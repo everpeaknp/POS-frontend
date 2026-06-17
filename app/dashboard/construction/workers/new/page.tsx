@@ -1,8 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { DashHeader } from '@/components/dashboard/dash-header';
 import WorkerForm from '@/components/construction/WorkerForm';
 
 export default function NewWorkerPage() {
@@ -13,26 +12,15 @@ export default function NewWorkerPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/dashboard/construction/workers"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">New Worker</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Add a new construction worker to your workforce
-          </p>
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader
+        title="New Worker"
+        subtitle="Add a new construction worker to your workforce"
+      />
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+          <WorkerForm onSuccess={handleSuccess} onCancel={() => router.back()} />
         </div>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <WorkerForm onSuccess={handleSuccess} />
       </div>
     </div>
   );

@@ -100,13 +100,13 @@ export default function NewSupplierPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Add Supplier" subtitle="New supplier record" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-8 max-w-3xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
 
           <Section title="Basic Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               <Field label="Supplier Name" required>
                 <Input 
                   value={form.name}
@@ -162,7 +162,7 @@ export default function NewSupplierPage() {
           </Section>
 
           <Section title="Address">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Province">
                 <Input 
                   value={form.province}
@@ -199,7 +199,7 @@ export default function NewSupplierPage() {
           </Section>
 
           <Section title="Business Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="PAN / VAT Number">
                 <Input 
                   value={form.pan}
@@ -236,7 +236,7 @@ export default function NewSupplierPage() {
           </Section>
 
           <Section title="Purchase Settings">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Credit Limit (Rs.)">
                 <Input 
                   type="number"

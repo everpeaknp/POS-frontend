@@ -123,13 +123,13 @@ export default function NewCustomerPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Add Customer" subtitle="New customer record" />
-      <div className="flex-1 p-6">
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-8 max-w-3xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           
           <Section title="Basic Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               <Field label="Full Name" required>
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -179,7 +179,7 @@ export default function NewCustomerPage() {
           </Section>
 
           <Section title="Billing Address">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Province">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -228,7 +228,7 @@ export default function NewCustomerPage() {
 
           {!sameAsBilling && (
             <Section title="Shipping Address">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <Field label="Province">
                   <Input 
                     className="h-9 text-sm border-gray-200"
@@ -262,7 +262,7 @@ export default function NewCustomerPage() {
           )}
 
           <Section title="Business Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="PAN / VAT Number">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -310,7 +310,7 @@ export default function NewCustomerPage() {
           </Section>
 
           <Section title="Opening Balance">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Opening Balance (Rs.)">
                 <Input 
                   type="number" 

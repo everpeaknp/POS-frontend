@@ -196,180 +196,180 @@ export default function SiteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Site Name and Location */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          label="Site Name"
-          name="name"
-          error={errors.name}
-          required
-        >
-          <input
-            {...register('name')}
-            type="text"
-            id="name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-            placeholder="Enter site name"
-          />
-        </FormField>
-
-        <FormField
-          label="Location"
-          name="location"
-          error={errors.location}
-          required
-        >
-          <input
-            {...register('location')}
-            type="text"
-            id="location"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-            placeholder="Enter site location"
-          />
-        </FormField>
-      </div>
-
-      {/* Client Name */}
-      <FormField
-        label="Client Name"
-        name="client_name"
-        error={errors.client_name}
-      >
-        <input
-          {...register('client_name')}
-          type="text"
-          id="client_name"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-          placeholder="Enter client name (optional)"
-        />
-      </FormField>
-
-      {/* Allocated Budget */}
-      <FormField
-        label="Allocated Budget (NPR)"
-        name="allocated_budget"
-        error={errors.allocated_budget}
-        required
-        hint="Total budget allocated for this construction site"
-      >
-        <input
-          {...register('allocated_budget')}
-          type="text"
-          id="allocated_budget"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-          placeholder="0.00"
-        />
-      </FormField>
-
-      {/* Start Date and Estimated End Date */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          label="Start Date"
-          name="start_date"
-          error={errors.start_date}
-          required
-        >
-          <input
-            {...register('start_date')}
-            type="date"
-            id="start_date"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-          />
-        </FormField>
-
-        <FormField
-          label="Estimated End Date"
-          name="estimated_end_date"
-          error={errors.estimated_end_date}
-        >
-          <input
-            {...register('estimated_end_date')}
-            type="date"
-            id="estimated_end_date"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-          />
-        </FormField>
-      </div>
-
-      {/* Assigned Manager and Warehouse */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          label="Assigned Manager"
-          name="manager"
-          error={errors.manager}
-          required
-          hint="Select a manager to oversee this site"
-        >
-          <select
-            {...register('manager')}
-            id="manager"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Site Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <FormField
+            label="Site Name"
+            name="name"
+            error={errors.name}
+            required
           >
-            <option value="">Select manager</option>
-            {managers.map((manager) => (
-              <option key={manager.id} value={manager.id}>
-                {manager.username} - {manager.role}
-              </option>
-            ))}
-          </select>
-        </FormField>
+            <input
+              {...register('name')}
+              type="text"
+              id="name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              placeholder="Enter site name"
+            />
+          </FormField>
 
-        <FormField
-          label="Warehouse"
-          name="warehouse"
-          error={errors.warehouse}
-          required
-          hint="Warehouse for site materials"
-        >
-          <select
-            {...register('warehouse')}
-            id="warehouse"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+          <FormField
+            label="Location"
+            name="location"
+            error={errors.location}
+            required
           >
-            <option value="">Select warehouse</option>
-            {warehouses.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
-                {warehouse.name} - {warehouse.location}
-              </option>
-            ))}
-          </select>
-        </FormField>
+            <input
+              {...register('location')}
+              type="text"
+              id="location"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              placeholder="Enter site location"
+            />
+          </FormField>
+
+          <FormField
+            label="Client Name"
+            name="client_name"
+            error={errors.client_name}
+          >
+            <input
+              {...register('client_name')}
+              type="text"
+              id="client_name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              placeholder="Enter client name (optional)"
+            />
+          </FormField>
+
+          <FormField
+            label="Allocated Budget (NPR)"
+            name="allocated_budget"
+            error={errors.allocated_budget}
+            required
+            hint="Total budget allocated for this construction site"
+          >
+            <input
+              {...register('allocated_budget')}
+              type="text"
+              id="allocated_budget"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              placeholder="0.00"
+            />
+          </FormField>
+        </div>
       </div>
 
-      {/* Status */}
-      <FormField
-        label="Status"
-        name="status"
-        error={errors.status}
-        required
-      >
-        <select
-          {...register('status')}
-          id="status"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-        >
-          <option value="planned">Planned</option>
-          <option value="active">Active</option>
-          <option value="on_hold">On Hold</option>
-          <option value="completed">Completed</option>
-        </select>
-      </FormField>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Schedule & Assignment</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <FormField
+            label="Start Date"
+            name="start_date"
+            error={errors.start_date}
+            required
+          >
+            <input
+              {...register('start_date')}
+              type="date"
+              id="start_date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            />
+          </FormField>
 
-      {/* Description */}
-      <FormField
-        label="Description"
-        name="description"
-        error={errors.description}
-      >
-        <textarea
-          {...register('description')}
-          id="description"
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-          placeholder="Optional site description, notes, or special requirements"
-        />
-      </FormField>
+          <FormField
+            label="Estimated End Date"
+            name="estimated_end_date"
+            error={errors.estimated_end_date}
+          >
+            <input
+              {...register('estimated_end_date')}
+              type="date"
+              id="estimated_end_date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            />
+          </FormField>
+
+          <FormField
+            label="Assigned Manager"
+            name="manager"
+            error={errors.manager}
+            required
+            hint="Select a manager to oversee this site"
+          >
+            <select
+              {...register('manager')}
+              id="manager"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            >
+              <option value="">Select manager</option>
+              {managers.map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                  {manager.username} - {manager.role}
+                </option>
+              ))}
+            </select>
+          </FormField>
+
+          <FormField
+            label="Warehouse"
+            name="warehouse"
+            error={errors.warehouse}
+            required
+            hint="Warehouse for site materials"
+          >
+            <select
+              {...register('warehouse')}
+              id="warehouse"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            >
+              <option value="">Select warehouse</option>
+              {warehouses.map((warehouse) => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name} - {warehouse.location}
+                </option>
+              ))}
+            </select>
+          </FormField>
+
+          <FormField
+            label="Status"
+            name="status"
+            error={errors.status}
+            required
+          >
+            <select
+              {...register('status')}
+              id="status"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            >
+              <option value="planned">Planned</option>
+              <option value="active">Active</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+            </select>
+          </FormField>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Description</h3>
+        <FormField
+          label="Description"
+          name="description"
+          error={errors.description}
+        >
+          <textarea
+            {...register('description')}
+            id="description"
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            placeholder="Optional site description, notes, or special requirements"
+          />
+        </FormField>
+      </div>
 
       {/* Form Actions */}
       <div className="flex gap-3 pt-4 border-t">

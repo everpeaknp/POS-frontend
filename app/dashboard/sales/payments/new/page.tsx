@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -112,20 +111,13 @@ export default function NewPaymentPage() {
   const selectedCustomer = customers.find(c => c.id === formData.customer);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Record Payment" subtitle="Record payment from customer" />
-      <div className="flex-1 p-6">
-        <div className="max-w-3xl">
-          <Link href="/dashboard/sales/payments">
-            <Button variant="ghost" size="sm" className="mb-4 gap-1.5 h-8">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to Payments
-            </Button>
-          </Link>
-
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
-            
-            {/* Customer Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-6 w-full">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Payment Details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Customer <span className="text-red-500">*</span>
@@ -165,10 +157,7 @@ export default function NewPaymentPage() {
                   required
                 />
               </div>
-            </div>
 
-            {/* Amount and Payment Method */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Amount <span className="text-red-500">*</span>
@@ -206,10 +195,7 @@ export default function NewPaymentPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Invoice and Reference */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Invoice (Optional)
@@ -248,55 +234,54 @@ export default function NewPaymentPage() {
                   placeholder="Transaction ID, Cheque #, etc."
                 />
               </div>
-            </div>
 
-            {/* Bank Name (conditional) */}
-            {(formData.payment_method === 'bank' || formData.payment_method === 'cheque') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Bank Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.bank_name}
-                  onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-                  placeholder="Bank name"
-                />
-              </div>
-            )}
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Notes
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent resize-none"
-                placeholder="Additional notes..."
-              />
+              {(formData.payment_method === "bank" || formData.payment_method === "cheque") && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Bank Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bank_name}
+                    onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    placeholder="Bank name"
+                  />
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
-              >
-                <Save className="h-4 w-4" /> Record Payment
-              </Button>
-              <Link href="/dashboard/sales/payments">
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </Link>
-            </div>
-          </form>
-        </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Notes</h3>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent resize-none"
+              placeholder="Additional notes..."
+            />
+          </div>
+
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.back()}
+              className="gap-1.5 text-gray-500"
+              disabled={loading}
+            >
+              <ArrowLeft className="h-4 w-4" /> Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+            >
+              <Save className="h-4 w-4" /> Record Payment
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

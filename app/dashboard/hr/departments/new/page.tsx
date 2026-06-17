@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,7 +53,6 @@ export default function NewDepartmentPage() {
         description: formData.description.trim() || null,
       };
 
-      // Only include head if selected
       if (formData.head) {
         payload.head = formData.head;
       }
@@ -66,7 +63,6 @@ export default function NewDepartmentPage() {
     } catch (error: any) {
       console.error('Failed to create department:', error);
       
-      // Handle validation errors
       if (error.response?.data) {
         const errors = error.response.data;
         if (typeof errors === 'object') {
@@ -86,70 +82,67 @@ export default function NewDepartmentPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Add New Department" subtitle="Create a new department" />
-      <div className="flex-1 p-6">
-        <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Departments
-        </Link>
-
-        <div className="max-w-2xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <div className="flex flex-col min-h-0">
+      <DashHeader title="Add New Department" subtitle="Create a new department for your organization" />
+      <div className="p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">Department Name*</Label>
-              <Input 
-                id="name" 
-                placeholder="Enter department name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                className="mt-1 h-9 border-gray-200" 
-                required 
-                disabled={loading}
-              />
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Department Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">Department Name*</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="Enter department name" 
+                    value={formData.name} 
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                    className="mt-1 h-9 border-gray-200" 
+                    required 
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="head" className="text-sm font-medium text-gray-700">Department Head</Label>
+                  <Select 
+                    value={formData.head} 
+                    onValueChange={(v) => setFormData({ ...formData, head: v ?? "" })}
+                    disabled={loading || loadingEmployees}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder={loadingEmployees ? "Loading employees..." : "Select department head (optional)"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {employees.map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.name} - {emp.designation}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div>
-              <Label htmlFor="head" className="text-sm font-medium text-gray-700">Department Head</Label>
-              <Select 
-                value={formData.head} 
-                onValueChange={(v) => setFormData({ ...formData, head: v ?? "" })}
-                disabled={loading || loadingEmployees}
-              >
-                <SelectTrigger className="mt-1 h-9 border-gray-200">
-                  <SelectValue placeholder={loadingEmployees ? "Loading employees..." : "Select department head (optional)"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} - {emp.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Description</h3>
+              <div>
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
+                <textarea 
+                  id="description"
+                  placeholder="Enter department description" 
+                  value={formData.description} 
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })} 
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  rows={4}
+                  disabled={loading}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
-              <textarea 
-                id="description"
-                placeholder="Enter department description" 
-                value={formData.description} 
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })} 
-                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none"
-                rows={4}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <Button 
-                type="submit" 
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
-                disabled={loading}
-              >
-                {loading ? "Saving..." : "Save Department"}
-              </Button>
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -157,6 +150,13 @@ export default function NewDepartmentPage() {
                 disabled={loading}
               >
                 Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save Department"}
               </Button>
             </div>
           </form>

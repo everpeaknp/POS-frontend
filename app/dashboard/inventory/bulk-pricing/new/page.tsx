@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,20 +129,15 @@ export default function NewBulkPricingPage() {
   const product = products.find(p => p.id === selectedProduct);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Add Bulk Pricing" subtitle="Create tiered pricing for products" />
-      <div className="flex-1 p-6">
-        <div className="max-w-4xl">
-          <Link href="/dashboard/inventory/bulk-pricing">
-            <Button variant="ghost" size="sm" className="mb-4 gap-1.5 h-8">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to Bulk Pricing
-            </Button>
-          </Link>
-
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
-            
-            {/* Product Selection */}
-            <div>
+      <div className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-6 w-full">
+          
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Product</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="sm:col-span-2 lg:col-span-2 xl:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Product <span className="text-red-500">*</span>
               </label>
@@ -168,14 +162,15 @@ export default function NewBulkPricingPage() {
                   Base Price: Rs {product.selling_price}
                 </p>
               )}
+              </div>
             </div>
+          </div>
 
-            {/* Pricing Tiers */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Pricing Tiers <span className="text-red-500">*</span>
-                </label>
+          <div>
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+              <h3 className="text-sm font-semibold text-gray-700">
+                Pricing Tiers <span className="text-red-500">*</span>
+              </h3>
                 <Button
                   type="button"
                   size="sm"
@@ -203,7 +198,7 @@ export default function NewBulkPricingPage() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
                           Min Quantity
@@ -278,23 +273,25 @@ export default function NewBulkPricingPage() {
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
-              >
-                <Save className="h-4 w-4" /> Create Pricing Tiers
-              </Button>
-              <Link href="/dashboard/inventory/bulk-pricing">
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </Link>
-            </div>
-          </form>
-        </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.back()}
+              className="gap-1.5 text-gray-500"
+              disabled={loading}
+            >
+              <ArrowLeft className="h-4 w-4" /> Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+            >
+              <Save className="h-4 w-4" /> Create Pricing Tiers
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

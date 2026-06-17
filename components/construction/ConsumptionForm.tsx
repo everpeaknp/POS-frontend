@@ -261,8 +261,10 @@ export default function ConsumptionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Site Selection */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Consumption Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <FormField
         label="Construction Site"
         name="site"
@@ -285,24 +287,6 @@ export default function ConsumptionForm({
         </select>
       </FormField>
 
-      {/* Show warehouse info when site is selected */}
-      {selectedSite && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Package className="w-5 h-5 text-[#22C55E] mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-900">
-                Warehouse: {selectedSite.warehouse_name}
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                Materials will be deducted from this warehouse inventory
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Product Selection */}
       <FormField
         label="Product/Material"
         name="product"
@@ -324,35 +308,6 @@ export default function ConsumptionForm({
         </select>
       </FormField>
 
-      {/* Show available stock when product is selected */}
-      {watchedProduct && watchedSite && availableStock !== null && (
-        <div className={`border rounded-lg p-4 ${
-          availableStock > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-        }`}>
-          <div className="flex items-start gap-3">
-            {availableStock > 0 ? (
-              <Package className="w-5 h-5 text-green-600 mt-0.5" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-            )}
-            <div>
-              <p className={`text-sm font-medium ${
-                availableStock > 0 ? 'text-green-900' : 'text-red-900'
-              }`}>
-                Available Stock: {availableStock.toFixed(2)} {selectedProduct?.unit_name || ''}
-              </p>
-              {availableStock === 0 && (
-                <p className="text-xs text-red-700 mt-1">
-                  No stock available at this warehouse. Please transfer stock first.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quantity and Unit Cost */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           label="Quantity"
           name="quantity"
@@ -384,7 +339,51 @@ export default function ConsumptionForm({
             placeholder="0.00"
           />
         </FormField>
+        </div>
       </div>
+
+      {selectedSite && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 w-full">
+          <div className="flex items-start gap-3">
+            <Package className="w-5 h-5 text-[#22C55E] mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-green-900">
+                Warehouse: {selectedSite.warehouse_name}
+              </p>
+              <p className="text-xs text-green-700 mt-1">
+                Materials will be deducted from this warehouse inventory
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show available stock when product is selected */}
+      {watchedProduct && watchedSite && availableStock !== null && (
+        <div className={`border rounded-lg p-4 ${
+          availableStock > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        }`}>
+          <div className="flex items-start gap-3">
+            {availableStock > 0 ? (
+              <Package className="w-5 h-5 text-green-600 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+            )}
+            <div>
+              <p className={`text-sm font-medium ${
+                availableStock > 0 ? 'text-green-900' : 'text-red-900'
+              }`}>
+                Available Stock: {availableStock.toFixed(2)} {selectedProduct?.unit_name || ''}
+              </p>
+              {availableStock === 0 && (
+                <p className="text-xs text-red-700 mt-1">
+                  No stock available at this warehouse. Please transfer stock first.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Total Cost Display */}
       {watch('quantity') && watch('unit_cost') && (
@@ -414,7 +413,7 @@ export default function ConsumptionForm({
       </FormField>
 
       {/* Form Actions */}
-      <div className="flex gap-3 pt-4 border-t">
+      <div className="flex gap-3 pt-4 border-t border-gray-100">
         <button
           type="submit"
           disabled={isSubmitting || availableStock === 0}

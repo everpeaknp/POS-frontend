@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MoreHorizontal, Trash2, X, Search, Mail, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +59,8 @@ const modules = [
 ];
 
 export default function UsersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -161,7 +164,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleInvite = () => {
+  const handleInvite = useCallback(() => {
     if (!canManageUsers()) {
       toast.error("You don't have permission to invite users");
       return;
@@ -174,7 +177,15 @@ export default function UsersPage() {
     setSelectedEmployee("");
     setErrors({});
     setShowInviteModal(true);
-  };
+  }, [permissions, currentUser?.role]);
+
+  useEffect(() => {
+    if (searchParams.get("invite") !== "1") return;
+    if (!permissions) return;
+
+    handleInvite();
+    router.replace("/dashboard/settings/users", { scroll: false });
+  }, [searchParams, permissions, handleInvite, router]);
 
   const handleEmployeeSelect = (employeeId: string) => {
     console.log('=== Employee Selection Debug ===');

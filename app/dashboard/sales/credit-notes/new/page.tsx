@@ -168,7 +168,7 @@ export default function NewCreditNotePage() {
 
   if (loadingCustomers) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="New Credit Note" subtitle="Create a new credit note" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-500">Loading...</div>
@@ -178,13 +178,13 @@ export default function NewCreditNotePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="New Credit Note" subtitle="Create a new credit note" />
-      <div className="flex-1 p-6">
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-8 max-w-3xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
 
           <Section title="Customer & Invoice">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Customer" required>
                 <Select 
                   value={form.customer || ""} 
@@ -230,7 +230,7 @@ export default function NewCreditNotePage() {
             {selectedInvoice && (
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
                 <div className="text-sm font-medium text-blue-900">Selected Invoice Details</div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                   <div>
                     <span className="text-blue-700">Invoice Amount:</span>
                     <span className="ml-2 font-medium text-blue-900">
@@ -259,7 +259,7 @@ export default function NewCreditNotePage() {
           </Section>
 
           <Section title="Credit Note Details">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Date" required>
                 <Input
                   type="date"

@@ -120,8 +120,10 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Worker Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <FormField
           label="Worker Name"
           name="name"
@@ -242,9 +244,12 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
             <option value="inactive">Inactive</option>
           </select>
         </FormField>
+        </div>
       </div>
 
-      <FormField
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Address</h3>
+        <FormField
         label="Address"
         name="address"
         error={errors.address}
@@ -256,8 +261,9 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           placeholder="Enter full address"
         />
       </FormField>
+      </div>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
         {onCancel && (
           <button
             type="button"

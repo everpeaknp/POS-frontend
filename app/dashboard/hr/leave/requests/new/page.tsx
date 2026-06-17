@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,91 +82,90 @@ export default function NewLeaveRequestPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col min-h-0">
         <DashHeader title="Apply for Leave" subtitle="Submit a new leave request" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
+        <div className="p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading form...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-0">
       <DashHeader title="Apply for Leave" subtitle="Submit a new leave request" />
-      <div className="flex-1 p-6">
-        <Link href="/dashboard/hr/leave" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Leave
-        </Link>
-
-        <div className="max-w-2xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      <div className="p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="type" className="text-sm font-medium text-gray-700">Leave Type*</Label>
-              <Select 
-                value={formData.leave_type} 
-                onValueChange={(v) => v && setFormData({ ...formData, leave_type: v })}
-                disabled={submitting}
-              >
-                <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select leave type" /></SelectTrigger>
-                <SelectContent>
-                  {leaveTypes.map((lt) => (
-                    <SelectItem key={lt.id} value={String(lt.id)}>
-                      {lt.name} ({lt.days_allowed} days)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Leave Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">Leave Type*</Label>
+                  <Select 
+                    value={formData.leave_type} 
+                    onValueChange={(v) => v && setFormData({ ...formData, leave_type: v })}
+                    disabled={submitting}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select leave type" /></SelectTrigger>
+                    <SelectContent>
+                      {leaveTypes.map((lt) => (
+                        <SelectItem key={lt.id} value={String(lt.id)}>
+                          {lt.name} ({lt.days_allowed} days)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="from" className="text-sm font-medium text-gray-700">From Date*</Label>
-                <Input 
-                  id="from" 
-                  type="date" 
-                  value={formData.start_date} 
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} 
-                  className="mt-1 h-9 border-gray-200" 
-                  required 
-                  disabled={submitting}
-                />
-              </div>
-              <div>
-                <Label htmlFor="to" className="text-sm font-medium text-gray-700">To Date*</Label>
-                <Input 
-                  id="to" 
-                  type="date" 
-                  value={formData.end_date} 
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} 
-                  className="mt-1 h-9 border-gray-200" 
-                  required 
-                  disabled={submitting}
-                />
+                <div>
+                  <Label htmlFor="from" className="text-sm font-medium text-gray-700">From Date*</Label>
+                  <Input 
+                    id="from" 
+                    type="date" 
+                    value={formData.start_date} 
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} 
+                    className="mt-1 h-9 border-gray-200" 
+                    required 
+                    disabled={submitting}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="to" className="text-sm font-medium text-gray-700">To Date*</Label>
+                  <Input 
+                    id="to" 
+                    type="date" 
+                    value={formData.end_date} 
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} 
+                    className="mt-1 h-9 border-gray-200" 
+                    required 
+                    disabled={submitting}
+                  />
+                </div>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="reason" className="text-sm font-medium text-gray-700">Reason*</Label>
-              <textarea 
-                id="reason"
-                placeholder="Enter reason for leave" 
-                value={formData.reason} 
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, reason: e.target.value })} 
-                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px]" 
-                required 
-                disabled={submitting}
-              />
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Reason</h3>
+              <div>
+                <Label htmlFor="reason" className="text-sm font-medium text-gray-700">Reason*</Label>
+                <textarea 
+                  id="reason"
+                  placeholder="Enter reason for leave" 
+                  value={formData.reason} 
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, reason: e.target.value })} 
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]" 
+                  required 
+                  disabled={submitting}
+                />
+              </div>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <Button 
-                type="submit" 
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
-                disabled={submitting}
-              >
-                {submitting ? "Submitting..." : "Submit Request"}
-              </Button>
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -176,6 +173,13 @@ export default function NewLeaveRequestPage() {
                 disabled={submitting}
               >
                 Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit Request"}
               </Button>
             </div>
           </form>

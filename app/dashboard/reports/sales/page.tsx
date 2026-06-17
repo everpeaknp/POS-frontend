@@ -71,13 +71,11 @@ export default function SalesReportPage() {
   const loadReportData = async () => {
     setLoading(true);
     try {
-      // Load sales performance data
       const salesResponse = await apiClient.get("/reports/sales-performance/", {
         params: { start_date: startDate, end_date: endDate }
       });
       setSalesData(salesResponse.data);
 
-      // Load trend data
       const trendResponse = await apiClient.get("/reports/revenue-expense-trend/", {
         params: { months: 6 }
       });
@@ -102,37 +100,50 @@ export default function SalesReportPage() {
     { label: "Top Customer", value: "N/A" },
   ];
 
-  // Transform trend data for chart
   const trendChartData = trendData?.monthly_data.map(item => ({
     date: item.month,
     sales: item.revenue,
   })) || [];
 
-  // Calculate total sales for percentage
   const totalSales = salesData?.total_sales || 1;
 
-  return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Sales Report" subtitle="Sales performance and trends" />
-      <ReportFilter 
-        period={period} 
-        onPeriodChange={handlePeriodChange} 
-        onGenerate={loadReportData}
-      />
+  if (loading && !salesData) {
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        <DashHeader title="Sales Report" subtitle="Sales performance and trends" />
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading sales report...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      <div className="flex-1 p-6 space-y-6">
-        {/* Export Buttons */}
-        <div className="flex justify-end">
-          <ExportButtons />
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader title="Sales Report" subtitle="Sales performance and trends" />
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <ReportFilter 
+              embedded
+              period={period} 
+              onPeriodChange={handlePeriodChange} 
+              onGenerate={loadReportData}
+            />
+            <ExportButtons />
+          </div>
         </div>
 
-        {/* Summary Cards */}
-        <SummaryCards cards={stats} />
+        <div className="w-full">
+          <SummaryCards cards={stats} />
+        </div>
 
-        {/* Sales Trend Chart */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Sales Trend (Last 6 Months)</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+          <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Sales Trend (Last 6 Months)</h3>
+          <ResponsiveContainer width="100%" height={320}>
             <LineChart data={trendChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
@@ -143,39 +154,40 @@ export default function SalesReportPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Top Customers */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-900">Top Customers</h3>
           </div>
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-12 text-center text-gray-500">Loading...</div>
           ) : salesData && salesData.top_customers.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {["Rank", "Customer Name", "Orders", "Total Amount", "% of Total"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {salesData.top_customers.map((customer, index) => {
-                  const percentage = ((customer.total_amount / totalSales) * 100).toFixed(1);
-                  return (
-                    <tr key={customer.customer_id} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{index + 1}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{customer.customer_name}</td>
-                      <td className="px-4 py-3 text-gray-600">{customer.total_orders}</td>
-                      <td className="px-4 py-3 text-gray-800 font-medium">Rs. {customer.total_amount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-gray-600">{percentage}%</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    {["Rank", "Customer Name", "Orders", "Total Amount", "% of Total"].map((h) => (
+                      <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {salesData.top_customers.map((customer, index) => {
+                    const percentage = ((customer.total_amount / totalSales) * 100).toFixed(1);
+                    return (
+                      <tr key={customer.customer_id} className="hover:bg-gray-50/50">
+                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{index + 1}</td>
+                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{customer.customer_name}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{customer.total_orders}</td>
+                        <td className="px-6 py-3 text-gray-800 font-medium whitespace-nowrap">Rs. {customer.total_amount.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{percentage}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">No customer data available</div>
+            <div className="p-12 text-center text-gray-500">No customer data available</div>
           )}
         </div>
       </div>

@@ -189,13 +189,12 @@ export default function AttendanceGrid() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-6">Daily Attendance Grid</h2>
+    <div className="space-y-6 w-full">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full">
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">Daily Attendance Grid</h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Site and Date Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Site <span className="text-red-500">*</span>
@@ -244,8 +243,8 @@ export default function AttendanceGrid() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                  <div className="overflow-x-auto w-full">
+                    <table className="min-w-full divide-y divide-gray-200 w-full">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -365,7 +364,7 @@ export default function AttendanceGrid() {
       </div>
 
       {/* Legend */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Status Legend</h3>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">

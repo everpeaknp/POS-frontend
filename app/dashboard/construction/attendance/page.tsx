@@ -1,16 +1,18 @@
+'use client';
+
 import { AttendanceGrid } from '@/components/construction';
+import { DashHeader } from '@/components/dashboard/dash-header';
 
 export default function AttendancePage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Worker Attendance</h1>
-        <p className="mt-2 text-gray-600">
-          Mark daily attendance for construction workers. Wage calculations are automatic.
-        </p>
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader
+        title="Worker Attendance"
+        subtitle="Mark daily attendance for construction workers. Wage calculations are automatic."
+      />
+      <div className="flex-1 overflow-y-auto p-6 w-full">
+        <AttendanceGrid />
       </div>
-
-      <AttendanceGrid />
     </div>
   );
 }

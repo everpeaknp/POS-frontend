@@ -116,8 +116,10 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Log Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <FormField
           label="Site"
           name="site"
@@ -182,8 +184,12 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
             placeholder="0.00"
           />
         </FormField>
+        </div>
       </div>
 
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Work & Progress</h3>
+        <div className="space-y-4">
       <FormField
         label="Work Description"
         name="work_description"
@@ -223,8 +229,10 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
           placeholder="Describe other expenses (if any)"
         />
       </FormField>
+        </div>
+      </div>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
         {onCancel && (
           <button
             type="button"

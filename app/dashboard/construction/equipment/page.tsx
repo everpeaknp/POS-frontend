@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { DashHeader } from '@/components/dashboard/dash-header';
 import { constructionApi, Equipment } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -48,25 +50,21 @@ export default function EquipmentPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Construction Equipment</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage equipment inventory and usage
-          </p>
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader title="Construction Equipment" subtitle="Manage equipment inventory and usage" />
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+        <div className="flex justify-end">
+          <Link
+            href="/dashboard/construction/equipment/new"
+            className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Equipment
+          </Link>
         </div>
-        <Link
-          href="/dashboard/construction/equipment/new"
-          className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium"
-        >
-          + New Equipment
-        </Link>
-      </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full">
         <div className="flex gap-2">
           {['all', 'available', 'in_use', 'maintenance'].map((status) => (
             <button
@@ -86,7 +84,7 @@ export default function EquipmentPage() {
 
       {/* Equipment List */}
       {loading ? (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
           <div className="animate-pulse p-6 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-16 bg-gray-200 rounded"></div>
@@ -94,7 +92,7 @@ export default function EquipmentPage() {
           </div>
         </div>
       ) : equipment.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
             fill="none"
@@ -120,7 +118,8 @@ export default function EquipmentPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+          <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -200,8 +199,10 @@ export default function EquipmentPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

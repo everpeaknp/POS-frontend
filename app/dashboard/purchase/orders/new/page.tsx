@@ -201,9 +201,9 @@ export default function NewPurchaseOrderPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Purchase Order" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
         </div>
       </div>
@@ -211,11 +211,11 @@ export default function NewPurchaseOrderPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Create Purchase Order" subtitle="New purchase order" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-5xl">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <Field label="PO Date" required>
               <Input 
                 type="date" 
@@ -243,8 +243,6 @@ export default function NewPurchaseOrderPage() {
                 </SelectContent>
               </Select>
             </Field>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Supplier" required>
               <div className="flex gap-2">
                 <Select value={form.supplier} onValueChange={(v) => setForm({ ...form, supplier: v || "" })}>
@@ -294,8 +292,8 @@ export default function NewPurchaseOrderPage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
             <LineItemsTable items={items} onChange={setItems} products={products} />
           </div>
-          <div className="flex flex-col sm:flex-row gap-6 justify-between">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between">
+            <div className="flex-1 min-w-0">
               <Label className="text-sm mb-1.5 block">Notes / Terms</Label>
               <textarea 
                 value={form.notes} 

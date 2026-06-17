@@ -330,7 +330,7 @@ export default function ProductForm({
           </div>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <FormField
           label="Product Name"
           name="name"
@@ -361,9 +361,7 @@ export default function ProductForm({
             placeholder="e.g., PROD-001"
           />
         </FormField>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           label="Category"
           name="category"
@@ -423,7 +421,7 @@ export default function ProductForm({
         </FormField>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <FormField
           label="Cost Price (NPR)"
           name="cost_price"
@@ -468,23 +466,7 @@ export default function ProductForm({
             placeholder="0"
           />
         </FormField>
-      </div>
 
-      <FormField
-        label="Description"
-        name="description"
-        error={errors.description}
-      >
-        <textarea
-          {...register('description')}
-          id="description"
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Optional product description"
-        />
-      </FormField>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           label="Status"
           name="status"
@@ -521,6 +503,20 @@ export default function ProductForm({
           </div>
         </FormField>
       </div>
+
+      <FormField
+        label="Description"
+        name="description"
+        error={errors.description}
+      >
+        <textarea
+          {...register('description')}
+          id="description"
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Optional product description"
+        />
+      </FormField>
 
       <div className="flex gap-3 pt-4 border-t">
         <button

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,17 +125,19 @@ export default function CustomReportsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Custom Reports" subtitle="Build and manage custom reports" />
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="saved">Saved Reports</TabsTrigger>
-            <TabsTrigger value="builder">Build New Report</TabsTrigger>
-          </TabsList>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="saved">Saved Reports</TabsTrigger>
+              <TabsTrigger value="builder">Build New Report</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Saved Reports Tab */}
-          <TabsContent value="saved" className="space-y-4 mt-4">
+          <TabsContent value="saved" className="space-y-4 mt-4 w-full">
             <div className="flex justify-end">
               <Button onClick={() => setTab("builder")} className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> New Custom Report
@@ -144,34 +145,36 @@ export default function CustomReportsPage() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#22C55E] mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading reports...</p>
               </div>
             ) : reports.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
                 <p className="text-gray-500">No custom reports yet. Create your first report to get started.</p>
                 <Button onClick={() => setTab("builder")} className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
                   <Plus className="h-4 w-4" /> Create Report
                 </Button>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+                <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
                       {["Report Name", "Created By", "Last Run", "Schedule", "Actions"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                        <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-100">
                     {reports.map((report) => (
                       <tr key={report.id} className="hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{report.name}</td>
-                        <td className="px-4 py-3 text-gray-600">{report.created_by_name}</td>
-                        <td className="px-4 py-3 text-gray-600">{report.last_run_display || 'Never'}</td>
-                        <td className="px-4 py-3 text-gray-600 capitalize">{report.schedule}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{report.name}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{report.created_by_name}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{report.last_run_display || 'Never'}</td>
+                        <td className="px-6 py-3 text-gray-600 capitalize whitespace-nowrap">{report.schedule}</td>
+                        <td className="px-6 py-3 whitespace-nowrap">
                           <DropdownMenu>
                             <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 focus:outline-none">
                               <MoreVertical className="h-4 w-4 text-gray-400" />
@@ -194,13 +197,14 @@ export default function CustomReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </TabsContent>
 
           {/* Build Report Tab */}
-          <TabsContent value="builder" className="space-y-4 mt-4">
-            <div className="max-w-3xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <TabsContent value="builder" className="space-y-4 mt-4 w-full">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
               {/* Step Indicator */}
               <div className="flex gap-2 mb-6">
                 {[1, 2, 3, 4, 5, 6].map((s) => (
@@ -210,7 +214,8 @@ export default function CustomReportsPage() {
 
               {step === 1 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 1: Report Setup</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 1: Report Setup</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
                     <Label htmlFor="name" className="text-sm font-medium text-gray-700">Report Name*</Label>
                     <Input 
@@ -230,13 +235,15 @@ export default function CustomReportsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  </div>
                   <div>
                     <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
                     <textarea 
                       placeholder="Enter report description" 
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" 
+                      className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" 
+                      rows={3}
                     />
                   </div>
                 </div>
@@ -244,8 +251,8 @@ export default function CustomReportsPage() {
 
               {step === 2 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 2: Select Data Source</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 2: Select Data Source</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
                     {(["sales", "purchase", "inventory", "accounting", "hr", "pos"] as const).map((module) => (
                       <button 
                         key={module} 
@@ -261,8 +268,8 @@ export default function CustomReportsPage() {
 
               {step === 3 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 3: Select Fields</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 3: Select Fields</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">Available Fields</p>
                       <div className="border border-gray-200 rounded-lg p-3 space-y-2 h-64 overflow-y-auto">
@@ -286,9 +293,9 @@ export default function CustomReportsPage() {
 
               {step === 4 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 4: Add Filters</h3>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 4: Add Filters</h3>
+                  <div className="space-y-3 w-full">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Select>
                         <SelectTrigger className="h-9 flex-1 border-gray-200"><SelectValue placeholder="Select field" /></SelectTrigger>
                         <SelectContent>
@@ -309,7 +316,8 @@ export default function CustomReportsPage() {
 
               {step === 5 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 5: Grouping & Sorting</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 5: Grouping & Sorting</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Group By</Label>
                     <Select>
@@ -336,12 +344,14 @@ export default function CustomReportsPage() {
                       </Select>
                     </div>
                   </div>
+                  </div>
                 </div>
               )}
 
               {step === 6 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Step 6: Chart Settings</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 6: Chart Settings</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Chart Type</Label>
                     <Select>
@@ -360,11 +370,12 @@ export default function CustomReportsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  </div>
                 </div>
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex gap-3 mt-8 pt-6 border-t border-gray-100">
+              <div className="flex flex-wrap justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
                 <Button variant="outline" onClick={() => setStep(Math.max(1, step - 1))} disabled={step === 1 || loading}>
                   Previous
                 </Button>

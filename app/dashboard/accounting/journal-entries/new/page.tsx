@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,10 +172,10 @@ export default function NewJournalEntryPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="New Journal Entry" subtitle="Loading..." />
-        <div className="flex-1 p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center max-w-5xl">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading form...</p>
           </div>
@@ -186,67 +185,65 @@ export default function NewJournalEntryPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="New Journal Entry" subtitle="Create manual journal entry" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5 max-w-5xl">
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Field label="Entry #">
-              <Input className="h-9 text-sm bg-gray-50 text-gray-500" value="Auto-generated" readOnly />
-            </Field>
-            <Field label="Date" required>
-              <Input 
-                type="date"
-                className="h-9 text-sm border-gray-200" 
-                value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              />
-            </Field>
-            <Field label="Type">
-              <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: (v as "Manual" | "Adjustment") || "Manual" }))}>
-                <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["Manual", "Adjustment"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Reference">
-              <Input 
-                className="h-9 text-sm border-gray-200" 
-                placeholder="e.g. INV-0001, PINV-0001"
-                value={formData.reference}
-                onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
-              />
-            </Field>
-            <Field label="Description" required>
-              <Input 
-                className="h-9 text-sm border-gray-200" 
-                placeholder="Journal entry description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </Field>
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader title="New Journal Entry" subtitle="Create a manual journal entry" />
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full space-y-8">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Entry Details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <Field label="Entry #">
+                <Input className="h-9 text-sm bg-gray-50 text-gray-500" value="Auto-generated" readOnly />
+              </Field>
+              <Field label="Date" required>
+                <Input 
+                  type="date"
+                  className="h-9 text-sm border-gray-200" 
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </Field>
+              <Field label="Type">
+                <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: (v as "Manual" | "Adjustment") || "Manual" }))}>
+                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Manual", "Adjustment"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Reference">
+                <Input 
+                  className="h-9 text-sm border-gray-200" 
+                  placeholder="e.g. INV-0001, PINV-0001"
+                  value={formData.reference}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
+                />
+              </Field>
+              <Field label="Description" required>
+                <Input 
+                  className="h-9 text-sm border-gray-200" 
+                  placeholder="Journal entry description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </Field>
+            </div>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Debit / Credit Lines</h3>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Debit / Credit Lines</h3>
             <JournalLinesTable lines={lines} onChange={setLines} accounts={accounts} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-100">
             <Button 
-              variant="ghost" 
+              type="button"
+              variant="outline" 
               onClick={() => router.back()} 
-              className="gap-1.5 text-gray-500"
               disabled={submitting}
             >
-              <ArrowLeft className="h-4 w-4" /> Cancel
+              Cancel
             </Button>
-            <div className="flex-1" />
             <Button 
               variant="outline" 
               className="border-gray-200 text-gray-700"

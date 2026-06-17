@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,6 @@ export default function NewTaxRulePage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.name.trim()) {
       toast.error('Tax name is required');
       return;
@@ -102,108 +100,114 @@ export default function NewTaxRulePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Add Tax Rule" subtitle="Create a new tax rule" />
-      <div className="flex-1 p-6">
-        <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5 max-w-lg">
-            <Field label="Tax Name" required>
-              <Input 
-                className="h-9 text-sm border-gray-200" 
-                placeholder="e.g. VAT 13%" 
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={loading}
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Tax Type" required>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => setFormData({ ...formData, type: value as TaxType })}
-                  disabled={loading}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(["VAT", "TDS", "Income Tax", "Other"] as const).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="Rate (%)" required>
-                <Input 
-                  type="number" 
-                  step="0.01"
-                  className="h-9 text-sm border-gray-200" 
-                  placeholder="13" 
-                  value={formData.rate}
-                  onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+    <div className="flex flex-col min-h-0">
+      <DashHeader title="Add Tax Rule" subtitle="Create a new tax rule for your organization" />
+      <div className="p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Tax Rule Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <Field label="Tax Name" required>
+                  <Input 
+                    className="h-9 text-sm border-gray-200" 
+                    placeholder="e.g. VAT 13%" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={loading}
+                  />
+                </Field>
+                <Field label="Tax Type" required>
+                  <Select 
+                    value={formData.type} 
+                    onValueChange={(value) => setFormData({ ...formData, type: value as TaxType })}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["VAT", "TDS", "Income Tax", "Other"] as const).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Rate (%)" required>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    className="h-9 text-sm border-gray-200" 
+                    placeholder="13" 
+                    value={formData.rate}
+                    onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                    disabled={loading}
+                  />
+                </Field>
+                <Field label="Applicable On" required>
+                  <Select 
+                    value={formData.applicable_on} 
+                    onValueChange={(value) => setFormData({ ...formData, applicable_on: value as ApplicableOn })}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["Sales", "Purchase", "Both"] as const).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Linked Account" required>
+                  <Select 
+                    value={formData.account} 
+                    onValueChange={(value) => setFormData({ ...formData, account: value || "" })}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-gray-200">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.code} - {acc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Status">
+                  <Select 
+                    value={formData.status} 
+                    onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Description</h3>
+              <Field label="Description">
+                <Textarea 
+                  className="text-sm border-gray-200 min-h-[80px]" 
+                  placeholder="Optional description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   disabled={loading}
                 />
               </Field>
             </div>
-            <Field label="Applicable On" required>
-              <Select 
-                value={formData.applicable_on} 
-                onValueChange={(value) => setFormData({ ...formData, applicable_on: value as ApplicableOn })}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(["Sales", "Purchase", "Both"] as const).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Linked Account" required>
-              <Select 
-                value={formData.account} 
-                onValueChange={(value) => setFormData({ ...formData, account: value || "" })}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.code} - {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Description">
-              <Textarea 
-                className="text-sm border-gray-200 min-h-[80px]" 
-                placeholder="Optional description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={loading}
-              />
-            </Field>
-            <Field label="Status">
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200 w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-            <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
               <Button 
                 type="button"
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => router.back()} 
-                className="gap-1.5 text-gray-500"
                 disabled={loading}
               >
-                <ArrowLeft className="h-4 w-4" /> Cancel
+                Cancel
               </Button>
-              <div className="flex-1" />
               <Button 
                 type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
@@ -212,8 +216,8 @@ export default function NewTaxRulePage() {
                 {loading ? 'Saving...' : 'Save Tax Rule'}
               </Button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

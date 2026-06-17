@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { calculatePayroll, processPayroll, PayrollCalculation } from "@/lib/api/hr";
@@ -59,92 +58,109 @@ export default function RunPayrollPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Run Payroll" subtitle="Calculate and process employee salaries" />
-      <div className="flex-1 p-6 space-y-6">
-        <Link href="/dashboard/hr/payroll" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" /> Back to Payroll
-        </Link>
-
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
         {!calculated ? (
-          <div className="max-w-2xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Select Period</h3>
-            <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full">
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Select Period</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
               <div>
-                <label className="text-sm font-medium text-gray-700">Month*</label>
+                <Label className="text-sm font-medium text-gray-700">Month*</Label>
                 <Select value={month} onValueChange={(v) => setMonth(v ?? "")}>
-                  <SelectTrigger className="mt-2 h-9 border-gray-200"><SelectValue placeholder="Select month" /></SelectTrigger>
+                  <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select month" /></SelectTrigger>
                   <SelectContent>
                     {nepaliMonths.map((m, i) => <SelectItem key={i} value={m}>{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-
-              <Button onClick={handleCalculate} disabled={!month || loading} className="bg-[#22C55E] hover:bg-[#16A34A] text-white w-full">
-                {loading ? "Calculating..." : "Calculate Payroll"}
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Year</Label>
+                <div className="mt-1 h-9 px-3 flex items-center border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-700">
+                  {year}
+                </div>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-1">
+                <Button
+                  onClick={handleCalculate}
+                  disabled={!month || loading}
+                  className="w-full h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                >
+                  {loading ? "Calculating..." : "Calculate Payroll"}
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-end pt-6 mt-6 border-t border-gray-100">
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
+                Cancel
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Summary */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Payroll Summary - {payrollData?.month} {payrollData?.year}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
+          <div className="space-y-4 w-full">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Payroll Summary — {payrollData?.month} {payrollData?.year}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Total Employees</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">{payrollData?.total_employees || 0}</p>
                 </div>
-                <div>
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Total Gross</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">Rs. {payrollData?.total_gross.toLocaleString() || 0}</p>
                 </div>
-                <div>
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Total Deductions</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">Rs. {payrollData?.total_deductions.toLocaleString() || 0}</p>
                 </div>
-                <div>
+                <div className="bg-green-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Net Payroll</p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">Rs. {payrollData?.total_net.toLocaleString() || 0}</p>
+                  <p className="text-2xl font-bold text-[#22C55E] mt-1">Rs. {payrollData?.total_net.toLocaleString() || 0}</p>
                 </div>
               </div>
             </div>
 
-            {/* Payroll Details */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+              <div className="px-6 py-4 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900">Employee Payroll Details</h3>
               </div>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    {["Employee", "Basic", "Allowances", "Gross", "Deductions", "Net"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {payrollData?.payroll_data.map((emp) => (
-                    <tr key={emp.employee} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{emp.employee_name}</td>
-                      <td className="px-4 py-3 text-gray-600">Rs. {emp.basic_salary.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-gray-600">Rs. {emp.allowances.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-gray-800 font-medium">Rs. {emp.gross_salary.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-gray-600">Rs. {emp.deductions.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-gray-800 font-bold">Rs. {emp.net_salary.toLocaleString()}</td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      {["Employee", "Basic", "Allowances", "Gross", "Deductions", "Net"].map((h) => (
+                        <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {payrollData?.payroll_data.map((emp) => (
+                      <tr key={emp.employee} className="hover:bg-gray-50/50">
+                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{emp.employee_name}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">Rs. {emp.basic_salary.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">Rs. {emp.allowances.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-800 font-medium whitespace-nowrap">Rs. {emp.gross_salary.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">Rs. {emp.deductions.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-800 font-bold whitespace-nowrap">Rs. {emp.net_salary.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button onClick={handleProcess} disabled={loading} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
-                {loading ? "Processing..." : "Process Payroll"}
-              </Button>
-              <Button variant="outline" onClick={() => { setCalculated(false); setPayrollData(null); }} disabled={loading}>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => { setCalculated(false); setPayrollData(null); }}
+                disabled={loading}
+              >
                 Back
+              </Button>
+              <Button onClick={handleProcess} disabled={loading} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6">
+                {loading ? "Processing..." : "Process Payroll"}
               </Button>
             </div>
           </div>

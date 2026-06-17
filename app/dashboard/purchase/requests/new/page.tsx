@@ -123,9 +123,9 @@ export default function NewPurchaseRequestPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Purchase Request" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
         </div>
       </div>
@@ -133,11 +133,11 @@ export default function NewPurchaseRequestPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Create Purchase Request" subtitle="New purchase requisition" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-4xl">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field label="Request Date" required>
               <Input 
                 type="date" 
@@ -162,8 +162,6 @@ export default function NewPurchaseRequestPage() {
                 className="h-9 text-sm bg-gray-50 text-gray-500" 
               />
             </Field>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Department" required>
               <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
@@ -191,7 +189,7 @@ export default function NewPurchaseRequestPage() {
             <textarea 
               value={form.notes} 
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="mt-1.5 w-full h-20 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
+              className="mt-1.5 w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
               placeholder="Reason for purchase request..." 
             />
           </div>
@@ -209,9 +207,9 @@ export default function NewPurchaseRequestPage() {
             )}
           </div>
 
-          <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+          <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 lg:p-6 space-y-3 w-full">
             <h3 className="text-sm font-semibold text-gray-700">Approval</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Approver">
                 <Select value={form.approver} onValueChange={(v) => setForm({ ...form, approver: v || "" })}>
                   <SelectTrigger className="h-9 text-sm border-gray-200">

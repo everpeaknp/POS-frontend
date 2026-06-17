@@ -107,9 +107,9 @@ export default function NewPurchaseInvoicePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Purchase Invoice" subtitle="New supplier invoice" />
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
@@ -117,11 +117,11 @@ export default function NewPurchaseInvoicePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Create Purchase Invoice" subtitle="New supplier invoice" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-5xl">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field label="Invoice #">
               <Input className="h-9 text-sm bg-gray-50 text-gray-500" value={form.invoiceNumber || "Auto-generated"} readOnly />
             </Field>
@@ -131,8 +131,6 @@ export default function NewPurchaseInvoicePage() {
             <Field label="Invoice Date" required>
               <Input className="h-9 text-sm border-gray-200" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             </Field>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Due Date" required>
               <Input className="h-9 text-sm border-gray-200" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
             </Field>
@@ -165,8 +163,6 @@ export default function NewPurchaseInvoicePage() {
                 </SelectContent>
               </Select>
             </Field>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Payment Terms">
               <Select value={form.paymentTerms} onValueChange={(v) => setForm({ ...form, paymentTerms: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
@@ -197,12 +193,12 @@ export default function NewPurchaseInvoicePage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
             <LineItemsTable items={items} onChange={setItems} />
           </div>
-          <div className="flex justify-end">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between">
+            <div className="flex-1 min-w-0">
+              <Label className="text-sm mb-1.5 block">Notes</Label>
+              <textarea className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]" placeholder="Additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            </div>
             <SummaryBox subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} />
-          </div>
-          <div>
-            <Label className="text-sm">Notes</Label>
-            <textarea className="mt-1.5 w-full h-20 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]" placeholder="Additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
             <Button variant="ghost" onClick={() => router.back()} className="gap-1.5 text-gray-500">

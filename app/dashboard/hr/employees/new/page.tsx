@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,19 +89,19 @@ export default function NewEmployeePage() {
 
   const validateStep = (step: number): boolean => {
     switch (step) {
-      case 1: // Personal
+      case 1:
         if (!formData.name || !formData.dob || !formData.gender || !formData.phone || !formData.email) {
           toast.error("Please fill in all personal information fields");
           return false;
         }
         return true;
-      case 2: // Employment
+      case 2:
         if (!formData.department || !formData.designation || !formData.employment_type || !formData.join_date) {
           toast.error("Please fill in all employment details");
           return false;
         }
         return true;
-      case 3: // Salary
+      case 3:
         if (!formData.basic_salary || Number(formData.basic_salary) <= 0) {
           toast.error("Please enter a valid salary amount");
           return false;
@@ -126,7 +125,6 @@ export default function NewEmployeePage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Validate all required fields
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
       toast.error("Please complete all required steps");
       return;
@@ -141,8 +139,6 @@ export default function NewEmployeePage() {
         status: 'active',
       };
       
-      console.log('Submitting employee data:', payload);
-      
       await createEmployee(payload);
 
       toast.success("Employee created successfully");
@@ -150,12 +146,9 @@ export default function NewEmployeePage() {
     } catch (error: any) {
       console.error('Failed to create employee:', error);
       
-      // Show detailed validation errors
       if (error.response?.data) {
         const errorData = error.response.data;
-        console.log('Validation errors:', errorData);
         
-        // Display field-specific errors
         if (typeof errorData === 'object') {
           Object.entries(errorData).forEach(([field, messages]) => {
             const errorMsg = Array.isArray(messages) ? messages.join(', ') : messages;
@@ -173,15 +166,10 @@ export default function NewEmployeePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-0">
       <DashHeader title="Add New Employee" subtitle="Create a new employee record" />
-      <div className="flex-1 p-6">
-        <Link href="/dashboard/hr/employees" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Employees
-        </Link>
-
-        <div className="max-w-4xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          {/* Step Indicator */}
+      <div className="p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
           <div className="mb-8">
             <div className="flex items-center justify-between">
               {STEPS.map((step, index) => (
@@ -213,11 +201,10 @@ export default function NewEmployeePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Step 1: Personal Information */}
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Personal Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
                     <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name*</Label>
                     <Input 
@@ -238,9 +225,6 @@ export default function NewEmployeePage() {
                       className="mt-1 h-9 border-gray-200" 
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="gender" className="text-sm font-medium text-gray-700">Gender*</Label>
                     <Select value={formData.gender || ""} onValueChange={(v) => setFormData({ ...formData, gender: v || "" })}>
@@ -260,27 +244,25 @@ export default function NewEmployeePage() {
                       className="mt-1 h-9 border-gray-200" 
                     />
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email*</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Enter email" 
-                    value={formData.email} 
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                    className="mt-1 h-9 border-gray-200" 
-                  />
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email*</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="Enter email" 
+                      value={formData.email} 
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                      className="mt-1 h-9 border-gray-200" 
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step 2: Employment Details */}
             {currentStep === 2 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment Details</h3>
-                <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Employment Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
                     <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department*</Label>
                     <Select value={formData.department || ""} onValueChange={(v) => setFormData({ ...formData, department: v || "" })}>
@@ -301,9 +283,6 @@ export default function NewEmployeePage() {
                       className="mt-1"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="type" className="text-sm font-medium text-gray-700">Employment Type*</Label>
                     <Select value={formData.employment_type || ""} onValueChange={(v) => setFormData({ ...formData, employment_type: v || "" })}>
@@ -327,51 +306,49 @@ export default function NewEmployeePage() {
               </div>
             )}
 
-            {/* Step 3: Salary Information */}
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Information</h3>
-                <div>
-                  <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Basic Salary (Rs.)*</Label>
-                  <Input 
-                    id="salary" 
-                    type="number" 
-                    placeholder="Enter salary" 
-                    value={formData.basic_salary || ''} 
-                    onChange={(e) => setFormData({ ...formData, basic_salary: Number(e.target.value) })} 
-                    className="mt-1 h-9 border-gray-200" 
-                  />
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Salary Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Basic Salary (Rs.)*</Label>
+                    <Input 
+                      id="salary" 
+                      type="number" 
+                      placeholder="Enter salary" 
+                      value={formData.basic_salary || ''} 
+                      onChange={(e) => setFormData({ ...formData, basic_salary: Number(e.target.value) })} 
+                      className="mt-1 h-9 border-gray-200" 
+                    />
+                  </div>
                 </div>
-                <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+                <div className="mt-4 bg-green-50 border border-green-100 rounded-lg p-4 w-full">
                   <p className="text-sm text-green-700">PF (Provident Fund): 10% employee + 10% employer</p>
                 </div>
               </div>
             )}
 
-            {/* Step 4: Documents */}
             {currentStep === 4 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents</h3>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Documents</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center w-full">
                   <p className="text-sm text-gray-600">Document uploads can be added after employee creation.</p>
                   <p className="text-xs text-gray-500 mt-2">You can upload documents like ID proof, certificates, etc. from the employee profile page.</p>
                 </div>
               </div>
             )}
 
-            {/* Step 5: Access */}
             {currentStep === 5 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">System Access</h3>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">System Access</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center w-full">
                   <p className="text-sm text-gray-600">System login access can be configured after employee creation.</p>
                   <p className="text-xs text-gray-500 mt-2">You can grant system access and assign roles from the employee profile page.</p>
                 </div>
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between gap-3 pt-6 border-t border-gray-100">
+            <div className="flex justify-between gap-3 pt-4 border-t border-gray-100">
               <div>
                 {currentStep > 1 && (
                   <Button 

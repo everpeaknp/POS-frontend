@@ -105,8 +105,10 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Equipment Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <FormField
           label="Equipment Name"
           name="name"
@@ -116,7 +118,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
           <input
             {...register('name')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             placeholder="Enter equipment name"
           />
         </FormField>
@@ -129,7 +131,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         >
           <select
             {...register('equipment_type')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
           >
             <option value="">Select type</option>
             {equipmentTypes.map((type) => (
@@ -148,7 +150,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         >
           <select
             {...register('ownership_type')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
           >
             <option value="owned">Owned</option>
             <option value="rented">Rented</option>
@@ -163,7 +165,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
           <input
             {...register('registration_number')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             placeholder="Vehicle/Equipment registration"
           />
         </FormField>
@@ -178,7 +180,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
               {...register('rental_cost_per_day')}
               type="number"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
               placeholder="0.00"
             />
           </FormField>
@@ -191,7 +193,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         >
           <select
             {...register('assigned_site')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             disabled={loadingSites}
           >
             <option value="">No site assigned</option>
@@ -211,7 +213,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         >
           <select
             {...register('status')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
           >
             <option value="available">Available</option>
             <option value="in_use">In Use</option>
@@ -219,8 +221,11 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
             <option value="retired">Retired</option>
           </select>
         </FormField>
+        </div>
       </div>
 
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Notes</h3>
       <FormField
         label="Notes"
         name="notes"
@@ -229,12 +234,13 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         <textarea
           {...register('notes')}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
           placeholder="Additional notes about the equipment"
         />
       </FormField>
+      </div>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
         {onCancel && (
           <button
             type="button"
@@ -247,7 +253,7 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Adding...' : 'Add Equipment'}
         </button>

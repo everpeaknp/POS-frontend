@@ -142,9 +142,9 @@ export default function OrgSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
@@ -152,14 +152,14 @@ export default function OrgSettingsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-2xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           
           <div>
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Business Information</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               <Field label="Business Name">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -213,7 +213,7 @@ export default function OrgSettingsPage() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Address</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Province">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -247,7 +247,7 @@ export default function OrgSettingsPage() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Preferences</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Currency">
                 <Select 
                   value={form.currency || ""} 

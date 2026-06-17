@@ -58,7 +58,6 @@ export default function ProfitLossPage() {
   const [plData, setPlData] = useState<PLData | null>(null);
 
   useEffect(() => {
-    // Set default dates based on period
     const today = new Date();
     let from = new Date();
     let to = new Date();
@@ -78,7 +77,6 @@ export default function ProfitLossPage() {
         to = new Date(today.getFullYear(), 11, 31);
         break;
       case "Custom":
-        // Don't auto-generate, let user set dates
         return;
     }
 
@@ -147,12 +145,12 @@ export default function ProfitLossPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Profit & Loss Statement" subtitle="Income and expense summary" />
-        <div className="flex-1 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-            <span className="ml-3 text-gray-600">Loading profit & loss...</span>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading profit & loss...</p>
           </div>
         </div>
       </div>
@@ -160,62 +158,59 @@ export default function ProfitLossPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Profit & Loss Statement" subtitle="Income and expense summary" />
-      <div className="flex-1 p-6 space-y-4">
-
-        <div className="flex flex-wrap items-center gap-3 justify-between">
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            {PERIODS.map((p) => (
-              <button 
-                key={p} 
-                onClick={() => setPeriod(p)} 
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-          {period === "Custom" && (
-            <div className="flex gap-2 items-center">
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="h-8 px-2 text-xs border border-gray-200 rounded-md"
-              />
-              <span className="text-xs text-gray-500">to</span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="h-8 px-2 text-xs border border-gray-200 rounded-md"
-              />
-              <Button 
-                onClick={fetchProfitLoss}
-                size="sm"
-                className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                Generate
-              </Button>
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
+          <div className="flex flex-wrap items-center gap-3 justify-between">
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+              {PERIODS.map((p) => (
+                <button 
+                  key={p} 
+                  onClick={() => setPeriod(p)} 
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
-          )}
-          <div className="flex gap-2">
+            {period === "Custom" && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="h-9 px-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                />
+                <span className="text-sm text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="h-9 px-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                />
+                <Button 
+                  onClick={fetchProfitLoss}
+                  className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                >
+                  Generate
+                </Button>
+              </div>
+            )}
             <Button 
               variant="outline" 
-              size="sm" 
-              className="h-8 gap-1.5 text-gray-600 border-gray-200"
+              className="h-9 gap-1.5 text-gray-600 border-gray-200"
               onClick={handleExportCSV}
               disabled={!plData}
             >
-              <Download className="h-3.5 w-3.5" /> CSV
+              <Download className="h-4 w-4" /> Export CSV
             </Button>
           </div>
         </div>
 
         {plData && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 max-w-2xl">
-            <div className="text-center mb-6">
+          <div className="space-y-4 w-full">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Profit & Loss Statement</p>
               <p className="text-lg font-bold text-gray-900">Income & Expense Summary</p>
               <p className="text-sm text-gray-500">
@@ -223,34 +218,42 @@ export default function ProfitLossPage() {
               </p>
             </div>
 
-            <div className="space-y-0.5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">INCOME</p>
-              {plData.income.accounts.map((acc) => (
-                <ReportRow key={acc.id} label={acc.name} amount={acc.amount} indent link={acc.id} />
-              ))}
-              {plData.income.accounts.length === 0 && (
-                <p className="text-sm text-gray-400 italic px-6 py-2">No income accounts</p>
-              )}
-              <Divider />
-              <ReportRow label="Total Income" amount={totalIncome} bold />
-
-              <div className="mt-5">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">OPERATING EXPENSES</p>
-                {plData.expenses.accounts.map((acc) => (
-                  <ReportRow key={acc.id} label={acc.name} amount={acc.amount} indent link={acc.id} />
-                ))}
-                {plData.expenses.accounts.length === 0 && (
-                  <p className="text-sm text-gray-400 italic px-6 py-2">No expense accounts</p>
-                )}
-                <Divider />
-                <ReportRow label="Total Expenses" amount={totalExpenses} bold />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Income</p>
+                <div className="space-y-0.5">
+                  {plData.income.accounts.map((acc) => (
+                    <ReportRow key={acc.id} label={acc.name} amount={acc.amount} indent link={acc.id} />
+                  ))}
+                  {plData.income.accounts.length === 0 && (
+                    <p className="text-sm text-gray-400 italic px-6 py-2">No income accounts</p>
+                  )}
+                  <Divider />
+                  <ReportRow label="Total Income" amount={totalIncome} bold />
+                </div>
               </div>
 
-              <div className={`mt-3 rounded-lg px-4 py-3 flex items-center justify-between ${netProfit >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-                <span className="font-bold text-gray-900">NET PROFIT</span>
-                <div className="text-right">
-                  <span className={`font-bold text-lg ${netProfit >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>{fmt(netProfit)}</span>
-                  <p className="text-xs text-gray-500">Margin: {netMargin.toFixed(1)}%</p>
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Operating Expenses</p>
+                <div className="space-y-0.5">
+                  {plData.expenses.accounts.map((acc) => (
+                    <ReportRow key={acc.id} label={acc.name} amount={acc.amount} indent link={acc.id} />
+                  ))}
+                  {plData.expenses.accounts.length === 0 && (
+                    <p className="text-sm text-gray-400 italic px-6 py-2">No expense accounts</p>
+                  )}
+                  <Divider />
+                  <ReportRow label="Total Expenses" amount={totalExpenses} bold />
+                </div>
+              </div>
+            </div>
+
+            <div className={`bg-white rounded-xl border shadow-sm p-6 lg:p-8 w-full ${netProfit >= 0 ? "border-green-100" : "border-red-100"}`}>
+              <div className={`rounded-lg px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${netProfit >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+                <span className="font-bold text-gray-900 text-lg">Net Profit</span>
+                <div className="sm:text-right">
+                  <span className={`font-bold text-2xl ${netProfit >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>{fmt(netProfit)}</span>
+                  <p className="text-sm text-gray-500 mt-1">Margin: {netMargin.toFixed(1)}%</p>
                 </div>
               </div>
             </div>
@@ -258,7 +261,7 @@ export default function ProfitLossPage() {
         )}
 
         {!plData && !loading && (
-          <div className="bg-white rounded-xl border border-gray-100 p-12 shadow-sm text-center max-w-2xl">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
             <p className="text-gray-400 text-sm">Select a period to view the profit & loss statement.</p>
           </div>
         )}
