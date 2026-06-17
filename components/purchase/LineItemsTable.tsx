@@ -3,6 +3,7 @@
 import { Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 import type { Product } from "@/lib/api/inventory";
 
 // Simple LineItem interface for purchase requests
@@ -73,7 +74,7 @@ export function LineItemsTable({ items, onChange, readOnly = false, products = [
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
 
   const setProduct = (idx: number, productId: string) => {
-    const p = products.find((x) => x.id === productId);
+    const p = products.find((x) => String(x.id) === productId);
     
     console.log('🔍 Product selected:', {
       productId,
@@ -175,21 +176,22 @@ export function LineItemsTable({ items, onChange, readOnly = false, products = [
               <tr key={item.id} className="hover:bg-gray-50/50">
                 <td className="px-3 py-2 text-gray-400 text-xs">{idx + 1}</td>
                 <td className="px-3 py-2">
-                  {readOnly ? <span>{productList.find(p => p.id === item.product)?.name || item.product}</span> : (
-                    <select 
-                      value={item.product} 
-                      onChange={(e) => {
-                        console.log('🎯 Product dropdown changed:', {
-                          idx,
-                          selectedValue: e.target.value,
-                          availableProducts: productList.length,
-                        });
-                        setProduct(idx, e.target.value);
-                      }}
-                      className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:border-[#22C55E]">
-                      <option value="">Select product</option>
-                      {productList.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+                  {readOnly ? <span>{productList.find(p => String(p.id) === item.product)?.name || item.product}</span> : (
+                    <Combobox
+                      options={productList.map((p) => ({
+                        value: String(p.id),
+                        label: `${p.name} (${p.sku})`,
+                        subtitle: p.cost_price !== undefined
+                          ? `Cost: Rs. ${typeof p.cost_price === "string" ? parseFloat(p.cost_price) : p.cost_price}`
+                          : undefined,
+                      }))}
+                      value={item.product}
+                      onValueChange={(v) => setProduct(idx, v)}
+                      placeholder="Select product"
+                      searchPlaceholder="Search products..."
+                      emptyText="No products found."
+                      className="min-w-[200px]"
+                    />
                   )}
                 </td>
                 <td className="px-3 py-2">

@@ -342,7 +342,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-green">
         {filteredNavItems.map((item) => (
           <SidebarItem key={item.label} item={item} openKey={openKey} onToggle={handleToggle} />
         ))}

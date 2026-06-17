@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { LineItemsTable, type PurchaseLineItem } from "@/components/purchase/LineItemsTable";
 import { SummaryBox } from "@/components/purchase/SummaryBox";
+import { Combobox } from "@/components/ui/combobox";
 import { purchaseOrdersAPI, suppliersAPI, type Supplier, type PurchaseOrderLine } from "@/lib/api/purchase";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
@@ -22,6 +23,27 @@ function Field({ label, required, children }: { label: string; required?: boolea
       {children}
     </div>
   );
+}
+
+function getPurchaseUnitPrice(product: Product): number {
+  const costPrice = typeof product.cost_price === "string"
+    ? parseFloat(product.cost_price)
+    : (typeof product.cost_price === "number" ? product.cost_price : 0);
+  const sellingPrice = typeof product.selling_price === "string"
+    ? parseFloat(product.selling_price)
+    : (typeof product.selling_price === "number" ? product.selling_price : 0);
+  if (!isNaN(costPrice) && costPrice > 0) return costPrice;
+  if (!isNaN(sellingPrice) && sellingPrice > 0) return sellingPrice;
+  return 0;
+}
+
+function getProductUnit(product: Product): string {
+  if (product.unit_name) return product.unit_name;
+  if (typeof product.unit === "string") return product.unit;
+  if (product.unit && typeof product.unit === "object" && "abbreviation" in product.unit) {
+    return (product.unit as { abbreviation: string }).abbreviation;
+  }
+  return "Pcs";
 }
 
 export default function NewPurchaseOrderPage() {
@@ -286,6 +308,40 @@ export default function NewPurchaseOrderPage() {
                 </SelectContent>
               </Select>
             </Field>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Add Product</h3>
+            <Combobox
+              options={products.map((p) => ({
+                value: String(p.id),
+                label: `${p.name} (${p.sku})`,
+                subtitle: `Cost: Rs. ${getPurchaseUnitPrice(p)}`,
+              }))}
+              value=""
+              onValueChange={(productId) => {
+                const product = products.find((p) => String(p.id) === productId);
+                if (!product) return;
+
+                const unitPrice = getPurchaseUnitPrice(product);
+                const newItem: PurchaseLineItem = {
+                  id: `item-${Date.now()}`,
+                  product: productId,
+                  description: "",
+                  qty: 1,
+                  unit: getProductUnit(product),
+                  unitPrice,
+                  discount: 0,
+                  tax: 13,
+                  amount: unitPrice * 1.13,
+                };
+                setItems([...items, newItem]);
+              }}
+              placeholder="Select product to add"
+              searchPlaceholder="Search products..."
+              emptyText="No products found."
+              className="w-full"
+            />
           </div>
 
           <div>
