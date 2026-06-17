@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import posApi, { type POSDiscount } from "@/lib/api/pos";
 import toast from "react-hot-toast";
 
 export default function POSDiscountsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [discounts, setDiscounts] = useState<POSDiscount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -46,6 +49,26 @@ export default function POSDiscountsPage() {
   useEffect(() => {
     fetchDiscounts();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditingId(null);
+    setForm({
+      name: "",
+      code: "",
+      description: "",
+      discount_type: "percentage",
+      discount_value: "",
+      apply_to: "bill",
+      min_quantity: "0",
+      min_amount: "0",
+      start_date: "",
+      end_date: "",
+      is_active: true,
+    });
+    setShowForm(true);
+    router.replace("/dashboard/pos/discounts", { scroll: false });
+  }, [searchParams, router]);
 
   const resetForm = () => {
     setForm({

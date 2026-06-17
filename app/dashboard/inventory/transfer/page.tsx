@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, ArrowRight, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ import toast from "react-hot-toast";
 const ITEMS_PER_PAGE = 20;
 
 export default function StockTransferPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +55,19 @@ export default function StockTransferPage() {
   const transfers = movements?.data?.results || [];
   const productList = products?.data?.results || [];
   const warehouseList = warehouses?.data?.results || [];
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setFormData({
+      product: "",
+      from_warehouse: "",
+      to_warehouse: "",
+      quantity: "",
+      notes: "",
+    });
+    setOpen(true);
+    router.replace("/dashboard/inventory/transfer", { scroll: false });
+  }, [searchParams, router]);
 
   // Filter and paginate
   const filteredTransfers = useMemo(() => {

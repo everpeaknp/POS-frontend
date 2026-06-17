@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ import toast from "react-hot-toast";
 const ITEMS_PER_PAGE = 20;
 
 export default function StockAdjustmentPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +56,20 @@ export default function StockAdjustmentPage() {
   const movements = movementsData?.data?.results || [];
 
   const adjustments = movements.filter((m: any) => m.movement_type === "adjustment");
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setFormData({
+      product: "",
+      type: "Addition",
+      quantity: "",
+      reason: "Stock received",
+      notes: "",
+      warehouse: "",
+    });
+    setOpen(true);
+    router.replace("/dashboard/inventory/adjustment", { scroll: false });
+  }, [searchParams, router]);
 
   // Filter and paginate
   const filteredAdjustments = useMemo(() => {

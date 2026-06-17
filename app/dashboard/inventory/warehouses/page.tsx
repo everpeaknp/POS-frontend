@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,8 @@ import toast from "react-hot-toast";
 const ITEMS_PER_PAGE = 20;
 
 export default function WarehousesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: "", location: "", manager: "" });
@@ -169,6 +172,14 @@ export default function WarehousesPage() {
     setFormData({ name: "", location: "", manager: "" });
     setOpen(true);
   };
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditingId(null);
+    setFormData({ name: "", location: "", manager: "" });
+    setOpen(true);
+    router.replace("/dashboard/inventory/warehouses", { scroll: false });
+  }, [searchParams, router]);
 
   const handleOpenEdit = (warehouse: any) => {
     setEditingId(warehouse.id);

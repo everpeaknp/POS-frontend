@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Edit, Trash2, Package, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import toast from "react-hot-toast";
 const ITEMS_PER_PAGE = 20;
 
 export default function CategoriesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", description: "", parent: "" });
@@ -29,6 +32,14 @@ export default function CategoriesPage() {
     () => inventoryApi.categories.list(),
     { immediate: true }
   );
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditingCategory(null);
+    setFormData({ name: "", description: "", parent: "" });
+    setOpen(true);
+    router.replace("/dashboard/inventory/categories", { scroll: false });
+  }, [searchParams, router]);
 
   const categoryList = categories?.data?.results || [];
 

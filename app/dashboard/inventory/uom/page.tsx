@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Edit, Trash2, Ruler, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ import { inventoryApi } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
 
 export default function UOMPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [formData, setFormData] = useState({ 
@@ -39,6 +42,14 @@ export default function UOMPage() {
       deps: [currentPage, searchTerm, pageSize]
     }
   );
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditingUnit(null);
+    setFormData({ name: "", abbreviation: "", type: "count" });
+    setOpen(true);
+    router.replace("/dashboard/inventory/uom", { scroll: false });
+  }, [searchParams, router]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {

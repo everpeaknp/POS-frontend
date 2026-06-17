@@ -17,6 +17,17 @@ interface SubItem {
   createHref?: string; // Optional quick create link
 }
 
+function matchesNavChild(pathname: string, child: SubItem): boolean {
+  if (pathname === child.href || pathname.startsWith(`${child.href}/`)) {
+    return true;
+  }
+  if (!child.createHref) {
+    return false;
+  }
+  const createPath = child.createHref.split("?")[0];
+  return pathname === createPath || pathname.startsWith(`${createPath}/`);
+}
+
 interface NavItem {
   label: string;
   icon: React.ElementType;
@@ -62,12 +73,12 @@ const navItems: NavItem[] = [
     requiredModule: "inventory",
     children: [
       { label: "Products", href: "/dashboard/inventory/products", createHref: "/dashboard/inventory/products/new" },
-      { label: "Product Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories" },
+      { label: "Product Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories?new=1" },
       { label: "Bulk Pricing", href: "/dashboard/inventory/bulk-pricing", createHref: "/dashboard/inventory/bulk-pricing/new" },
-      { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment" },
-      { label: "Stock Transfer", href: "/dashboard/inventory/transfer", createHref: "/dashboard/inventory/transfer" },
-      { label: "Warehouses", href: "/dashboard/inventory/warehouses", createHref: "/dashboard/inventory/warehouses" },
-      { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom" },
+      { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment?new=1" },
+      { label: "Stock Transfer", href: "/dashboard/inventory/transfer", createHref: "/dashboard/inventory/transfer?new=1" },
+      { label: "Warehouses", href: "/dashboard/inventory/warehouses", createHref: "/dashboard/inventory/warehouses?new=1" },
+      { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom?new=1" },
       { label: "Inventory Reports", href: "/dashboard/inventory/reports" },
     ],
   },
@@ -96,7 +107,7 @@ const navItems: NavItem[] = [
       { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
       { label: "Attendance", href: "/dashboard/construction/attendance" },
       { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
-      { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/material-consumption/new" },
+      { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
       { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
       { label: "Construction Reports", href: "/dashboard/construction/reports" },
     ],
@@ -125,7 +136,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Billing", href: "/dashboard/pos" },
       { label: "Transactions", href: "/dashboard/pos/transactions" },
-      { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts/new" },
+      { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts?new=1" },
       { label: "Daily Reports", href: "/dashboard/pos/reports" },
     ],
   },
@@ -153,7 +164,7 @@ const navItems: NavItem[] = [
       { label: "Inventory Report", href: "/dashboard/reports/inventory" },
       { label: "Financial Report", href: "/dashboard/reports/financial" },
       { label: "Tax Report", href: "/dashboard/reports/tax" },
-      { label: "Custom Reports", href: "/dashboard/reports/custom" },
+      { label: "Custom Reports", href: "/dashboard/reports/custom", createHref: "/dashboard/reports/custom?tab=builder" },
     ],
   },
   {
@@ -179,7 +190,7 @@ function SidebarItem({ item, openKey, onToggle }: {
   const pathname = usePathname();
   const isOpen = openKey === item.label;
 
-  const isChildActive = item.children?.some((c) => pathname === c.href) ?? false;
+  const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
 
   // Direct link (Dashboard)
@@ -225,7 +236,7 @@ function SidebarItem({ item, openKey, onToggle }: {
       >
         <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-white/10 space-y-0.5">
           {item.children?.map((child) => {
-            const active = pathname === child.href;
+            const active = matchesNavChild(pathname, child);
             return (
               <div key={child.href} className="group flex items-center gap-1">
                 <Link href={child.href}
@@ -284,7 +295,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   // Find which parent should be open by default based on current path
   const defaultOpen = filteredNavItems.find((item) =>
-    item.children?.some((c) => pathname.startsWith(c.href))
+    item.children?.some((c) => matchesNavChild(pathname, c))
   )?.label ?? null;
 
   const [openKey, setOpenKey] = useState<string | null>(defaultOpen);
@@ -292,7 +303,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   // Update open key when pathname changes
   useEffect(() => {
     const match = filteredNavItems.find((item) =>
-      item.children?.some((c) => pathname.startsWith(c.href))
+      item.children?.some((c) => matchesNavChild(pathname, c))
     );
     if (match) {
       setOpenKey(match.label);
