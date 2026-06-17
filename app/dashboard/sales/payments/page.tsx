@@ -1,0 +1,160 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Plus, Search, Filter, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import { StatusBadge } from "@/components/sales/StatusBadge";
+import { SkeletonTable } from "@/components/shared/Skeleton";
+import { useApi } from "@/lib/hooks/useApi";
+import { paymentReceivedAPI } from "@/lib/api/sales";
+import { formatCurrency } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export default function PaymentsPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [methodFilter, setMethodFilter] = useState("");
+
+  const { data, loading, refetch } = useApi(
+    () => paymentReceivedAPI.list({ payment_method: methodFilter || undefined }),
+    { immediate: true, deps: [methodFilter] }
+  );
+
+  // Ensure payments is always an array
+  const payments = Array.isArray(data) ? data : [];
+
+  const filteredPayments = payments.filter((payment: any) =>
+    payment.payment_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.reference_number?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paymentMethodColors: Record<string, string> = {
+    cash: "bg-green-100 text-green-700",
+    bank: "bg-blue-100 text-blue-700",
+    esewa: "bg-purple-100 text-purple-700",
+    khalti: "bg-pink-100 text-pink-700",
+    fonepay: "bg-orange-100 text-orange-700",
+    cheque: "bg-yellow-100 text-yellow-700",
+    other: "bg-gray-100 text-gray-600",
+  };
+
+  return (
+    <div className="flex flex-col min-h-full">
+      <DashHeader title="Payments Received" subtitle="Track customer payments" />
+      <div className="flex-1 p-6 space-y-4">
+        
+        {/* Actions bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search payments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+            />
+          </div>
+
+          <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v || '')}>
+            <SelectTrigger className="w-[180px] h-10 border-gray-200">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="All Methods" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Methods</SelectItem>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="bank">Bank Transfer</SelectItem>
+              <SelectItem value="esewa">eSewa</SelectItem>
+              <SelectItem value="khalti">Khalti</SelectItem>
+              <SelectItem value="fonepay">FonePay</SelectItem>
+              <SelectItem value="cheque">Cheque</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Link href="/dashboard/sales/payments/new">
+            <Button size="sm" className="h-10 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Plus className="h-4 w-4" /> Record Payment
+            </Button>
+          </Link>
+        </div>
+
+        {/* Payments table */}
+        {loading ? (
+          <SkeletonTable rows={5} />
+        ) : filteredPayments.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No payments found</h3>
+            <p className="text-gray-500 mb-4">Start by recording your first payment</p>
+            <Link href="/dashboard/sales/payments/new">
+              <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+                <Plus className="h-4 w-4" /> Record Payment
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {["Payment #", "Date", "Customer", "Amount", "Method", "Invoice", "Reference", "Received By"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredPayments.map((payment: any) => (
+                  <tr key={payment.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                      {payment.payment_number}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {new Date(payment.date).toLocaleDateString('en-GB')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/sales/customers/${payment.customer}`}
+                        className="text-gray-700 hover:text-[#22C55E] font-medium"
+                      >
+                        {payment.customer_name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-900">
+                      {formatCurrency(payment.amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        paymentMethodColors[payment.payment_method] || "bg-gray-100 text-gray-600"
+                      }`}>
+                        {payment.payment_method}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                      {payment.invoice_number || '—'}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                      {payment.reference_number || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">
+                      {payment.received_by_name || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
