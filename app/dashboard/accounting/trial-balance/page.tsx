@@ -10,6 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { accountsAPI } from "@/lib/api/accounting";
 
 const fmt = (n: number) =>
   `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

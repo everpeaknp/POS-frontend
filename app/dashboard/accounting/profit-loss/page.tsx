@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { accountsAPI } from "@/lib/api/accounting";
 
 const PERIODS = ["This Month", "This Quarter", "This Year", "Custom"] as const;
 const fmt = (n: number) =>

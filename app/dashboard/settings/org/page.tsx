@@ -1,89 +1,142 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { tenantApi, Tenant } from "@/lib/api/tenant";
+import { SettingsNav } from "@/components/settings/SettingsNav";
+import { DateSystemPreferenceCard } from "@/components/settings/DateSystemPreferenceCard";
+import { DateInput } from "@/components/shared/DateInput";
+import { tenantApi, type Tenant } from "@/lib/api/tenant";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
+import type { DateCalendarSystem } from "@/lib/dates";
 import toast from "react-hot-toast";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+const BUSINESS_TYPES = [
+  { value: "construction", label: "Construction" },
+  { value: "hardware", label: "Hardware" },
+  { value: "retail", label: "Retail" },
+  { value: "wholesale", label: "Wholesale" },
+  { value: "manufacturing", label: "Manufacturing" },
+  { value: "services", label: "Services" },
+  { value: "other", label: "Other" },
+] as const;
+
+interface OrgFormState {
+  name: string;
+  workspace_name: string;
+  business_type: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  pan_vat_number: string;
+  website: string;
+  street: string;
+  city: string;
+  district: string;
+  province: string;
+  accounting_start_date: string;
+  vat_registered: boolean;
+  date_format: DateCalendarSystem;
+}
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="text-sm">{label}</Label>
+      <Label className="text-sm">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </Label>
       {children}
     </div>
   );
 }
 
-export default function OrgSettingsPage() {
+function parseAddress(address: string | undefined) {
+  const parts = (address || "").split(", ").filter(Boolean);
+  return {
+    street: parts[0] || "",
+    city: parts[1] || "",
+    district: parts[2] || "",
+    province: parts[3] || "",
+  };
+}
+
+function buildAddress(form: OrgFormState) {
+  return [form.street, form.city, form.district, form.province]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function tenantToForm(tenant: Tenant, dateSystem: DateCalendarSystem): OrgFormState {
+  const address = parseAddress(tenant.address);
+  return {
+    name: tenant.name || "",
+    workspace_name: tenant.workspace_name || tenant.name || "",
+    business_type: tenant.business_type || "other",
+    owner_name: tenant.owner_name || "",
+    email: tenant.email || "",
+    phone: tenant.phone || "",
+    pan_vat_number: tenant.pan_vat_number || "",
+    website: tenant.website || "",
+    ...address,
+    accounting_start_date: tenant.accounting_start_date || "",
+    vat_registered: tenant.vat_registered ?? false,
+    date_format: dateSystem,
+  };
+}
+
+function OrgSettingsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, refreshUser } = useAuth();
+  const { dateSystem, setDateSystem } = useDateSystem();
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
-  const [form, setForm] = useState({
-    name: "",
-    business_type: "",
-    owner_name: "",
-    email: "",
-    phone: "",
-    pan: "",
-    website: "",
-    province: "",
-    district: "",
-    city: "",
-    street: "",
-    currency: "NPR",
-    date_format: "BS",
-    vat_rate: "13",
-    fiscal_year_start: "Shrawan",
-  });
+  const [tenantMeta, setTenantMeta] = useState<Pick<Tenant, "slug" | "plan_type" | "user_role"> | null>(null);
+  const [form, setForm] = useState<OrgFormState>(() =>
+    tenantToForm({ address: "" } as Tenant, "AD")
+  );
 
-  useEffect(() => {
-    loadTenantData();
-    
-    // Show success message if redirected from org creation
-    const refresh = searchParams.get('refresh');
-    if (refresh === 'true') {
-      toast.success("Organization created successfully! You can now manage your settings.");
-    }
-  }, [searchParams]);
+  const canEdit =
+    tenantMeta?.user_role === "admin" ||
+    user?.role === "admin";
 
-  const loadTenantData = async () => {
+  const loadTenantData = useCallback(async () => {
     try {
       const data = await tenantApi.getCurrent();
-      
-      // Parse address into components
-      const addressParts = (data.address || "").split(", ");
-      
-      setForm({
-        name: data.name || "",
-        business_type: data.business_type || "",
-        owner_name: data.owner_name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        pan: "",
-        website: "",
-        street: addressParts[0] || "",
-        city: addressParts[1] || "",
-        district: addressParts[2] || "",
-        province: addressParts[3] || "",
-        currency: "NPR",
-        date_format: "BS",
-        vat_rate: "13",
-        fiscal_year_start: "Shrawan",
+      setTenantMeta({
+        slug: data.slug,
+        plan_type: data.plan_type,
+        user_role: data.user_role,
       });
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        toast.error("No organization found. Please create one first.");
-        // Redirect to create organization page after a short delay
-        setTimeout(() => {
-          window.location.href = '/erp/new';
-        }, 2000);
+      setForm(tenantToForm(data, dateSystem));
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 404) {
+        toast.error("No organization selected. Open a Khata from ERP first.");
+        setTimeout(() => router.push("/erp"), 1500);
       } else {
         toast.error("Failed to load organization settings");
         console.error(error);
@@ -91,9 +144,32 @@ export default function OrgSettingsPage() {
     } finally {
       setLoading(false);
     }
+  }, [dateSystem, router]);
+
+  useEffect(() => {
+    loadTenantData();
+  }, [loadTenantData]);
+
+  useEffect(() => {
+    if (searchParams.get("refresh") === "true") {
+      toast.success("Organization created successfully! You can now manage your settings.");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, date_format: dateSystem }));
+  }, [dateSystem]);
+
+  const updateField = <K extends keyof OrgFormState>(key: K, value: OrgFormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async () => {
+    if (!canEdit) {
+      toast.error("Only organization admins can update settings");
+      return;
+    }
+
     if (!form.name.trim()) {
       toast.error("Business name is required");
       return;
@@ -101,36 +177,41 @@ export default function OrgSettingsPage() {
 
     setSubmitting(true);
     try {
-      // Build address string
-      const address = [
-        form.street,
-        form.city,
-        form.district,
-        form.province
-      ].filter(Boolean).join(", ");
-
       const updateData = {
         name: form.name.trim(),
-        business_type: form.business_type || undefined,
+        workspace_name: form.workspace_name.trim() || form.name.trim(),
+        business_type: form.business_type || "other",
         owner_name: form.owner_name.trim() || undefined,
         email: form.email.trim() || undefined,
         phone: form.phone.trim() || undefined,
-        address: address || undefined,
+        pan_vat_number: form.pan_vat_number.trim() || undefined,
+        website: form.website.trim() || undefined,
+        address: buildAddress(form) || undefined,
+        accounting_start_date: form.accounting_start_date || undefined,
+        vat_registered: form.vat_registered,
       };
 
       await tenantApi.updateCurrent(updateData);
-      toast.success("Settings saved successfully");
-    } catch (error: any) {
-      if (error.response?.data) {
-        const errors = error.response.data;
-        if (typeof errors === 'object') {
-          Object.entries(errors).forEach(([field, messages]) => {
-            if (Array.isArray(messages)) {
-              toast.error(`${field}: ${messages.join(', ')}`);
-            }
-          });
+
+      if (form.date_format !== dateSystem) {
+        await setDateSystem(form.date_format);
+      }
+
+      await refreshUser();
+      await loadTenantData();
+      toast.success("Organization settings saved");
+    } catch (error: unknown) {
+      const data = (error as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      if (data && typeof data === "object") {
+        if (typeof data.detail === "string") {
+          toast.error(data.detail);
+        } else if (typeof data.error === "string") {
+          toast.error(data.error);
         } else {
-          toast.error(error.response?.data?.message || "Failed to save settings");
+          Object.entries(data).forEach(([field, messages]) => {
+            const msg = Array.isArray(messages) ? messages.join(", ") : String(messages);
+            toast.error(`${field}: ${msg}`);
+          });
         }
       } else {
         toast.error("Failed to save settings");
@@ -144,6 +225,9 @@ export default function OrgSettingsPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
+        <div className="px-6">
+          <SettingsNav />
+        </div>
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
@@ -154,163 +238,253 @@ export default function OrgSettingsPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
+      <div className="px-6">
+        <SettingsNav />
+      </div>
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
-          
+          {tenantMeta && (
+            <div className="flex flex-wrap gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
+              <span>
+                Workspace slug: <span className="font-medium text-gray-700">{tenantMeta.slug}</span>
+              </span>
+              <span>
+                Plan: <span className="font-medium text-gray-700 capitalize">{tenantMeta.plan_type}</span>
+              </span>
+              {!canEdit && (
+                <span className="text-amber-700">View only — contact an admin to make changes</span>
+              )}
+            </div>
+          )}
+
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Business Information</h3>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+              Business Information
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              <Field label="Business Name">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
+              <Field label="Business Name" required>
+                <Input
+                  className="h-9 text-sm border-gray-200"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
-              <Field label="PAN / VAT Number">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  value={form.pan}
-                  onChange={(e) => setForm({ ...form, pan: e.target.value })}
+              <Field label="Workspace Name">
+                <Input
+                  className="h-9 text-sm border-gray-200"
+                  value={form.workspace_name}
+                  onChange={(e) => updateField("workspace_name", e.target.value)}
+                  disabled={!canEdit || submitting}
+                  placeholder="Shown in sidebar and ERP"
                 />
               </Field>
-              <Field label="Phone">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </Field>
-              <Field label="Email">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-              </Field>
-              <Field label="Website">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  value={form.website}
-                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+              <Field label="Owner Name">
+                <Input
+                  className="h-9 text-sm border-gray-200"
+                  value={form.owner_name}
+                  onChange={(e) => updateField("owner_name", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
               <Field label="Industry">
-                <Select 
-                  value={form.business_type || ""} 
-                  onValueChange={(v) => setForm({ ...form, business_type: v || "" })}
+                <Select
+                  value={form.business_type}
+                  onValueChange={(v) => updateField("business_type", v || "other")}
+                  disabled={!canEdit || submitting}
                 >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {["Retail", "Wholesale", "Manufacturing", "Services", "Other"].map((i) => (
-                      <SelectItem key={i} value={i.toLowerCase()}>{i}</SelectItem>
+                    {BUSINESS_TYPES.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </Field>
+              <Field label="PAN / VAT Number">
+                <Input
+                  className="h-9 text-sm border-gray-200"
+                  value={form.pan_vat_number}
+                  onChange={(e) => updateField("pan_vat_number", e.target.value)}
+                  disabled={!canEdit || submitting}
+                  placeholder="e.g. 123456789"
+                />
+              </Field>
+              <Field label="Phone">
+                <Input
+                  className="h-9 text-sm border-gray-200"
+                  value={form.phone}
+                  onChange={(e) => updateField("phone", e.target.value)}
+                  disabled={!canEdit || submitting}
+                />
+              </Field>
+              <Field label="Email">
+                <Input
+                  type="email"
+                  className="h-9 text-sm border-gray-200"
+                  value={form.email}
+                  onChange={(e) => updateField("email", e.target.value)}
+                  disabled={!canEdit || submitting}
+                />
+              </Field>
+              <Field label="Website">
+                <Input
+                  className="h-9 text-sm border-gray-200"
+                  value={form.website}
+                  onChange={(e) => updateField("website", e.target.value)}
+                  disabled={!canEdit || submitting}
+                  placeholder="https://example.com"
+                />
+              </Field>
             </div>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Address</h3>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+              Address
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <Field label="Province">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
+                <Input
+                  className="h-9 text-sm border-gray-200"
                   value={form.province}
-                  onChange={(e) => setForm({ ...form, province: e.target.value })}
+                  onChange={(e) => updateField("province", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
               <Field label="District">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
+                <Input
+                  className="h-9 text-sm border-gray-200"
                   value={form.district}
-                  onChange={(e) => setForm({ ...form, district: e.target.value })}
+                  onChange={(e) => updateField("district", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
               <Field label="City">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
+                <Input
+                  className="h-9 text-sm border-gray-200"
                   value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  onChange={(e) => updateField("city", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
               <Field label="Street">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
+                <Input
+                  className="h-9 text-sm border-gray-200"
                   value={form.street}
-                  onChange={(e) => setForm({ ...form, street: e.target.value })}
+                  onChange={(e) => updateField("street", e.target.value)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
             </div>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Preferences</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <Field label="Currency">
-                <Select 
-                  value={form.currency || ""} 
-                  onValueChange={(v) => setForm({ ...form, currency: v || "" })}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NPR">NPR — Nepali Rupee</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="Date Format">
-                <Select 
-                  value={form.date_format || ""} 
-                  onValueChange={(v) => setForm({ ...form, date_format: v || "" })}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BS">Bikram Sambat (BS)</SelectItem>
-                    <SelectItem value="AD">Anno Domini (AD)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="VAT Rate (%)">
-                <Input 
-                  type="number" 
-                  className="h-9 text-sm border-gray-200" 
-                  value={form.vat_rate}
-                  onChange={(e) => setForm({ ...form, vat_rate: e.target.value })}
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+              Accounting
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <Field label="Accounting Start Date">
+                <DateInput
+                  value={form.accounting_start_date}
+                  onChange={(date) => updateField("accounting_start_date", date)}
+                  disabled={!canEdit || submitting}
                 />
               </Field>
-              <Field label="Fiscal Year Start">
-                <Select 
-                  value={form.fiscal_year_start || ""} 
-                  onValueChange={(v) => setForm({ ...form, fiscal_year_start: v || "" })}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Shrawan">Shrawan (Month 4)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
+              <div className="flex flex-col gap-1.5 justify-end">
+                <Label className="text-sm">VAT Registered</Label>
+                <label className="flex items-center gap-2 h-9 text-sm text-gray-700">
+                  <Checkbox
+                    checked={form.vat_registered}
+                    onCheckedChange={(checked) =>
+                      updateField("vat_registered", checked === true)
+                    }
+                    disabled={!canEdit || submitting}
+                  />
+                  Organization is VAT registered in Nepal
+                </label>
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-gray-100">
-            <Button 
-              onClick={handleSubmit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+              Preferences
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+              <Field label="Currency">
+                <Input
+                  className="h-9 text-sm border-gray-200 bg-gray-50 text-gray-600"
+                  value="NPR — Nepali Rupee"
+                  readOnly
+                />
+              </Field>
+              <Field label="Fiscal Year">
+                <Input
+                  className="h-9 text-sm border-gray-200 bg-gray-50 text-gray-600"
+                  value="Shrawan (Nepali FY)"
+                  readOnly
+                />
+              </Field>
+              <Field label="Default VAT Rate">
+                <Input
+                  className="h-9 text-sm border-gray-200 bg-gray-50 text-gray-600"
+                  value="13% (configure in Tax Management)"
+                  readOnly
+                />
+              </Field>
+            </div>
+
+            <DateSystemPreferenceCard
+              variant="embedded"
+              value={form.date_format}
+              onValueChange={(system) => updateField("date_format", system)}
+              disabled={!canEdit || submitting}
+            />
           </div>
+
+          {canEdit && (
+            <div className="pt-2 border-t border-gray-100">
+              <Button
+                onClick={handleSubmit}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrgSettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col h-full min-h-0">
+          <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        </div>
+      }
+    >
+      <OrgSettingsContent />
+    </Suspense>
   );
 }

@@ -12,6 +12,7 @@ import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { accountsAPI, type Account, type LedgerEntry } from "@/lib/api/accounting";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 

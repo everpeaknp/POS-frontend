@@ -10,6 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { JournalLinesTable, type JournalLine } from "@/components/accounting/JournalLinesTable";
 import { DateInput } from "@/components/shared/DateInput";
 import { todayIsoDate } from "@/lib/dates";
+import { accountsAPI, journalEntriesAPI, type Account } from "@/lib/api/accounting";
 import toast from "react-hot-toast";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {

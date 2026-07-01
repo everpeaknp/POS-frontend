@@ -4,6 +4,8 @@ export interface TenantData {
   name: string;
   business_type: string;
   address?: string;
+  pan_vat_number?: string;
+  website?: string;
   accounting_start_date?: string;
   vat_registered?: boolean;
   workspace_name?: string;
@@ -19,6 +21,8 @@ export interface Tenant {
   slug: string;
   business_type: string;
   address: string;
+  pan_vat_number?: string;
+  website?: string;
   accounting_start_date?: string;
   vat_registered: boolean;
   workspace_name: string;

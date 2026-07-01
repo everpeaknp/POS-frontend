@@ -5,23 +5,51 @@ import { Calendar } from "lucide-react";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
 import type { DateCalendarSystem } from "@/lib/dates";
 import { formatDisplayDate, todayIsoDate } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 
-export function DateSystemPreferenceCard() {
+interface DateSystemPreferenceCardProps {
+  variant?: "standalone" | "embedded";
+  value?: DateCalendarSystem;
+  onValueChange?: (system: DateCalendarSystem) => void;
+  disabled?: boolean;
+}
+
+export function DateSystemPreferenceCard({
+  variant = "standalone",
+  value,
+  onValueChange,
+  disabled = false,
+}: DateSystemPreferenceCardProps) {
   const { dateSystem, setDateSystem, loading } = useDateSystem();
-  const sample = formatDisplayDate(todayIsoDate(), dateSystem);
+  const activeSystem = value ?? dateSystem;
+  const sample = formatDisplayDate(todayIsoDate(), activeSystem);
+  const isControlled = value !== undefined && onValueChange !== undefined;
 
   const handleChange = async (system: DateCalendarSystem) => {
-    if (system === dateSystem) return;
+    if (system === activeSystem || disabled) return;
+
+    if (isControlled) {
+      onValueChange(system);
+      return;
+    }
+
     try {
       await setDateSystem(system);
-      toast.success(`Date system switched to ${system === "BS" ? "Bikram Sambat" : "Gregorian (AD)"}`);
+      toast.success(
+        `Date system switched to ${system === "BS" ? "Bikram Sambat" : "Gregorian (AD)"}`
+      );
     } catch {
       toast.error("Failed to save date system preference");
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 lg:p-6">
+    <div
+      className={cn(
+        variant === "standalone" &&
+          "bg-white rounded-xl border border-gray-100 shadow-sm p-5 lg:p-6 mb-6 max-w-5xl"
+      )}
+    >
       <div className="flex items-start gap-3 mb-4">
         <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
           <Calendar className="h-5 w-5" />
@@ -29,7 +57,8 @@ export function DateSystemPreferenceCard() {
         <div>
           <h3 className="font-semibold text-gray-900">Date System</h3>
           <p className="text-sm text-gray-500 mt-0.5">
-            Choose how dates are displayed across the app. Data is always stored in Gregorian (AD) format.
+            Choose how dates are displayed across the app. Data is always stored in
+            Gregorian (AD) format.
           </p>
         </div>
       </div>
@@ -38,24 +67,26 @@ export function DateSystemPreferenceCard() {
         {(
           [
             { id: "AD" as const, label: "Gregorian (AD)", hint: "e.g. 30 Jun 2026" },
-            { id: "BS" as const, label: "Bikram Sambat (BS)", hint: "e.g. १६ असार २०८३" },
+            { id: "BS" as const, label: "Bikram Sambat (BS)", hint: "e.g. 16 Asar 2083" },
           ] as const
         ).map((option) => {
-          const active = dateSystem === option.id;
+          const active = activeSystem === option.id;
           return (
             <button
               key={option.id}
               type="button"
-              disabled={loading}
+              disabled={loading || disabled}
               onClick={() => handleChange(option.id)}
-              className={`flex-1 rounded-xl border px-4 py-3 text-left transition-all ${
+              className={`flex-1 rounded-xl border px-4 py-3 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                 active
                   ? "border-[#22C55E] bg-green-50 ring-1 ring-[#22C55E]/30"
                   : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className={`text-sm font-semibold ${active ? "text-green-800" : "text-gray-800"}`}>
+                <span
+                  className={`text-sm font-semibold ${active ? "text-green-800" : "text-gray-800"}`}
+                >
                   {option.label}
                 </span>
                 <span
@@ -72,10 +103,17 @@ export function DateSystemPreferenceCard() {
 
       <p className="text-xs text-gray-400 mt-4">
         Today: <span className="font-medium text-gray-600">{sample}</span>
-        {!loading && (
+        {!isControlled && !loading && (
           <span className="ml-2">
-            · Saved {typeof window !== "undefined" && localStorage.getItem("khata_date_calendar_system") ? "on this device" : ""}
+            · Saved{" "}
+            {typeof window !== "undefined" &&
+            localStorage.getItem("khata_date_calendar_system")
+              ? "on this device"
+              : ""}
           </span>
+        )}
+        {isControlled && (
+          <span className="ml-2">· Saved when you click Save Changes</span>
         )}
       </p>
     </div>

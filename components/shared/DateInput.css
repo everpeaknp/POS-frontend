@@ -1,0 +1,66 @@
+.khata-nc-panel .nc-card,
+.khata-nc-panel .nc-card.nc-card-elevated {
+  width: 100%;
+  min-width: 280px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.khata-nc-panel .nc-days {
+  gap: 3px;
+  padding: 4px 8px 10px;
+}
+
+.khata-nc-panel .nc-day {
+  aspect-ratio: auto;
+  border-radius: 8px;
+  min-height: 44px;
+  height: auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 1px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.khata-nc-panel .nc-day .khata-day-bs {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: inherit;
+}
+
+.khata-nc-panel .nc-day .khata-day-ad {
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--nc-text3, #888);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.khata-nc-panel .nc-day.is-sat .khata-day-ad {
+  color: var(--nc-red, #c0392b);
+  opacity: 0.75;
+}
+
+.khata-nc-panel .nc-day.is-selected .khata-day-bs,
+.khata-nc-panel .nc-day.is-selected .khata-day-ad {
+  color: inherit;
+  opacity: 1;
+}
+
+.khata-nc-panel .nc-sel-bar {
+  padding: 8px 12px;
+  min-height: 48px;
+}
+
+.khata-nc-panel .nc-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
