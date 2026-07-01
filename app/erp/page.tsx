@@ -21,6 +21,7 @@ export default function ErpPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     console.log('[ERP] useEffect - user:', user ? 'exists' : 'null');
@@ -129,16 +130,17 @@ export default function ErpPage() {
             {/* Profile Dropdown */}
             <div className="relative">
               <button
-                onClick={(e) => {
-                  e.currentTarget.nextElementSibling?.classList.toggle('hidden');
-                }}
-                className="w-10 h-10 rounded-full bg-green-600 text-white text-sm font-semibold flex items-center justify-center hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                className="group rounded-full p-1.5 bg-[#22C55E]/10 transition-colors duration-200 hover:bg-[#22C55E]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E] focus-visible:ring-offset-2"
                 aria-label="User menu"
+                aria-expanded={profileMenuOpen}
               >
-                {getInitials(user.first_name, user.last_name)}
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#22C55E] text-white text-sm font-semibold ring-2 ring-[#22C55E] ring-offset-2 transition-colors duration-200 group-hover:bg-[#16A34A]">
+                  {getInitials(user.first_name, user.last_name)}
+                </span>
               </button>
-              {/* Dropdown Menu */}
-              <div className="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+              {profileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-900">
                     {user.first_name} {user.last_name}
@@ -161,6 +163,7 @@ export default function ErpPage() {
                   Logout
                 </button>
               </div>
+              )}
             </div>
           </div>
         </div>

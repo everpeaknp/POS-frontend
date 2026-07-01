@@ -164,15 +164,6 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Accounting Features</h2>
-        <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-          Enjoy additional features with Khata.app alongside basic accounting by selecting modules that fit your business needs.
-        </p>
-      </div>
-
-      {/* Module Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {availableModules.map((module) => {
           const isSelected = selectedModules.includes(module.id);
@@ -182,10 +173,10 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
             <div
               key={module.id}
               onClick={() => toggleModule(module.id)}
-              className={`relative border-2 rounded-xl p-5 cursor-pointer transition-all ${
+              className={`relative border rounded-xl p-5 cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-[#22C55E] bg-green-50/50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-[#22C55E] bg-green-50/60 shadow-sm'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
               }`}
             >
               {/* Required Badge for Accounting */}
@@ -200,8 +191,8 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
               {/* Recommended Badge */}
               {module.recommended && module.id !== 'accounting' && (
                 <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
-                    ⭐ Recommended
+                  <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
+                    Recommended
                   </span>
                 </div>
               )}
@@ -255,14 +246,13 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-900">
-          <strong>Note:</strong> Accounting and Settings modules are always included as core features. You can modify other module selections later from organization settings.
+      <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
+        <p className="text-sm text-green-900">
+          <strong className="font-semibold">Note:</strong> Accounting and Settings are always included. You can change other modules later from organization settings.
         </p>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center gap-3 pt-4">
+      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
         <Button
           type="button"
           variant="outline"
@@ -275,7 +265,7 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
           type="button"
           onClick={handleNext}
           disabled={selectedModules.length === 0}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg text-base"
+          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
         >
           Next: Review <ArrowRight className="h-4 w-4" />
         </Button>

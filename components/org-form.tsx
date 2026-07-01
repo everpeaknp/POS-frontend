@@ -66,6 +66,15 @@ const defaultForm: OrgFormData = {
   agreeToTerms: false,
 };
 
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 space-y-4">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
 function FieldGroup({ label, required, children, hint }: {
   label: string; required?: boolean; children: React.ReactNode; hint?: string;
 }) {
@@ -258,18 +267,17 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
     }
   };
 
-  const inputCls = "h-10 border-gray-200 bg-gray-50 focus:border-[#22C55E] focus:ring-[#22C55E]/10 text-sm";
+  const inputCls =
+    "h-11 w-full rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/15 focus-visible:ring-3 text-sm [color-scheme:light]";
+
+  const selectContentCls = "bg-white border border-gray-200 shadow-lg";
+  const selectItemCls = "focus:bg-green-50 focus:text-green-900";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      {/* Main Grid: Form Fields (Left) + Logo Upload (Right) */}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 [color-scheme:light] [--autofill-bg:#ffffff] [--autofill-text:#111827]">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Form Fields (spans 2 columns) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Organization Details Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Organization Details</h3>
-            
+        <div className="lg:col-span-2 space-y-5">
+          <FormSection title="Organization details">
             <FieldGroup label="Organization Name" required>
               <Input 
                 placeholder="e.g. ABC Construction" 
@@ -285,9 +293,11 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
                 <SelectTrigger className={inputCls}>
                   <SelectValue placeholder="Select industry" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className={selectContentCls}>
                   {businessTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                    <SelectItem key={type.value} value={type.value} className={selectItemCls}>
+                      {type.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -302,12 +312,9 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
                 className={inputCls} 
               />
             </FieldGroup>
-          </div>
+          </FormSection>
 
-          {/* Accounting Details Section */}
-          <div className="space-y-4 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Accounting Details</h3>
-            
+          <FormSection title="Accounting details">
             <FieldGroup label="Accounting Start Date" required hint="When your accounting records begin">
               <Input 
                 type="date" 
@@ -319,14 +326,14 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
             </FieldGroup>
 
             <FieldGroup label="Registered with VAT?" required>
-              <div className="flex items-center gap-3 h-10">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, vatRegistered: true })}
-                  className={`flex-1 h-full rounded-lg border-2 font-medium text-sm transition-all ${
+                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
                     form.vatRegistered
-                      ? 'border-[#22C55E] bg-green-50 text-[#22C55E]'
-                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
                   Yes
@@ -334,22 +341,19 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, vatRegistered: false })}
-                  className={`flex-1 h-full rounded-lg border-2 font-medium text-sm transition-all ${
+                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
                     !form.vatRegistered
-                      ? 'border-[#22C55E] bg-green-50 text-[#22C55E]'
-                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
                   No
                 </button>
               </div>
             </FieldGroup>
-          </div>
+          </FormSection>
 
-          {/* Workspace Setup Section */}
-          <div className="space-y-4 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Workspace Setup</h3>
-            
+          <FormSection title="Workspace setup">
             <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
               <Input 
                 placeholder="e.g. ABC Main Workspace" 
@@ -360,19 +364,17 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
               />
             </FieldGroup>
 
-            {/* Workspace URL Preview */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-900 font-medium mb-1">Your workspace URL:</p>
-              <p className="text-base font-mono text-blue-700">{workspaceUrl}</p>
+            <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
+              <p className="text-xs font-medium text-green-800 mb-1">Your workspace URL</p>
+              <p className="text-sm font-mono text-[#16A34A] break-all">{workspaceUrl}</p>
             </div>
-          </div>
+          </FormSection>
         </div>
 
-        {/* Right Column: Logo Upload */}
         <div className="lg:col-span-1">
-          <div className="sticky top-6">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Company Logo</h3>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:border-gray-400 transition-colors">
+          <div className="lg:sticky lg:top-6">
+            <FormSection title="Company logo">
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center bg-white hover:border-[#22C55E]/40 transition-colors">
               {logoPreview ? (
                 <div className="space-y-4">
                   <div className="w-full aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -417,21 +419,21 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
               {logoError && (
                 <p className="text-xs text-red-500 mt-3">{logoError}</p>
               )}
-            </div>
+              </div>
+            </FormSection>
           </div>
         </div>
       </div>
 
-      {/* Additional Options (Collapsible) */}
-      <div className="space-y-4 pt-6 border-t border-gray-200">
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="space-y-3">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
           <Collapsible open={moreInfoOpen} onOpenChange={setMoreInfoOpen}>
-            <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <span>Add more organization info (optional)</span>
               {moreInfoOpen ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="px-4 pb-4 pt-1 flex flex-col gap-3 border-t border-gray-100 bg-gray-50/30">
+              <div className="px-4 pb-4 pt-1 flex flex-col gap-3 border-t border-gray-100 bg-gray-50/50">
                 <FieldGroup label="Owner Name">
                   <Input placeholder="John Doe" value={form.ownerName}
                     onChange={(e) => setForm({ ...form, ownerName: e.target.value })}
@@ -453,14 +455,14 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
         </div>
 
         {/* Referral Code (Collapsible) */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
           <Collapsible open={referralOpen} onOpenChange={setReferralOpen}>
-            <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <span>Have a referral code?</span>
               {referralOpen ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="px-4 pb-4 pt-1 border-t border-gray-100 bg-gray-50/30">
+              <div className="px-4 pb-4 pt-1 border-t border-gray-100 bg-gray-50/50">
                 <FieldGroup label="Referral Code">
                   <Input placeholder="Enter referral code" value={form.referralCode}
                     onChange={(e) => setForm({ ...form, referralCode: e.target.value })}
@@ -473,7 +475,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       </div>
 
       {/* Agreement */}
-      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+      <div className="flex items-start gap-3 p-4 bg-green-50/50 rounded-xl border border-green-100">
         <Checkbox id="terms" checked={form.agreeToTerms}
           onCheckedChange={(checked) => setForm({ ...form, agreeToTerms: checked === true })}
           className="mt-0.5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]" />
@@ -485,16 +487,16 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       </div>
 
       {/* Submit Button */}
-      <div className="flex items-center gap-3 pt-4">
+      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
         {showBackButton && (
           <Button type="button" variant="outline" onClick={() => router.back()}
-            className="px-5 h-11 border-gray-300 text-gray-700 hover:bg-gray-50 gap-1.5"
+            className="px-5 h-11 border-gray-200 text-gray-700 hover:bg-gray-50 gap-1.5"
             disabled={loading}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
         )}
         <Button type="submit" disabled={!isValid || loading || isSubmitting}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg text-base">
+          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50">
           {loading || isSubmitting ? (submitLabel || "Processing...") : (submitLabel || (onNext ? "Next: Select Modules" : "Create Organization"))} <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

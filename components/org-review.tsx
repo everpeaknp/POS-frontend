@@ -160,17 +160,8 @@ export function OrgReview({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Review Your Organization</h2>
-        <p className="text-sm text-gray-600">
-          Please review the information below before submitting your registration
-        </p>
-      </div>
-
-      {/* Organization Details Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+    <div className="flex flex-col gap-5">
+      <div className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Organization Details</h3>
           <Button
@@ -199,7 +190,7 @@ export function OrgReview({
             <Globe className="h-5 w-5 text-gray-400 mt-0.5" />
             <div className="flex-1">
               <p className="text-xs text-gray-500 mb-1">Workspace URL</p>
-              <p className="text-sm font-medium text-blue-600 font-mono">{workspaceUrl}</p>
+              <p className="text-sm font-medium text-[#16A34A] font-mono break-all">{workspaceUrl}</p>
             </div>
           </div>
 
@@ -251,10 +242,9 @@ export function OrgReview({
         </div>
       </div>
 
-      {/* Selected Features Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Selected Features</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Selected features</h3>
           <Button
             type="button"
             variant="ghost"
@@ -292,15 +282,13 @@ export function OrgReview({
         )}
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-900">
-          <strong>Note:</strong> By clicking "Create Organization", you agree to our Terms of Service and Privacy Policy. You can modify these settings later from your organization settings.
+      <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
+        <p className="text-sm text-green-900">
+          <strong className="font-semibold">Note:</strong> By creating your organization, you agree to our Terms of Service and Privacy Policy. You can update these settings later.
         </p>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center gap-3 pt-4">
+      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
         <Button
           type="button"
           variant="outline"
@@ -314,7 +302,7 @@ export function OrgReview({
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg text-base"
+          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
         >
           {loading ? "Creating Organization..." : "Create Organization"} <ArrowRight className="h-4 w-4" />
         </Button>

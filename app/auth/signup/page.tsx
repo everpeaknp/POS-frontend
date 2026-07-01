@@ -62,17 +62,12 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormData) => {
     try {
-      // Auto-generate username from email (part before @)
-      const username = data.email.split('@')[0];
-      
-      // Register user WITHOUT tenant_name (no automatic organization creation)
       await registerUser({
-        username,
         email: data.email,
         password: data.password,
         first_name: data.first_name,
         last_name: data.last_name,
-        phone: data.phone,
+        phone: data.phone.trim(),
       });
       
       toast.success("Registration successful! Redirecting to workspace...");
