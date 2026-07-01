@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import FormField from '@/components/shared/FormField';
+import { DateInput } from '@/components/shared/DateInput';
 import { sitesAPI } from '@/lib/api/construction';
 import apiClient from '@/lib/api/client';
 
@@ -67,6 +68,7 @@ export default function SiteForm({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
@@ -271,11 +273,12 @@ export default function SiteForm({
             error={errors.start_date}
             required
           >
-            <input
-              {...register('start_date')}
-              type="date"
-              id="start_date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            <Controller
+              name="start_date"
+              control={control}
+              render={({ field }) => (
+                <DateInput value={field.value || ''} onChange={field.onChange} />
+              )}
             />
           </FormField>
 
@@ -284,11 +287,12 @@ export default function SiteForm({
             name="estimated_end_date"
             error={errors.estimated_end_date}
           >
-            <input
-              {...register('estimated_end_date')}
-              type="date"
-              id="estimated_end_date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            <Controller
+              name="estimated_end_date"
+              control={control}
+              render={({ field }) => (
+                <DateInput value={field.value || ''} onChange={field.onChange} />
+              )}
             />
           </FormField>
 

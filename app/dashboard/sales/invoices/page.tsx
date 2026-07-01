@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -180,10 +181,10 @@ export default function InvoicesPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {new Date(inv.date).toLocaleDateString('en-GB')}
+                    <FormattedDate value={inv.date} />
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {new Date(inv.due_date).toLocaleDateString('en-GB')}
+                    <FormattedDate value={inv.due_date} />
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-800">{inv.customer_name || inv.customer}</td>
                   <td className="px-4 py-3 text-gray-800">Rs. {inv.amount.toLocaleString()}</td>

@@ -1,15 +1,30 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 
 interface ReportFilterProps {
   period: string;
   onPeriodChange: (value: string) => void;
   onGenerate: () => void;
   embedded?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  onFromDateChange?: (value: string) => void;
+  onToDateChange?: (value: string) => void;
 }
 
-export function ReportFilter({ period, onPeriodChange, onGenerate, embedded }: ReportFilterProps) {
+export function ReportFilter({
+  period,
+  onPeriodChange,
+  onGenerate,
+  embedded,
+  fromDate = "",
+  toDate = "",
+  onFromDateChange,
+  onToDateChange,
+}: ReportFilterProps) {
   const content = (
     <div className="flex flex-wrap items-center gap-3">
       <Select value={period} onValueChange={(v) => onPeriodChange(v ?? "month")}>
@@ -21,8 +36,16 @@ export function ReportFilter({ period, onPeriodChange, onGenerate, embedded }: R
         </SelectContent>
       </Select>
 
-      <Input type="date" placeholder="From Date" className="h-9 w-40 text-sm border-gray-200" />
-      <Input type="date" placeholder="To Date" className="h-9 w-40 text-sm border-gray-200" />
+      <DateInput
+        value={fromDate}
+        onChange={(v) => onFromDateChange?.(v)}
+        className="w-40"
+      />
+      <DateInput
+        value={toDate}
+        onChange={(v) => onToDateChange?.(v)}
+        className="w-40"
+      />
 
       <Button onClick={onGenerate} className="bg-[#22C55E] hover:bg-[#16A34A] text-white h-9">
         Generate Report

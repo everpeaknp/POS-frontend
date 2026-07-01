@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -273,11 +274,11 @@ export default function QuotationsPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(q.date).toLocaleDateString('en-GB')}
+                      <FormattedDate value={q.date} />
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-800">{q.customer_name || q.customer}</td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(q.valid_until).toLocaleDateString('en-GB')}
+                      <FormattedDate value={q.valid_until} />
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-800">{formatCurrency(q.total)}</td>
                     <td className="px-4 py-3"><StatusBadge status={q.status} /></td>

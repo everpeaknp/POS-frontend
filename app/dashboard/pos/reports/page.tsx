@@ -1,9 +1,11 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { Calendar, DollarSign, ShoppingCart, TrendingUp, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -115,10 +117,10 @@ export default function POSReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label className="text-sm">Date *</Label>
-              <Input
-                type="date"
+              <DateInput
+                
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(date) => setSelectedDate(date)}
                 className="mt-1"
               />
             </div>
@@ -164,10 +166,10 @@ export default function POSReportsPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <div className="flex items-center gap-3">
             <Label className="text-sm">Filter by Date:</Label>
-            <Input
-              type="date"
+            <DateInput
+              
               value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
+              onChange={(date) => setFilterDate(date)}
               className="max-w-xs"
             />
             {filterDate && (
@@ -205,12 +207,7 @@ export default function POSReportsPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-lg">
-                      {new Date(report.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
+                      <FormattedDate value={report.date} />
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {report.warehouse_name || "All Warehouses"} • 

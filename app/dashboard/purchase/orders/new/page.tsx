@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -239,18 +240,18 @@ export default function NewPurchaseOrderPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <Field label="PO Date" required>
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 value={form.date} 
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(date) => setForm({ ...form, date: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </Field>
             <Field label="Expected Delivery Date">
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 value={form.expected_delivery_date} 
-                onChange={(e) => setForm({ ...form, expected_delivery_date: e.target.value })}
+                onChange={(date) => setForm({ ...form, expected_delivery_date: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </Field>

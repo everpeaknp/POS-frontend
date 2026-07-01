@@ -2,27 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, CreditCard, Loader2, AlertCircle, Download, Filter } from "lucide-react";
+import { ArrowLeft, CreditCard, Loader2, AlertCircle, Filter, Plus, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { bankAccountsAPI, bankTransactionsAPI, type BankAccount, type BankTransaction } from "@/lib/api/accounting";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
-function formatDate(dateString: string) {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return dateString;
-  }
-}
 
 export default function BankAccountDetailPage() {
+  const { formatDate } = useDateSystem();
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -33,6 +28,15 @@ export default function BankAccountDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddTx, setShowAddTx] = useState(false);
+  const [savingTx, setSavingTx] = useState(false);
+  const [txForm, setTxForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    reference: "",
+    description: "",
+    type: "Credit" as BankTransaction["type"],
+    amount: "",
+  });
 
   useEffect(() => {
     if (id) {
@@ -49,16 +53,8 @@ export default function BankAccountDetailPage() {
       const accountData = await bankAccountsAPI.get(id);
       setAccount(accountData);
 
-      // Fetch transactions
-      try {
-        const transactionsData = await bankTransactionsAPI.list({ bank_account: id });
-        const txData = Array.isArray(transactionsData) ? transactionsData : (transactionsData as any).results || [];
-        setTransactions(txData);
-      } catch (txError) {
-        console.error('Failed to load transactions:', txError);
-        // Don't fail the whole page if transactions fail
-        setTransactions([]);
-      }
+      const transactionsData = await bankAccountsAPI.statement(id);
+      setTransactions(transactionsData);
     } catch (error: any) {
       console.error('Failed to load bank account:', error);
       if (error.response?.status === 404) {
@@ -79,6 +75,54 @@ export default function BankAccountDetailPage() {
       tx.reference.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
   });
+
+  const handleAddTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(txForm.amount);
+    if (!txForm.reference.trim() || !txForm.description.trim() || Number.isNaN(amount) || amount <= 0) {
+      toast.error("Reference, description, and a positive amount are required");
+      return;
+    }
+
+    setSavingTx(true);
+    try {
+      const isCredit = txForm.type === "Credit" || txForm.type === "Opening";
+      await bankTransactionsAPI.create({
+        bank_account: id,
+        date: txForm.date,
+        reference: txForm.reference.trim(),
+        description: txForm.description.trim(),
+        type: txForm.type,
+        debit: isCredit ? 0 : amount,
+        credit: isCredit ? amount : 0,
+      });
+      toast.success("Transaction recorded");
+      setShowAddTx(false);
+      setTxForm({
+        date: new Date().toISOString().split("T")[0],
+        reference: "",
+        description: "",
+        type: "Credit",
+        amount: "",
+      });
+      fetchAccountDetails();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail || "Failed to record transaction");
+    } finally {
+      setSavingTx(false);
+    }
+  };
+
+  const handleReconcile = async (txId: string) => {
+    try {
+      await bankTransactionsAPI.reconcile(txId);
+      toast.success("Transaction reconciled");
+      fetchAccountDetails();
+    } catch {
+      toast.error("Failed to reconcile transaction");
+    }
+  };
 
   if (loading) {
     return (
@@ -185,10 +229,56 @@ export default function BankAccountDetailPage() {
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Bank Statement</h3>
-              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
-                <Download className="h-3.5 w-3.5" /> Export
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 h-8 text-xs"
+                  onClick={() => router.push(`/dashboard/accounting/bank-accounts/reconciliation/${id}`)}
+                >
+                  <CheckCircle className="h-3.5 w-3.5" /> Reconcile
+                </Button>
+                <Button size="sm" className="gap-1.5 h-8 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white" onClick={() => setShowAddTx((v) => !v)}>
+                  <Plus className="h-3.5 w-3.5" /> Add Transaction
+                </Button>
+              </div>
             </div>
+
+            {showAddTx && (
+              <form onSubmit={handleAddTransaction} className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                <div>
+                  <Label className="text-xs">Date</Label>
+                  <DateInput  className="h-9 text-sm mt-1" value={txForm.date} onChange={(date) => setTxForm((f) => ({ ...f, date: date}))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Type</Label>
+                  <Select value={txForm.type} onValueChange={(v) => setTxForm((f) => ({ ...f, type: (v || "Credit") as BankTransaction["type"] }))}>
+                    <SelectTrigger className="h-9 text-sm mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["Credit", "Debit", "Transfer"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Reference</Label>
+                  <Input className="h-9 text-sm mt-1" value={txForm.reference} onChange={(e) => setTxForm((f) => ({ ...f, reference: e.target.value }))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Description</Label>
+                  <Input className="h-9 text-sm mt-1" value={txForm.description} onChange={(e) => setTxForm((f) => ({ ...f, description: e.target.value }))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Amount (Rs.)</Label>
+                  <Input type="number" step="0.01" min="0" className="h-9 text-sm mt-1" value={txForm.amount} onChange={(e) => setTxForm((f) => ({ ...f, amount: e.target.value }))} />
+                </div>
+                <div className="flex items-end gap-2">
+                  <Button type="submit" size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white" disabled={savingTx}>
+                    {savingTx ? "Saving..." : "Save"}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setShowAddTx(false)}>Cancel</Button>
+                </div>
+              </form>
+            )}
 
             <div className="flex gap-3">
               <div className="flex-1">
@@ -237,6 +327,7 @@ export default function BankAccountDetailPage() {
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -269,6 +360,17 @@ export default function BankAccountDetailPage() {
                         }`}>
                           {tx.reconciled ? 'Reconciled' : 'Pending'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {!tx.reconciled && (
+                          <button
+                            type="button"
+                            onClick={() => handleReconcile(tx.id)}
+                            className="text-xs text-[#22C55E] hover:underline"
+                          >
+                            Reconcile
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

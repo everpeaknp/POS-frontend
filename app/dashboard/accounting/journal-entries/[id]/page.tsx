@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Printer, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
 import { Label } from "@/components/ui/label";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { JournalStatusBadge, JournalTypeBadge } from "@/components/accounting/JournalStatusBadge";
@@ -18,6 +19,7 @@ const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 export default function JournalEntryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { formatDate } = useDateSystem();
   const [entry, setEntry] = useState<JournalEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [reverseModal, setReverseModal] = useState(false);
@@ -78,10 +80,10 @@ export default function JournalEntryDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Loading..." subtitle="Journal Entry" />
-        <div className="flex-1 p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center max-w-4xl">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading journal entry...</p>
           </div>
@@ -92,10 +94,10 @@ export default function JournalEntryDetailPage() {
 
   if (!entry) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Not Found" subtitle="Journal Entry" />
-        <div className="flex-1 p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center max-w-4xl">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
             <p className="text-gray-600">Journal entry not found</p>
             <Link href="/dashboard/accounting/journal-entries">
               <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white">Back to List</Button>
@@ -119,9 +121,10 @@ export default function JournalEntryDetailPage() {
   const statusDisplay = entry.status.charAt(0).toUpperCase() + entry.status.slice(1);
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title={entry.entry_number} subtitle={`Journal Entry · ${entry.date}`} />
-      <div className="flex-1 p-6 space-y-4 max-w-4xl">
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader title={entry.entry_number} subtitle={`Journal Entry · ${formatDate(entry.date)}`} />
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full space-y-6">
 
         <div className="flex flex-wrap items-center gap-2">
           <JournalStatusBadge status={statusDisplay} />
@@ -147,12 +150,12 @@ export default function JournalEntryDetailPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4 space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Entry Info</h3>
             {[
               ["Entry #", entry.entry_number],
-              ["Date", entry.date],
+              ["Date", formatDate(entry.date)],
               ["Reference", entry.reference ?? "—"],
               ["Type", entry.type],
             ].map(([k, v]) => (
@@ -162,12 +165,12 @@ export default function JournalEntryDetailPage() {
               </div>
             ))}
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
+          <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4 space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Posting Info</h3>
             {[
               ["Description", entry.description],
               ["Posted By", entry.posted_by_name ?? "—"],
-              ["Posted Date", entry.posted_date ? new Date(entry.posted_date).toLocaleDateString() : "—"],
+              ["Posted Date", entry.posted_date ? formatDate(entry.posted_date) : "—"],
               ["Status", statusDisplay],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between text-sm">
@@ -178,7 +181,7 @@ export default function JournalEntryDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <div className="rounded-xl border border-gray-100 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Journal Lines</h3>
           <JournalLinesTable lines={lines} onChange={() => {}} readOnly />
         </div>
@@ -186,6 +189,7 @@ export default function JournalEntryDetailPage() {
         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${balanced ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
           {balanced ? "✓ Entry is balanced" : "⚠ Entry is not balanced"}
           <span className="text-gray-500 font-normal ml-2">Total Debit: {fmt(Number(entry.total_debit))} | Total Credit: {fmt(Number(entry.total_credit))}</span>
+        </div>
         </div>
       </div>
 
@@ -197,11 +201,10 @@ export default function JournalEntryDetailPage() {
             <div className="space-y-3">
               <div>
                 <Label className="text-sm">Reversal Date</Label>
-                <Input 
-                  type="date"
-                  className="mt-1.5 h-9 text-sm border-gray-200" 
+                <DateInput
+                  className="mt-1.5"
                   value={reversalDate}
-                  onChange={(e) => setReversalDate(e.target.value)}
+                  onChange={setReversalDate}
                 />
               </div>
             </div>

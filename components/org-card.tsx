@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { tenantApi } from "@/lib/api/tenant";
+import { useAuth } from "@/lib/context/AuthContext";
 
 interface OrgCardProps {
   org: Organization;
@@ -16,17 +17,35 @@ interface OrgCardProps {
 
 export function OrgCard({ org, onDelete }: OrgCardProps) {
   const router = useRouter();
+  const { switchOrganization } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isOpening, setIsOpening] = useState(false);
   
   // Check if user is a member of THIS specific organization
   // user_role is set by backend if user has membership in this tenant
   const isMember = !!org.user_role;
 
+  const handleOpenKhata = async () => {
+    try {
+      setIsOpening(true);
+      await switchOrganization(org.slug);
+      toast.success(`Opened ${org.workspace_name || org.name}`);
+    } catch (error: unknown) {
+      console.error("Failed to switch organization:", error);
+      const err = error as { response?: { data?: { error?: string; detail?: string }; status?: number } };
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        (err.response?.status === 404 ? "Organization not found" : "Failed to open organization. Please try again.");
+      toast.error(message);
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
   const handleEdit = () => {
-    // Navigate to edit page with tenant slug
-    const slug = org.subdomain.split('.')[0]; // Extract slug from subdomain
-    router.push(`/erp/${slug}/edit`);
+    router.push(`/erp/${org.slug}/edit`);
   };
 
   const handleDelete = async () => {
@@ -37,7 +56,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
 
     try {
       setIsDeleting(true);
-      const slug = org.subdomain.split('.')[0]; // Extract slug from subdomain
+      const slug = org.slug;
       await tenantApi.delete(slug);
       toast.success("Organization deleted successfully");
       setShowDeleteConfirm(false);
@@ -64,7 +83,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-4 hover:shadow-md hover:border-green-100 transition-all group">
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3 h-full min-h-[220px] hover:shadow-md hover:border-green-100 transition-all group">
       <div className="flex items-start justify-between">
         <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl border border-green-100">
           {org.icon}
@@ -106,12 +125,13 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
           <span className="text-xs text-amber-700 font-medium">Trial ends in {org.trialDaysLeft} days</span>
         </div>
       )}
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-1 mt-auto">
         {isMember ? (
           <>
             <Button size="sm" className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-8 gap-1.5"
-              onClick={() => window.location.href = `/dashboard`}>
-              <ExternalLink className="h-3 w-3" /> Open Khata
+              onClick={handleOpenKhata}
+              disabled={isOpening}>
+              <ExternalLink className="h-3 w-3" /> {isOpening ? "Opening..." : "Open Khata"}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-8 gap-1.5">
               <ShoppingCart className="h-3 w-3" /> Open POS

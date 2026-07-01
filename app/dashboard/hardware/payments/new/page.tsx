@@ -1,5 +1,6 @@
 'use client';
 
+import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { paymentReceivedAPI, customerAPI, Customer } from '@/lib/api/sales';
@@ -96,26 +97,7 @@ export default function NewHardwarePaymentPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Amount (NPR) <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={formData.payment_date}
-              onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-              required
-            />
+            <DateInput value={formData.payment_date} onChange={(date) => setFormData({ ...formData, payment_date: date })} />
           </div>
         </div>
 

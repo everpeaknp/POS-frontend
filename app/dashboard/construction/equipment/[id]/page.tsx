@@ -1,5 +1,6 @@
 'use client';
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -165,7 +166,7 @@ export default function EquipmentDetailPage() {
               <div>
                 <p className="text-sm text-gray-500">Purchase Date</p>
                 <p className="font-medium text-gray-900">
-                  {new Date(equipment.purchase_date).toLocaleDateString()}
+                  <FormattedDate value={equipment.purchase_date} />
                 </p>
               </div>
             )}

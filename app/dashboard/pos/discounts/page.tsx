@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -303,20 +304,20 @@ export default function POSDiscountsPage() {
                 
                 <div>
                   <Label className="text-sm">Start Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
+                    
                     value={form.start_date}
-                    onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                    onChange={(date) => setForm({ ...form, start_date: date})}
                     className="mt-1"
                   />
                 </div>
                 
                 <div>
                   <Label className="text-sm">End Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
+                    
                     value={form.end_date}
-                    onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                    onChange={(date) => setForm({ ...form, end_date: date})}
                     className="mt-1"
                   />
                 </div>

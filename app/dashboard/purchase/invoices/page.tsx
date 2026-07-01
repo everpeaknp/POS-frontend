@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, MoreHorizontal, Eye, Edit, CreditCard, Printer, Loader2 } from "lucide-react";
@@ -84,8 +85,8 @@ export default function PurchaseInvoicesPage() {
                   filtered.map((inv) => (
                     <tr key={inv.id} className={`hover:bg-gray-50/50 transition-colors ${inv.status === "Overdue" ? "border-l-2 border-red-400" : ""}`}>
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/invoices/${inv.id}`)}>{inv.invoice_number}</td>
-                      <td className="px-4 py-3 text-gray-600">{new Date(inv.date).toLocaleDateString()}</td>
-                      <td className={`px-4 py-3 ${inv.status === "Overdue" ? "text-red-500 font-medium" : "text-gray-600"}`}>{new Date(inv.due_date || "").toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-gray-600"><FormattedDate value={inv.date} /></td>
+                      <td className={`px-4 py-3 ${inv.status === "Overdue" ? "text-red-500 font-medium" : "text-gray-600"}`}><FormattedDate value={inv.due_date || ""} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{inv.supplier_name}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">Rs. {inv.total_amount?.toLocaleString()}</td>
                       <td className="px-4 py-3 text-gray-600">Rs. {inv.paid_amount?.toLocaleString()}</td>

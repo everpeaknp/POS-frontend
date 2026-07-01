@@ -102,6 +102,7 @@ export default function ErpPage() {
   // Convert tenants to Organization format
   const organizations: Organization[] = tenants.map(tenant => ({
     id: tenant.id.toString(),
+    slug: tenant.slug,
     name: tenant.name,
     subdomain: `${tenant.slug}.khata.app`,
     icon: tenant.name.charAt(0).toUpperCase(),
@@ -121,10 +122,10 @@ export default function ErpPage() {
   const hasNoTenants = tenants.length === 0;
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col relative">
+    <div className="h-screen bg-[#F3F4F6] flex flex-col relative overflow-hidden">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <TiggLogo size="md" />
           <div className="flex items-center gap-4">
             {/* Profile Dropdown */}
@@ -176,8 +177,9 @@ export default function ErpPage() {
         pendingInvitationsCount={invitations.filter(inv => inv.status === 'pending' && !inv.is_expired).length}
       />
 
-      {/* Content */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+      {/* Content — 1 row × 4 cards, horizontal scroll */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="max-w-[1600px] w-full mx-auto px-6 py-8 pb-24">
         {activeTab === "organizations" && (
           <>
             {/* Search Bar */}
@@ -205,10 +207,15 @@ export default function ErpPage() {
               />
             ) : filteredOrgs.length > 0 ? (
               // Show organization cards
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredOrgs.map((org) => (
-                  <OrgCard key={org.id} org={org} onDelete={fetchTenants} />
-                ))}
+              <div className="overflow-x-auto overscroll-x-contain pb-4 scroll-smooth">
+                <div
+                  className="grid grid-flow-col gap-5 w-full"
+                  style={{ gridAutoColumns: "calc((100% - 3 * 1.25rem) / 4)" }}
+                >
+                  {filteredOrgs.map((org) => (
+                    <OrgCard key={org.id} org={org} onDelete={fetchTenants} />
+                  ))}
+                </div>
               </div>
             ) : searchQuery ? (
               // Show "not found" if searching and no results
@@ -314,6 +321,7 @@ export default function ErpPage() {
             </div>
           )
         )}
+        </div>
       </div>
 
       {/* Floating Action Button */}

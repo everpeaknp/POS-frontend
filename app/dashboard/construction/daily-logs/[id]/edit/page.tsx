@@ -1,10 +1,11 @@
 'use client';
 
+import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
@@ -36,6 +37,7 @@ export default function EditDailyLogPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
@@ -221,10 +223,12 @@ export default function EditDailyLogPage() {
               error={errors.date}
               required
             >
-              <input
-                {...register('date')}
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value || ''} onChange={field.onChange} />
+                )}
               />
             </FormField>
 

@@ -43,6 +43,12 @@ export interface PaginatedResponse<T> {
 }
 
 export const tenantApi = {
+  // Switch active organization (sets user.tenant on backend)
+  switch: async (slug: string): Promise<Tenant> => {
+    const response = await apiClient.post(`/tenants/${slug}/switch/`);
+    return response.data.tenant;
+  },
+
   // Get all tenants (handles pagination)
   getAll: async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants/');

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, MoreHorizontal, Eye, Edit, CheckCircle, XCircle, FileText } from "lucide-react";
@@ -104,7 +105,7 @@ export default function PurchaseRequestsPage() {
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/requests/${r.id}`)}>{r.request_number}</td>
-                      <td className="px-4 py-3 text-gray-600">{new Date(r.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-gray-600"><FormattedDate value={r.date} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{r.requested_by_name || 'N/A'}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">Rs. {Number(r.estimated_amount || 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><StatusBadge status={r.status} /></td>

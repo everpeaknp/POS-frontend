@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -296,7 +297,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Start Date</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{new Date(leaveRequest.start_date).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1"><FormattedDate value={leaveRequest.start_date} /></p>
                 </div>
               </div>
 
@@ -306,7 +307,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">End Date</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{new Date(leaveRequest.end_date).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1"><FormattedDate value={leaveRequest.end_date} /></p>
                 </div>
               </div>
 
@@ -326,7 +327,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Applied On</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{new Date(leaveRequest.created_at).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1"><FormattedDate value={leaveRequest.created_at} /></p>
                 </div>
               </div>
             </div>
@@ -346,7 +347,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                     <p className="text-sm text-gray-500">Approved By</p>
                     <p className="text-sm font-medium text-gray-900 mt-1">{leaveRequest.approved_by_name}</p>
                     {leaveRequest.approved_at && (
-                      <p className="text-xs text-gray-500 mt-1">on {new Date(leaveRequest.approved_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-500 mt-1">on <FormattedDate value={leaveRequest.approved_at} /></p>
                     )}
                   </div>
                 </div>

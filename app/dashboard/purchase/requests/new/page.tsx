@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -139,18 +140,18 @@ export default function NewPurchaseRequestPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field label="Request Date" required>
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 value={form.date} 
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(date) => setForm({ ...form, date: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </Field>
             <Field label="Required By Date" required>
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 value={form.required_by} 
-                onChange={(e) => setForm({ ...form, required_by: e.target.value })}
+                onChange={(date) => setForm({ ...form, required_by: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </Field>

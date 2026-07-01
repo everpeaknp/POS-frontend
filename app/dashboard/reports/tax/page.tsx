@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -170,7 +171,7 @@ export default function TaxReportPage() {
                           <td className="px-4 py-3 text-gray-600">{formatCurrency(item.gross)}</td>
                           <td className="px-4 py-3 text-gray-600">{item.rate}%</td>
                           <td className="px-4 py-3 text-gray-800 font-medium">{formatCurrency(item.tds)}</td>
-                          <td className="px-4 py-3 text-gray-600">{new Date(item.date).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-gray-600"><FormattedDate value={item.date} /></td>
                           <td className="px-4 py-3">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${item.submitted ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                               {item.submitted ? "Yes" : "No"}

@@ -318,17 +318,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
         {user?.tenant ? (
-          <div className="flex items-center gap-3">
-            {/* Tenant Logo - placeholder for now, can be added later */}
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm">
-              {user.tenant.name.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              {(user.tenant.workspace_name || user.tenant.name).charAt(0).toUpperCase()}
             </div>
-            <div className="flex flex-col">
-              <span className="text-white font-semibold text-sm leading-tight">
-                {user.tenant.name}
+            <div className="flex flex-col min-w-0">
+              <span className="text-white font-semibold text-sm leading-tight truncate">
+                {user.tenant.workspace_name || user.tenant.name}
               </span>
-              <span className="text-gray-400 text-xs leading-tight">
-                Business OS
+              <span className="text-gray-400 text-xs leading-tight truncate">
+                {user.tenant.slug}.khata.app
               </span>
             </div>
           </div>
@@ -350,16 +349,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       <div className="px-5 py-4 border-t border-white/10">
         <p className="text-xs text-gray-600">© 2025 Khata Business OS</p>
-        {user && (
-          <p className="text-xs text-gray-500 mt-1">
-            {user.first_name} {user.last_name} • {user.role}
-          </p>
-        )}
-        {user?.tenant && (
-          <p className="text-xs text-gray-600 mt-0.5">
-            {user.tenant.plan_type} Plan
-          </p>
-        )}
+        {user?.tenant ? (
+          <>
+            <p className="text-sm font-medium text-white mt-2 truncate">
+              {user.tenant.workspace_name || user.tenant.name}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5 truncate">
+              {user.tenant.email || `${user.tenant.slug}@khata.app`}
+            </p>
+          </>
+        ) : user ? (
+          <p className="text-xs text-gray-500 mt-1 truncate">{user.email}</p>
+        ) : null}
       </div>
     </div>
   );

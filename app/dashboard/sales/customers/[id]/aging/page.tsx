@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -171,10 +172,10 @@ export default function CustomerAgingReportPage() {
                       {invoice.invoice_number}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(invoice.date).toLocaleDateString('en-GB')}
+                      <FormattedDate value={invoice.date} />
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(invoice.due_date).toLocaleDateString('en-GB')}
+                      <FormattedDate value={invoice.due_date} />
                     </td>
                     <td className="px-4 py-3 font-medium">{formatCurrency(invoice.amount)}</td>
                     <td className="px-4 py-3 text-gray-600">{formatCurrency(invoice.paid_amount)}</td>

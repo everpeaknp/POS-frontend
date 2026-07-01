@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
@@ -149,13 +150,7 @@ export default function NewPaymentPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-                  required
-                />
+                <DateInput value={formData.date} onChange={(date) => setFormData({ ...formData, date })} />
               </div>
 
               <div>

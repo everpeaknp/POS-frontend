@@ -1,5 +1,27 @@
 import apiClient from './client';
 
+type Paginated<T> = T[] | { results?: T[]; next?: string | null; count?: number };
+
+function unwrapList<T>(data: Paginated<T>): T[] {
+  if (Array.isArray(data)) return data;
+  return data.results ?? [];
+}
+
+async function fetchAllPages<T>(url: string, params?: Record<string, unknown>): Promise<T[]> {
+  const all: T[] = [];
+  let page = 1;
+  while (true) {
+    const response = await apiClient.get<Paginated<T>>(url, { params: { ...params, page } });
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    const results = data.results ?? [];
+    all.push(...results);
+    if (!data.next) break;
+    page += 1;
+  }
+  return all;
+}
+
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
@@ -145,8 +167,7 @@ export const accountsAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<Account[]>('/accounting/accounts/', { params });
-    return response.data;
+    return fetchAllPages<Account>('/accounting/accounts/', params);
   },
 
   // Get account by ID
@@ -330,8 +351,7 @@ export const journalEntriesAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<JournalEntry[]>('/accounting/journal-entries/', { params });
-    return response.data;
+    return fetchAllPages<JournalEntry>('/accounting/journal-entries/', params);
   },
 
   // Get journal entry by ID
@@ -388,8 +408,7 @@ export const bankAccountsAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<BankAccount[]>('/accounting/bank-accounts/', { params });
-    return response.data;
+    return fetchAllPages<BankAccount>('/accounting/bank-accounts/', params);
   },
 
   // Get bank account by ID
@@ -423,8 +442,8 @@ export const bankAccountsAPI = {
 
   // Get bank statement
   statement: async (id: string) => {
-    const response = await apiClient.get<BankTransaction[]>(`/accounting/bank-accounts/${id}/statement/`);
-    return response.data;
+    const response = await apiClient.get<BankTransaction[] | Paginated<BankTransaction>>(`/accounting/bank-accounts/${id}/statement/`);
+    return unwrapList(response.data);
   },
 };
 
@@ -441,8 +460,7 @@ export const bankTransactionsAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<BankTransaction[]>('/accounting/bank-transactions/', { params });
-    return response.data;
+    return fetchAllPages<BankTransaction>('/accounting/bank-transactions/', params);
   },
 
   // Get bank transaction by ID
@@ -494,8 +512,7 @@ export const taxRulesAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<TaxRule[]>('/accounting/tax-rules/', { params });
-    return response.data;
+    return fetchAllPages<TaxRule>('/accounting/tax-rules/', params);
   },
 
   // Get tax rule by ID
@@ -539,8 +556,7 @@ export const vatReturnsAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<VATReturn[]>('/accounting/vat-returns/', { params });
-    return response.data;
+    return fetchAllPages<VATReturn>('/accounting/vat-returns/', params);
   },
 
   // Get VAT return by ID

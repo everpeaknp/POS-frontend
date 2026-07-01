@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MoreHorizontal, Trash2, X, Search, Mail, Shield } from "lucide-react";
@@ -751,10 +752,10 @@ export default function UsersPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(inv.created_at).toLocaleDateString()}
+                      <FormattedDate value={inv.created_at} />
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(inv.expires_at).toLocaleDateString()}
+                      <FormattedDate value={inv.expires_at} />
                     </td>
                     <td className="px-4 py-3">
                       {inv.status === 'pending' && (

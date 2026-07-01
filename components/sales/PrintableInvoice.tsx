@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react';
+import { FormattedDate } from '@/components/shared/FormattedDate';
 import { SalesOrder } from '@/lib/api/sales';
 import { formatCurrency } from '@/lib/utils';
 
@@ -53,7 +56,7 @@ export const PrintableInvoice = React.forwardRef<HTMLDivElement, PrintableInvoic
             </h2>
             <p className="text-sm text-gray-600 mt-2">#{order.order_number}</p>
             <p className="text-sm text-gray-600">
-              Date: {new Date(order.date).toLocaleDateString('en-GB')}
+              Date: <FormattedDate value={order.date} />
             </p>
           </div>
         </div>

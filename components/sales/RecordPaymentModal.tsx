@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { invoiceAPI } from "@/lib/api/sales";
@@ -64,11 +65,10 @@ export function RecordPaymentModal({ open, onClose, invoiceId, balance, onSucces
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm">Payment Date</Label>
-              <Input 
-                type="date"
-                value={form.date} 
-                onChange={(e) => setForm({ ...form, date: e.target.value })} 
-                className="h-9" 
+              <DateInput
+                value={form.date}
+                onChange={(date) => setForm({ ...form, date })}
+                className="h-9"
               />
             </div>
             <div className="flex flex-col gap-1.5">

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, ArrowRight, Search, Trash2 } from "lucide-react";
@@ -400,7 +401,7 @@ export default function StockTransferPage() {
                       />
                     </td>
                     <td className="px-4 py-3 font-medium text-[#22C55E]">#{t.id}</td>
-                    <td className="px-4 py-3 text-gray-600">{new Date(t.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-gray-600"><FormattedDate value={t.created_at} /></td>
                     <td className="px-4 py-3 font-medium text-gray-800">{t.product_name}</td>
                     <td className="px-4 py-3 font-semibold text-gray-800">{Math.abs(parseFloat(t.quantity))}</td>
                     <td className="px-4 py-3 text-gray-600 text-xs">{t.from_warehouse_name || '-'}</td>

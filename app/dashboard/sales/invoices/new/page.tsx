@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -314,19 +315,19 @@ export default function NewInvoicePage() {
               <Input className="h-9 text-sm bg-gray-50 text-gray-500" value="Auto-generated" readOnly />
             </Field>
             <Field label="Invoice Date" required>
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 className="h-9 text-sm border-gray-200" 
                 value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(date) => setForm({ ...form, date: date})}
               />
             </Field>
             <Field label="Due Date" required>
-              <Input 
-                type="date" 
+              <DateInput 
+                 
                 className="h-9 text-sm border-gray-200" 
                 value={form.due_date}
-                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                onChange={(date) => setForm({ ...form, due_date: date})}
               />
             </Field>
           </div>

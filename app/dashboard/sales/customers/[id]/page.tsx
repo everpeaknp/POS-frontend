@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -171,7 +172,7 @@ export default function CustomerProfilePage() {
                             </Link>
                           </td>
                           <td className="px-2 py-2.5 text-gray-600">
-                            {new Date(o.date).toLocaleDateString('en-GB')}
+                            <FormattedDate value={o.date} />
                           </td>
                           <td className="px-2 py-2.5 text-gray-600">{o.items_count || 0}</td>
                           <td className="px-2 py-2.5 font-medium">{formatCurrency(o.total)}</td>
@@ -214,10 +215,10 @@ export default function CustomerProfilePage() {
                             {inv.invoice_number}
                           </td>
                           <td className="px-2 py-2.5 text-gray-600">
-                            {new Date(inv.date).toLocaleDateString('en-GB')}
+                            <FormattedDate value={inv.date} />
                           </td>
                           <td className="px-2 py-2.5 text-gray-600">
-                            {new Date(inv.due_date).toLocaleDateString('en-GB')}
+                            <FormattedDate value={inv.due_date} />
                           </td>
                           <td className="px-2 py-2.5 font-medium">{formatCurrency(inv.amount)}</td>
                           <td className="px-2 py-2.5 text-red-600">{formatCurrency(inv.balance)}</td>
@@ -257,7 +258,7 @@ export default function CustomerProfilePage() {
                       ledger.map((entry: any) => (
                         <tr key={entry.id} className="hover:bg-gray-50/50">
                           <td className="px-2 py-2.5 text-gray-600">
-                            {new Date(entry.date).toLocaleDateString('en-GB')}
+                            <FormattedDate value={entry.date} />
                           </td>
                           <td className="px-2 py-2.5 text-gray-600 capitalize">{entry.transaction_type}</td>
                           <td className="px-2 py-2.5 font-mono text-xs text-[#22C55E]">

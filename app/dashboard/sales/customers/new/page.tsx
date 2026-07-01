@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -321,12 +322,12 @@ export default function NewCustomerPage() {
                 />
               </Field>
               <Field label="As of Date">
-                <Input 
-                  type="date"
+                <DateInput 
+                  
                   className="h-9 text-sm border-gray-200" 
                   placeholder="2082-01-01"
                   value={form.opening_balance_date}
-                  onChange={(e) => setForm({ ...form, opening_balance_date: e.target.value })}
+                  onChange={(date) => setForm({ ...form, opening_balance_date: date})}
                 />
               </Field>
             </div>

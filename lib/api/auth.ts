@@ -20,6 +20,8 @@ export interface Tenant {
   id: number;
   name: string;
   slug: string;
+  workspace_name?: string;
+  email?: string;
   business_type: string;
   is_active: boolean;
   plan_type: string;
@@ -109,17 +111,24 @@ export const authApi = {
 
 // Permissions API
 export interface PermissionsMatrix {
-  Admin: Record<string, boolean>;
-  Manager: Record<string, boolean>;
-  Supervisor: Record<string, boolean>;
-  Accountant: Record<string, boolean>;
-  Viewer: Record<string, boolean>;
+  Admin?: Record<string, boolean>;
+  Manager?: Record<string, boolean>;
+  Supervisor?: Record<string, boolean>;
+  Accountant?: Record<string, boolean>;
+  Cashier?: Record<string, boolean>;
+  Viewer?: Record<string, boolean>;
 }
 
 export const permissionsApi = {
-  // Get permissions matrix
+  // Get full permissions matrix (admin/manager settings only)
   getPermissions: async (): Promise<PermissionsMatrix> => {
     const response = await apiClient.get('/auth/permissions/');
+    return response.data;
+  },
+
+  // Get current user's role permissions (all authenticated users)
+  getMyPermissions: async (): Promise<PermissionsMatrix> => {
+    const response = await apiClient.get('/auth/permissions/me/');
     return response.data;
   },
 

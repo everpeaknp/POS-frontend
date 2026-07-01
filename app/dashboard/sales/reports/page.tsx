@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -167,18 +168,8 @@ export default function SalesReportsPage() {
           
           {dateRange === "Custom" && (
             <>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
-              />
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
-              />
+              <DateInput value={startDate} onChange={(date) => setStartDate(date)} />
+              <DateInput value={endDate} onChange={(date) => setEndDate(date)} />
             </>
           )}
           

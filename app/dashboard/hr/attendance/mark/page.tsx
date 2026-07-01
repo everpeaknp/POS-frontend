@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -149,13 +150,7 @@ export default function MarkAttendancePage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="mb-6">
             <label className="text-sm font-medium text-gray-700">Date</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={(e) => setDate(e.target.value)} 
-              className="mt-2 h-9 px-3 border border-gray-200 rounded-lg text-sm"
-              disabled={submitting}
-            />
+            <DateInput value={date} onChange={(date) => setDate(date)} />
           </div>
 
           <div className="flex gap-3 mb-6">

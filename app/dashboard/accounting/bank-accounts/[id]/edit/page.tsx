@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { bankAccountsAPI, accountsAPI, type BankAccount, type Account } from "@/lib/api/accounting";
-
-const BANKS = ["Nepal Bank Ltd.", "NIC Asia Bank", "Everest Bank", "Standard Chartered", "Himalayan Bank", "Nabil Bank", "Rastriya Banijya Bank", "Kumari Bank", "Laxmi Bank", "Other"];
+import { BankNameCombobox } from "@/components/accounting/BankNameCombobox";
+import { bankAccountsAPI } from "@/lib/api/accounting";
+import { loadBankGlAccounts } from "@/lib/accounting/bank-gl-accounts";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -33,7 +35,7 @@ export default function EditBankAccountPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [glAccounts, setGlAccounts] = useState<Account[]>([]);
+  const [glAccounts, setGlAccounts] = useState<Awaited<ReturnType<typeof loadBankGlAccounts>>>([]);
   const [formData, setFormData] = useState<{
     bank_name: string;
     account_name: string;
@@ -65,12 +67,9 @@ export default function EditBankAccountPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch GL accounts
-      const glData = await accountsAPI.list({ type: 'Assets', sub_type: 'Bank', status: 'active' });
-      const accountsData = Array.isArray(glData) ? glData : (glData as any).results || [];
-      setGlAccounts(accountsData);
+      const glData = await loadBankGlAccounts();
+      setGlAccounts(glData);
 
-      // Fetch bank account details
       const accountData = await bankAccountsAPI.get(id);
       setFormData({
         bank_name: accountData.bank_name,
@@ -79,7 +78,7 @@ export default function EditBankAccountPage() {
         type: accountData.type as AccountType,
         branch: accountData.branch || "",
         swift_code: accountData.swift_code || "",
-        gl_account: accountData.gl_account,
+        gl_account: String(accountData.gl_account),
         status: accountData.status as Status,
       });
     } catch (error: any) {
@@ -125,7 +124,7 @@ export default function EditBankAccountPage() {
         type: formData.type,
         branch: formData.branch.trim(),
         swift_code: formData.swift_code.trim(),
-        gl_account: formData.gl_account,
+        gl_account: Number(formData.gl_account) || formData.gl_account,
         status: formData.status,
       });
       toast.success('Bank account updated successfully');
@@ -138,6 +137,16 @@ export default function EditBankAccountPage() {
       setSaving(false);
     }
   };
+
+  const glAccountOptions = useMemo(
+    () =>
+      glAccounts.map((acc) => ({
+        value: String(acc.id),
+        label: `${acc.code} — ${acc.name}`,
+        subtitle: `${acc.type} · ${acc.sub_type}`,
+      })),
+    [glAccounts]
+  );
 
   if (loading) {
     return (
@@ -178,18 +187,11 @@ export default function EditBankAccountPage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5 max-w-2xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Bank Name" required>
-                <Select 
-                  value={formData.bank_name} 
-                  onValueChange={(value) => setFormData({ ...formData, bank_name: value || "" })}
+                <BankNameCombobox
+                  value={formData.bank_name}
+                  onChange={(bank_name) => setFormData({ ...formData, bank_name })}
                   disabled={saving}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200">
-                    <SelectValue placeholder="Select bank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BANKS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                />
               </Field>
               <Field label="Account Name" required>
                 <Input 
@@ -245,22 +247,25 @@ export default function EditBankAccountPage() {
               </Field>
             </div>
             <Field label="Link to GL Account" required>
-              <Select 
-                value={formData.gl_account} 
-                onValueChange={(value) => setFormData({ ...formData, gl_account: value || "" })}
-                disabled={saving}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue placeholder="Select GL account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {glAccounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.code} - {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {glAccounts.length === 0 ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  No GL accounts found.{" "}
+                  <Link href="/dashboard/accounting/chart-of-accounts/new" className="font-medium underline text-[#22C55E]">
+                    Create a Bank account
+                  </Link>{" "}
+                  in Chart of Accounts.
+                </div>
+              ) : (
+                <Combobox
+                  options={glAccountOptions}
+                  value={formData.gl_account || undefined}
+                  onValueChange={(value) => setFormData({ ...formData, gl_account: value })}
+                  placeholder="Search GL account..."
+                  searchPlaceholder="Code or name..."
+                  emptyText="No account found."
+                  disabled={saving}
+                />
+              )}
             </Field>
             <Field label="Status" required>
               <Select 
@@ -290,7 +295,7 @@ export default function EditBankAccountPage() {
               <Button 
                 type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-                disabled={saving}
+                disabled={saving || glAccounts.length === 0}
               >
                 {saving ? 'Saving...' : 'Update Bank Account'}
               </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -183,11 +184,11 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">Created</p>
-              <p className="text-sm text-gray-900">{new Date(department.created_at).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-900"><FormattedDate value={department.created_at} /></p>
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">Last Updated</p>
-              <p className="text-sm text-gray-900">{new Date(department.updated_at).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-900"><FormattedDate value={department.updated_at} /></p>
             </div>
           </div>
 

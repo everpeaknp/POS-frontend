@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
@@ -196,11 +197,11 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                   </div>
                   <div>
                     <Label htmlFor="dob" className="text-sm font-medium text-gray-700">Date of Birth*</Label>
-                    <Input 
+                    <DateInput 
                       id="dob" 
-                      type="date" 
+                       
                       value={formData.dob} 
-                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })} 
+                      onChange={(date) => setFormData({ ...formData, dob: date})} 
                       className="mt-1 h-9 border-gray-200" 
                       required 
                     />
@@ -281,11 +282,11 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                   </div>
                   <div>
                     <Label htmlFor="joinDate" className="text-sm font-medium text-gray-700">Join Date*</Label>
-                    <Input 
+                    <DateInput 
                       id="joinDate" 
-                      type="date" 
+                       
                       value={formData.join_date} 
-                      onChange={(e) => setFormData({ ...formData, join_date: e.target.value })} 
+                      onChange={(date) => setFormData({ ...formData, join_date: date})} 
                       className="mt-1 h-9 border-gray-200" 
                       required 
                     />

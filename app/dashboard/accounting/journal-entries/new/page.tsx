@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { JournalLinesTable, type JournalLine } from "@/components/accounting/JournalLinesTable";
-import { journalEntriesAPI, accountsAPI, Account } from "@/lib/api/accounting";
+import { DateInput } from "@/components/shared/DateInput";
+import { todayIsoDate } from "@/lib/dates";
 import toast from "react-hot-toast";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -31,7 +32,7 @@ export default function NewJournalEntryPage() {
     reference: string;
     description: string;
   }>({
-    date: new Date().toISOString().split('T')[0],
+    date: todayIsoDate(),
     type: "Manual",
     reference: "",
     description: ""
@@ -45,10 +46,18 @@ export default function NewJournalEntryPage() {
     fetchAccounts();
   }, []);
 
+  const buildLinesPayload = (validLines: JournalLine[]) =>
+    validLines.map((l) => ({
+      account: Number(l.accountId) || l.accountId,
+      description: l.description || "",
+      debit: l.debit || 0,
+      credit: l.credit || 0,
+    }));
+
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const data = await accountsAPI.list();
+      const data = await accountsAPI.list({ status: "active" });
       setAccounts(Array.isArray(data) ? data : []);
     } catch (error: any) {
       console.error('Failed to fetch accounts:', error);
@@ -81,12 +90,7 @@ export default function NewJournalEntryPage() {
         type: formData.type,
         reference: formData.reference || undefined,
         description: formData.description,
-        lines: validLines.map(l => ({
-          account: l.accountId,
-          description: l.description,
-          debit: l.debit,
-          credit: l.credit
-        }))
+        lines: buildLinesPayload(validLines),
       };
 
       await journalEntriesAPI.create(payload);
@@ -137,12 +141,7 @@ export default function NewJournalEntryPage() {
         type: formData.type,
         reference: formData.reference || undefined,
         description: formData.description,
-        lines: validLines.map(l => ({
-          account: l.accountId,
-          description: l.description,
-          debit: l.debit,
-          credit: l.credit
-        }))
+        lines: buildLinesPayload(validLines),
       };
 
       const entry = await journalEntriesAPI.create(payload);
@@ -196,11 +195,11 @@ export default function NewJournalEntryPage() {
                 <Input className="h-9 text-sm bg-gray-50 text-gray-500" value="Auto-generated" readOnly />
               </Field>
               <Field label="Date" required>
-                <Input 
-                  type="date"
-                  className="h-9 text-sm border-gray-200" 
+                <DateInput
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
+                  disabled={submitting}
+                  required
                 />
               </Field>
               <Field label="Type">
@@ -232,7 +231,21 @@ export default function NewJournalEntryPage() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Debit / Credit Lines</h3>
-            <JournalLinesTable lines={lines} onChange={setLines} accounts={accounts} />
+            {accounts.length === 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                No active accounts found. Create accounts in{" "}
+                <button
+                  type="button"
+                  className="font-medium underline"
+                  onClick={() => router.push("/dashboard/accounting/chart-of-accounts/new")}
+                >
+                  Chart of Accounts
+                </button>{" "}
+                before adding journal lines.
+              </div>
+            ) : (
+              <JournalLinesTable lines={lines} onChange={setLines} accounts={accounts} />
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-100">
@@ -248,12 +261,12 @@ export default function NewJournalEntryPage() {
               variant="outline" 
               className="border-gray-200 text-gray-700"
               onClick={handleSaveDraft}
-              disabled={submitting}
+              disabled={submitting || accounts.length === 0}
             >
               {submitting ? "Saving..." : "Save Draft"}
             </Button>
             <Button 
-              disabled={!balanced || submitting} 
+              disabled={!balanced || submitting || accounts.length === 0} 
               className={`px-6 text-white ${balanced && !submitting ? "bg-[#22C55E] hover:bg-[#16A34A]" : "bg-gray-300 cursor-not-allowed"}`}
               onClick={handlePostEntry}
             >

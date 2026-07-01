@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, MoreHorizontal, Eye, Edit, PackageCheck, X } from "lucide-react";
@@ -101,7 +102,7 @@ export default function PurchaseOrdersPage() {
                     {paginated.map((o) => (
                       <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}>{o.po_number}</td>
-                        <td className="px-4 py-3 text-gray-600">{new Date(o.date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-gray-600"><FormattedDate value={o.date} /></td>
                         <td className="px-4 py-3 font-medium text-gray-800">{o.supplier_name || 'N/A'}</td>
                         <td className="px-4 py-3 text-gray-600">{o.expected_delivery_date ? new Date(o.expected_delivery_date).toLocaleDateString() : 'N/A'}</td>
                         <td className="px-4 py-3 text-gray-600">{o.items_count || 0}</td>

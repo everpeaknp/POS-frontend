@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { constructionApi, Site, Worker } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
+import { DateInput } from '@/components/shared/DateInput';
 
 const attendanceSchema = z.object({
   site: z.string().min(1, 'Site is required'),
@@ -31,6 +32,7 @@ export default function AttendanceGrid() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     formState: { errors },
@@ -219,10 +221,12 @@ export default function AttendanceGrid() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                {...register('date')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value || ''} onChange={field.onChange} />
+                )}
               />
               {errors.date && (
                 <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>

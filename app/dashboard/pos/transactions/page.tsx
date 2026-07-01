@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, X, Loader2, Calendar, DollarSign, User } from "lucide-react";
@@ -210,7 +211,7 @@ export default function POSTransactionsPage() {
                         <span className="font-medium text-sm">{transaction.transaction_number}</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {new Date(transaction.date!).toLocaleDateString()}
+                        <FormattedDate value={transaction.date!} />
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {transaction.customer_display || "Walk-in"}

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -262,7 +263,7 @@ export default function SalesOrdersPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(o.date).toLocaleDateString('en-GB')}
+                      <FormattedDate value={o.date} />
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-800">{o.customer_name || o.customer}</td>
                     <td className="px-4 py-3 text-gray-600">{o.items_count || 0}</td>

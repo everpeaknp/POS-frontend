@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Printer, X, Loader2, Calendar, User, CreditCard, Package, Receipt } from "lucide-react";
@@ -149,7 +150,7 @@ export default function TransactionDetailPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader 
         title={transaction.transaction_number || "Transaction"} 
-        subtitle={`POS Transaction · ${new Date(transaction.date!).toLocaleDateString('en-GB')}`}
+        subtitle={`POS Transaction · $<FormattedDate value={transaction.date!} />`}
       />
       
       <div className="flex-1 p-6 space-y-6 max-w-5xl">

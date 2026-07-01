@@ -29,7 +29,7 @@ export default function JournalEntriesPage() {
     try {
       setLoading(true);
       const data = await journalEntriesAPI.list();
-      setEntries(Array.isArray(data) ? data : []);
+      setEntries(data);
     } catch (error: any) {
       console.error('Failed to fetch journal entries:', error);
       toast.error('Failed to load journal entries');

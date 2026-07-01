@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, ArrowLeft, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -316,12 +317,11 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
 
           <FormSection title="Accounting details">
             <FieldGroup label="Accounting Start Date" required hint="When your accounting records begin">
-              <Input 
-                type="date" 
+              <DateInput
                 value={form.accountingStartDate}
-                onChange={(e) => setForm({ ...form, accountingStartDate: e.target.value })}
-                required 
-                className={inputCls} 
+                onChange={(date) => setForm({ ...form, accountingStartDate: date })}
+                required
+                className={inputCls}
               />
             </FieldGroup>
 

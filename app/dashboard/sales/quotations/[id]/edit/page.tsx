@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -173,10 +174,10 @@ export default function EditQuotationPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm">Date</Label>
-              <Input 
-                type="date"
+              <DateInput 
+                
                 value={form.date} 
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(date) => setForm({ ...form, date: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </div>
@@ -195,10 +196,10 @@ export default function EditQuotationPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm">Valid Until <span className="text-red-500">*</span></Label>
-              <Input 
-                type="date"
+              <DateInput 
+                
                 value={form.validUntil} 
-                onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
+                onChange={(date) => setForm({ ...form, validUntil: date})}
                 className="h-9 text-sm border-gray-200" 
               />
             </div>

@@ -1,7 +1,9 @@
 ﻿"use client";
 
+import { useMemo } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Account } from "@/lib/api/accounting";
 
 export interface JournalLine {
@@ -21,6 +23,24 @@ interface Props {
 }
 
 export function JournalLinesTable({ lines, onChange, readOnly, accounts = [] }: Props) {
+  const postableAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.status === "active")
+        .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })),
+    [accounts]
+  );
+
+  const accountOptions = useMemo(
+    () =>
+      postableAccounts.map((a) => ({
+        value: String(a.id),
+        label: `${a.code} — ${a.name}`,
+        subtitle: a.type,
+      })),
+    [postableAccounts]
+  );
+
   const addLine = () => {
     onChange([...lines, { id: Date.now().toString(), accountId: "", accountName: "", description: "", debit: 0, credit: 0 }]);
   };
@@ -33,8 +53,16 @@ export function JournalLinesTable({ lines, onChange, readOnly, accounts = [] }: 
     onChange(lines.map((l) => {
       if (l.id !== id) return l;
       if (field === "accountId") {
-        const acc = accounts.find((a) => a.id === value);
-        return { ...l, accountId: value as string, accountName: acc?.name ?? "" };
+        const acc = postableAccounts.find((a) => String(a.id) === String(value));
+        return { ...l, accountId: String(value), accountName: acc?.name ?? "" };
+      }
+      if (field === "debit") {
+        const debit = value as number;
+        return { ...l, debit, credit: debit > 0 ? 0 : l.credit };
+      }
+      if (field === "credit") {
+        const credit = value as number;
+        return { ...l, credit, debit: credit > 0 ? 0 : l.debit };
       }
       return { ...l, [field]: value };
     }));
@@ -60,20 +88,19 @@ export function JournalLinesTable({ lines, onChange, readOnly, accounts = [] }: 
           <tbody className="divide-y divide-gray-100">
             {lines.map((line) => (
               <tr key={line.id} className="hover:bg-gray-50/50">
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 min-w-[220px]">
                   {readOnly ? (
                     <span className="text-gray-800">{line.accountName}</span>
                   ) : (
-                    <select
-                      value={line.accountId}
-                      onChange={(e) => updateLine(line.id, "accountId", e.target.value)}
-                      className="w-full h-8 text-sm border border-gray-200 rounded px-2 bg-white focus:outline-none focus:border-[#22C55E]"
-                    >
-                      <option value="">Select account</option>
-                      {accounts.filter((a) => a.level > 0).map((a) => (
-                        <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
-                      ))}
-                    </select>
+                    <Combobox
+                      options={accountOptions}
+                      value={line.accountId || undefined}
+                      onValueChange={(v) => updateLine(line.id, "accountId", v)}
+                      placeholder="Search account..."
+                      searchPlaceholder="Code or name..."
+                      emptyText={postableAccounts.length === 0 ? "No active accounts. Add accounts in Chart of Accounts." : "No account found."}
+                      className="h-8 text-sm"
+                    />
                   )}
                 </td>
                 <td className="px-3 py-2">

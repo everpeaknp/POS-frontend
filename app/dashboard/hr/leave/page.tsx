@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Search, MoreVertical } from "lucide-react";
@@ -303,7 +304,7 @@ export default function LeavePage() {
                         <td className="px-4 py-3 text-gray-600">{leave.end_date}</td>
                         <td className="px-4 py-3 text-gray-600">{leave.days_requested} days</td>
                         <td className="px-4 py-3 text-gray-600 truncate max-w-xs">{leave.reason}</td>
-                        <td className="px-4 py-3 text-gray-600">{new Date(leave.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-gray-600"><FormattedDate value={leave.created_at} /></td>
                         <td className="px-4 py-3"><LeaveStatusBadge status={leave.status} /></td>
                         <td className="px-4 py-3">
                           <DropdownMenu>

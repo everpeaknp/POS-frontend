@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -123,11 +124,11 @@ export default function NewLeaveRequestPage() {
 
                 <div>
                   <Label htmlFor="from" className="text-sm font-medium text-gray-700">From Date*</Label>
-                  <Input 
+                  <DateInput 
                     id="from" 
-                    type="date" 
+                     
                     value={formData.start_date} 
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} 
+                    onChange={(date) => setFormData({ ...formData, start_date: date})} 
                     className="mt-1 h-9 border-gray-200" 
                     required 
                     disabled={submitting}
@@ -136,11 +137,11 @@ export default function NewLeaveRequestPage() {
 
                 <div>
                   <Label htmlFor="to" className="text-sm font-medium text-gray-700">To Date*</Label>
-                  <Input 
+                  <DateInput 
                     id="to" 
-                    type="date" 
+                     
                     value={formData.end_date} 
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} 
+                    onChange={(date) => setFormData({ ...formData, end_date: date})} 
                     className="mt-1 h-9 border-gray-200" 
                     required 
                     disabled={submitting}

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { Plus, Search, Filter, Download } from "lucide-react";
@@ -119,7 +120,7 @@ export default function PaymentsPage() {
                       {payment.payment_number}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(payment.date).toLocaleDateString('en-GB')}
+                      <FormattedDate value={payment.date} />
                     </td>
                     <td className="px-4 py-3">
                       <Link

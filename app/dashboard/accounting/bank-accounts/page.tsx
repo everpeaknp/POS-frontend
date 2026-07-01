@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { bankAccountsAPI, type BankAccount } from "@/lib/api/accounting";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
@@ -15,17 +16,9 @@ function maskAccount(num: string) {
   return "XXXX XXXX " + num.slice(-4);
 }
 
-function formatDate(dateString?: string) {
-  if (!dateString) return "Never";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return "Never";
-  }
-}
 
 export default function BankAccountsPage() {
+  const { formatDate } = useDateSystem();
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -41,8 +34,7 @@ export default function BankAccountsPage() {
       setLoading(true);
       setError(null);
       const data = await bankAccountsAPI.list();
-      const accountsData = Array.isArray(data) ? data : (data as any).results || [];
-      setAccounts(accountsData);
+      setAccounts(data);
     } catch (error: any) {
       console.error('Failed to load bank accounts:', error);
       setError('Failed to load bank accounts. Please try again.');
@@ -165,7 +157,7 @@ export default function BankAccountsPage() {
                 </div>
 
                 <div className="text-xs text-gray-400">
-                  Last reconciled: {formatDate(bank.last_reconciled)}
+                  Last reconciled: {formatDate(bank.last_reconciled, "Never")}
                 </div>
 
                 <div className="flex gap-2 pt-1 border-t border-gray-100">

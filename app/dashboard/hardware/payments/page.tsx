@@ -1,5 +1,6 @@
 'use client';
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -114,7 +115,7 @@ export default function HardwarePaymentsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
-                      {new Date(payment.date).toLocaleDateString()}
+                      <FormattedDate value={payment.date} />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

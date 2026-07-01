@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -82,7 +83,7 @@ export default function FinancialReportPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">Profit & Loss Statement</h3>
                 <p className="text-xs text-gray-600">
-                  For the period {new Date(data.profit_and_loss.period.from_date).toLocaleDateString()} to {new Date(data.profit_and_loss.period.to_date).toLocaleDateString()}
+                  For the period <FormattedDate value={data.profit_and_loss.period.from_date} /> to <FormattedDate value={data.profit_and_loss.period.to_date} />
                 </p>
               </div>
               <table className="w-full text-sm">
@@ -124,7 +125,7 @@ export default function FinancialReportPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">Balance Sheet</h3>
                 <p className="text-xs text-gray-600">
-                  As of {new Date(data.balance_sheet.as_of_date).toLocaleDateString()}
+                  As of <FormattedDate value={data.balance_sheet.as_of_date} />
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-6">
@@ -195,7 +196,7 @@ export default function FinancialReportPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">Trial Balance</h3>
                 <p className="text-xs text-gray-600">
-                  As of {new Date(data.trial_balance.as_of_date).toLocaleDateString()}
+                  As of <FormattedDate value={data.trial_balance.as_of_date} />
                 </p>
               </div>
               <table className="w-full text-sm">
@@ -232,7 +233,7 @@ export default function FinancialReportPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">Cash Flow Statement</h3>
                 <p className="text-xs text-gray-600">
-                  For the period {new Date(data.cash_flow.period.from_date).toLocaleDateString()} to {new Date(data.cash_flow.period.to_date).toLocaleDateString()}
+                  For the period <FormattedDate value={data.cash_flow.period.from_date} /> to <FormattedDate value={data.cash_flow.period.to_date} />
                 </p>
               </div>
               <div className="space-y-4">

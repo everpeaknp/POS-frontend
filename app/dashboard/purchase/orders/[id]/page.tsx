@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -223,7 +224,7 @@ export default function PurchaseOrderDetailPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader 
         title={order.po_number} 
-        subtitle={`Purchase Order · ${new Date(order.date).toLocaleDateString('en-GB')}`} 
+        subtitle={`Purchase Order · $<FormattedDate value={order.date} />`} 
       />
       <div className="flex-1 p-6 space-y-4 max-w-5xl">
         {/* Action bar */}
@@ -286,13 +287,13 @@ export default function PurchaseOrderDetailPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Date</span>
               <span className="font-medium text-gray-800">
-                {new Date(order.date).toLocaleDateString('en-GB')}
+                <FormattedDate value={order.date} />
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Expected Delivery</span>
               <span className="font-medium text-gray-800">
-                {new Date(order.expected_delivery_date).toLocaleDateString('en-GB')}
+                <FormattedDate value={order.expected_delivery_date} />
               </span>
             </div>
             <div className="flex justify-between text-sm">

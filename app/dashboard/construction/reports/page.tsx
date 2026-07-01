@@ -1,5 +1,6 @@
 'use client';
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { DashHeader } from '@/components/dashboard/dash-header';
 import { constructionApi, Site, SiteReport } from '@/lib/api/construction';
@@ -213,14 +214,14 @@ export default function ConstructionReportsPage() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Start Date:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {new Date(report.start_date).toLocaleDateString()}
+                      <FormattedDate value={report.start_date} />
                     </span>
                   </div>
                   {report.estimated_end_date && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Estimated End Date:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        {new Date(report.estimated_end_date).toLocaleDateString()}
+                        <FormattedDate value={report.estimated_end_date} />
                       </span>
                     </div>
                   )}
@@ -228,7 +229,7 @@ export default function ConstructionReportsPage() {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Actual End Date:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        {new Date(report.actual_end_date).toLocaleDateString()}
+                        <FormattedDate value={report.actual_end_date} />
                       </span>
                     </div>
                   )}

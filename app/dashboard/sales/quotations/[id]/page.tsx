@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -222,7 +223,7 @@ export default function QuotationDetailPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader 
         title={quotation.quotation_number} 
-        subtitle={`Quotation · ${new Date(quotation.date).toLocaleDateString('en-GB')}`} 
+        subtitle={`Quotation · $<FormattedDate value={quotation.date} />`} 
       />
       <div className="flex-1 p-6 space-y-4 max-w-5xl">
         {/* Action bar */}
@@ -287,13 +288,13 @@ export default function QuotationDetailPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Date</span>
               <span className="font-medium text-gray-800">
-                {new Date(quotation.date).toLocaleDateString('en-GB')}
+                <FormattedDate value={quotation.date} />
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Valid Until</span>
               <span className={`font-medium ${isExpired ? 'text-red-600' : 'text-gray-800'}`}>
-                {new Date(quotation.valid_until).toLocaleDateString('en-GB')}
+                <FormattedDate value={quotation.valid_until} />
               </span>
             </div>
             <div className="flex justify-between text-sm">

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -100,7 +101,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Join Date</span>
-                <span className="text-sm font-medium text-gray-900">{new Date(employee.join_date).toLocaleDateString()}</span>
+                <span className="text-sm font-medium text-gray-900"><FormattedDate value={employee.join_date} /></span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Employment Type</span>
@@ -155,7 +156,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Date of Birth</p>
-                  <p className="text-xl font-bold text-gray-900 mt-1">{new Date(employee.dob).toLocaleDateString()}</p>
+                  <p className="text-xl font-bold text-gray-900 mt-1"><FormattedDate value={employee.dob} /></p>
                 </div>
               </div>
             </TabsContent>

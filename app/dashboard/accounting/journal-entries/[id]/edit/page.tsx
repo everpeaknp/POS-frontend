@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -66,8 +67,8 @@ export default function EditJournalEntryPage() {
       });
       
       setLines((entryData.lines ?? []).map((l) => ({
-        id: l.id || String(Math.random()),
-        accountId: l.account,
+        id: String(l.id || Math.random()),
+        accountId: String(l.account),
         accountName: l.account_name || '',
         description: l.description,
         debit: Number(l.debit),
@@ -104,7 +105,7 @@ export default function EditJournalEntryPage() {
         reference: formData.reference || undefined,
         description: formData.description,
         lines: validLines.map(l => ({
-          account: l.accountId,
+          account: Number(l.accountId) || l.accountId,
           description: l.description,
           debit: l.debit,
           credit: l.credit
@@ -165,7 +166,7 @@ export default function EditJournalEntryPage() {
         reference: formData.reference || undefined,
         description: formData.description,
         lines: validLines.map(l => ({
-          account: l.accountId,
+          account: Number(l.accountId) || l.accountId,
           description: l.description,
           debit: l.debit,
           credit: l.credit
@@ -244,11 +245,9 @@ export default function EditJournalEntryPage() {
               <Input className="h-9 text-sm bg-gray-50 text-gray-500" value={entry.entry_number} readOnly />
             </Field>
             <Field label="Date" required>
-              <Input 
-                type="date"
-                className="h-9 text-sm border-gray-200" 
+              <DateInput
                 value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
               />
             </Field>
             <Field label="Type">

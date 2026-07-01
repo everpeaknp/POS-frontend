@@ -1,5 +1,6 @@
 'use client';
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -346,14 +347,14 @@ export default function SitesPage() {
                   <div>
                     <p className="text-gray-500">Start Date</p>
                     <p className="font-medium text-gray-900">
-                      {new Date(site.start_date).toLocaleDateString()}
+                      <FormattedDate value={site.start_date} />
                     </p>
                   </div>
                   {site.estimated_end_date && (
                     <div>
                       <p className="text-gray-500">Est. Completion</p>
                       <p className="font-medium text-gray-900">
-                        {new Date(site.estimated_end_date).toLocaleDateString()}
+                        <FormattedDate value={site.estimated_end_date} />
                       </p>
                     </div>
                   )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -183,7 +184,7 @@ export default function EmployeesPage() {
                     <td className="px-4 py-3 text-gray-600">{emp.designation}</td>
                     <td className="px-4 py-3 text-gray-600">{emp.department_name || 'N/A'}</td>
                     <td className="px-4 py-3 text-gray-600">{emp.phone}</td>
-                    <td className="px-4 py-3 text-gray-600">{new Date(emp.join_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-gray-600"><FormattedDate value={emp.join_date} /></td>
                     <td className="px-4 py-3"><EmploymentTypeBadge type={emp.employment_type} /></td>
                     <td className="px-4 py-3"><EmployeeStatusBadge status={emp.status} /></td>
                     <td className="px-4 py-3">

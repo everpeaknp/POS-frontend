@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -39,7 +40,7 @@ export default function NewAccountPage() {
     name: "",
     parent: "",
     description: "",
-    status: "Active",
+    status: "active",
     openingBalance: "",
     openingBalanceDate: "",
     balanceType: "Debit",
@@ -54,13 +55,25 @@ export default function NewAccountPage() {
     try {
       setLoading(true);
       const data = await accountsAPI.list();
-      setAccounts(Array.isArray(data) ? data : []);
+      setAccounts(data);
     } catch (error: any) {
       console.error('Failed to fetch accounts:', error);
       toast.error('Failed to load accounts');
     } finally {
       setLoading(false);
     }
+  };
+
+  const parentOptions = useMemo(() => {
+    return accounts
+      .filter((a) => a.type === type && a.status === "active")
+      .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+  }, [accounts, type]);
+
+  const handleTypeChange = (nextType: string) => {
+    setType(nextType);
+    setSubType("");
+    setFormData((prev) => ({ ...prev, parent: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,13 +99,21 @@ export default function NewAccountPage() {
         name: formData.name,
         type: type,
         sub_type: subType,
-        level: formData.parent ? 1 : 0,
         status: formData.status,
         description: formData.description
       };
 
       if (formData.parent) {
         payload.parent = formData.parent;
+      }
+
+      const openingAmount = parseFloat(formData.openingBalance);
+      if (!Number.isNaN(openingAmount) && openingAmount > 0) {
+        payload.opening_balance = openingAmount;
+        if (formData.openingBalanceDate) {
+          payload.opening_balance_date = formData.openingBalanceDate;
+        }
+        payload.balance_type = formData.balanceType.toLowerCase();
       }
 
       await accountsAPI.create(payload);
@@ -161,7 +182,7 @@ export default function NewAccountPage() {
                   />
                 </Field>
                 <Field label="Account Type" required>
-                  <Select value={type} onValueChange={(v) => { setType(v ?? "Assets"); setSubType(""); }}>
+                  <Select value={type} onValueChange={(v) => handleTypeChange(v ?? "Assets")}>
                     <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["Assets", "Liabilities", "Equity", "Income", "Expense"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -177,23 +198,40 @@ export default function NewAccountPage() {
                   </Select>
                 </Field>
                 <Field label="Parent Account">
-                  <select 
-                    className="h-9 w-full text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
-                    value={formData.parent}
-                    onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
+                  <Select
+                    value={formData.parent || "__none__"}
+                    onValueChange={(v) =>
+                      setFormData((prev) => ({ ...prev, parent: v === "__none__" ? "" : (v ?? "") }))
+                    }
                   >
-                    <option value="">— None (Top Level) —</option>
-                    {accounts.filter((a) => a.type === type && a.level < 2).map((a) => (
-                      <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-9 text-sm border-gray-200 w-full">
+                      <SelectValue placeholder="None (top level)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— None (Top Level) —</SelectItem>
+                      {parentOptions.map((a) => (
+                        <SelectItem key={a.id} value={String(a.id)}>
+                          {a.code} — {a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {parentOptions.length === 0 ? (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No other {type} accounts yet. This will be a top-level account, or create a {type} account first to use as a parent.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {parentOptions.length} {type} account{parentOptions.length !== 1 ? "s" : ""} available as parent
+                    </p>
+                  )}
                 </Field>
                 <Field label="Status">
-                  <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v ?? "Active" }))}>
+                  <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v ?? "active" }))}>
                     <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -234,11 +272,11 @@ export default function NewAccountPage() {
                   />
                 </Field>
                 <Field label="Opening Balance Date">
-                  <Input 
-                    type="date"
+                  <DateInput 
+                    
                     className="h-9 text-sm border-gray-200" 
                     value={formData.openingBalanceDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, openingBalanceDate: e.target.value }))}
+                    onChange={(date) => setFormData(prev => ({ ...prev, openingBalanceDate: date}))}
                   />
                 </Field>
                 <Field label="Balance Type">

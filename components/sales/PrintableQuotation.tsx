@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react';
+import { FormattedDate } from '@/components/shared/FormattedDate';
 import { Quotation } from '@/lib/api/sales';
 import { formatCurrency } from '@/lib/utils';
 
@@ -45,11 +48,11 @@ export const PrintableQuotation = React.forwardRef<HTMLDivElement, PrintableQuot
               </p>
               <p className="text-sm text-gray-600">
                 <span className="font-semibold">Date:</span>{' '}
-                {new Date(quotation.date).toLocaleDateString('en-GB')}
+                <FormattedDate value={quotation.date} />
               </p>
               <p className="text-sm text-gray-600">
                 <span className="font-semibold">Valid Until:</span>{' '}
-                {new Date(quotation.valid_until).toLocaleDateString('en-GB')}
+                <FormattedDate value={quotation.valid_until} />
               </p>
             </div>
           </div>

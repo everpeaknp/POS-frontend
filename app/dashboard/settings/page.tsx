@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Settings, Users, Lock, CreditCard, Zap, FileText } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { DateSystemPreferenceCard } from "@/components/settings/DateSystemPreferenceCard";
 
 const settingsCards = [
   {
@@ -66,6 +67,8 @@ export default function SettingsPage() {
             </Link>
           </p>
         </div>
+
+        <DateSystemPreferenceCard />
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
           {settingsCards.map((card) => {

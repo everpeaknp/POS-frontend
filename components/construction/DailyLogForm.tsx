@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { constructionApi, Site } from '@/lib/api/construction';
 import FormField from '@/components/shared/FormField';
+import { DateInput } from '@/components/shared/DateInput';
 
 const dailyLogSchema = z.object({
   site: z.string().min(1, 'Site is required'),
@@ -32,6 +33,7 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<DailyLogFormData>({
@@ -146,10 +148,12 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
           error={errors.date}
           required
         >
-          <input
-            {...register('date')}
-            type="date"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+          <Controller
+            name="date"
+            control={control}
+            render={({ field }) => (
+              <DateInput value={field.value || ''} onChange={field.onChange} />
+            )}
           />
         </FormField>
 

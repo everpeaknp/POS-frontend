@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import FormField from '@/components/shared/FormField';
+import { DateInput } from '@/components/shared/DateInput';
 import { purchaseRequestsAPI } from '@/lib/api/purchase';
 import apiClient from '@/lib/api/client';
 import { Trash2, Plus } from 'lucide-react';
@@ -233,11 +234,12 @@ export default function RequestForm({
             error={errors.date}
             required
           >
-            <input
-              {...register('date')}
-              type="date"
-              id="date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <DateInput value={field.value || ''} onChange={field.onChange} />
+              )}
             />
           </FormField>
 
@@ -247,11 +249,12 @@ export default function RequestForm({
             error={errors.required_by}
             required
           >
-            <input
-              {...register('required_by')}
-              type="date"
-              id="required_by"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <Controller
+              name="required_by"
+              control={control}
+              render={({ field }) => (
+                <DateInput value={field.value || ''} onChange={field.onChange} />
+              )}
             />
           </FormField>
         </div>

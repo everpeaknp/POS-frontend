@@ -1,16 +1,18 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { bankAccountsAPI, accountsAPI, type Account } from "@/lib/api/accounting";
-
-const BANKS = ["Nepal Bank Ltd.", "NIC Asia Bank", "Everest Bank", "Standard Chartered", "Himalayan Bank", "Nabil Bank", "Rastriya Banijya Bank", "Kumari Bank", "Laxmi Bank", "Other"];
+import { BankNameCombobox } from "@/components/accounting/BankNameCombobox";
+import { bankAccountsAPI } from "@/lib/api/accounting";
+import { loadBankGlAccounts } from "@/lib/accounting/bank-gl-accounts";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -27,7 +29,8 @@ type Status = "active" | "inactive";
 export default function NewBankAccountPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [glAccounts, setGlAccounts] = useState<Account[]>([]);
+  const [loadingGlAccounts, setLoadingGlAccounts] = useState(true);
+  const [glAccounts, setGlAccounts] = useState<Awaited<ReturnType<typeof loadBankGlAccounts>>>([]);
   const [formData, setFormData] = useState<{
     bank_name: string;
     account_name: string;
@@ -56,14 +59,27 @@ export default function NewBankAccountPage() {
 
   const fetchGLAccounts = async () => {
     try {
-      const data = await accountsAPI.list({ type: 'Assets', sub_type: 'Bank', status: 'active' });
-      const accountsData = Array.isArray(data) ? data : (data as any).results || [];
-      setGlAccounts(accountsData);
-    } catch (error: any) {
-      console.error('Failed to load GL accounts:', error);
-      toast.error('Failed to load GL accounts');
+      setLoadingGlAccounts(true);
+      setGlAccounts(await loadBankGlAccounts());
+    } catch (error: unknown) {
+      console.error("Failed to load GL accounts:", error);
+      toast.error("Failed to load GL accounts");
+    } finally {
+      setLoadingGlAccounts(false);
     }
   };
+
+  const glAccountOptions = useMemo(
+    () =>
+      glAccounts.map((acc) => ({
+        value: String(acc.id),
+        label: `${acc.code} — ${acc.name}`,
+        subtitle: `${acc.type} · ${acc.sub_type}`,
+      })),
+    [glAccounts]
+  );
+
+  const hasAssetAccounts = glAccounts.some((a) => a.type === "Assets");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,7 +97,11 @@ export default function NewBankAccountPage() {
       return;
     }
     if (!formData.gl_account) {
-      toast.error('GL account is required');
+      toast.error("GL account is required");
+      return;
+    }
+    if (glAccounts.length === 0) {
+      toast.error("Create a Bank or Cash account in Chart of Accounts first");
       return;
     }
 
@@ -94,7 +114,7 @@ export default function NewBankAccountPage() {
         type: formData.type,
         branch: formData.branch.trim(),
         swift_code: formData.swift_code.trim(),
-        gl_account: formData.gl_account,
+        gl_account: Number(formData.gl_account) || formData.gl_account,
         balance: parseFloat(formData.balance) || 0,
         status: formData.status,
       });
@@ -119,18 +139,11 @@ export default function NewBankAccountPage() {
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Bank Account Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <Field label="Bank Name" required>
-                  <Select 
-                    value={formData.bank_name} 
-                    onValueChange={(value) => setFormData({ ...formData, bank_name: value || "" })}
+                  <BankNameCombobox
+                    value={formData.bank_name}
+                    onChange={(bank_name) => setFormData({ ...formData, bank_name })}
                     disabled={loading}
-                  >
-                    <SelectTrigger className="h-9 text-sm border-gray-200">
-                      <SelectValue placeholder="Select bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BANKS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  />
                 </Field>
                 <Field label="Account Name" required>
                   <Input 
@@ -181,22 +194,37 @@ export default function NewBankAccountPage() {
                   />
                 </Field>
                 <Field label="Link to GL Account" required>
-                  <Select 
-                    value={formData.gl_account} 
-                    onValueChange={(value) => setFormData({ ...formData, gl_account: value || "" })}
-                    disabled={loading}
-                  >
-                    <SelectTrigger className="h-9 text-sm border-gray-200">
-                      <SelectValue placeholder="Select GL account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {glAccounts.map((acc) => (
-                        <SelectItem key={acc.id} value={acc.id}>
-                          {acc.code} - {acc.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {loadingGlAccounts ? (
+                    <p className="text-sm text-gray-500 py-2">Loading accounts...</p>
+                  ) : glAccounts.length === 0 ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      No GL accounts found.{" "}
+                      <Link
+                        href="/dashboard/accounting/chart-of-accounts/new"
+                        className="font-medium underline text-[#22C55E]"
+                      >
+                        Create a Bank account
+                      </Link>{" "}
+                      in Chart of Accounts (type Assets, sub-type Bank).
+                    </div>
+                  ) : (
+                    <>
+                      <Combobox
+                        options={glAccountOptions}
+                        value={formData.gl_account || undefined}
+                        onValueChange={(value) => setFormData({ ...formData, gl_account: value })}
+                        placeholder="Search GL account..."
+                        searchPlaceholder="Code or name..."
+                        emptyText="No account found."
+                        disabled={loading}
+                      />
+                      {!hasAssetAccounts && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          No Asset accounts yet — showing all active accounts. Prefer creating a Bank account under Assets.
+                        </p>
+                      )}
+                    </>
+                  )}
                 </Field>
                 <Field label="Opening Balance (Rs.)">
                   <Input 
@@ -237,9 +265,9 @@ export default function NewBankAccountPage() {
               <Button 
                 type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-                disabled={loading}
+                disabled={loading || loadingGlAccounts || glAccounts.length === 0}
               >
-                {loading ? 'Saving...' : 'Save Bank Account'}
+                {loading ? "Saving..." : "Save Bank Account"}
               </Button>
             </div>
           </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, MoreHorizontal, Eye, CheckCircle, Printer, Loader2 } from "lucide-react";
@@ -71,7 +72,7 @@ export default function DebitNotesPage() {
                   filtered.map((dn) => (
                     <tr key={dn.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/debit-notes/${dn.id}`)}>{dn.debit_note_number}</td>
-                      <td className="px-4 py-3 text-gray-600">{new Date(dn.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-gray-600"><FormattedDate value={dn.date} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{dn.supplier_name}</td>
                       <td className="px-4 py-3 text-blue-600 font-medium">{dn.invoice_number}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">Rs. {dn.amount?.toLocaleString()}</td>

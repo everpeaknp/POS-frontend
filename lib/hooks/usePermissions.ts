@@ -13,18 +13,36 @@ export function usePermissions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      setPermissions(null);
+      setLoading(false);
+      return;
+    }
+
     loadPermissions();
-  }, []);
+  }, [user?.id, user?.tenant?.id, user?.role]);
 
   const loadPermissions = async () => {
+    if (!user) {
+      setPermissions(null);
+      setLoading(false);
+      return;
+    }
+
+    // No org selected yet — skip API call
+    if (!user.tenant) {
+      setPermissions(null);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await permissionsApi.getPermissions();
+      setLoading(true);
+      const data = await permissionsApi.getMyPermissions();
       setPermissions(data);
-    } catch (error: any) {
-      // Silently handle permission errors - not all users can access the permissions API
-      // Only admins and managers can view the full permissions matrix
-      if (error?.response?.status === 403 || error?.response?.status === 401) {
-        // User doesn't have permission to view permissions matrix - this is expected for non-admin users
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err?.response?.status === 403 || err?.response?.status === 401 || err?.response?.status === 400) {
         setPermissions(null);
       } else {
         console.error('Failed to load permissions:', error);
@@ -40,29 +58,36 @@ export function usePermissions() {
    */
   const hasModuleAccess = (module: string): boolean => {
     if (!user?.tenant) return false;
-    
-    // Normalize module name to lowercase for comparison
+
     const normalizedModule = module.toLowerCase();
     const activeModules = user.tenant.active_modules || [];
-    
-    // Check if module is in tenant's active modules
+
     return activeModules.some(m => m.toLowerCase() === normalizedModule);
   };
 
-  const hasPermission = (module: string, action: string): boolean => {
-    if (!user?.role || !permissions) return false;
+  const getRoleKey = (): string | null => {
+    if (!user?.role) return null;
+    return user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
+  };
 
-    // First check if tenant has access to this module
+  const hasPermission = (module: string, action: string): boolean => {
+    if (!user?.role) return false;
     if (!hasModuleAccess(module)) return false;
 
-    // Capitalize role to match permissions matrix keys (e.g., "admin" -> "Admin")
-    const roleKey = user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
+    const roleKey = getRoleKey();
+    if (!roleKey) return false;
 
-    // Check if role exists in permissions matrix
-    if (!(roleKey in permissions)) return false;
+    // Use profile module flags as fallback when matrix is unavailable
+    if (!permissions || !(roleKey in permissions)) {
+      const moduleKey = module.toLowerCase() as keyof NonNullable<typeof user.permissions>['modules'];
+      const hasMod = user.permissions?.modules?.[moduleKey];
+      if (!hasMod) return false;
+      if (action === 'View') return true;
+      if (user.role === 'admin') return true;
+      if (user.role === 'viewer') return false;
+      return user.permissions?.can_edit_data ?? false;
+    }
 
-    // Capitalize module to match permissions matrix keys
-    // Special case: 'pos' -> 'POS', 'hr' -> 'HR' (acronyms are all caps)
     let moduleKey: string;
     const lowerModule = module.toLowerCase();
     if (lowerModule === 'pos') {
@@ -70,24 +95,21 @@ export function usePermissions() {
     } else if (lowerModule === 'hr') {
       moduleKey = 'HR';
     } else {
-      // Regular capitalization: "sales" -> "Sales"
       moduleKey = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
     }
 
-    // Check specific permission (e.g., "Sales-View", "POS-View")
     const rolePermissions = permissions[roleKey as keyof PermissionsMatrix];
+    if (!rolePermissions) return false;
+
     const permissionKey = `${moduleKey}-${action}`;
-    
     return rolePermissions[permissionKey] === true;
   };
 
   const canView = (module: string) => {
-    // For viewing, we only need to check if tenant has module access
-    // Role-based permissions are checked by hasPermission
     if (!hasModuleAccess(module)) return false;
     return hasPermission(module, 'View');
   };
-  
+
   const canCreate = (module: string) => hasPermission(module, 'Create');
   const canEdit = (module: string) => hasPermission(module, 'Edit');
   const canDelete = (module: string) => hasPermission(module, 'Delete');

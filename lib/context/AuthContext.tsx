@@ -1,8 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { authApi, User, LoginCredentials, RegisterData } from '@/lib/api/auth';
+import { tenantApi, type Tenant } from '@/lib/api/tenant';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +14,21 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (data: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
+  switchOrganization: (slug: string) => Promise<void>;
+}
+
+function toAuthTenant(tenant: Tenant): NonNullable<User['tenant']> {
+  return {
+    id: tenant.id,
+    name: tenant.name,
+    slug: tenant.slug,
+    workspace_name: tenant.workspace_name,
+    email: tenant.email,
+    business_type: tenant.business_type,
+    is_active: tenant.is_active,
+    plan_type: tenant.plan_type,
+    active_modules: tenant.active_modules,
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,8 +152,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const switchOrganization = async (slug: string) => {
+    const switchedTenant = await tenantApi.switch(slug);
+    const userData = await authApi.getProfile();
+    const tenant = toAuthTenant(switchedTenant);
+    const nextUser: User = {
+      ...userData,
+      tenant: userData.tenant?.slug === tenant.slug ? userData.tenant : tenant,
+    };
+
+    localStorage.setItem('active_tenant_slug', tenant.slug);
+    flushSync(() => setUser(nextUser));
+    router.push('/dashboard');
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, refreshUser, switchOrganization }}>
       {children}
     </AuthContext.Provider>
   );
