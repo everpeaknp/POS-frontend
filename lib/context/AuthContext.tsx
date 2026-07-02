@@ -14,7 +14,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (data: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
-  switchOrganization: (slug: string) => Promise<void>;
+  switchOrganization: (slug: string, redirectTo?: string) => Promise<void>;
 }
 
 function toAuthTenant(tenant: Tenant): NonNullable<User['tenant']> {
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const switchOrganization = async (slug: string) => {
+  const switchOrganization = async (slug: string, redirectTo = '/dashboard') => {
     const switchedTenant = await tenantApi.switch(slug);
     const userData = await authApi.getProfile();
     const tenant = toAuthTenant(switchedTenant);
@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem('active_tenant_slug', tenant.slug);
     flushSync(() => setUser(nextUser));
-    router.push('/dashboard');
+    router.push(redirectTo);
   };
 
   return (

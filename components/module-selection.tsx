@@ -173,31 +173,13 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
             <div
               key={module.id}
               onClick={() => toggleModule(module.id)}
-              className={`relative border rounded-xl p-5 cursor-pointer transition-all ${
+              className={`relative border rounded-xl p-5 cursor-pointer transition-all flex flex-col ${
                 isSelected
                   ? 'border-[#22C55E] bg-green-50/60 shadow-sm'
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
               }`}
             >
-              {/* Required Badge for Accounting */}
-              {module.id === 'accounting' && (
-                <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
-                    ✓ Required
-                  </span>
-                </div>
-              )}
-              
-              {/* Recommended Badge */}
-              {module.recommended && module.id !== 'accounting' && (
-                <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
-                    Recommended
-                  </span>
-                </div>
-              )}
-
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 flex-1">
                 {/* Checkbox */}
                 <div className="flex-shrink-0 mt-1">
                   <Checkbox
@@ -233,6 +215,20 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
                   </div>
                 )}
               </div>
+
+              {(module.id === 'accounting' || module.recommended) && (
+                <div className="flex justify-end mt-auto pt-3">
+                  {module.id === 'accounting' ? (
+                    <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                      ✓ Required
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
+                      Recommended
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

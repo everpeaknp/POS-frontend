@@ -21,6 +21,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const [isOpeningPos, setIsOpeningPos] = useState(false);
   
   // Check if user is a member of THIS specific organization
   // user_role is set by backend if user has membership in this tenant
@@ -41,6 +42,24 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
       toast.error(message);
     } finally {
       setIsOpening(false);
+    }
+  };
+
+  const handleOpenPOS = async () => {
+    try {
+      setIsOpeningPos(true);
+      await switchOrganization(org.slug, "/dashboard/pos");
+      toast.success(`Opened POS for ${org.workspace_name || org.name}`);
+    } catch (error: unknown) {
+      console.error("Failed to open POS:", error);
+      const err = error as { response?: { data?: { error?: string; detail?: string }; status?: number } };
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        (err.response?.status === 404 ? "Organization not found" : "Failed to open POS. Please try again.");
+      toast.error(message);
+    } finally {
+      setIsOpeningPos(false);
     }
   };
 
@@ -133,8 +152,14 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
               disabled={isOpening}>
               <ExternalLink className="h-3 w-3" /> {isOpening ? "Opening..." : "Open Khata"}
             </Button>
-            <Button size="sm" variant="outline" className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-8 gap-1.5">
-              <ShoppingCart className="h-3 w-3" /> Open POS
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-8 gap-1.5"
+              onClick={handleOpenPOS}
+              disabled={isOpeningPos || isOpening}
+            >
+              <ShoppingCart className="h-3 w-3" /> {isOpeningPos ? "Opening..." : "Open POS"}
             </Button>
           </>
         ) : (

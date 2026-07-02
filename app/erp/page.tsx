@@ -206,16 +206,10 @@ export default function ErpPage() {
                 showButton={true}
               />
             ) : filteredOrgs.length > 0 ? (
-              // Show organization cards
-              <div className="overflow-x-auto overscroll-x-contain pb-4 scroll-smooth">
-                <div
-                  className="grid grid-flow-col gap-5 w-full"
-                  style={{ gridAutoColumns: "calc((100% - 3 * 1.25rem) / 4)" }}
-                >
-                  {filteredOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} onDelete={fetchTenants} />
-                  ))}
-                </div>
+              <div className="grid grid-cols-4 gap-5 w-full">
+                {filteredOrgs.map((org) => (
+                  <OrgCard key={org.id} org={org} onDelete={fetchTenants} />
+                ))}
               </div>
             ) : searchQuery ? (
               // Show "not found" if searching and no results
