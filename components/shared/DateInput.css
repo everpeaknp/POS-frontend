@@ -22,6 +22,7 @@
   padding: 3px 1px;
   overflow: hidden;
   gap: 2px;
+  transition: background-color 0.1s;
 }
 
 .khata-nc-panel .nc-day .khata-day-bs {
@@ -58,9 +59,30 @@
   min-height: 48px;
 }
 
+.khata-nc-panel .nc-title-main,
+.khata-nc-panel .nc-title-sub {
+  transition: color 0.12s ease;
+}
+
+.khata-nc-panel .nc-title-btn:hover .nc-title-main,
+.khata-nc-panel .nc-title-btn:hover .nc-title-sub {
+  color: var(--nc-accent, #b45309);
+}
+
 .khata-nc-panel .nc-clear-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   align-self: center;
+}
+
+.khata-nc-panel .khata-today-bar {
+  border-top: 1px solid var(--nc-border, #e5e7eb);
+  border-radius: 0 0 8px 8px;
+  min-height: 52px;
+}
+
+.khata-nc-panel .khata-today-bar .nc-clear-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
 }

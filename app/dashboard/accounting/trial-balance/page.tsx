@@ -1,10 +1,9 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
-import { Download } from "lucide-react";
+import { Download, Scale } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
@@ -113,10 +112,11 @@ export default function TrialBalancePage() {
       <DashHeader title="Trial Balance" subtitle="Verify debit and credit totals" />
       <div className="flex-1 p-6 space-y-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <div className="flex flex-wrap items-end gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end max-w-3xl">
+            <div className="sm:col-span-2">
               <Label className="text-sm mb-1.5 block">As of Date</Label>
               <DateInput
+                className="max-w-sm"
                 value={asOf}
                 onChange={(v) => {
                   setAsOf(v);
@@ -124,12 +124,16 @@ export default function TrialBalancePage() {
                 }}
                 disabled={generating}
               />
-              <p className="text-xs text-gray-400 mt-1">Leave blank for all posted entries to date</p>
+              <p className="text-xs text-gray-400 mt-1.5">
+                Leave blank for all posted entries to date
+              </p>
             </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               onClick={handleGenerate}
               disabled={generating}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9"
             >
               {generating ? "Generating..." : "Generate"}
             </Button>
@@ -264,9 +268,13 @@ export default function TrialBalancePage() {
         )}
 
         {!generated && (
-          <div className="bg-white rounded-xl border border-gray-100 p-12 shadow-sm text-center">
-            <p className="text-gray-400 text-sm">
-              Optionally set an as-of date, then click Generate to view the trial balance.
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400">
+              <Scale className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-medium text-gray-700">No trial balance generated yet</p>
+            <p className="text-sm text-gray-400 mt-1 max-w-md mx-auto">
+              Optionally set an as-of date, then click Generate to view debit and credit totals.
             </p>
           </div>
         )}

@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -17,12 +18,11 @@ import {
   bsToAd,
   formatAdDate,
   formatBsDate,
-  type BsDate,
 } from "nepali-calender-saroj";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
-import { formatIsoDateLocal, parseIsoDateLocal } from "@/lib/dates";
+import { formatIsoDateLocal, parseIsoDateLocal, todayIsoDate } from "@/lib/dates";
 import "./DateInput.css";
 
 interface DateInputProps {
@@ -42,6 +42,12 @@ function formatAdDayShort(date: Date): string {
 }
 
 function parseVisibleBsMonth(root: HTMLElement): { year: number; month: number } | null {
+  const storedYear = root.dataset.khataViewYear;
+  const storedMonth = root.dataset.khataViewMonth;
+  if (storedYear && storedMonth) {
+    return { year: Number(storedYear), month: Number(storedMonth) };
+  }
+
   const title = root.querySelector(".nc-title-main")?.textContent?.trim();
   if (!title) return null;
 
@@ -52,6 +58,46 @@ function parseVisibleBsMonth(root: HTMLElement): { year: number; month: number }
   if (monthIndex === -1) return null;
 
   return { year: Number(match[2]), month: monthIndex + 1 };
+}
+
+function setViewMonthDataset(root: HTMLElement, year: number, month: number) {
+  root.dataset.khataViewYear = String(year);
+  root.dataset.khataViewMonth = String(month);
+}
+
+function updateHeaderForBsDate(
+  root: HTMLElement,
+  year: number,
+  month: number,
+  day: number
+) {
+  const titleMain = root.querySelector(".nc-title-main");
+  const titleSub = root.querySelector(".nc-title-sub");
+  const ad = bsToAd(year, month, day);
+
+  if (titleMain) {
+    titleMain.textContent = formatBsDate(year, month, day, false);
+  }
+  if (titleSub && ad) {
+    titleSub.textContent = formatAdDate(ad);
+  }
+}
+
+function restoreMonthHeader(root: HTMLElement) {
+  const year = Number(root.dataset.khataViewYear);
+  const month = Number(root.dataset.khataViewMonth);
+  if (!year || !month) return;
+
+  const titleMain = root.querySelector(".nc-title-main");
+  const titleSub = root.querySelector(".nc-title-sub");
+  const adStart = bsToAd(year, month, 1);
+
+  if (titleMain) {
+    titleMain.textContent = `${NEPALI_MONTHS_EN[month - 1]} ${year}`;
+  }
+  if (titleSub && adStart) {
+    titleSub.textContent = formatAdDate(adStart);
+  }
 }
 
 const PANEL_WIDTH = 300;
@@ -107,6 +153,8 @@ function computePanelStyle(
 function enhanceCalendarDayCells(root: HTMLElement) {
   const month = parseVisibleBsMonth(root);
   if (!month) return;
+
+  setViewMonthDataset(root, month.year, month.month);
 
   root.querySelectorAll<HTMLElement>(".nc-day").forEach((cell) => {
     if (cell.dataset.khataEnhanced === "1") return;
@@ -178,12 +226,22 @@ function BsDateInput({
 }: DateInputProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [previewBs, setPreviewBs] = useState<BsDate | null>(null);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const enhancingRef = useRef(false);
   const bsValue = value ? adStringToBs(value) : null;
+
+  const todayBar = useMemo(() => {
+    const iso = todayIsoDate();
+    const bs = adStringToBs(iso);
+    const ad = parseIsoDateLocal(iso);
+    if (!bs || !ad) return null;
+    return {
+      bs: formatBsDate(bs.year, bs.month, bs.day, false),
+      ad: formatAdDate(ad),
+    };
+  }, [open]);
 
   useEffect(() => {
     setMounted(true);
@@ -218,7 +276,7 @@ function BsDateInput({
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
-  }, [open, previewBs, updatePosition]);
+  }, [open, updatePosition]);
 
   useEffect(() => {
     if (!open) return;
@@ -232,7 +290,6 @@ function BsDateInput({
         return;
       }
       setOpen(false);
-      setPreviewBs(null);
     };
 
     document.addEventListener("mousedown", handler);
@@ -242,7 +299,16 @@ function BsDateInput({
   useEffect(() => {
     if (!open || !panelRef.current) return;
 
-    refreshDayCells();
+    const panel = panelRef.current;
+
+    const syncHeader = () => {
+      refreshDayCells();
+      if (bsValue) {
+        updateHeaderForBsDate(panel, bsValue.year, bsValue.month, bsValue.day);
+      }
+    };
+
+    syncHeader();
 
     const observer = new MutationObserver((mutations) => {
       const hasStructuralChange = mutations.some(
@@ -256,42 +322,67 @@ function BsDateInput({
       );
 
       if (hasStructuralChange) {
+        delete panel.dataset.khataViewYear;
+        delete panel.dataset.khataViewMonth;
         refreshDayCells();
+        if (bsValue) {
+          updateHeaderForBsDate(panel, bsValue.year, bsValue.month, bsValue.day);
+        }
       }
     });
 
-    const calendarRoot = panelRef.current.querySelector(".nc-card");
+    const calendarRoot = panel.querySelector(".nc-card");
     if (calendarRoot) {
       observer.observe(calendarRoot, { childList: true, subtree: true });
     }
 
-    const grid = panelRef.current.querySelector(".nc-days");
-    const onHover = (event: Event) => {
-      const cell = (event.target as HTMLElement).closest<HTMLElement>(".nc-day");
-      if (!cell || !panelRef.current) return;
+    const grid = panel.querySelector(".nc-days");
 
-      const month = parseVisibleBsMonth(panelRef.current);
-      const day = Number(cell.dataset.bsDay);
-      if (!month || !day || Number.isNaN(day)) return;
-
-      setPreviewBs({ year: month.year, month: month.month, day });
+    const showDayInHeader = (year: number, month: number, day: number) => {
+      updateHeaderForBsDate(panel, year, month, day);
     };
 
-    const onLeave = () => setPreviewBs(null);
+    const resetHeader = () => {
+      if (bsValue) {
+        updateHeaderForBsDate(panel, bsValue.year, bsValue.month, bsValue.day);
+      } else {
+        restoreMonthHeader(panel);
+      }
+    };
+
+    const onHover = (event: Event) => {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>(".nc-day");
+      if (!cell) return;
+
+      const monthInfo = parseVisibleBsMonth(panel);
+      const day = Number(cell.dataset.bsDay);
+      if (!monthInfo || !day || Number.isNaN(day)) return;
+
+      showDayInHeader(monthInfo.year, monthInfo.month, day);
+    };
+
+    const onDayClick = (event: Event) => {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>(".nc-day");
+      if (!cell) return;
+
+      const monthInfo = parseVisibleBsMonth(panel);
+      const day = Number(cell.dataset.bsDay);
+      if (!monthInfo || !day || Number.isNaN(day)) return;
+
+      showDayInHeader(monthInfo.year, monthInfo.month, day);
+    };
 
     grid?.addEventListener("mouseover", onHover);
-    grid?.addEventListener("mouseleave", onLeave);
+    grid?.addEventListener("mouseleave", resetHeader);
+    grid?.addEventListener("click", onDayClick);
 
     return () => {
       observer.disconnect();
       grid?.removeEventListener("mouseover", onHover);
-      grid?.removeEventListener("mouseleave", onLeave);
+      grid?.removeEventListener("mouseleave", resetHeader);
+      grid?.removeEventListener("click", onDayClick);
     };
-  }, [open, refreshDayCells]);
-
-  const previewAd = previewBs
-    ? bsToAd(previewBs.year, previewBs.month, previewBs.day)
-    : null;
+  }, [open, refreshDayCells, bsValue]);
 
   const bsLabel = bsValue
     ? formatBsDate(bsValue.year, bsValue.month, bsValue.day, false)
@@ -307,37 +398,38 @@ function BsDateInput({
       role="dialog"
       aria-modal="true"
     >
-      {previewBs && previewAd && (
-        <div className="border-b border-gray-100 bg-gray-50 px-3 py-2 text-center">
-          <div className="text-sm font-medium text-foreground">
-            {formatBsDate(
-              previewBs.year,
-              previewBs.month,
-              previewBs.day,
-              false
-            )}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {formatAdDate(previewAd)}
-          </div>
-        </div>
-      )}
-
       <NepaliCalendar
         value={bsValue}
         onChange={(_bs, ad) => {
           if (!ad) {
             onChange("");
-          } else {
-            onChange(formatIsoDateLocal(ad));
+            return;
           }
-          setPreviewBs(null);
+          onChange(formatIsoDateLocal(ad));
           setOpen(false);
         }}
         mode="light"
         showNepali={false}
-        showSelectedBar
+        showSelectedBar={false}
       />
+
+      {todayBar && (
+        <div className="nc-theme-light nc-sel-bar khata-today-bar">
+          <div>
+            <div className="nc-sel-bs">{todayBar.bs}</div>
+            <div className="nc-sel-ad">{todayBar.ad}</div>
+          </div>
+          <button
+            type="button"
+            className="nc-clear-btn"
+            aria-label="Clear selection"
+            onClick={() => onChange("")}
+            disabled={!value}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   ) : null;
 
@@ -359,7 +451,7 @@ function BsDateInput({
         aria-haspopup="dialog"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "flex h-9 w-full items-center gap-2 rounded-lg border border-input bg-background px-2.5 text-left text-sm transition-colors outline-none",
+          "flex h-9 w-full items-center gap-2 rounded-lg border border-gray-200 bg-background px-2.5 text-left text-sm transition-colors outline-none",
           "hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           open && "border-ring ring-3 ring-ring/50"
         )}
