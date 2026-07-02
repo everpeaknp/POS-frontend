@@ -349,18 +349,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       <div className="px-5 py-4 border-t border-white/10">
         <p className="text-xs text-gray-600">© 2025 Khata Business OS</p>
-        {user?.tenant ? (
-          <>
-            <p className="text-sm font-medium text-white mt-2 truncate">
-              {user.tenant.workspace_name || user.tenant.name}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5 truncate">
-              {user.tenant.email || `${user.tenant.slug}@khata.app`}
-            </p>
-          </>
-        ) : user ? (
-          <p className="text-xs text-gray-500 mt-1 truncate">{user.email}</p>
-        ) : null}
       </div>
     </div>
   );

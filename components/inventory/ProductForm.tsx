@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
@@ -14,31 +14,60 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
-const productSchema = z.object({
-  name: z.string().min(1, 'Product name is required').max(255, 'Name too long'),
-  sku: z.string().min(1, 'SKU is required').max(50, 'SKU too long'),
-  category: z.string().min(1, 'Category is required'),
-  unit: z.string().min(1, 'Unit is required'),
-  cost_price: z.string()
-    .min(1, 'Cost price is required')
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: 'Must be a valid positive number',
-    }),
-  selling_price: z.string()
-    .min(1, 'Selling price is required')
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: 'Must be a valid positive number',
-    }),
-  reorder_level: z.string()
-    .optional()
-    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: 'Must be a valid positive number',
-    }),
-  description: z.string().optional().or(z.literal('')),
-  status: z.enum(['active', 'inactive', 'discontinued']),
-  total_stock: z.number().optional(),
-});
+const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-[#22C55E]';
+
+const productSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Product name is required').max(255, 'Name must be 255 characters or less'),
+    sku: z
+      .string()
+      .trim()
+      .min(1, 'SKU is required')
+      .max(100, 'SKU must be 100 characters or less')
+      .regex(/^[A-Za-z0-9._-]+$/, 'SKU can only contain letters, numbers, dots, dashes, and underscores'),
+    category: z
+      .string()
+      .nullable()
+      .refine((val) => !!val, 'Category is required'),
+    unit: z
+      .string()
+      .nullable()
+      .refine((val) => !!val, 'Unit of measure is required'),
+    cost_price: z
+      .string()
+      .min(1, 'Cost price is required')
+      .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, {
+        message: 'Enter a valid amount (0 or greater)',
+      }),
+    selling_price: z
+      .string()
+      .min(1, 'Selling price is required')
+      .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, {
+        message: 'Enter a valid amount (0 or greater)',
+      }),
+    reorder_level: z
+      .string()
+      .optional()
+      .refine((val) => !val || val === '' || (!Number.isNaN(Number(val)) && Number(val) >= 0), {
+        message: 'Reorder level must be 0 or greater',
+      }),
+    description: z.string().max(2000, 'Description is too long').optional().or(z.literal('')),
+    status: z.enum(['active', 'inactive', 'discontinued']),
+    total_stock: z.number().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const cost = Number(data.cost_price);
+    const selling = Number(data.selling_price);
+    if (!Number.isNaN(cost) && !Number.isNaN(selling) && selling < cost) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Selling price cannot be less than cost price',
+        path: ['selling_price'],
+      });
+    }
+  });
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -47,6 +76,15 @@ interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
   onSuccess?: () => void;
   onCancel?: () => void;
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">{title}</h3>
+      {children}
+    </div>
+  );
 }
 
 export default function ProductForm({
@@ -58,103 +96,81 @@ export default function ProductForm({
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Category dialog state
+
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
-  const [categoryForm, setCategoryForm] = useState({
-    name: "",
-    description: "",
-    parent: "",
-  });
-  
-  // Unit dialog state
+  const [categoryForm, setCategoryForm] = useState({ name: '', description: '', parent: '' });
+
   const [showUnitDialog, setShowUnitDialog] = useState(false);
   const [creatingUnit, setCreatingUnit] = useState(false);
   const [unitForm, setUnitForm] = useState({
-    name: "",
-    abbreviation: "",
-    type: "count" as "count" | "weight" | "length" | "volume" | "area",
+    name: '',
+    abbreviation: '',
+    type: 'count' as 'count' | 'weight' | 'length' | 'volume' | 'area',
   });
 
   const isEdit = !!productId;
 
+  const emptyDefaults: ProductFormData = {
+    name: '',
+    sku: '',
+    category: null,
+    unit: null,
+    cost_price: '',
+    selling_price: '',
+    reorder_level: '0',
+    description: '',
+    status: 'active',
+  };
+
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
+    mode: 'onBlur',
     defaultValues: {
-      status: 'active',
-      reorder_level: '0',
-      description: '',
+      ...emptyDefaults,
       ...initialData,
+      category: initialData?.category ? String(initialData.category) : null,
+      unit: initialData?.unit ? String(initialData.unit) : null,
+      status: initialData?.status ?? 'active',
     },
   });
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
     reset,
     setError,
+    setValue,
   } = form;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch categories
-        let categoriesData = [];
-        try {
-          const categoriesRes = await inventoryApi.categories.list();
-          categoriesData = Array.isArray(categoriesRes.data) 
-            ? categoriesRes.data 
-            : (categoriesRes.data as any).results || [];
-        } catch (catError: any) {
-          console.error('Categories error:', catError);
-          if (catError.response?.status === 401) {
-            toast.error('Authentication failed. Please login again.');
-          } else if (catError.response?.status === 404) {
-            toast.error('Categories API endpoint not found.');
-          } else {
-            toast.error('Failed to load categories. Check if backend is running.');
-          }
-        }
-        
-        // Fetch units
-        let unitsData = [];
-        try {
-          const unitsRes = await inventoryApi.units.list();
-          unitsData = Array.isArray(unitsRes.data) 
-            ? unitsRes.data 
-            : (unitsRes.data as any).results || [];
-        } catch (unitError: any) {
-          console.error('Units error:', unitError);
-          if (unitError.response?.status === 401) {
-            toast.error('Authentication failed. Please login again.');
-          } else if (unitError.response?.status === 404) {
-            toast.error('Units API endpoint not found.');
-          } else {
-            toast.error('Failed to load units. Check if backend is running.');
-          }
-        }
-        
+
+        const [categoriesRes, unitsRes] = await Promise.all([
+          inventoryApi.categories.list().catch(() => null),
+          inventoryApi.units.list().catch(() => null),
+        ]);
+
+        const categoriesData = categoriesRes
+          ? Array.isArray(categoriesRes.data)
+            ? categoriesRes.data
+            : (categoriesRes.data as any).results || []
+          : [];
+
+        const unitsData = unitsRes
+          ? Array.isArray(unitsRes.data)
+            ? unitsRes.data
+            : (unitsRes.data as any).results || []
+          : [];
+
         setCategories(categoriesData);
         setUnits(unitsData);
-        
-        // Show warning if no data
-        if (categoriesData.length === 0) {
-          toast.error('No categories found. Please create categories first.', {
-            duration: 5000,
-          });
-        }
-        if (unitsData.length === 0) {
-          toast.error('No units found. Please create units of measure first.', {
-            duration: 5000,
-          });
-        }
-      } catch (error: any) {
-        console.error('Failed to load form data:', error);
-        toast.error('Failed to load form data. Please check console for details.');
+      } catch {
+        toast.error('Failed to load categories and units');
       } finally {
         setLoading(false);
       }
@@ -163,32 +179,32 @@ export default function ProductForm({
     fetchData();
   }, []);
 
+  const hasMissingData = categories.length === 0 || units.length === 0;
+
   const handleCreateCategory = async () => {
     if (!categoryForm.name.trim()) {
-      toast.error("Category name is required");
+      toast.error('Category name is required');
       return;
     }
 
     setCreatingCategory(true);
     try {
       const submitData: any = {
-        name: categoryForm.name,
-        description: categoryForm.description
+        name: categoryForm.name.trim(),
+        description: categoryForm.description,
       };
-      
       if (categoryForm.parent) {
         submitData.parent = parseInt(categoryForm.parent);
       }
 
       const newCategory = await inventoryApi.categories.create(submitData);
-      toast.success("Category created successfully");
-      setCategories([...categories, newCategory.data]);
-      form.setValue('category', String(newCategory.data.id));
+      toast.success('Category created successfully');
+      setCategories((prev) => [...prev, newCategory.data]);
+      setValue('category', String(newCategory.data.id), { shouldValidate: true });
       setShowCategoryDialog(false);
-      setCategoryForm({ name: "", description: "", parent: "" });
+      setCategoryForm({ name: '', description: '', parent: '' });
     } catch (error: any) {
-      console.error("Failed to create category:", error);
-      toast.error(error.response?.data?.message || "Failed to create category");
+      toast.error(error.response?.data?.message || 'Failed to create category');
     } finally {
       setCreatingCategory(false);
     }
@@ -196,100 +212,68 @@ export default function ProductForm({
 
   const handleCreateUnit = async () => {
     if (!unitForm.name.trim() || !unitForm.abbreviation.trim()) {
-      toast.error("Name and abbreviation are required");
+      toast.error('Unit name and abbreviation are required');
       return;
     }
 
     setCreatingUnit(true);
     try {
-      const newUnit = await inventoryApi.units.create(unitForm);
-      toast.success("Unit created successfully");
-      setUnits([...units, newUnit.data]);
-      form.setValue('unit', String(newUnit.data.id));
+      const newUnit = await inventoryApi.units.create({
+        ...unitForm,
+        name: unitForm.name.trim(),
+        abbreviation: unitForm.abbreviation.trim(),
+      });
+      toast.success('Unit created successfully');
+      setUnits((prev) => [...prev, newUnit.data]);
+      setValue('unit', String(newUnit.data.id), { shouldValidate: true });
       setShowUnitDialog(false);
-      setUnitForm({ name: "", abbreviation: "", type: "count" });
+      setUnitForm({ name: '', abbreviation: '', type: 'count' });
     } catch (error: any) {
-      console.error("Failed to create unit:", error);
-      toast.error(error.response?.data?.message || "Failed to create unit");
+      toast.error(error.response?.data?.message || 'Failed to create unit');
     } finally {
       setCreatingUnit(false);
     }
   };
 
   const onSubmit = async (data: ProductFormData) => {
+    if (hasMissingData) {
+      toast.error('Create at least one category and unit before adding products');
+      return;
+    }
+
     try {
-      // Transform data to match backend expectations
       const payload: any = {
-        name: data.name,
-        sku: data.sku,
-        category: data.category ? Number(data.category) : null,
+        name: data.name.trim(),
+        sku: data.sku.trim(),
+        category: Number(data.category),
         unit: Number(data.unit),
         cost_price: Number(data.cost_price),
         selling_price: Number(data.selling_price),
         reorder_level: data.reorder_level ? Number(data.reorder_level) : 0,
-        description: data.description || '',
+        description: data.description?.trim() || '',
         status: data.status,
       };
 
-      console.log('='.repeat(60));
-      console.log('PRODUCT FORM SUBMISSION');
-      console.log('='.repeat(60));
-      console.log('Form data:', data);
-      console.log('Payload:', payload);
-      console.log('Available categories:', categories.map(c => ({ id: c.id, name: c.name })));
-      console.log('Available units:', units.map(u => ({ id: u.id, name: u.name })));
-      console.log('Selected category ID:', payload.category);
-      console.log('Selected unit ID:', payload.unit);
-      
-      // Validate category exists in available categories
-      if (payload.category) {
-        const categoryExists = categories.some(c => c.id === payload.category);
-        console.log('Category exists in dropdown:', categoryExists);
-        if (!categoryExists) {
-          console.error('WARNING: Selected category not in available categories!');
-          toast.error('Invalid category selected. Please refresh the page and try again.');
-          return;
-        }
-      }
-      
-      // Validate unit exists in available units
-      const unitExists = units.some(u => u.id === payload.unit);
-      console.log('Unit exists in dropdown:', unitExists);
-      if (!unitExists) {
-        console.error('WARNING: Selected unit not in available units!');
-        toast.error('Invalid unit selected. Please refresh the page and try again.');
-        return;
-      }
-      console.log('='.repeat(60));
-
       if (isEdit && productId) {
         await inventoryApi.products.update(Number(productId), payload);
-        toast.success('Product updated successfully!');
+        toast.success('Product updated successfully');
       } else {
         await inventoryApi.products.create(payload);
-        toast.success('Product created successfully!');
-        reset();
+        toast.success('Product created successfully');
+        reset(emptyDefaults);
       }
       onSuccess?.();
     } catch (error: any) {
-      console.error('Product submission error:', error);
-      console.error('Error response:', error.response);
-      
-      // Use the new error utility for cleaner error handling
       if (isValidationError(error)) {
-        // Map Django validation errors to form fields
         mapDjangoErrorsToForm(error.response.data, setError, toast.error);
-        
-        // Show specific messages for common issues
         const errorData = error.response.data;
         if (errorData.sku) {
           const skuError = Array.isArray(errorData.sku) ? errorData.sku[0] : errorData.sku;
-          if (skuError.includes('already exists') || skuError.includes('unique')) {
-            toast.error('This SKU already exists. Please use a different SKU.');
+          if (String(skuError).includes('already exists') || String(skuError).includes('unique')) {
+            setError('sku', { message: 'This SKU is already in use' });
           }
         }
       } else {
-        // Handle other errors (500, network, etc.)
         toast.error(getErrorMessage(error));
       }
     }
@@ -297,263 +281,257 @@ export default function ProductForm({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
       </div>
     );
   }
 
-  // Show warning if no master data
-  const hasMissingData = categories.length === 0 || units.length === 0;
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
       {hasMissingData && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                <strong>Missing Master Data:</strong>
-                {categories.length === 0 && (
-                  <span> You need to create <a href="/dashboard/inventory/categories" className="underline font-medium hover:text-yellow-800">categories</a> first.</span>
-                )}
-                {units.length === 0 && (
-                  <span> You need to create <a href="/dashboard/inventory/uom" className="underline font-medium hover:text-yellow-800">units of measure</a> first.</span>
-                )}
-              </p>
-            </div>
-          </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong>Setup required:</strong>
+          {categories.length === 0 && (
+            <span>
+              {' '}
+              Add a{' '}
+              <a href="/dashboard/inventory/categories" className="font-medium underline hover:text-amber-950">
+                category
+              </a>
+            </span>
+          )}
+          {units.length === 0 && (
+            <span>
+              {' '}
+              Add a{' '}
+              <a href="/dashboard/inventory/uom" className="font-medium underline hover:text-amber-950">
+                unit of measure
+              </a>
+            </span>
+          )}
+          {' '}before creating products.
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <FormField
-          label="Product Name"
-          name="name"
-          error={errors.name}
-          required
-        >
-          <input
-            {...register('name')}
-            type="text"
-            id="name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter product name"
-          />
-        </FormField>
 
-        <FormField
-          label="SKU"
-          name="sku"
-          error={errors.sku}
-          required
-          hint="Unique product identifier"
-        >
-          <input
-            {...register('sku')}
-            type="text"
-            id="sku"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g., PROD-001"
-          />
-        </FormField>
+      <Section title="Product Details">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <FormField label="Product Name" name="name" error={errors.name} required>
+            <Input
+              {...register('name')}
+              id="name"
+              className={cn(inputClass, errors.name && 'border-red-500')}
+              placeholder="Enter product name"
+            />
+          </FormField>
 
-        <FormField
-          label="Category"
-          name="category"
-          error={errors.category}
-          required
-        >
-          <div className="flex gap-2">
-            <select
-              {...register('category')}
-              id="category"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setShowCategoryDialog(true)}
-              className="inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300 hover:border-[#22C55E] hover:text-[#22C55E] hover:bg-gray-50 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-        </FormField>
+          <FormField label="SKU" name="sku" error={errors.sku} required hint="Unique code, e.g. PROD-001">
+            <Input
+              {...register('sku')}
+              id="sku"
+              className={cn(inputClass, errors.sku && 'border-red-500')}
+              placeholder="PROD-001"
+            />
+          </FormField>
 
-        <FormField
-          label="Unit of Measure"
-          name="unit"
-          error={errors.unit}
-          required
-        >
-          <div className="flex gap-2">
-            <select
-              {...register('unit')}
-              id="unit"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select unit</option>
-              {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name} ({unit.abbreviation})
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setShowUnitDialog(true)}
-              className="inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300 hover:border-[#22C55E] hover:text-[#22C55E] hover:bg-gray-50 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-        </FormField>
-      </div>
+          <FormField label="Category" name="category" error={errors.category} required>
+            <div className="flex gap-2">
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? null}
+                    onValueChange={(value) => field.onChange(value)}
+                  >
+                    <SelectTrigger className={cn('flex-1', inputClass, errors.category && 'border-red-500')}>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                onClick={() => setShowCategoryDialog(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </FormField>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <FormField
-          label="Cost Price (NPR)"
-          name="cost_price"
-          error={errors.cost_price}
-          required
-        >
-          <input
-            {...register('cost_price')}
-            type="text"
-            id="cost_price"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0.00"
-          />
-        </FormField>
+          <FormField label="Unit of Measure" name="unit" error={errors.unit} required>
+            <div className="flex gap-2">
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? null}
+                    onValueChange={(value) => field.onChange(value)}
+                  >
+                    <SelectTrigger className={cn('flex-1', inputClass, errors.unit && 'border-red-500')}>
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {units.map((unit) => (
+                        <SelectItem key={unit.id} value={String(unit.id)}>
+                          {unit.name} ({unit.abbreviation})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                onClick={() => setShowUnitDialog(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </FormField>
+        </div>
+      </Section>
 
-        <FormField
-          label="Selling Price (NPR)"
-          name="selling_price"
-          error={errors.selling_price}
-          required
-        >
-          <input
-            {...register('selling_price')}
-            type="text"
-            id="selling_price"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0.00"
-          />
-        </FormField>
+      <Section title="Pricing & Inventory">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <FormField label="Cost Price (NPR)" name="cost_price" error={errors.cost_price} required>
+            <Input
+              {...register('cost_price')}
+              id="cost_price"
+              type="number"
+              min="0"
+              step="0.01"
+              className={cn(inputClass, errors.cost_price && 'border-red-500')}
+              placeholder="0.00"
+            />
+          </FormField>
 
-        <FormField
-          label="Reorder Level"
-          name="reorder_level"
-          error={errors.reorder_level}
-          hint="Low stock alert threshold"
-        >
-          <input
-            {...register('reorder_level')}
-            type="text"
-            id="reorder_level"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0"
-          />
-        </FormField>
+          <FormField label="Selling Price (NPR)" name="selling_price" error={errors.selling_price} required>
+            <Input
+              {...register('selling_price')}
+              id="selling_price"
+              type="number"
+              min="0"
+              step="0.01"
+              className={cn(inputClass, errors.selling_price && 'border-red-500')}
+              placeholder="0.00"
+            />
+          </FormField>
 
-        <FormField
-          label="Status"
-          name="status"
-          error={errors.status}
-          required
-        >
-          <select
-            {...register('status')}
-            id="status"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="discontinued">Discontinued</option>
-          </select>
-        </FormField>
+          <FormField label="Reorder Level" name="reorder_level" error={errors.reorder_level} hint="Low stock alert threshold">
+            <Input
+              {...register('reorder_level')}
+              id="reorder_level"
+              type="number"
+              min="0"
+              step="0.01"
+              className={cn(inputClass, errors.reorder_level && 'border-red-500')}
+              placeholder="0"
+            />
+          </FormField>
 
-        <FormField
-          label="Total Stock"
-          name="total_stock"
-          hint={isEdit ? "Current stock across all warehouses" : "Stock will be available after product creation"}
-        >
-          <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-            <span className="text-lg font-semibold text-gray-900">
-              {isEdit ? ((initialData as any).total_stock || 0) : 0}
-            </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              isEdit && (initialData as any).total_stock > 0
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {isEdit && (initialData as any).total_stock > 0 ? 'In Stock' : 'Out of Stock'}
-            </span>
-          </div>
-        </FormField>
-      </div>
+          <FormField label="Status" name="status" error={errors.status} required>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => field.onChange(value ?? 'active')}
+                >
+                  <SelectTrigger className={cn(inputClass, errors.status && 'border-red-500')}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="discontinued">Discontinued</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
 
-      <FormField
-        label="Description"
-        name="description"
-        error={errors.description}
-      >
-        <textarea
-          {...register('description')}
-          id="description"
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Optional product description"
-        />
-      </FormField>
-
-      <div className="flex gap-3 pt-4 border-t">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
-          {isSubmitting && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          {isEdit && (
+            <FormField label="Total Stock" name="total_stock" hint="Current stock across all warehouses">
+              <div className="flex h-9 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3">
+                <span className="text-sm font-semibold text-gray-900">
+                  {(initialData as any)?.total_stock ?? 0}
+                </span>
+                <span
+                  className={cn(
+                    'rounded-full px-2 py-0.5 text-xs font-medium',
+                    (initialData as any)?.total_stock > 0
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  )}
+                >
+                  {(initialData as any)?.total_stock > 0 ? 'In Stock' : 'Out of Stock'}
+                </span>
+              </div>
+            </FormField>
           )}
-          {isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Create Product'}
-        </button>
-        
+        </div>
+      </Section>
+
+      <Section title="Description">
+        <FormField label="Description" name="description" error={errors.description}>
+          <textarea
+            {...register('description')}
+            id="description"
+            rows={4}
+            className={cn(
+              'w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent',
+              errors.description && 'border-red-500'
+            )}
+            placeholder="Optional product description"
+          />
+        </FormField>
+      </Section>
+
+      <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="text-gray-500">
             Cancel
-          </button>
+          </Button>
         )}
-        
         {!isEdit && (
-          <button
-            type="button"
-            onClick={() => reset()}
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="button" variant="outline" onClick={() => reset(emptyDefaults)} disabled={isSubmitting} className="border-gray-200">
             Reset
-          </button>
+          </Button>
         )}
+        <Button
+          type="submit"
+          disabled={isSubmitting || hasMissingData}
+          className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : isEdit ? (
+            'Update Product'
+          ) : (
+            'Create Product'
+          )}
+        </Button>
       </div>
 
-      {/* Category Creation Dialog */}
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -561,12 +539,14 @@ export default function ProductForm({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm">Category Name <span className="text-red-500">*</span></Label>
+              <Label className="text-sm">
+                Category Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={categoryForm.name}
                 onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
                 placeholder="e.g. Building Materials"
-                className="h-9 text-sm border-gray-200"
+                className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -574,7 +554,7 @@ export default function ProductForm({
               <select
                 value={categoryForm.parent}
                 onChange={(e) => setCategoryForm({ ...categoryForm, parent: e.target.value })}
-                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                className={cn(inputClass, 'rounded-md border bg-white px-3')}
               >
                 <option value="">None (Root Category)</option>
                 {categories.map((cat) => (
@@ -590,20 +570,12 @@ export default function ProductForm({
                 value={categoryForm.description}
                 onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
                 placeholder="Optional"
-                className="h-9 text-sm border-gray-200"
+                className={inputClass}
               />
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowCategoryDialog(false);
-                setCategoryForm({ name: "", description: "", parent: "" });
-              }}
-              disabled={creatingCategory}
-            >
+          <div className="flex justify-end gap-2 border-t pt-2">
+            <Button type="button" variant="outline" onClick={() => setShowCategoryDialog(false)} disabled={creatingCategory}>
               Cancel
             </Button>
             <Button
@@ -618,14 +590,13 @@ export default function ProductForm({
                   Creating...
                 </>
               ) : (
-                "Create Category"
+                'Create Category'
               )}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Unit Creation Dialog */}
       <Dialog open={showUnitDialog} onOpenChange={setShowUnitDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -633,30 +604,31 @@ export default function ProductForm({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm">Name <span className="text-red-500">*</span></Label>
+              <Label className="text-sm">
+                Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={unitForm.name}
                 onChange={(e) => setUnitForm({ ...unitForm, name: e.target.value })}
                 placeholder="e.g. Kilogram"
-                className="h-9 text-sm border-gray-200"
+                className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm">Abbreviation <span className="text-red-500">*</span></Label>
+              <Label className="text-sm">
+                Abbreviation <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={unitForm.abbreviation}
                 onChange={(e) => setUnitForm({ ...unitForm, abbreviation: e.target.value })}
                 placeholder="e.g. Kg"
-                className="h-9 text-sm border-gray-200"
+                className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm">Type</Label>
-              <Select
-                value={unitForm.type}
-                onValueChange={(v) => setUnitForm({ ...unitForm, type: v as any })}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200">
+              <Select value={unitForm.type} onValueChange={(v) => setUnitForm({ ...unitForm, type: v as any })}>
+                <SelectTrigger className={inputClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -669,16 +641,8 @@ export default function ProductForm({
               </Select>
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowUnitDialog(false);
-                setUnitForm({ name: "", abbreviation: "", type: "count" });
-              }}
-              disabled={creatingUnit}
-            >
+          <div className="flex justify-end gap-2 border-t pt-2">
+            <Button type="button" variant="outline" onClick={() => setShowUnitDialog(false)} disabled={creatingUnit}>
               Cancel
             </Button>
             <Button
@@ -693,7 +657,7 @@ export default function ProductForm({
                   Creating...
                 </>
               ) : (
-                "Create Unit"
+                'Create Unit'
               )}
             </Button>
           </div>

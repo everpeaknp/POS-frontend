@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Plus, Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, AlertTriangle, Package } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { inventoryApi, Product } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
+import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function ProductsListPage() {
@@ -129,7 +132,7 @@ export default function ProductsListPage() {
         <DashHeader title="Products" subtitle="Manage your product inventory" />
         <div className="flex-1 p-6">
           <EmptyState
-            icon={Plus}
+            icon={Package}
             title="No products yet"
             description="Get started by creating your first product."
             actionLabel="Create Product"
@@ -149,8 +152,8 @@ export default function ProductsListPage() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center flex-1">
             {/* Search */}
             <div className="relative flex-1 md:max-w-xs">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
                 type="text"
                 placeholder="Search by name or SKU..."
                 value={searchTerm}
@@ -158,20 +161,19 @@ export default function ProductsListPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-[#22C55E]"
               />
             </div>
 
-            {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+              <Filter className="h-4 w-4 text-gray-400 shrink-0" />
               <select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -184,21 +186,24 @@ export default function ProductsListPage() {
           {/* Action Buttons */}
           <div className="flex gap-2">
             {selectedProducts.size > 0 && (
-              <button
+              <Button
+                type="button"
+                variant="outline"
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm"
+                className="h-9 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 mr-1.5" />
                 Delete ({selectedProducts.size})
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              type="button"
               onClick={() => router.push("/dashboard/inventory/products/new")}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-green transition-colors flex items-center gap-2 text-sm"
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               New Product
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -247,8 +252,8 @@ export default function ProductsListPage() {
                       <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                       <td className="px-4 py-3 text-gray-600">{product.category_name || "-"}</td>
                       <td className="px-4 py-3 text-gray-600 text-xs">{product.unit_name}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">₹{Number(product.cost_price).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">₹{Number(product.selling_price).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(product.cost_price)}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(product.selling_price)}</td>
                       <td className="px-4 py-3 text-right">
                         <span className={`font-semibold ${
                           isOutOfStock ? "text-red-600" : 
@@ -270,21 +275,27 @@ export default function ProductsListPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-500 hover:text-[#22C55E] hover:bg-green-50"
                             onClick={() => router.push(`/dashboard/inventory/products/${product.id}`)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                             title="Edit"
                           >
                             <Edit2 className="h-4 w-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleDeleteProduct(product.id, product.name)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -301,35 +312,44 @@ export default function ProductsListPage() {
                 Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} products
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="h-9 w-9 border-gray-200"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                </button>
+                </Button>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
+                    <Button
                       key={page}
+                      type="button"
+                      variant={currentPage === page ? 'default' : 'outline'}
+                      size="sm"
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                      className={
                         currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 hover:bg-gray-100"
-                      }`}
+                          ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                          : 'h-9 min-w-9 border-gray-200'
+                      }
                     >
                       {page}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-                <button
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="h-9 w-9 border-gray-200"
                 >
                   <ChevronRight className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -340,12 +360,13 @@ export default function ProductsListPage() {
           <div className="text-center py-12">
             <p className="text-gray-500">No products found matching your filters.</p>
             <button
+              type="button"
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("all");
                 setCurrentPage(1);
               }}
-              className="mt-4 text-blue-600 hover:underline text-sm"
+              className="mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] hover:underline"
             >
               Clear filters
             </button>
@@ -354,11 +375,11 @@ export default function ProductsListPage() {
 
         {/* Confirmation Dialog */}
         {confirmDialog.isOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-sm rounded-xl border border-gray-100 bg-white p-6 shadow-xl">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -371,19 +392,18 @@ export default function ProductsListPage() {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 flex gap-3 justify-end">
-                <button
+              <div className="mt-6 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setConfirmDialog({ isOpen: false, type: 'single' })}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="border-gray-200"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-                >
+                </Button>
+                <Button type="button" onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           </div>

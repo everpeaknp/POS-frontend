@@ -306,8 +306,15 @@ export const purchaseOrdersAPI = {
   },
 
   // Receive items
-  receiveItems: async (id: string, items: Array<{ line_id: string; quantity: number }>) => {
-    const response = await apiClient.post<PurchaseOrder>(`/purchase/orders/${id}/receive/`, { items });
+  receiveItems: async (
+    id: string,
+    items: Array<{ line_id: string; quantity: number }>,
+    warehouseId?: string | number,
+  ) => {
+    const response = await apiClient.post<PurchaseOrder>(`/purchase/orders/${id}/receive/`, {
+      items,
+      warehouse_id: warehouseId,
+    });
     return response.data;
   },
 };

@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/sales/StatusBadge";
 import { LineItemsTable } from "@/components/purchase/LineItemsTable";
 import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
 import { purchaseOrdersAPI, type PurchaseOrder } from "@/lib/api/purchase";
+import { inventoryApi, type ProductActivity, type Warehouse } from "@/lib/api/inventory";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -21,6 +22,18 @@ export default function PurchaseOrderDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [receivingQuantities, setReceivingQuantities] = useState<Record<string, number>>({});
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [receiveWarehouseId, setReceiveWarehouseId] = useState<string>("");
+
+  useEffect(() => {
+    inventoryApi.warehouses.list({ is_active: true }).then((res) => {
+      const list = res.data.results || [];
+      setWarehouses(list);
+      if (list.length > 0) {
+        setReceiveWarehouseId(String(list[0].id));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -63,7 +76,11 @@ export default function PurchaseOrderDetailPage() {
     
     setUpdating(true);
     try {
-      await purchaseOrdersAPI.receiveItems(order.id, itemsToReceive);
+      await purchaseOrdersAPI.receiveItems(
+        order.id,
+        itemsToReceive,
+        receiveWarehouseId || undefined,
+      );
       toast.success(`Items received for ${order.po_number}`);
       
       // Refresh order data
@@ -451,6 +468,25 @@ export default function PurchaseOrderDetailPage() {
             </div>
             
             <div className="p-6 space-y-4">
+              {warehouses.length > 0 && (
+                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <label className="text-sm font-medium text-gray-700 block mb-2">
+                    Receive into warehouse
+                  </label>
+                  <select
+                    value={receiveWarehouseId}
+                    onChange={(e) => setReceiveWarehouseId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  >
+                    {warehouses.map((wh) => (
+                      <option key={wh.id} value={wh.id}>
+                        {wh.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {order.lines?.map(line => {
                 const ordered = Number(line.quantity);
                 const received = Number(line.received_quantity || 0);

@@ -90,6 +90,29 @@ export interface StockMovement {
   created_at: string;
 }
 
+export interface ProductLinkedPurchaseOrder {
+  id: number;
+  po_number: string;
+  date: string;
+  status: string;
+  quantity: string | number;
+  received_quantity: string | number;
+}
+
+export interface ProductLinkedSalesOrder {
+  id: number;
+  order_number: string;
+  date: string;
+  status: string;
+  quantity: string | number;
+}
+
+export interface ProductActivity {
+  movements: StockMovement[];
+  purchase_orders: ProductLinkedPurchaseOrder[];
+  sales_orders: ProductLinkedSalesOrder[];
+}
+
 export interface BulkPricing {
   id: number;
   product: number;
@@ -175,6 +198,8 @@ export const inventoryApi = {
       apiClient.get<Product[]>('/inventory/products/low_stock/'),
     stockHistory: (id: number) => 
       apiClient.get<StockMovement[]>(`/inventory/products/${id}/stock_history/`),
+    activity: (id: number) =>
+      apiClient.get<ProductActivity>(`/inventory/products/${id}/activity/`),
   },
 
   // Stocks
