@@ -35,7 +35,7 @@ export default function CustomerAgingReportPage() {
 
   if (customerLoading || agingLoading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Loading..." subtitle="Aging Report" />
         <div className="flex-1 p-6">
           <SkeletonTable rows={5} />
@@ -46,10 +46,15 @@ export default function CustomerAgingReportPage() {
 
   if (!customer || !aging) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Not Found" subtitle="Aging Report" />
-        <div className="flex-1 p-6">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
           <p className="text-gray-500">Customer not found</p>
+          <Link href="/dashboard/sales/customers">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Customers
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -63,20 +68,17 @@ export default function CustomerAgingReportPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title={`Aging Report - ${customer.name}`} subtitle="Outstanding balance breakdown" />
-      <div className="flex-1 p-6 space-y-4 max-w-6xl">
-        
-        <Link href={`/dashboard/sales/customers/${id}`}>
-          <Button variant="ghost" size="sm" className="mb-2 gap-1.5 h-8">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Customer
-          </Button>
-        </Link>
-
-        {/* Credit Summary */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Credit Summary</h3>
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full min-h-full space-y-6">
+          <div className="flex flex-wrap items-center gap-2 sticky top-0 z-10 bg-[#F3F4F6] py-2 -mx-1 px-1">
+            <Link href={`/dashboard/sales/customers/${id}`}>
+              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </Button>
+            </Link>
+            <div className="flex-1" />
             <Button
               size="sm"
               variant="outline"
@@ -86,6 +88,10 @@ export default function CustomerAgingReportPage() {
               <Download className="h-3.5 w-3.5" /> Export
             </Button>
           </div>
+
+        {/* Credit Summary */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 lg:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Summary</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
@@ -128,7 +134,7 @@ export default function CustomerAgingReportPage() {
         </div>
 
         {/* Aging Buckets */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 lg:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Aging Analysis</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {ageBuckets.map((bucket) => (
@@ -199,6 +205,7 @@ export default function CustomerAgingReportPage() {
               <p className="text-sm text-gray-400">No overdue invoices</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

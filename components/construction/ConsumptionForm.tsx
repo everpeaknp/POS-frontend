@@ -99,11 +99,6 @@ export default function ConsumptionForm({
         const sitesData = sitesRes.data.results || sitesRes.data || [];
         const productsData = productsRes.data.results || productsRes.data || [];
         
-        console.log('Products loaded:', productsData.length);
-        if (productsData.length > 0) {
-          console.log('Sample product:', productsData[0]);
-        }
-        
         setSites(sitesData);
         setProducts(productsData);
       } catch (error: any) {
@@ -126,25 +121,16 @@ export default function ConsumptionForm({
 
     // Find selected product
     const product = products.find(p => p.id.toString() === watchedProduct);
-    console.log('=== PRODUCT SELECTION ===');
-    console.log('Watched product ID:', watchedProduct);
-    console.log('Found product:', product);
     
     if (product) {
       setSelectedProduct(product);
       const costPrice = product.cost_price || '0';
-      console.log('Cost price from product:', costPrice);
-      console.log('Setting unit_cost field to:', costPrice);
       
-      // Use setValue with shouldValidate and shouldDirty options
       setValue('unit_cost', costPrice, { 
         shouldValidate: true,
         shouldDirty: true 
       });
-      
-      console.log('setValue called successfully');
     } else {
-      console.log('Product not found in products array');
       setSelectedProduct(null);
     }
   }, [watchedProduct, products, setValue]);
@@ -161,13 +147,9 @@ export default function ConsumptionForm({
         // Find selected site to get warehouse
         const site = sites.find(s => s.id === watchedSite);
         if (!site) {
-          console.log('Site not found:', watchedSite);
           return;
         }
 
-        console.log('Fetching stock for product:', watchedProduct, 'at warehouse:', site.warehouse);
-
-        // Fetch stock for this product at this warehouse
         const response = await apiClient.get('/inventory/stocks/', {
           params: {
             product: watchedProduct,
@@ -178,10 +160,8 @@ export default function ConsumptionForm({
         const stocks = response.data.results || response.data || [];
         if (stocks.length > 0) {
           setAvailableStock(Number(stocks[0].quantity));
-          console.log('Available stock:', stocks[0].quantity);
         } else {
           setAvailableStock(0);
-          console.log('No stock found');
         }
       } catch (error) {
         console.error('Failed to fetch stock:', error);

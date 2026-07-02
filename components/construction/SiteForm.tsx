@@ -88,31 +88,19 @@ export default function SiteForm({
       try {
         setLoading(true);
         
-        console.log('Fetching managers and warehouses...');
-        
-        // Fetch managers from HR employees with designation containing 'Manager'
-        // and warehouses from inventory
         const [employeesRes, warehousesRes] = await Promise.all([
           apiClient.get('/hr/employees/', { params: { status: 'active' } }),
           apiClient.get('/inventory/warehouses/'),
         ]);
         
-        console.log('Employees response:', employeesRes.data);
-        console.log('Warehouses response:', warehousesRes.data);
-        
         const employeesData = employeesRes.data.results || employeesRes.data || [];
         const warehousesData = warehousesRes.data.results || warehousesRes.data || [];
         
-        // Filter employees with Manager designation
         const managersData = employeesData.filter((emp: any) => 
           emp.designation && 
           (emp.designation.toLowerCase().includes('manager') || 
            emp.designation.toLowerCase().includes('supervisor'))
         );
-        
-        console.log('Total employees:', employeesData.length);
-        console.log('Managers/Supervisors count:', managersData.length);
-        console.log('Warehouses count:', warehousesData.length);
         
         // Transform employee data to match Manager interface
         const transformedManagers = managersData.map((emp: any) => ({

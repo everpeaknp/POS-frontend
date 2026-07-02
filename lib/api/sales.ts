@@ -333,8 +333,12 @@ export const paymentReceivedAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<PaymentReceived[]>('/sales/payments/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results: PaymentReceived[] } | PaymentReceived[]>(
+      '/sales/payments/',
+      { params }
+    );
+    const data = response.data;
+    return Array.isArray(data) ? data : (data.results ?? []);
   },
 
   // Get payment by ID

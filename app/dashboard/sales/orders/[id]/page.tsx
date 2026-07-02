@@ -136,9 +136,9 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Loading..." subtitle="Sales Order" />
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
         </div>
       </div>
@@ -147,10 +147,10 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Order Not Found" subtitle="Sales Order" />
-        <div className="flex-1 p-6 flex flex-col items-center justify-center">
-          <p className="text-gray-500 mb-4">The order you're looking for doesn't exist.</p>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-gray-500">The order you're looking for doesn't exist.</p>
           <Link href="/dashboard/sales/orders">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="h-4 w-4" /> Back to Orders
@@ -180,207 +180,208 @@ export default function OrderDetailPage() {
   const grandTotal = Number(order.total);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader 
         title={order.order_number} 
-        subtitle={`Sales Order · $<FormattedDate value={order.date} />`} 
+        subtitle={`Sales Order · ${order.date}`} 
       />
-      <div className="flex-1 p-6 space-y-4 max-w-5xl">
-        {/* Action bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={order.status} />
-          <div className="flex-1" />
-          
-          {order.status === 'Draft' && (
-            <>
-              <Link href={`/dashboard/sales/orders/${order.id}/edit`}>
-                <Button variant="outline" size="sm" className="gap-1.5 h-8">
-                  <Edit className="h-3.5 w-3.5" /> Edit
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full min-h-full space-y-6">
+          {/* Action bar */}
+          <div className="flex flex-wrap items-center gap-2 sticky top-0 z-10 bg-[#F3F4F6] py-2 -mx-1 px-1">
+            <Link href="/dashboard/sales/orders">
+              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </Button>
+            </Link>
+            <StatusBadge status={order.status} />
+            <div className="flex-1" />
+            
+            {order.status === 'Draft' && (
+              <>
+                <Link href={`/dashboard/sales/orders/${order.id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                    <Edit className="h-3.5 w-3.5" /> Edit
+                  </Button>
+                </Link>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleStatusUpdate('Confirmed')}
+                  disabled={updating}
+                  className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5 h-8"
+                >
+                  {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  Confirm Order
                 </Button>
-              </Link>
+              </>
+            )}
+            
+            {order.status === 'Confirmed' && (
               <Button 
                 size="sm" 
-                onClick={() => handleStatusUpdate('Confirmed')}
+                onClick={() => handleStatusUpdate('Delivered')}
                 disabled={updating}
-                className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5 h-8"
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8"
               >
                 {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                Confirm Order
+                Mark as Delivered
               </Button>
-            </>
-          )}
-          
-          {order.status === 'Confirmed' && (
-            <Button 
-              size="sm" 
-              onClick={() => handleStatusUpdate('Delivered')}
-              disabled={updating}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8"
-            >
-              {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
-              Mark as Delivered
-            </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handlePrint}
-            className="gap-1.5 h-8"
-          >
-            <Printer className="h-3.5 w-3.5" /> Print / PDF
-          </Button>
-          
-          {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+            )}
+            
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => handleStatusUpdate('Cancelled')}
-              disabled={updating}
-              className="gap-1.5 h-8 text-red-500 border-red-200 hover:bg-red-50"
+              onClick={handlePrint}
+              className="gap-1.5 h-8"
             >
-              {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
-              Cancel
+              <Printer className="h-3.5 w-3.5" /> Print / PDF
             </Button>
-          )}
-        </div>
-
-        {/* Info cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Order Info</h3>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Order #</span>
-              <span className="font-medium text-gray-800">{order.order_number}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Date</span>
-              <span className="font-medium text-gray-800">
-                <FormattedDate value={order.date} />
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Reference</span>
-              <span className="font-medium text-gray-800">{order.reference || "—"}</span>
-            </div>
-            {order.payment_type && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Payment Type</span>
-                <span className="font-medium text-gray-800 capitalize">{order.payment_type}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Status</span>
-              <StatusBadge status={order.status} />
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Created By</span>
-              <span className="font-medium text-gray-800">{order.created_by_name || "—"}</span>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</h3>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Name</span>
-              <span className="font-medium text-gray-800">{order.customer_name || order.customer}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Total Amount</span>
-              <span className="font-medium text-gray-800">{formatCurrency(order.total)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Items</span>
-              <span className="font-medium text-gray-800">{order.items_count || lineItems.length}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Line items */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
-          <LineItemsTable items={lineItems} onChange={() => {}} readOnly />
-          <div className="flex justify-end mt-4">
-            <SalesSummaryBox 
-              subtotal={subtotal} 
-              totalDiscount={totalDiscount} 
-              totalTax={totalTax} 
-              grandTotal={grandTotal} 
-            />
-          </div>
-        </div>
-
-        {/* Notes */}
-        {order.notes && (
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Notes</h3>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{order.notes}</p>
-          </div>
-        )}
-
-        {/* Activity Timeline */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Activity</h3>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <FileText className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-800">Order Created</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                  <Clock className="h-3 w-3" />
-                  {new Date(order.created_at).toLocaleString('en-GB')}
-                </p>
-              </div>
-            </div>
             
-            {order.status !== 'Draft' && (
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Order Confirmed</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                    <Clock className="h-3 w-3" />
-                    {new Date(order.updated_at).toLocaleString('en-GB')}
-                  </p>
+            {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleStatusUpdate('Cancelled')}
+                disabled={updating}
+                className="gap-1.5 h-8 text-red-500 border-red-200 hover:bg-red-50"
+              >
+                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                Cancel
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            {/* Left column — order & customer info */}
+            <div className="xl:col-span-4 space-y-6">
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-3">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Order Info</h3>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Order #</span>
+                  <span className="font-medium text-gray-800">{order.order_number}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Date</span>
+                  <span className="font-medium text-gray-800">
+                    <FormattedDate value={order.date} />
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Reference</span>
+                  <span className="font-medium text-gray-800">{order.reference || "—"}</span>
+                </div>
+                {order.payment_type && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Payment Type</span>
+                    <span className="font-medium text-gray-800 capitalize">{order.payment_type}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm items-center">
+                  <span className="text-gray-500">Status</span>
+                  <StatusBadge status={order.status} />
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Created By</span>
+                  <span className="font-medium text-gray-800">{order.created_by_name || "—"}</span>
                 </div>
               </div>
-            )}
-            
-            {order.status === 'Delivered' && (
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-green-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Delivered</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                    <Clock className="h-3 w-3" />
-                    {new Date(order.updated_at).toLocaleString('en-GB')}
-                  </p>
+              
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-3">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</h3>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Name</span>
+                  <span className="font-medium text-gray-800">{order.customer_name || order.customer}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total Amount</span>
+                  <span className="font-semibold text-[#22C55E]">{formatCurrency(order.total)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Items</span>
+                  <span className="font-medium text-gray-800">{order.items_count || lineItems.length}</span>
                 </div>
               </div>
-            )}
-            
-            {order.status === 'Cancelled' && (
-              <div className="flex items-start gap-3">
-                <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Order Cancelled</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                    <Clock className="h-3 w-3" />
-                    {new Date(order.updated_at).toLocaleString('en-GB')}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Back button */}
-        <div className="flex justify-start">
-          <Link href="/dashboard/sales/orders">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Orders
-            </Button>
-          </Link>
+              {/* Activity Timeline */}
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Activity</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Order Created</p>
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                        <Clock className="h-3 w-3" />
+                        {new Date(order.created_at).toLocaleString('en-GB')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {order.status !== 'Draft' && (
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-blue-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Order Confirmed</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          {new Date(order.updated_at).toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.status === 'Delivered' && (
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-green-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Delivered</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          {new Date(order.updated_at).toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.status === 'Cancelled' && (
+                    <div className="flex items-start gap-3">
+                      <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Order Cancelled</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          {new Date(order.updated_at).toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right column — line items & notes */}
+            <div className="xl:col-span-8 space-y-6">
+              <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Line Items</h3>
+                <LineItemsTable items={lineItems} onChange={() => {}} readOnly />
+                <div className="flex justify-end mt-6">
+                  <SalesSummaryBox 
+                    subtotal={subtotal} 
+                    totalDiscount={totalDiscount} 
+                    totalTax={totalTax} 
+                    grandTotal={grandTotal} 
+                  />
+                </div>
+              </div>
+
+              {order.notes && (
+                <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Notes</h3>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{order.notes}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

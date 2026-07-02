@@ -24,12 +24,9 @@ export default function ErpPage() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
-    console.log('[ERP] useEffect - user:', user ? 'exists' : 'null');
     if (!user) {
-      console.log('[ERP] No user, redirecting to login');
       router.push("/auth/login");
     } else {
-      // Fetch all tenants created by this user
       fetchTenants();
       fetchInvitations();
     }
@@ -40,7 +37,6 @@ export default function ErpPage() {
     try {
       setLoading(true);
       const data = await tenantApi.getAll();
-      console.log('[ERP] Fetched tenants:', data);
       setTenants(data);
     } catch (error) {
       console.error('[ERP] Failed to fetch tenants:', error);

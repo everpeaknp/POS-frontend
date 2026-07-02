@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
@@ -271,10 +271,10 @@ export default function NewInvoicePage() {
 
   if (loadingCustomers || loadingProducts) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Invoice" subtitle="New tax invoice" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
+          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
         </div>
       </div>
     );
@@ -283,7 +283,7 @@ export default function NewInvoicePage() {
   // Show message if no customers exist
   if (!loadingCustomers && customers.length === 0) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Invoice" subtitle="New tax invoice" />
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center max-w-md">
@@ -305,18 +305,17 @@ export default function NewInvoicePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Create Invoice" subtitle="New tax invoice" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-5xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field label="Invoice #">
               <Input className="h-9 text-sm bg-gray-50 text-gray-500" value="Auto-generated" readOnly />
             </Field>
             <Field label="Invoice Date" required>
               <DateInput 
-                 
                 className="h-9 text-sm border-gray-200" 
                 value={form.date}
                 onChange={(date) => setForm({ ...form, date: date})}
@@ -324,15 +323,11 @@ export default function NewInvoicePage() {
             </Field>
             <Field label="Due Date" required>
               <DateInput 
-                 
                 className="h-9 text-sm border-gray-200" 
                 value={form.due_date}
                 onChange={(date) => setForm({ ...form, due_date: date})}
               />
             </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Customer" required>
               <div className="flex gap-2">
                 <Select 
@@ -352,7 +347,7 @@ export default function NewInvoicePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 px-3 border-[#22C55E] text-[#22C55E] hover:bg-green-50"
+                  className="h-9 px-3 border-[#22C55E] text-[#22C55E] hover:bg-green-50 shrink-0"
                   onClick={() => setCustomerDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4" />
@@ -395,9 +390,6 @@ export default function NewInvoicePage() {
                 </SelectContent>
               </Select>
             </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Payment Type" required>
               <Select 
                 value={form.payment_type} 
@@ -453,7 +445,7 @@ export default function NewInvoicePage() {
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
             <Button 
               variant="ghost" 
-              onClick={() => router.back()} 
+              onClick={() => router.push("/dashboard/sales/invoices")} 
               className="gap-1.5 text-gray-500"
               disabled={submitting}
             >

@@ -4,7 +4,7 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Edit } from "lucide-react";
+import { Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
@@ -41,7 +41,7 @@ export default function CustomerProfilePage() {
 
   if (customerLoading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Loading..." subtitle="Customer Profile" />
         <div className="flex-1 p-6">
           <SkeletonTable rows={5} />
@@ -53,10 +53,15 @@ export default function CustomerProfilePage() {
   const customer = customerData?.data;
   if (!customer) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Not Found" subtitle="Customer Profile" />
-        <div className="flex-1 p-6">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
           <p className="text-gray-500">Customer not found</p>
+          <Link href="/dashboard/sales/customers">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Customers
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -67,33 +72,19 @@ export default function CustomerProfilePage() {
   const ledger = ledgerData || [];
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title={customer.name} subtitle="Customer Profile" />
-      <div className="flex-1 p-6 space-y-4 max-w-5xl">
-        
-        {/* Profile card */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
-            {customer.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-gray-900">{customer.name}</h2>
-              <StatusBadge status={customer.status} />
-            </div>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {customer.phone} · {customer.email || 'No email'}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {customer.address || 'No address'} {customer.pan && `· PAN: ${customer.pan}`}
-            </p>
-            {customer.current_balance > 0 && (
-              <p className="text-sm font-semibold text-red-600 mt-1">
-                Outstanding: {formatCurrency(customer.current_balance)}
-              </p>
-            )}
-          </div>
-          <div className="flex gap-2">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full min-h-full space-y-6">
+          {/* Action bar */}
+          <div className="flex flex-wrap items-center gap-2 sticky top-0 z-10 bg-[#F3F4F6] py-2 -mx-1 px-1">
+            <Link href="/dashboard/sales/customers">
+              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </Button>
+            </Link>
+            <StatusBadge status={customer.status} />
+            <div className="flex-1" />
             <Link href={`/dashboard/sales/customers/${customer.id}/aging`}>
               <Button variant="outline" size="sm" className="gap-1.5 h-8">
                 Aging Report
@@ -105,29 +96,49 @@ export default function CustomerProfilePage() {
               </Button>
             </Link>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="border-b border-gray-100 px-4 flex gap-1">
-            {tabs.map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-                  activeTab === t
-                    ? "border-[#22C55E] text-[#22C55E]"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          {/* Profile card */}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              {customer.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-gray-900">{customer.name}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {customer.phone} · {customer.email || 'No email'}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {customer.address || 'No address'} {customer.pan && `· PAN: ${customer.pan}`}
+              </p>
+              {customer.current_balance > 0 && (
+                <p className="text-sm font-semibold text-red-600 mt-1">
+                  Outstanding: {formatCurrency(customer.current_balance)}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="p-5">
+          {/* Tabs */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="border-b border-gray-100 px-4 flex gap-1 overflow-x-auto">
+              {tabs.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(t)}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === t
+                      ? "border-[#22C55E] text-[#22C55E]"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5 lg:p-6">
             {activeTab === "Overview" && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
                 {[
                   { label: "Total Orders", value: customer.total_orders || 0 },
                   { label: "Total Spent", value: formatCurrency(customer.total_spent || 0) },
@@ -282,6 +293,7 @@ export default function CustomerProfilePage() {
             {activeTab === "Credit Notes" && (
               <p className="text-sm text-gray-400 py-6 text-center">No credit notes found</p>
             )}
+            </div>
           </div>
         </div>
       </div>

@@ -158,7 +158,7 @@ export default function EditCustomerPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Edit Customer" subtitle="Loading..." />
         <div className="flex-1 p-6">
           <SkeletonTable rows={5} />
@@ -168,13 +168,27 @@ export default function EditCustomerPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Edit Customer" subtitle={form.name || "Update customer record"} />
-      <div className="flex-1 p-6">
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-8 max-w-3xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full min-h-full space-y-6">
+          <div className="flex flex-wrap items-center gap-2 sticky top-0 z-10 bg-[#F3F4F6] py-2 -mx-1 px-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-8"
+              onClick={() => router.push(`/dashboard/sales/customers/${id}`)}
+              disabled={submitting}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            </Button>
+          </div>
+
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           
           <Section title="Basic Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <Field label="Full Name" required>
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -236,7 +250,7 @@ export default function EditCustomerPage() {
           </Section>
 
           <Section title="Billing Address">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Field label="Province">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -285,7 +299,7 @@ export default function EditCustomerPage() {
 
           {!sameAsBilling && (
             <Section title="Shipping Address">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Field label="Province">
                   <Input 
                     className="h-9 text-sm border-gray-200"
@@ -319,7 +333,7 @@ export default function EditCustomerPage() {
           )}
 
           <Section title="Business Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Field label="PAN / VAT Number">
                 <Input 
                   className="h-9 text-sm border-gray-200" 
@@ -374,7 +388,7 @@ export default function EditCustomerPage() {
               className="gap-1.5 text-gray-500"
               disabled={submitting}
             >
-              <ArrowLeft className="h-4 w-4" /> Cancel
+              Cancel
             </Button>
             <Button 
               type="submit"
@@ -392,6 +406,7 @@ export default function EditCustomerPage() {
             </Button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

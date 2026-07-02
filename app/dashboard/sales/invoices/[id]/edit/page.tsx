@@ -42,12 +42,12 @@ export default function EditInvoicePage() {
   const grandTotal = subtotal - totalDiscount + totalTax;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader title={`Edit ${invoice.id}`} subtitle="Update invoice details" />
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-5xl">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field label="Invoice #">
               <Input className="h-9 text-sm bg-gray-50 text-gray-500" value={invoice.id} readOnly />
             </Field>
@@ -57,12 +57,9 @@ export default function EditInvoicePage() {
             <Field label="Due Date" required>
               <Input className="h-9 text-sm border-gray-200" defaultValue={invoice.dueDate} />
             </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Customer" required>
               <select defaultValue={mockCustomers.find((c) => c.name === invoice.customer)?.id ?? ""}
-                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]">
+                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E] w-full">
                 {mockCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
@@ -82,9 +79,6 @@ export default function EditInvoicePage() {
                 </SelectContent>
               </Select>
             </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Bank Account">
               <Select defaultValue="nepal-bank">
                 <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>

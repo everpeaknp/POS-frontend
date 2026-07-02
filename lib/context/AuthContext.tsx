@@ -41,32 +41,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load user from localStorage on mount
   useEffect(() => {
     const loadUser = async () => {
-      console.log('[AuthContext] Loading user...');
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
-          // Add cache-busting parameter to ensure fresh data
           const userData = await authApi.getProfile();
-          console.log('[AuthContext] User loaded:', userData);
-          console.log('[AuthContext] User has tenant:', userData.tenant !== null);
-          if (userData.tenant) {
-            console.log('[AuthContext] Tenant details:', userData.tenant);
-          }
           setUser(userData);
         } catch (error: any) {
           console.error('[AuthContext] Failed to load user:', error);
           
-          // If 403 or 401, token is invalid/expired - clear it
           if (error?.response?.status === 403 || error?.response?.status === 401) {
-            console.log('[AuthContext] Token is invalid or expired, clearing auth data');
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             document.cookie = 'access_token=; path=/; max-age=0';
             document.cookie = 'refresh_token=; path=/; max-age=0';
           }
         }
-      } else {
-        console.log('[AuthContext] No token found');
       }
       setLoading(false);
     };
@@ -76,23 +65,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      console.log('[AuthContext] Starting login...');
       const { access, refresh } = await authApi.login(credentials);
       
-      // Store in localStorage
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
       
-      // Store in cookies for middleware (client-side cookie)
-      document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
-      document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+      document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`;
+      document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`;
 
-      console.log('[AuthContext] Fetching user profile...');
       const userData = await authApi.getProfile();
       setUser(userData);
       
-      console.log('[AuthContext] Redirecting to /erp...');
-      // Redirect to ERP workspace page to show tenant info
       router.push('/erp');
     } catch (error) {
       console.error('Login failed:', error);
@@ -137,15 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      console.log('[AuthContext] Refreshing user data...');
       const userData = await authApi.getProfile();
-      console.log('[AuthContext] Fresh user data received:', userData);
-      console.log('[AuthContext] User has tenant:', userData.tenant !== null);
-      if (userData.tenant) {
-        console.log('[AuthContext] Tenant:', userData.tenant);
-      }
       setUser(userData);
-      console.log('[AuthContext] User state updated');
     } catch (error) {
       console.error('[AuthContext] Refresh user failed:', error);
       throw error;
