@@ -350,3 +350,92 @@ export const inventoryApi = {
       ),
   },
 };
+
+// ============================================================================
+// INVENTORY DASHBOARD API (Overview page)
+// ============================================================================
+
+export interface InventoryDashboardData {
+  summary: {
+    total_products: number;
+    total_units: number;
+    low_stock: number;
+    out_of_stock: number;
+  };
+  valuation: {
+    total_cost_value: number;
+    total_sale_value: number;
+    potential_profit: number;
+  };
+  stockData: Array<{ name: string; stock: number }>;
+  lowStockItems: Array<{
+    id: number;
+    name: string;
+    sku: string;
+    current_stock: number;
+    reorder_level: number;
+    shortage: number;
+    status: string;
+    category: string | null;
+    unit: string;
+  }>;
+  topByValue: Array<{
+    name: string;
+    sku: string;
+    total_cost_value: number;
+    stock: number;
+  }>;
+  warehouseCount: number;
+  categoryCount: number;
+}
+
+export const inventoryDashboardAPI = {
+  get: async (): Promise<InventoryDashboardData> => {
+    const [stockRes, lowStockRes, valuationRes, warehousesRes, categoriesRes] =
+      await Promise.all([
+        apiClient.get<{
+          summary: InventoryDashboardData['summary'];
+          stock_data: Array<{ name: string; stock: number }>;
+        }>('/inventory/reports/stock-summary/'),
+        apiClient.get<{
+          items: InventoryDashboardData['lowStockItems'];
+        }>('/inventory/reports/low-stock/'),
+        apiClient.get<{
+          summary: InventoryDashboardData['valuation'];
+          items: Array<{
+            name: string;
+            sku: string;
+            stock: number;
+            total_cost_value: number;
+          }>;
+        }>('/inventory/reports/valuation/'),
+        apiClient.get<{ results?: Warehouse[] }>('/inventory/warehouses/'),
+        apiClient.get<{ results?: Category[] }>('/inventory/categories/'),
+      ]);
+
+    const stock = stockRes.data;
+    const valuation = valuationRes.data;
+    const warehouses = warehousesRes.data?.results ?? [];
+    const categories = categoriesRes.data?.results ?? [];
+
+    const topByValue = [...(valuation.items ?? [])]
+      .sort((a, b) => b.total_cost_value - a.total_cost_value)
+      .slice(0, 5)
+      .map((item) => ({
+        name: item.name,
+        sku: item.sku,
+        total_cost_value: item.total_cost_value,
+        stock: item.stock,
+      }));
+
+    return {
+      summary: stock.summary,
+      valuation: valuation.summary,
+      stockData: (stock.stock_data ?? []).slice(0, 10),
+      lowStockItems: (lowStockRes.data.items ?? []).slice(0, 5),
+      topByValue,
+      warehouseCount: warehouses.filter((w) => w.is_active).length,
+      categoryCount: categories.length,
+    };
+  },
+};

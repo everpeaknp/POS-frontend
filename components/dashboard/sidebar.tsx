@@ -15,9 +15,13 @@ interface SubItem {
   label: string;
   href: string;
   createHref?: string; // Optional quick create link
+  exact?: boolean; // Only highlight on exact path (for module overview pages)
 }
 
 function matchesNavChild(pathname: string, child: SubItem): boolean {
+  if (child.exact) {
+    return pathname === child.href;
+  }
   if (pathname === child.href || pathname.startsWith(`${child.href}/`)) {
     return true;
   }
@@ -44,6 +48,7 @@ const navItems: NavItem[] = [
     icon: TrendingUp,
     requiredModule: "sales",
     children: [
+      { label: "Overview", href: "/dashboard/sales", exact: true },
       { label: "Sales Orders", href: "/dashboard/sales/orders", createHref: "/dashboard/sales/orders/new" },
       { label: "Quotations", href: "/dashboard/sales/quotations", createHref: "/dashboard/sales/quotations/new" },
       { label: "Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
@@ -59,6 +64,7 @@ const navItems: NavItem[] = [
     icon: ShoppingCart,
     requiredModule: "purchase",
     children: [
+      { label: "Overview", href: "/dashboard/purchase", exact: true },
       { label: "Purchase Orders", href: "/dashboard/purchase/orders", createHref: "/dashboard/purchase/orders/new" },
       { label: "Purchase Requests", href: "/dashboard/purchase/requests", createHref: "/dashboard/purchase/requests/new" },
       { label: "Suppliers", href: "/dashboard/purchase/suppliers", createHref: "/dashboard/purchase/suppliers/new" },
@@ -72,6 +78,7 @@ const navItems: NavItem[] = [
     icon: Package,
     requiredModule: "inventory",
     children: [
+      { label: "Overview", href: "/dashboard/inventory", exact: true },
       { label: "Products", href: "/dashboard/inventory/products", createHref: "/dashboard/inventory/products/new" },
       { label: "Product Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories?new=1" },
       { label: "Bulk Pricing", href: "/dashboard/inventory/bulk-pricing", createHref: "/dashboard/inventory/bulk-pricing/new" },
@@ -103,6 +110,7 @@ const navItems: NavItem[] = [
     icon: HardHat,
     requiredModule: "construction",
     children: [
+      { label: "Overview", href: "/dashboard/construction", exact: true },
       { label: "Sites", href: "/dashboard/construction/sites", createHref: "/dashboard/construction/sites/new" },
       { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
       { label: "Attendance", href: "/dashboard/construction/attendance" },
@@ -118,7 +126,7 @@ const navItems: NavItem[] = [
     requiredModule: "accounting",
     requiredRoles: ["admin", "accountant", "manager"],
     children: [
-      { label: "Overview", href: "/dashboard/accounting" },
+      { label: "Overview", href: "/dashboard/accounting", exact: true },
       { label: "Chart of Accounts", href: "/dashboard/accounting/chart-of-accounts", createHref: "/dashboard/accounting/chart-of-accounts/new" },
       { label: "Journal Entries", href: "/dashboard/accounting/journal-entries", createHref: "/dashboard/accounting/journal-entries/new" },
       { label: "General Ledger", href: "/dashboard/accounting/general-ledger" },
@@ -146,6 +154,7 @@ const navItems: NavItem[] = [
     requiredModule: "hr",
     requiredRoles: ["admin", "manager"],
     children: [
+      { label: "Overview", href: "/dashboard/hr", exact: true },
       { label: "Employees", href: "/dashboard/hr/employees", createHref: "/dashboard/hr/employees/new" },
       { label: "Departments", href: "/dashboard/hr/departments", createHref: "/dashboard/hr/departments/new" },
       { label: "Attendance", href: "/dashboard/hr/attendance", createHref: "/dashboard/hr/attendance/mark" },
@@ -159,6 +168,7 @@ const navItems: NavItem[] = [
     icon: BarChart2,
     requiredModule: "reports",
     children: [
+      { label: "Overview", href: "/dashboard/reports", exact: true },
       { label: "Sales Report", href: "/dashboard/reports/sales" },
       { label: "Purchase Report", href: "/dashboard/reports/purchase" },
       { label: "Inventory Report", href: "/dashboard/reports/inventory" },

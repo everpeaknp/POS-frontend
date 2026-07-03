@@ -1,141 +1,415 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, ShoppingCart, Package, DollarSign, FileText, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  TrendingUp,
+  ShoppingCart,
+  Package,
+  DollarSign,
+  FileText,
+  Settings,
+  ChevronRight,
+  AlertTriangle,
+  HardHat,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { SummaryCards } from "@/components/reports/SummaryCards";
-import { monthlyRevenueExpense, businessKPIs } from "@/lib/mock-data/reports";
+import { SkeletonCard } from "@/components/shared/Skeleton";
+import { useAuth } from "@/lib/context/AuthContext";
+import { reportsAPI, type DashboardSummary } from "@/lib/api/reports";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
+
+const reportCards = [
+  {
+    icon: TrendingUp,
+    title: "Sales Report",
+    desc: "Sales performance and trends",
+    href: "/dashboard/reports/sales",
+    color: "bg-green-50 text-[#22C55E]",
+  },
+  {
+    icon: ShoppingCart,
+    title: "Purchase Report",
+    desc: "Purchase history and analysis",
+    href: "/dashboard/reports/purchase",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    icon: Package,
+    title: "Inventory Report",
+    desc: "Stock levels and valuation",
+    href: "/dashboard/reports/inventory",
+    color: "bg-amber-50 text-amber-600",
+  },
+  {
+    icon: DollarSign,
+    title: "Financial Report",
+    desc: "P&L, Balance Sheet, Trial Balance",
+    href: "/dashboard/reports/financial",
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    icon: FileText,
+    title: "Tax Report",
+    desc: "VAT, TDS and tax summaries",
+    href: "/dashboard/reports/tax",
+    color: "bg-red-50 text-red-600",
+  },
+  {
+    icon: Settings,
+    title: "Custom Reports",
+    desc: "Build your own report",
+    href: "/dashboard/reports/custom",
+    color: "bg-gray-50 text-gray-600",
+  },
+];
 
 export default function ReportsPage() {
-  const stats = [
-    { label: "Total Revenue", value: "Rs. 24,85,200", change: 12 },
-    { label: "Total Expenses", value: "Rs. 13,10,000", change: 8 },
-    { label: "Net Profit", value: "Rs. 11,75,200", change: 15, color: "green" as const },
-    { label: "Tax Liability", value: "Rs. 1,30,000", change: -5, color: "red" as const },
-  ];
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
 
-  const reportCards = [
-    { icon: TrendingUp, title: "Sales Report", desc: "Sales performance and trends", href: "/dashboard/reports/sales" },
-    { icon: ShoppingCart, title: "Purchase Report", desc: "Purchase history and analysis", href: "/dashboard/reports/purchase" },
-    { icon: Package, title: "Inventory Report", desc: "Stock levels and valuation", href: "/dashboard/reports/inventory" },
-    { icon: DollarSign, title: "Financial Report", desc: "P&L, Balance Sheet, Trial Balance", href: "/dashboard/reports/financial" },
-    { icon: FileText, title: "Tax Report", desc: "VAT, TDS and tax summaries", href: "/dashboard/reports/tax" },
-    { icon: Settings, title: "Custom Reports", desc: "Build your own report", href: "/dashboard/reports/custom" },
-  ];
+  const workspaceName =
+    user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
+  const subtitle = `${workspaceName} · Business analytics and insights`;
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await reportsAPI.dashboardSummary();
+      setSummary(data);
+    } catch (error) {
+      console.error("Failed to fetch reports overview:", error);
+      toast.error("Failed to load reports overview");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const financials = summary?.financials;
+
+  const statCards = financials
+    ? [
+        {
+          label: "Total Revenue",
+          value: formatNPR(financials.total_revenue),
+          sub: `Sales + invoices`,
+          icon: TrendingUp,
+          color: "bg-green-50 text-[#22C55E]",
+        },
+        {
+          label: "Total Expenses",
+          value: formatNPR(financials.total_expenses),
+          sub: "Purchases, materials, labor",
+          icon: ShoppingCart,
+          color: "bg-red-50 text-red-600",
+        },
+        {
+          label: "Net Profit",
+          value: formatNPR(financials.net_profit),
+          sub: `${financials.profit_margin_percentage.toFixed(1)}% margin`,
+          icon: DollarSign,
+          color: "bg-blue-50 text-blue-600",
+        },
+        {
+          label: "Receivables",
+          value: formatNPR(financials.total_receivables),
+          sub: `Payables: ${formatNPR(financials.total_payables)}`,
+          icon: FileText,
+          color: "bg-purple-50 text-purple-600",
+        },
+      ]
+    : [];
+
+  const revenueExpenseChart = financials
+    ? [
+        { name: "Revenue", amount: financials.total_revenue },
+        { name: "Expenses", amount: financials.total_expenses },
+        { name: "Net Profit", amount: financials.net_profit },
+      ]
+    : [];
+
+  const breakdownChart = useMemo(() => {
+    if (!financials?.breakdown) return [];
+    const b = financials.breakdown;
+    return [
+      { name: "Sales", value: b.sales_revenue },
+      { name: "Invoices", value: b.invoice_revenue },
+      { name: "Purchases", value: b.purchase_expenses },
+      { name: "Materials", value: b.material_expenses },
+      { name: "Labor", value: b.labor_expenses },
+    ].filter((item) => item.value > 0);
+  }, [financials]);
+
+  const lowStockItems = summary?.inventory.low_stock_items ?? [];
+  const budgetAlerts = summary?.construction.budget_alert_sites ?? [];
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Reports" subtitle={subtitle} />
+        <div className="flex-1 p-6 space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Reports" subtitle="Business analytics and insights" />
+      <DashHeader title="Reports" subtitle={subtitle} />
       <div className="flex-1 p-6 space-y-6">
         {/* Stats */}
-        <SummaryCards cards={stats} />
-
-        {/* Quick Access Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reportCards.map((card) => (
-            <Link key={card.title} href={card.href}>
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer h-full">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                    <card.icon className="h-6 w-6 text-[#22C55E]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{card.title}</h3>
-                    <p className="text-sm text-gray-600">{card.desc}</p>
-                  </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((s) => (
+            <div
+              key={s.label}
+              className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-gray-500">{s.label}</p>
+                <div className={`p-2 rounded-lg ${s.color}`}>
+                  <s.icon className="h-4 w-4" />
                 </div>
-                <Button className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white h-8 text-sm">
-                  View Report
-                </Button>
               </div>
-            </Link>
+              <p className="text-xl font-bold text-gray-900">{s.value}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+            </div>
           ))}
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue vs Expense (Last 6 Months)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyRevenueExpense}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value: any) => `Rs. ${value.toLocaleString()}`} />
-                <Legend />
-                <Bar dataKey="revenue" fill="#22C55E" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="expense" fill="#EF4444" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Business KPIs</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs text-gray-600">Gross Profit Margin</span>
-                  <span className="text-sm font-bold text-gray-900">{businessKPIs.grossProfitMargin}%</span>
+        {/* Report navigation */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">All Reports</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reportCards.map((card) => (
+              <Link
+                key={card.title}
+                href={card.href}
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-lg ${card.color} group-hover:scale-105 transition-transform`}>
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
+                    <span className="inline-flex items-center gap-1 text-xs text-[#22C55E] font-medium mt-2 group-hover:gap-1.5 transition-all">
+                      View report
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-[#22C55E] h-2 rounded-full" style={{ width: `${businessKPIs.grossProfitMargin}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs text-gray-600">Net Profit Margin</span>
-                  <span className="text-sm font-bold text-gray-900">{businessKPIs.netProfitMargin}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-[#22C55E] h-2 rounded-full" style={{ width: `${businessKPIs.netProfitMargin}%` }} />
-                </div>
-              </div>
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-600 mb-1">Current Ratio</p>
-                <p className="text-2xl font-bold text-gray-900">{businessKPIs.currentRatio}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 mb-1">Inventory Turnover</p>
-                <p className="text-2xl font-bold text-gray-900">{businessKPIs.inventoryTurnover}x</p>
-              </div>
-            </div>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Recent Downloads */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900">Recent Report Downloads</h3>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              Revenue vs Expenses
+            </h3>
+            {revenueExpenseChart.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={revenueExpenseChart}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
+                  <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+                No financial data yet
+              </div>
+            )}
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                {["Report Name", "Generated By", "Date", "Action"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {[
-                { name: "Sales Report - Poush 2081", by: "Admin", date: "2082-01-10" },
-                { name: "Purchase Report - Mangsir 2081", by: "Manager", date: "2082-01-08" },
-                { name: "Inventory Report - Jan 2082", by: "Admin", date: "2082-01-05" },
-              ].map((item) => (
-                <tr key={item.name} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.by}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.date}</td>
-                  <td className="px-4 py-3">
-                    <Button variant="ghost" size="sm" className="text-[#22C55E] hover:bg-green-50">
-                      Download
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              Revenue & Expense Breakdown
+            </h3>
+            {breakdownChart.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={breakdownChart}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    dataKey="value"
+                    paddingAngle={3}
+                  >
+                    {breakdownChart.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
+                  <Legend iconType="circle" iconSize={8} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+                No breakdown data yet
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Alerts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Low Stock Alerts
+              </h3>
+              <Link
+                href="/dashboard/reports/inventory"
+                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              >
+                View report
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {lowStockItems.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-400">
+                All products are adequately stocked
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Product", "Stock", "Reorder Level", "Status"].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-4 py-2.5 text-xs font-medium text-gray-500"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {lowStockItems.slice(0, 5).map((item) => (
+                    <tr key={item.product_id} className="hover:bg-gray-50/50">
+                      <td className="px-4 py-3 font-medium text-gray-900">{item.product_name}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {item.current_stock} {item.unit}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{item.reorder_level}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            item.urgency === "critical"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {item.urgency === "critical" ? "Critical" : "Low"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <HardHat className="h-4 w-4 text-orange-500" />
+                Construction Budget Alerts
+              </h3>
+              <Link
+                href="/dashboard/construction/reports"
+                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              >
+                View report
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {budgetAlerts.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-400">
+                No budget alerts at this time
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Site", "Budget Used", "Remaining", "Alert"].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-4 py-2.5 text-xs font-medium text-gray-500"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {budgetAlerts.slice(0, 5).map((site) => (
+                    <tr key={site.site_id} className="hover:bg-gray-50/50">
+                      <td className="px-4 py-3 font-medium text-gray-900">{site.site_name}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {site.budget_utilization_percentage.toFixed(1)}%
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {formatNPR(site.remaining_budget)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            site.alert_level === "critical"
+                              ? "bg-red-100 text-red-700"
+                              : site.alert_level === "high"
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {site.alert_level.charAt(0).toUpperCase() + site.alert_level.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
     </div>

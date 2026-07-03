@@ -1,8 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Building2,
+  Users,
+  CircleCheck,
+  Wallet,
+  Plus,
+  ClipboardCheck,
+  FileText,
+  BarChart3,
+  ChevronRight,
+  HardHat,
+  MapPin,
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
+import { DashHeader } from '@/components/dashboard/dash-header';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { SkeletonCard } from '@/components/shared/Skeleton';
+import { useAuth } from '@/lib/context/AuthContext';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -18,11 +45,89 @@ interface DashboardStats {
   total_actual_spend: number;
 }
 
+const quickActions = [
+  {
+    href: '/dashboard/construction/sites/new',
+    label: 'New Site',
+    sub: 'Create project',
+    icon: Building2,
+    color: 'bg-blue-50 text-blue-600',
+  },
+  {
+    href: '/dashboard/construction/workers/new',
+    label: 'New Worker',
+    sub: 'Add workforce',
+    icon: Users,
+    color: 'bg-green-50 text-[#22C55E]',
+  },
+  {
+    href: '/dashboard/construction/attendance',
+    label: 'Mark Attendance',
+    sub: 'Daily tracking',
+    icon: ClipboardCheck,
+    color: 'bg-purple-50 text-purple-600',
+  },
+  {
+    href: '/dashboard/construction/daily-logs/new',
+    label: 'New Daily Log',
+    sub: 'Log progress',
+    icon: FileText,
+    color: 'bg-orange-50 text-orange-600',
+  },
+];
+
+const moduleLinks = [
+  {
+    href: '/dashboard/construction/sites',
+    label: 'Manage Sites',
+    sub: 'View all projects',
+    icon: Building2,
+    color: 'bg-blue-50 text-blue-600',
+  },
+  {
+    href: '/dashboard/construction/workers',
+    label: 'Manage Workers',
+    sub: 'View workforce',
+    icon: HardHat,
+    color: 'bg-green-50 text-[#22C55E]',
+  },
+  {
+    href: '/dashboard/construction/reports',
+    label: 'View Reports',
+    sub: 'Budget analysis',
+    icon: BarChart3,
+    color: 'bg-purple-50 text-purple-600',
+  },
+];
+
+function getBudgetHealthColor(percentage: number) {
+  if (percentage < 80) return 'text-green-700 bg-green-50 border-green-200';
+  if (percentage < 100) return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+  return 'text-red-700 bg-red-50 border-red-200';
+}
+
+function getBudgetHealthLabel(percentage: number) {
+  if (percentage < 80) return 'Healthy';
+  if (percentage < 100) return 'Warning';
+  return 'Over Budget';
+}
+
+function getProgressBarColor(percentage: number) {
+  if (percentage < 80) return 'bg-[#22C55E]';
+  if (percentage < 100) return 'bg-yellow-500';
+  return 'bg-red-500';
+}
+
 export default function ConstructionDashboardPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sites, setSites] = useState<Site[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const workspaceName =
+    user?.tenant?.workspace_name || user?.tenant?.name || 'Workspace';
+  const subtitle = `${workspaceName} · Budget tracking, labor, and site operations`;
 
   useEffect(() => {
     fetchDashboardData();
@@ -31,26 +136,21 @@ export default function ConstructionDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch all sites
+
       const sitesData = await constructionApi.sites.list();
       const sitesArray = Array.isArray(sitesData) ? sitesData : [];
       setSites(sitesArray);
-      
-      // Fetch workers
+
       const workersData = await constructionApi.workers.list();
       const workersArray = Array.isArray(workersData) ? workersData : [];
-      
-      // Calculate stats
-      const activeSites = sitesArray.filter(s => s.status === 'active');
-      const activeWorkers = workersArray.filter(w => w.status === 'active');
-      
-      const sitesOnBudget = sitesArray.filter(s => (s.budget_percentage ?? 0) < 100).length;
-      const sitesOverBudget = sitesArray.filter(s => (s.budget_percentage ?? 0) >= 100).length;
-      
+
+      const activeSites = sitesArray.filter((s) => s.status === 'active');
+      const activeWorkers = workersArray.filter((w) => w.status === 'active');
+      const sitesOnBudget = sitesArray.filter((s) => (s.budget_percentage ?? 0) < 100).length;
+      const sitesOverBudget = sitesArray.filter((s) => (s.budget_percentage ?? 0) >= 100).length;
       const totalAllocatedBudget = sitesArray.reduce((sum, s) => sum + s.allocated_budget, 0);
       const totalActualSpend = sitesArray.reduce((sum, s) => sum + (s.actual_spend ?? 0), 0);
-      
+
       setStats({
         total_sites: sitesArray.length,
         active_sites: activeSites.length,
@@ -61,7 +161,7 @@ export default function ConstructionDashboardPage() {
         total_allocated_budget: totalAllocatedBudget,
         total_actual_spend: totalActualSpend,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch dashboard data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
@@ -69,361 +169,283 @@ export default function ConstructionDashboardPage() {
     }
   };
 
-  const getBudgetHealthColor = (percentage: number) => {
-    if (percentage < 80) return 'text-green-600 bg-green-50 border-green-200';
-    if (percentage < 100) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
+  const activeSites = useMemo(
+    () => sites.filter((s) => s.status === 'active'),
+    [sites]
+  );
 
-  const getBudgetHealthLabel = (percentage: number) => {
-    if (percentage < 80) return 'Healthy';
-    if (percentage < 100) return 'Warning';
-    return 'Over Budget';
-  };
+  const budgetChartData = useMemo(
+    () =>
+      activeSites.slice(0, 8).map((site) => ({
+        name: site.name.length > 14 ? `${site.name.slice(0, 14)}…` : site.name,
+        allocated: site.allocated_budget,
+        spent: site.actual_spend ?? 0,
+      })),
+    [activeSites]
+  );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'planned':
-        return 'bg-blue-100 text-blue-800';
-      case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
+  const statCards = stats
+    ? [
+        {
+          label: 'Total Sites',
+          value: stats.total_sites.toString(),
+          sub: `${stats.active_sites} active`,
+          icon: Building2,
+          color: 'bg-blue-50 text-blue-600',
+        },
+        {
+          label: 'Total Workers',
+          value: stats.total_workers.toString(),
+          sub: `${stats.active_workers} active`,
+          icon: Users,
+          color: 'bg-green-50 text-[#22C55E]',
+        },
+        {
+          label: 'Budget Health',
+          value: stats.sites_on_budget.toString(),
+          sub:
+            stats.sites_over_budget > 0
+              ? `${stats.sites_over_budget} over budget`
+              : 'on budget',
+          icon: CircleCheck,
+          color: 'bg-emerald-50 text-emerald-600',
+        },
+        {
+          label: 'Total Budget',
+          value: formatNPR(stats.total_allocated_budget),
+          sub: `Spent: ${formatNPR(stats.total_actual_spend)}`,
+          icon: Wallet,
+          color: 'bg-purple-50 text-purple-600',
+        },
+      ]
+    : [];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Construction" subtitle={subtitle} />
+        <div className="flex-1 p-6 space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Construction Module</h1>
-        <p className="mt-2 text-gray-600">
-          Manage construction projects with budget tracking, labor management, and site operations
-        </p>
-      </div>
-
-      {/* Stats Overview */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Sites */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Sites</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total_sites}</p>
-                <p className="text-sm text-gray-500 mt-1">{stats.active_sites} active</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Workers */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Workers</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total_workers}</p>
-                <p className="text-sm text-gray-500 mt-1">{stats.active_workers} active</p>
-              </div>
-              <div className="p-3 bg-[#22C55E] bg-opacity-10 rounded-lg">
-                <svg className="w-8 h-8 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Budget Health */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Budget Health</p>
-                <p className="text-3xl font-bold text-[#22C55E] mt-2">{stats.sites_on_budget}</p>
-                <p className="text-sm text-gray-500 mt-1">on budget</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            {stats.sites_over_budget > 0 && (
-              <div className="mt-3 p-2 bg-red-50 rounded-md">
-                <p className="text-xs text-red-700 font-medium">
-                  {stats.sites_over_budget} site{stats.sites_over_budget > 1 ? 's' : ''} over budget
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Total Budget */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Budget</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">{formatNPR(stats.total_allocated_budget)}</p>
-                <p className="text-sm text-gray-500 mt-1">Spent: {formatNPR(stats.total_actual_spend)}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link
-          href="/dashboard/construction/sites/new"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">New Site</p>
-              <p className="text-sm text-gray-600">Create project</p>
-            </div>
-          </div>
-        </Link>
-
-
-        <Link
-          href="/dashboard/construction/workers/new"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#22C55E] bg-opacity-10 rounded-lg group-hover:bg-opacity-20 transition-colors">
-              <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">New Worker</p>
-              <p className="text-sm text-gray-600">Add workforce</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/dashboard/construction/attendance"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Mark Attendance</p>
-              <p className="text-sm text-gray-600">Daily tracking</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/dashboard/construction/daily-logs/new"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
-              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">New Daily Log</p>
-              <p className="text-sm text-gray-600">Log progress</p>
-            </div>
-          </div>
-        </Link>
-      </div>
-
-
-      {/* Active Sites Overview */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900">Active Construction Sites</h2>
-            <Link
-              href="/dashboard/construction/sites"
-              className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
-            >
-              View All →
-            </Link>
-          </div>
-        </div>
-
-        {sites.filter(s => s.status === 'active').length === 0 ? (
-          <div className="p-12 text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No active sites</h3>
-            <p className="mt-1 text-sm text-gray-500">Create a new construction site to get started.</p>
-            <div className="mt-6">
-              <Link
-                href="/dashboard/construction/sites/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#22C55E] hover:bg-[#16A34A]"
-              >
-                + New Site
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {sites.filter(s => s.status === 'active').slice(0, 5).map((site) => (
+    <div className="flex flex-col min-h-full">
+      <DashHeader title="Construction" subtitle={subtitle} />
+      <div className="flex-1 p-6 space-y-6">
+        {/* Stats */}
+        {stats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {statCards.map((s) => (
               <div
-                key={site.id}
-                className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => router.push(`/dashboard/construction/sites/${site.id}`)}
+                key={s.label}
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{site.name}</h3>
-                    <p className="text-sm text-gray-600">{site.location}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded text-xs font-medium border ${getBudgetHealthColor(
-                      site.budget_percentage ?? 0
-                    )}`}
-                  >
-                    {getBudgetHealthLabel(site.budget_percentage ?? 0)}
-                  </span>
-                </div>
-
-
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span>Budget: {formatNPR(site.allocated_budget)}</span>
-                    <span>{(site.budget_percentage ?? 0).toFixed(1)}% Used</span>
-                  </div>
-                  <div className="overflow-hidden h-2 rounded-full bg-gray-200">
-                    <div
-                      style={{ width: `${Math.min(site.budget_percentage ?? 0, 100)}%` }}
-                      className={`h-full transition-all duration-500 ${
-                        (site.budget_percentage ?? 0) < 80
-                          ? 'bg-[#22C55E]'
-                          : (site.budget_percentage ?? 0) < 100
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                      }`}
-                    ></div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-gray-500">{s.label}</p>
+                  <div className={`p-2 rounded-lg ${s.color}`}>
+                    <s.icon className="h-4 w-4" />
                   </div>
                 </div>
-
-                {/* Cost Summary */}
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">Material</p>
-                    <p className="font-semibold text-gray-900">{formatNPR(site.material_cost ?? 0)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Labor</p>
-                    <p className="font-semibold text-gray-900">{formatNPR(site.labor_cost ?? 0)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Remaining</p>
-                    <p className={`font-semibold ${(site.remaining_budget ?? 0) >= 0 ? 'text-[#22C55E]' : 'text-red-600'}`}>
-                      {formatNPR(site.remaining_budget ?? 0)}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                <p
+                  className={`text-xs mt-0.5 ${
+                    s.label === 'Budget Health' && stats.sites_over_budget > 0
+                      ? 'text-red-500'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {s.sub}
+                </p>
               </div>
             ))}
           </div>
         )}
-      </div>
 
-      {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link
-          href="/dashboard/construction/sites"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Manage Sites</p>
-              <p className="text-sm text-gray-600">View all projects</p>
+        {/* Quick actions */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2.5 rounded-lg ${action.color} group-hover:scale-105 transition-transform`}
+                  >
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 text-sm">{action.label}</p>
+                    <p className="text-xs text-gray-500">{action.sub}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Budget chart */}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              Budget vs Spend (Active Sites)
+            </h3>
+            {budgetChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={budgetChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value) => formatNPR(Number(value ?? 0))} />
+                  <Legend />
+                  <Bar dataKey="allocated" name="Allocated" fill="#93C5FD" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="spent" name="Spent" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+                No active sites to chart
+              </div>
+            )}
+          </div>
+
+          {/* Module links */}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Module Navigation</h3>
+            <div className="space-y-2">
+              {moduleLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center justify-between p-3 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-100 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${link.color}`}>
+                      <link.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{link.label}</p>
+                      <p className="text-xs text-gray-500">{link.sub}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                </Link>
+              ))}
             </div>
           </div>
-        </Link>
+        </div>
 
-
-        <Link
-          href="/dashboard/construction/workers"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#22C55E] bg-opacity-10 rounded-lg">
-              <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Manage Workers</p>
-              <p className="text-sm text-gray-600">View workforce</p>
-            </div>
+        {/* Active sites */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-gray-700">Active Construction Sites</h2>
+            <Link
+              href="/dashboard/construction/sites"
+              className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+            >
+              View all
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-        </Link>
 
-        <Link
-          href="/dashboard/construction/reports"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          {activeSites.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="No active sites"
+              description="Create a new construction site to start tracking budgets, labor, and daily progress."
+              actionLabel="New Site"
+              actionHref="/dashboard/construction/sites/new"
+            />
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {activeSites.slice(0, 5).map((site) => {
+                const pct = site.budget_percentage ?? 0;
+                return (
+                  <button
+                    key={site.id}
+                    type="button"
+                    className="w-full text-left p-5 hover:bg-gray-50 transition-colors"
+                    onClick={() => router.push(`/dashboard/construction/sites/${site.id}`)}
+                  >
+                    <div className="flex justify-between items-start gap-4 mb-3">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                          {site.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{site.location}</span>
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getBudgetHealthColor(pct)}`}
+                      >
+                        {getBudgetHealthLabel(pct)}
+                      </span>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Budget: {formatNPR(site.allocated_budget)}</span>
+                        <span>{pct.toFixed(1)}% used</span>
+                      </div>
+                      <div className="overflow-hidden h-1.5 rounded-full bg-gray-100">
+                        <div
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                          className={`h-full transition-all duration-500 ${getProgressBarColor(pct)}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <p className="text-gray-500">Material</p>
+                        <p className="font-semibold text-gray-900">
+                          {formatNPR(site.material_cost ?? 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Labor</p>
+                        <p className="font-semibold text-gray-900">
+                          {formatNPR(site.labor_cost ?? 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Remaining</p>
+                        <p
+                          className={`font-semibold ${
+                            (site.remaining_budget ?? 0) >= 0
+                              ? 'text-[#22C55E]'
+                              : 'text-red-600'
+                          }`}
+                        >
+                          {formatNPR(site.remaining_budget ?? 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">View Reports</p>
-              <p className="text-sm text-gray-600">Budget analysis</p>
-            </div>
-          </div>
-        </Link>
+          )}
+        </div>
       </div>
     </div>
   );
