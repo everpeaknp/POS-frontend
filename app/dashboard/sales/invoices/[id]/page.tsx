@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, FileText, Calendar, DollarSign, User, Loader2, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { ArrowLeft, FileText, Calendar, DollarSign, User, Loader2, Trash2, Printer } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { invoiceAPI, Invoice } from "@/lib/api/sales";
+import { PrintableSalesInvoice } from "@/components/print/PrintableSalesInvoice";
+import { invoiceAPI, salesOrderAPI, Invoice, SalesOrder } from "@/lib/api/sales";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
@@ -20,11 +23,20 @@ const statusColors = {
 export default function InvoiceDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const invoiceId = params.id as string;
+  const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
   
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [salesOrder, setSalesOrder] = useState<SalesOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${invoice?.invoice_number || "Invoice"}_${new Date().toISOString().split("T")[0]}`,
+  });
 
   useEffect(() => {
     if (invoiceId) {
@@ -36,6 +48,15 @@ export default function InvoiceDetailPage() {
     try {
       const response = await invoiceAPI.get(invoiceId);
       setInvoice(response.data);
+
+      if (response.data.sales_order) {
+        try {
+          const orderResponse = await salesOrderAPI.get(response.data.sales_order);
+          setSalesOrder(orderResponse.data);
+        } catch {
+          setSalesOrder(null);
+        }
+      }
     } catch (error) {
       console.error("Error loading invoice:", error);
       toast.error("Failed to load invoice");
@@ -44,6 +65,13 @@ export default function InvoiceDetailPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (searchParams.get("print") === "1" && invoice && companyInfo && !loading) {
+      const timer = setTimeout(() => handlePrint(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, invoice, companyInfo, loading, handlePrint]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this invoice?")) {
@@ -106,6 +134,15 @@ export default function InvoiceDetailPage() {
             Back to Invoices
           </Button>
           <div className="flex-1" />
+          <Button
+            variant="outline"
+            onClick={() => handlePrint()}
+            disabled={!companyInfo}
+            className="gap-2"
+          >
+            <Printer className="h-4 w-4" />
+            Print
+          </Button>
           <Button
             variant="outline"
             onClick={handleDelete}
@@ -238,6 +275,17 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
       </div>
+
+      {companyInfo && (
+        <div className="hidden">
+          <PrintableSalesInvoice
+            ref={printRef}
+            invoice={invoice}
+            salesOrder={salesOrder}
+            companyInfo={companyInfo}
+          />
+        </div>
+      )}
     </div>
   );
 }

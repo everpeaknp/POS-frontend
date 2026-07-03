@@ -118,7 +118,7 @@ export default function PurchaseDashboardPage() {
   };
 
   const totalPurchases = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (inv.total_amount ?? 0), 0),
+    () => invoices.reduce((sum, inv) => sum + (inv.amount ?? 0), 0),
     [invoices]
   );
 
@@ -143,7 +143,7 @@ export default function PurchaseDashboardPage() {
     invoices.forEach((inv) => {
       const d = new Date(inv.date);
       if (d.getFullYear() === year) {
-        buckets[d.getMonth()].purchases += inv.total_amount ?? 0;
+        buckets[d.getMonth()].purchases += inv.amount ?? 0;
       }
     });
     return buckets;

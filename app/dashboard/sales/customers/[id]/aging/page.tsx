@@ -11,6 +11,7 @@ import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { customerAPI, customerCreditAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
+import { downloadCsv } from "@/lib/utils/csv";
 import toast from "react-hot-toast";
 
 export default function CustomerAgingReportPage() {
@@ -30,7 +31,19 @@ export default function CustomerAgingReportPage() {
   const aging = agingData;
 
   const handleExport = () => {
-    toast.success("Export functionality coming soon");
+    if (!customer || !aging) return;
+    downloadCsv(
+      `aging-${customer.name.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.csv`,
+      ["Bucket", "Amount (Rs.)"],
+      [
+        ["Current (0-30 days)", String(aging.current)],
+        ["31-60 days", String(aging.days_30_60)],
+        ["61-90 days", String(aging.days_60_90)],
+        ["90+ days", String(aging.days_90_plus)],
+        ["Total Outstanding", String(aging.total_outstanding)],
+      ]
+    );
+    toast.success("Aging report exported");
   };
 
   if (customerLoading || agingLoading) {

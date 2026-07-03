@@ -383,6 +383,16 @@ export const journalEntriesAPI = {
     await apiClient.delete(`/accounting/journal-entries/${id}/`);
   },
 
+  glIntegrationSummary: async () => {
+    const response = await apiClient.get<{
+      by_prefix: Record<string, number>;
+      by_type: Record<string, number>;
+      total_posted: number;
+      checklist: Array<{ step: number; action: string; expect: string }>;
+    }>('/accounting/journal-entries/gl-integration-summary/');
+    return response.data;
+  },
+
   // Post journal entry
   post: async (id: string) => {
     const response = await apiClient.post<JournalEntry>(`/accounting/journal-entries/${id}/post_entry/`);

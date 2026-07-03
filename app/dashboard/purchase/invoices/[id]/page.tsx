@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Printer, CreditCard, ArrowLeft, Loader2 } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +14,20 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { AmountInWords } from "@/components/sales/AmountInWords";
-import { purchaseInvoicesAPI, type PurchaseInvoice } from "@/lib/api/purchase";
+import { PrintablePurchaseInvoice } from "@/components/print/PrintablePurchaseInvoice";
+import { purchaseInvoicesAPI, purchaseOrdersAPI, type PurchaseInvoice, type PurchaseOrder } from "@/lib/api/purchase";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function PurchaseInvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
+
   const [invoice, setInvoice] = useState<PurchaseInvoice | null>(null);
+  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [payModal, setPayModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -30,12 +38,26 @@ export default function PurchaseInvoiceDetailPage() {
     reference: "",
   });
 
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${invoice?.invoice_number || "PurchaseInvoice"}_${new Date().toISOString().split("T")[0]}`,
+  });
+
   const fetchInvoice = async () => {
     if (!id) return;
     try {
       const data = await purchaseInvoicesAPI.get(id);
       setInvoice(data);
       setPaymentForm((prev) => ({ ...prev, amount: data.balance }));
+
+      if (data.purchase_order) {
+        try {
+          const po = await purchaseOrdersAPI.get(data.purchase_order);
+          setPurchaseOrder(po);
+        } catch {
+          setPurchaseOrder(null);
+        }
+      }
     } catch (error: any) {
       console.error("Error fetching invoice:", error);
       toast.error("Failed to load invoice details");
@@ -47,6 +69,13 @@ export default function PurchaseInvoiceDetailPage() {
   useEffect(() => {
     fetchInvoice();
   }, [id]);
+
+  useEffect(() => {
+    if (searchParams.get("print") === "1" && invoice && companyInfo && !loading) {
+      const timer = setTimeout(() => handlePrint(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, invoice, companyInfo, loading, handlePrint]);
 
   const handleRecordPayment = async () => {
     if (!invoice) return;
@@ -107,6 +136,8 @@ export default function PurchaseInvoiceDetailPage() {
   }
 
   const canRecordPayment = invoice.balance > 0 && invoice.status !== "Paid";
+  const subtotal = purchaseOrder ? Number(purchaseOrder.subtotal) : Number(invoice.amount);
+  const tax = purchaseOrder ? Number(purchaseOrder.tax) : 0;
 
   return (
     <div className="flex flex-col min-h-full">
@@ -118,7 +149,13 @@ export default function PurchaseInvoiceDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={invoice.status} />
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.print()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => handlePrint()}
+            disabled={!companyInfo}
+          >
             <Printer className="h-3.5 w-3.5" /> Print
           </Button>
           {canRecordPayment && (
@@ -155,9 +192,13 @@ export default function PurchaseInvoiceDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment Summary</h3>
             {[
-              ["Subtotal", formatCurrency(invoice.subtotal)],
-              ["Tax", formatCurrency(invoice.tax_amount)],
-              ["Total Amount", formatCurrency(invoice.total_amount)],
+              ...(purchaseOrder
+                ? [
+                    ["Subtotal", formatCurrency(subtotal)],
+                    ["Tax", formatCurrency(tax)],
+                  ]
+                : []),
+              ["Total Amount", formatCurrency(invoice.amount)],
               ["Paid", formatCurrency(invoice.paid_amount)],
               ["Balance Due", formatCurrency(invoice.balance)],
             ].map(([k, v]) => (
@@ -174,21 +215,25 @@ export default function PurchaseInvoiceDetailPage() {
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <div className="flex justify-end">
             <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-3 space-y-1 min-w-[200px]">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Subtotal</span>
-                <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Tax</span>
-                <span className="font-medium">{formatCurrency(invoice.tax_amount)}</span>
-              </div>
+              {purchaseOrder && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span className="font-medium">{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Tax</span>
+                    <span className="font-medium">{formatCurrency(tax)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between text-sm border-t pt-1">
                 <span className="text-gray-700 font-semibold">Total</span>
-                <span className="font-bold text-[#22C55E]">{formatCurrency(invoice.total_amount)}</span>
+                <span className="font-bold text-[#22C55E]">{formatCurrency(invoice.amount)}</span>
               </div>
             </div>
           </div>
-          <div className="mt-3"><AmountInWords amount={invoice.total_amount} /></div>
+          <div className="mt-3"><AmountInWords amount={invoice.amount} /></div>
         </div>
 
         {invoice.notes && (
@@ -204,6 +249,17 @@ export default function PurchaseInvoiceDetailPage() {
           </Button>
         </Link>
       </div>
+
+      {companyInfo && (
+        <div className="hidden">
+          <PrintablePurchaseInvoice
+            ref={printRef}
+            invoice={invoice}
+            purchaseOrder={purchaseOrder}
+            companyInfo={companyInfo}
+          />
+        </div>
+      )}
 
       <Dialog open={payModal} onOpenChange={setPayModal}>
         <DialogContent className="max-w-md">

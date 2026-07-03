@@ -224,7 +224,7 @@ const posApi = {
 
   createSession: async (data: {
     opening_cash: number;
-    warehouse?: string | null;
+    warehouse?: number | null;
     notes?: string;
   }): Promise<POSSession> => {
     const response = await apiClient.post('/pos/sessions/', data);

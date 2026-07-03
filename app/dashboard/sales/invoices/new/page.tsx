@@ -15,7 +15,7 @@ import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
 import { customerAPI, salesOrderAPI, invoiceAPI, Customer, SalesOrder } from "@/lib/api/sales";
 import { inventoryApi, Product } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
-import type { LineItem } from "@/lib/mock-data/sales";
+import type { LineItem } from "@/lib/types/sales";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (

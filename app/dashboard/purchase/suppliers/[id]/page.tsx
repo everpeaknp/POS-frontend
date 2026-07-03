@@ -231,7 +231,7 @@ export default function SupplierProfilePage() {
                     <td className="px-4 py-3 text-gray-600">
                       {inv.due_date ? <FormattedDate value={inv.due_date} /> : "—"}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{formatCurrency(inv.total_amount)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{formatCurrency(inv.amount)}</td>
                     <td className="px-4 py-3 text-gray-600">{formatCurrency(inv.paid_amount)}</td>
                     <td className={`px-4 py-3 font-medium ${inv.balance > 0 ? "text-red-500" : "text-gray-500"}`}>
                       {inv.balance > 0 ? formatCurrency(inv.balance) : "—"}

@@ -119,6 +119,7 @@ const navItems: NavItem[] = [
       { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
       { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
       { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
+      { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage" },
       { label: "Construction Reports", href: "/dashboard/construction/reports" },
     ],
   },

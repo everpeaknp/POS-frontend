@@ -4,7 +4,7 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreVertical } from "lucide-react";
+import { Plus, Search, MoreVertical, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -216,6 +216,13 @@ export default function InvoicesPage() {
                           className="cursor-pointer"
                         >
                           Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => router.push(`/dashboard/sales/invoices/${inv.id}?print=1`)}
+                          className="cursor-pointer gap-2"
+                        >
+                          <Printer className="h-4 w-4" />
+                          Print
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-red-600 focus:text-red-600 cursor-pointer"

@@ -29,7 +29,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useApi } from "@/lib/hooks/useApi";
-import { salesDashboardAPI } from "@/lib/api/sales";
+import { salesDashboardAPI, customerCreditAPI } from "@/lib/api/sales";
 
 const statusStyle: Record<string, string> = {
   Paid: "bg-green-100 text-green-700",
@@ -115,6 +115,11 @@ export default function SalesDashboardPage() {
 
   const { data: dashboardData, loading, error, refetch } = useApi(
     () => salesDashboardAPI.get(period),
+    { immediate: true }
+  );
+
+  const { data: creditOverview } = useApi(
+    () => customerCreditAPI.getCreditOverview(),
     { immediate: true }
   );
 
@@ -225,6 +230,57 @@ export default function SalesDashboardPage() {
             </div>
           ))}
         </div>
+
+        {creditOverview && (
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-700">Credit Overview</h2>
+              <Link href="/dashboard/sales/customers" className="text-xs text-[#22C55E] hover:underline">
+                View customers
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="p-3 bg-red-50 rounded-lg">
+                <p className="text-xs text-gray-500">Outstanding</p>
+                <p className="text-lg font-bold text-red-600">
+                  Rs. {Number((creditOverview as { total_outstanding?: number }).total_outstanding ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500">Credit Limit (total)</p>
+                <p className="text-lg font-bold">
+                  Rs. {Number((creditOverview as { total_credit_limit?: number }).total_credit_limit ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500">With Balance</p>
+                <p className="text-lg font-bold">
+                  {(creditOverview as { customers_with_balance?: number }).customers_with_balance ?? 0}
+                </p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <p className="text-xs text-gray-500">Over Limit</p>
+                <p className="text-lg font-bold text-orange-600">
+                  {(creditOverview as { customers_over_limit?: number }).customers_over_limit ?? 0}
+                </p>
+              </div>
+            </div>
+            {Array.isArray((creditOverview as { customers?: Array<{ id: string; name: string; current_balance: number }> }).customers) && (
+              <ul className="divide-y divide-gray-50">
+                {((creditOverview as { customers: Array<{ id: string; name: string; current_balance: number }> }).customers)
+                  .slice(0, 5)
+                  .map((c) => (
+                    <li key={c.id} className="flex justify-between py-2 text-sm">
+                      <Link href={`/dashboard/sales/customers/${c.id}`} className="hover:text-[#22C55E]">
+                        {c.name}
+                      </Link>
+                      <span className="font-medium text-red-600">Rs. {c.current_balance.toLocaleString()}</span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Quick actions */}
         <div>

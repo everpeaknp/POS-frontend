@@ -4,7 +4,7 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Edit, Printer, FileText, XCircle, CheckCircle, Clock, Loader2, ArrowLeft } from "lucide-react";
+import { Edit, Printer, FileText, XCircle, CheckCircle, Clock, Loader2, ArrowLeft, CreditCard } from "lucide-react";
 import { useReactToPrint } from 'react-to-print';
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -13,6 +13,7 @@ import { LineItemsTable } from "@/components/sales/LineItemsTable";
 import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
 import { PrintableInvoice } from "@/components/sales/PrintableInvoice";
 import { salesOrderAPI, type SalesOrder } from "@/lib/api/sales";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -22,6 +23,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -129,6 +131,42 @@ export default function OrderDetailPage() {
     });
   };
 
+  const handleFinalizeOnCredit = async () => {
+    if (!order) return;
+
+    toast((t) => (
+      <div className="flex flex-col gap-4 min-w-[320px] p-2">
+        <p className="font-semibold text-gray-900">Finalize on credit?</p>
+        <p className="text-sm text-gray-600">
+          This will post Rs. {Number(order.total).toLocaleString()} to the customer ledger and mark the order as delivered.
+        </p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={() => toast.dismiss(t.id)} className="px-4 py-2 text-sm border rounded-lg">Cancel</button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              setUpdating(true);
+              try {
+                await salesOrderAPI.finalizeOnCredit(String(order.id));
+                toast.success("Order finalized on credit");
+                const response = await salesOrderAPI.get(id);
+                setOrder(response.data);
+              } catch (error: unknown) {
+                const err = error as { response?: { data?: { error?: string } } };
+                toast.error(err.response?.data?.error || "Failed to finalize on credit");
+              } finally {
+                setUpdating(false);
+              }
+            }}
+            className="px-4 py-2 text-sm text-white bg-[#22C55E] rounded-lg"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity, position: "top-center" });
+  };
+
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `${order?.order_number || 'Order'}_${new Date().toISOString().split('T')[0]}`,
@@ -225,6 +263,20 @@ export default function OrderDetailPage() {
               >
                 {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                 Mark as Delivered
+              </Button>
+            )}
+
+            {order.payment_type === 'credit' &&
+              order.status !== 'Delivered' &&
+              order.status !== 'Cancelled' && (
+              <Button
+                size="sm"
+                onClick={handleFinalizeOnCredit}
+                disabled={updating}
+                className="bg-orange-500 hover:bg-orange-600 text-white gap-1.5 h-8"
+              >
+                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                Finalize on Credit
               </Button>
             )}
             
@@ -386,9 +438,11 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Hidden Printable Invoice */}
-      <div className="hidden">
-        <PrintableInvoice ref={printRef} order={order} />
-      </div>
+      {companyInfo && order && (
+        <div className="hidden">
+          <PrintableInvoice ref={printRef} order={order} companyInfo={companyInfo} />
+        </div>
+      )}
     </div>
   );
 }

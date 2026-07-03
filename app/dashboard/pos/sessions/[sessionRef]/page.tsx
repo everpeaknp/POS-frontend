@@ -2,33 +2,60 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { PosStatusBadge } from "@/components/pos/PosStatusBadge";
+import { NotFoundView } from "@/components/shared/NotFoundView";
 import posApi, { POSSession } from "@/lib/api/pos";
+import { extractPosSessionRef, isValidPosSessionRef } from "@/lib/pos/session-ref";
 import { toast } from "sonner";
 
-export default function PosSessionDetailPage({ params }: { params: { id: string } }) {
+function useSessionRef(): string | undefined {
+  const params = useParams();
+  const raw = params.sessionRef;
+  const fromParams = Array.isArray(raw) ? raw[0] : raw;
+  return isValidPosSessionRef(fromParams) ? fromParams : undefined;
+}
+
+export default function PosSessionDetailPage() {
+  const sessionRef = useSessionRef();
   const [session, setSession] = useState<POSSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (!sessionRef) {
+      setLoading(false);
+      setNotFound(true);
+      return;
+    }
+
     const fetchSession = async () => {
       try {
         setLoading(true);
-        const data = await posApi.getSession(params.id);
+        setNotFound(false);
+        const data = await posApi.getSession(sessionRef);
         setSession(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to fetch session:", error);
-        toast.error(error.message || "Failed to load session details");
+        const err = error as { response?: { status?: number; data?: { detail?: string } } };
+        if (err.response?.status === 404) {
+          setNotFound(true);
+          setSession(null);
+        } else {
+          const message =
+            err.response?.data?.detail || "Failed to load session details";
+          toast.error(message);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchSession();
-  }, [params.id]);
+  }, [sessionRef]);
 
   if (loading) {
     return (
@@ -41,13 +68,17 @@ export default function PosSessionDetailPage({ params }: { params: { id: string 
     );
   }
 
-  if (!session) {
+  if (notFound || !session) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Session Not Found" />
-        <div className="flex-1 p-6">
-          <p className="text-gray-600">The requested session could not be found.</p>
-        </div>
+        <DashHeader title="POS Sessions" />
+        <NotFoundView
+          variant="embedded"
+          title="Session not found"
+          description="This session does not exist or the link is invalid."
+          primaryHref="/dashboard/pos/sessions"
+          primaryLabel="Back to Sessions"
+        />
       </div>
     );
   }
@@ -62,7 +93,6 @@ export default function PosSessionDetailPage({ params }: { params: { id: string 
           <ArrowLeft className="h-4 w-4" /> Back to Sessions
         </Link>
 
-        {/* Session Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Session Information</h3>
@@ -150,8 +180,8 @@ export default function PosSessionDetailPage({ params }: { params: { id: string 
                   {session.cash_variance !== 0 && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Cash Variance</span>
-                      <span className={`text-sm font-medium ${session.cash_variance > 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                        {session.cash_variance > 0 ? '+' : ''}
+                      <span className={`text-sm font-medium ${session.cash_variance > 0 ? "text-blue-600" : "text-red-600"}`}>
+                        {session.cash_variance > 0 ? "+" : ""}
                         Rs. {session.cash_variance.toLocaleString()}
                       </span>
                     </div>
@@ -162,7 +192,6 @@ export default function PosSessionDetailPage({ params }: { params: { id: string 
           </div>
         </div>
 
-        {/* Transactions - Coming Soon */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-900">Transactions ({session.total_transactions})</h3>
@@ -172,7 +201,6 @@ export default function PosSessionDetailPage({ params }: { params: { id: string 
           </div>
         </div>
 
-        {/* Actions */}
         {session.status === "open" && (
           <div className="flex gap-3">
             <Link href={`/dashboard/pos/sessions/${session.id}/close`}>

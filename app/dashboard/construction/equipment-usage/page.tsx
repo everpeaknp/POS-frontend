@@ -1,0 +1,206 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Plus, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import {
+  constructionApi,
+  type EquipmentUsageLog,
+  type Equipment,
+  type Site,
+} from "@/lib/api/construction";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+export default function EquipmentUsagePage() {
+  const [logs, setLogs] = useState<EquipmentUsageLog[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    equipment: "",
+    site: "",
+    date: new Date().toISOString().split("T")[0],
+    hours_used: "",
+    cost: "",
+    notes: "",
+  });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [logsRes, equipRes, sitesRes] = await Promise.all([
+        constructionApi.equipmentUsage.list(),
+        constructionApi.equipment.list(),
+        constructionApi.sites.list(),
+      ]);
+      setLogs(logsRes);
+      setEquipment(Array.isArray(equipRes) ? equipRes : []);
+      setSites(Array.isArray(sitesRes) ? sitesRes : []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load equipment usage");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await constructionApi.equipmentUsage.create({
+        equipment: form.equipment,
+        site: form.site,
+        date: form.date,
+        hours_used: parseFloat(form.hours_used),
+        cost: parseFloat(form.cost || "0"),
+        notes: form.notes || undefined,
+      });
+      toast.success("Usage logged");
+      setDialogOpen(false);
+      setForm({
+        equipment: "",
+        site: "",
+        date: new Date().toISOString().split("T")[0],
+        hours_used: "",
+        cost: "",
+        notes: "",
+      });
+      fetchData();
+    } catch (error: unknown) {
+      console.error(error);
+      toast.error("Failed to log usage");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-full">
+      <DashHeader title="Equipment Usage" subtitle="Track equipment hours and costs by site" />
+      <div className="flex-1 p-6 space-y-4">
+        <div className="flex justify-end">
+          <Button
+            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" /> Log Usage
+          </Button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+            </div>
+          ) : logs.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No usage logs yet</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  {["Date", "Equipment", "Site", "Hours", "Cost", "Notes"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {logs.map((log) => (
+                  <tr key={log.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3">{log.date}</td>
+                    <td className="px-4 py-3 font-medium">{log.equipment_name || log.equipment}</td>
+                    <td className="px-4 py-3">{log.site_name || log.site}</td>
+                    <td className="px-4 py-3">{log.hours_used}h</td>
+                    <td className="px-4 py-3">{formatNPR(Number(log.cost))}</td>
+                    <td className="px-4 py-3 text-gray-500 truncate max-w-[200px]">{log.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Log Equipment Usage</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+            <div>
+              <Label>Equipment *</Label>
+              <Select value={form.equipment} onValueChange={(v) => setForm({ ...form, equipment: v })}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select equipment" /></SelectTrigger>
+                <SelectContent>
+                  {equipment.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Site *</Label>
+              <Select value={form.site} onValueChange={(v) => setForm({ ...form, site: v })}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select site" /></SelectTrigger>
+                <SelectContent>
+                  {sites.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Date *</Label>
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="mt-1" required />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Hours Used *</Label>
+                <Input type="number" step="0.5" min="0" value={form.hours_used} onChange={(e) => setForm({ ...form, hours_used: e.target.value })} className="mt-1" required />
+              </div>
+              <div>
+                <Label>Cost (Rs.)</Label>
+                <Input type="number" step="0.01" min="0" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} className="mt-1" />
+              </div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-1" />
+            </div>
+            <DialogFooter className="gap-2">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+                {submitting ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

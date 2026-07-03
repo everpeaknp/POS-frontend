@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount } from "@/lib/api/pos";
+import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction } from "@/lib/api/pos";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
@@ -46,6 +47,16 @@ export default function POSPage() {
   const [searching, setSearching] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [scanningBarcode, setScanningBarcode] = useState(false);
+  const [todayTransactions, setTodayTransactions] = useState<POSTransaction[]>([]);
+
+  const fetchTodayTransactions = async () => {
+    try {
+      const data = await posApi.getTodayTransactions();
+      setTodayTransactions(data);
+    } catch {
+      // non-blocking
+    }
+  };
 
   // Load initial data
   useEffect(() => {
@@ -71,6 +82,7 @@ export default function POSPage() {
       }
     };
     fetchData();
+    fetchTodayTransactions();
   }, []);
 
   // Auto-focus barcode input on mount and after each scan
@@ -569,6 +581,7 @@ export default function POSPage() {
       setAmountPaid("");
       setNotes("");
       setPaymentMethod("cash");
+      fetchTodayTransactions();
       
       // Auto-focus barcode for next customer
       setTimeout(() => {
@@ -857,6 +870,28 @@ export default function POSPage() {
 
           {/* Right: Checkout */}
           <div className="space-y-4">
+            {todayTransactions.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm">Today&apos;s Sales</h3>
+                  <Link href="/dashboard/pos/transactions" className="text-xs text-[#22C55E] hover:underline">
+                    View all
+                  </Link>
+                </div>
+                <p className="text-2xl font-bold text-[#22C55E] mb-2">
+                  Rs. {todayTransactions.reduce((s, t) => s + Number(t.total), 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500 mb-2">{todayTransactions.length} transactions today</p>
+                <ul className="space-y-1 max-h-32 overflow-y-auto text-xs">
+                  {todayTransactions.slice(0, 5).map((t) => (
+                    <li key={t.id} className="flex justify-between text-gray-600">
+                      <span>{t.transaction_number}</span>
+                      <span>Rs. {Number(t.total).toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-4">
               <h3 className="font-semibold">Checkout</h3>
               

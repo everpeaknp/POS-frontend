@@ -16,7 +16,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { customerAPI, salesOrderAPI, type Customer, type SalesOrderLine } from "@/lib/api/sales";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
-import type { LineItem } from "@/lib/mock-data/sales";
+import type { LineItem } from "@/lib/types/sales";
 
 export default function NewSalesOrderPage() {
   const router = useRouter();

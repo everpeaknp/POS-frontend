@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getInitials } from "@/lib/mock-data";
+import { getInitials } from "@/lib/utils";
 
 interface AvatarDropdownProps {
   name: string;

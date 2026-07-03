@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import toast from "react-hot-toast";
 
 interface DashHeaderProps {
@@ -46,6 +47,9 @@ export function DashHeader({ title, subtitle }: DashHeaderProps) {
         {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
       
+      <div className="flex items-center gap-2">
+        <NotificationBell />
+
       {/* User Dropdown */}
       <div className="relative" ref={dropdownRef}>
         <button
@@ -108,6 +112,7 @@ export function DashHeader({ title, subtitle }: DashHeaderProps) {
             </div>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

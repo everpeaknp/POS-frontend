@@ -88,7 +88,7 @@ export default function PurchaseInvoicesPage() {
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={inv.date} /></td>
                       <td className={`px-4 py-3 ${inv.status === "Overdue" ? "text-red-500 font-medium" : "text-gray-600"}`}><FormattedDate value={inv.due_date || ""} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{inv.supplier_name}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800">Rs. {inv.total_amount?.toLocaleString()}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800">Rs. {inv.amount?.toLocaleString()}</td>
                       <td className="px-4 py-3 text-gray-600">Rs. {inv.paid_amount?.toLocaleString()}</td>
                       <td className={`px-4 py-3 font-medium ${inv.balance > 0 ? "text-red-500" : "text-gray-500"}`}>{inv.balance > 0 ? `Rs. ${inv.balance.toLocaleString()}` : "—"}</td>
                       <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
@@ -103,7 +103,7 @@ export default function PurchaseInvoicesPage() {
                                 { icon: Eye, label: "View", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}`) },
                                 { icon: CreditCard, label: "Record Payment", action: () => {} },
                                 { icon: Edit, label: "Edit", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}/edit`) },
-                                { icon: Printer, label: "Print", action: () => {} },
+                                { icon: Printer, label: "Print", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}?print=1`) },
                               ].map(({ icon: Icon, label, action }) => (
                                 <button key={label} onClick={() => { action(); setMenu(null); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">

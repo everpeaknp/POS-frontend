@@ -172,7 +172,7 @@ export default function NewDebitNotePage() {
                 <option value="">— Select invoice —</option>
                 {supplierInvoices.map((inv) => (
                   <option key={inv.id} value={inv.id}>
-                    {inv.invoice_number} — Rs. {inv.total_amount?.toLocaleString()}
+                    {inv.invoice_number} — Rs. {inv.amount?.toLocaleString()}
                   </option>
                 ))}
               </select>

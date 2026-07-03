@@ -6,6 +6,7 @@ import { Search, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import apiClient from "@/lib/api/client";
+import { downloadCsv } from "@/lib/utils/csv";
 import toast from "react-hot-toast";
 
 interface AuditLog {
@@ -64,7 +65,23 @@ export default function AuditPage() {
   };
 
   const handleExport = () => {
-    toast.success("Export functionality coming soon");
+    if (filteredLogs.length === 0) {
+      toast.error("No logs to export");
+      return;
+    }
+    downloadCsv(
+      `audit-logs-${new Date().toISOString().split("T")[0]}.csv`,
+      ["Date", "User", "Action", "Module", "Description", "IP"],
+      filteredLogs.map((log) => [
+        log.created_at,
+        log.user_name,
+        log.action_display || log.action,
+        log.module,
+        log.description,
+        log.ip_address || "",
+      ])
+    );
+    toast.success("Audit log exported");
   };
 
   const filteredLogs = logs.filter((log) =>

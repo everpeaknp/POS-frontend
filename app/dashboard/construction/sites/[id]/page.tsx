@@ -14,6 +14,12 @@ export default function SiteDetailPage() {
   const siteId = params.id as string;
 
   const [site, setSite] = useState<Site | null>(null);
+  const [siteDashboard, setSiteDashboard] = useState<{
+    workers?: { total_active?: number };
+    attendance?: { present?: number; absent?: number; half_day?: number; overtime?: number };
+    material_consumption?: { last_30_days?: number };
+    daily_logs?: { total?: number };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -27,8 +33,12 @@ export default function SiteDetailPage() {
   const fetchSite = async () => {
     try {
       setLoading(true);
-      const siteData = await constructionApi.sites.get(siteId);
+      const [siteData, dashboardData] = await Promise.all([
+        constructionApi.sites.get(siteId),
+        constructionApi.sites.dashboard(siteId),
+      ]);
       setSite(siteData);
+      setSiteDashboard(dashboardData);
     } catch (error: any) {
       console.error('Failed to fetch site:', error);
       toast.error('Failed to load site details');
@@ -142,6 +152,27 @@ export default function SiteDetailPage() {
           </button>
         </div>
       </div>
+
+      {siteDashboard && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-xs text-gray-500">Active Workers</p>
+            <p className="text-2xl font-bold">{siteDashboard.workers?.total_active ?? 0}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-xs text-gray-500">Present (7 days)</p>
+            <p className="text-2xl font-bold text-green-600">{siteDashboard.attendance?.present ?? 0}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-xs text-gray-500">Material Logs (30d)</p>
+            <p className="text-2xl font-bold">{siteDashboard.material_consumption?.last_30_days ?? 0}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-xs text-gray-500">Daily Logs</p>
+            <p className="text-2xl font-bold">{siteDashboard.daily_logs?.total ?? 0}</p>
+          </div>
+        </div>
+      )}
 
       {/* Budget Overview */}
       <div className="bg-white rounded-lg shadow p-6">

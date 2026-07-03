@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,41 +9,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { NotFoundView } from "@/components/shared/NotFoundView";
 import posApi, { POSSession } from "@/lib/api/pos";
+import { isValidPosSessionRef } from "@/lib/pos/session-ref";
 import { toast } from "sonner";
 
-export default function CloseSessionPage({ params }: { params: { id: string } }) {
+function useSessionRef(): string | undefined {
+  const params = useParams();
+  const raw = params.sessionRef;
+  const fromParams = Array.isArray(raw) ? raw[0] : raw;
+  return isValidPosSessionRef(fromParams) ? fromParams : undefined;
+}
+
+export default function CloseSessionPage() {
   const router = useRouter();
+  const sessionRef = useSessionRef();
   const [session, setSession] = useState<POSSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [closingCash, setClosingCash] = useState("");
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
+    if (!sessionRef) {
+      setLoading(false);
+      setNotFound(true);
+      return;
+    }
+
     const fetchSession = async () => {
       try {
         setLoading(true);
-        const data = await posApi.getSession(params.id);
-        
+        setNotFound(false);
+        const data = await posApi.getSession(sessionRef);
+
         if (data.status === "closed") {
           toast.error("This session is already closed");
-          router.push(`/dashboard/pos/sessions/${params.id}`);
+          router.push(`/dashboard/pos/sessions/${data.id}`);
           return;
         }
-        
+
         setSession(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to fetch session:", error);
-        toast.error(error.message || "Failed to load session details");
-        router.push("/dashboard/pos/sessions");
+        const err = error as { response?: { status?: number } };
+        if (err.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          toast.error("Failed to load session details");
+          router.push("/dashboard/pos/sessions");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchSession();
-  }, [params.id, router]);
+  }, [sessionRef, router]);
 
   if (loading) {
     return (
@@ -56,10 +79,17 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
     );
   }
 
-  if (!session) {
+  if (notFound || !session) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Session Not Found" />
+        <DashHeader title="POS Sessions" />
+        <NotFoundView
+          variant="embedded"
+          title="Session not found"
+          description="This session does not exist or the link is invalid."
+          primaryHref="/dashboard/pos/sessions"
+          primaryLabel="Back to Sessions"
+        />
       </div>
     );
   }
@@ -69,7 +99,7 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!closingCash || parseFloat(closingCash) < 0) {
       toast.error("Please enter a valid closing cash amount");
       return;
@@ -77,13 +107,13 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
 
     try {
       setSubmitting(true);
-      await posApi.closeSession(session.id, parseFloat(closingCash));
-      
+      await posApi.closeSession(String(session.id), parseFloat(closingCash));
+
       toast.success("Session closed successfully");
       router.push(`/dashboard/pos/sessions/${session.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to close session:", error);
-      toast.error(error.message || "Failed to close session");
+      toast.error("Failed to close session");
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +129,6 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
 
         <div className="max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Summary */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">Session Summary</h3>
               <div className="space-y-3">
@@ -130,7 +159,6 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
               </div>
             </div>
 
-            {/* Closing Cash */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
               <div>
                 <Label htmlFor="closingCash" className="text-sm font-medium text-gray-700">
@@ -151,10 +179,10 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
                 {closingCash && (
                   <div className={`mt-3 p-3 rounded-lg ${variance === 0 ? "bg-green-50 text-green-700" : variance > 0 ? "bg-blue-50 text-blue-700" : "bg-red-50 text-red-700"}`}>
                     <p className="text-sm font-medium">
-                      {variance === 0 
-                        ? "✓ Cash matches perfectly" 
-                        : variance > 0 
-                        ? `+ Rs. ${variance.toLocaleString()} (Overage)` 
+                      {variance === 0
+                        ? "✓ Cash matches perfectly"
+                        : variance > 0
+                        ? `+ Rs. ${variance.toLocaleString()} (Overage)`
                         : `- Rs. ${Math.abs(variance).toLocaleString()} (Shortage)`}
                     </p>
                   </div>
@@ -177,16 +205,16 @@ export default function CloseSessionPage({ params }: { params: { id: string } })
             </div>
 
             <div className="flex gap-3">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
                 disabled={submitting}
               >
                 {submitting ? "Closing..." : "Close Session"}
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => router.back()}
                 disabled={submitting}
               >

@@ -2,31 +2,18 @@
 
 import React from 'react';
 import { FormattedDate } from '@/components/shared/FormattedDate';
+import { PrintCompanyHeader } from '@/components/print/PrintCompanyHeader';
 import { SalesOrder } from '@/lib/api/sales';
+import type { CompanyPrintInfo } from '@/lib/print/company-info';
 import { formatCurrency } from '@/lib/utils';
 
 interface PrintableInvoiceProps {
   order: SalesOrder;
-  companyInfo?: {
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-    pan?: string;
-  };
+  companyInfo: CompanyPrintInfo;
 }
 
 export const PrintableInvoice = React.forwardRef<HTMLDivElement, PrintableInvoiceProps>(
   ({ order, companyInfo }, ref) => {
-    const defaultCompanyInfo = {
-      name: 'Khata Business OS',
-      address: 'Kathmandu, Nepal',
-      phone: '+977-1-XXXXXXX',
-      email: 'info@khata.com',
-      pan: 'XXXXXXXXX',
-      ...companyInfo,
-    };
-
     const lineItems = order.lines?.map(line => ({
       product: line.product_name || line.product,
       description: line.description || '',
@@ -39,27 +26,12 @@ export const PrintableInvoice = React.forwardRef<HTMLDivElement, PrintableInvoic
 
     return (
       <div ref={ref} className="p-8 bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-300">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{defaultCompanyInfo.name}</h1>
-            <p className="text-sm text-gray-600 mt-2">{defaultCompanyInfo.address}</p>
-            <p className="text-sm text-gray-600">Phone: {defaultCompanyInfo.phone}</p>
-            <p className="text-sm text-gray-600">Email: {defaultCompanyInfo.email}</p>
-            {defaultCompanyInfo.pan && (
-              <p className="text-sm text-gray-600">PAN: {defaultCompanyInfo.pan}</p>
-            )}
-          </div>
-          <div className="text-right">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {order.status === 'Delivered' ? 'INVOICE' : 'SALES ORDER'}
-            </h2>
-            <p className="text-sm text-gray-600 mt-2">#{order.order_number}</p>
-            <p className="text-sm text-gray-600">
-              Date: <FormattedDate value={order.date} />
-            </p>
-          </div>
-        </div>
+        <PrintCompanyHeader
+          company={companyInfo}
+          documentTitle={order.status === 'Delivered' ? 'INVOICE' : 'SALES ORDER'}
+          documentNumber={order.order_number}
+          documentDate={<FormattedDate value={order.date} />}
+        />
 
         {/* Customer Info */}
         <div className="mb-8">

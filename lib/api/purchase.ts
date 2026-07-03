@@ -105,16 +105,16 @@ export interface PurchaseInvoice {
   date: string;
   supplier: string;
   supplier_name?: string;
-  purchase_order: string;
+  purchase_order?: string;
   purchase_order_number?: string;
-  subtotal: number;
-  tax_amount: number;
-  total_amount: number;
+  amount: number;
   paid_amount: number;
   balance: number;
   status: 'Received' | 'Partially Paid' | 'Paid' | 'Overdue';
   due_date?: string;
   notes?: string;
+  created_by?: string;
+  created_by_name?: string;
   created_at: string;
   updated_at: string;
 }

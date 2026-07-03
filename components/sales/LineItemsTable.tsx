@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
-import type { LineItem } from "@/lib/mock-data/sales";
+import type { LineItem } from "@/lib/types/sales";
 import type { Product } from "@/lib/api/inventory";
 
 interface LineItemsTableProps {
