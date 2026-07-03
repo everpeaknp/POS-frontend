@@ -86,6 +86,8 @@ const navItems: NavItem[] = [
       { label: "Stock Transfer", href: "/dashboard/inventory/transfer", createHref: "/dashboard/inventory/transfer?new=1" },
       { label: "Warehouses", href: "/dashboard/inventory/warehouses", createHref: "/dashboard/inventory/warehouses?new=1" },
       { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom?new=1" },
+      { label: "Stock In", href: "/dashboard/inventory/stock-in" },
+      { label: "Stock Out", href: "/dashboard/inventory/stock-out" },
       { label: "Inventory Reports", href: "/dashboard/inventory/reports" },
     ],
   },
@@ -143,6 +145,7 @@ const navItems: NavItem[] = [
     requiredModule: "pos",
     children: [
       { label: "Billing", href: "/dashboard/pos" },
+      { label: "Sessions", href: "/dashboard/pos/sessions", createHref: "/dashboard/pos/sessions/new" },
       { label: "Transactions", href: "/dashboard/pos/transactions" },
       { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts?new=1" },
       { label: "Daily Reports", href: "/dashboard/pos/reports" },
@@ -183,6 +186,7 @@ const navItems: NavItem[] = [
     requiredModule: "settings",
     requiredRoles: ["admin", "manager"],
     children: [
+      { label: "Overview", href: "/dashboard/settings", exact: true },
       { label: "Organization Settings", href: "/dashboard/settings/org" },
       { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite" },
       { label: "Billing & Subscription", href: "/dashboard/settings/billing" },

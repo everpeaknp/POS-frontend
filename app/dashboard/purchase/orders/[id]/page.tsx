@@ -3,7 +3,7 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Edit, Package, XCircle, CheckCircle, Clock, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 
 export default function PurchaseOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -60,6 +61,12 @@ export default function PurchaseOrderDetailPage() {
       fetchOrder();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (searchParams.get("receive") === "1" && order && !loading) {
+      setShowReceiveModal(true);
+    }
+  }, [searchParams, order, loading]);
 
   const handleReceiveItems = async () => {
     if (!order) return;

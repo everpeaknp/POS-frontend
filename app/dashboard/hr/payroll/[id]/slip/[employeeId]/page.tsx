@@ -1,16 +1,46 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { mockEmployees, mockPayrollList } from "@/lib/mock-data/hr";
+import { getPayroll, type Payroll } from "@/lib/api/hr";
+import toast from "react-hot-toast";
 
-export default function PayslipPage({ params }: { params: { id: string; employeeId: string } }) {
-  const payroll = mockPayrollList.find((p) => p.id === params.id);
-  const employee = mockEmployees.find((e) => e.id === params.employeeId);
+export default function PayslipPage() {
+  const params = useParams<{ id: string; employeeId: string }>();
+  const monthKey = decodeURIComponent(params.id);
+  const payrollId = params.employeeId;
+  const [record, setRecord] = useState<Payroll | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!payroll || !employee) {
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getPayroll(payrollId);
+        setRecord(data);
+      } catch {
+        toast.error("Failed to load payslip");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [payrollId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Payslip" subtitle="Loading..." />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!record) {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Payslip Not Found" />
@@ -18,149 +48,59 @@ export default function PayslipPage({ params }: { params: { id: string; employee
     );
   }
 
-  const gross = Math.round(employee.salary * 1.15);
-  const deductions = Math.round(employee.salary * 0.15);
-  const net = employee.salary;
-
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title={`Payslip - ${employee.name}`} subtitle={payroll.month} />
+      <DashHeader title={`Payslip - ${record.employee_name}`} subtitle={`${record.month} ${record.year}`} />
       <div className="flex-1 p-6 space-y-6">
-        <Link href={`/dashboard/hr/payroll/${payroll.id}`} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+        <Link
+          href={`/dashboard/hr/payroll/${encodeURIComponent(monthKey)}`}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Payroll
         </Link>
 
-        {/* Payslip */}
         <div className="max-w-3xl bg-white rounded-xl border border-gray-100 shadow-sm p-8">
-          {/* Header */}
           <div className="text-center mb-8 pb-8 border-b border-gray-200">
             <h1 className="text-2xl font-bold text-gray-900">SALARY SLIP</h1>
-            <p className="text-sm text-gray-600 mt-2">Month: {payroll.month}</p>
+            <p className="text-sm text-gray-600 mt-2">{record.month} {record.year}</p>
           </div>
 
-          {/* Employee Info */}
           <div className="grid grid-cols-2 gap-8 mb-8">
             <div>
-              <p className="text-xs text-gray-600 font-medium">Employee Name</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{employee.name}</p>
-              <p className="text-xs text-gray-600 font-medium mt-3">Designation</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{employee.designation}</p>
+              <p className="text-xs text-gray-600 font-medium">Employee</p>
+              <p className="text-sm font-bold text-gray-900 mt-1">{record.employee_name}</p>
               <p className="text-xs text-gray-600 font-medium mt-3">Department</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{employee.department}</p>
+              <p className="text-sm font-bold text-gray-900 mt-1">{record.department_name}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-600 font-medium">Employee ID</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{employee.id}</p>
-              <p className="text-xs text-gray-600 font-medium mt-3">Join Date</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{employee.joinDate}</p>
-              <p className="text-xs text-gray-600 font-medium mt-3">PAN</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">-</p>
+              <p className="text-xs text-gray-600 font-medium">Status</p>
+              <p className="text-sm font-bold text-gray-900 mt-1 capitalize">{record.status}</p>
+              {record.processed_date && (
+                <>
+                  <p className="text-xs text-gray-600 font-medium mt-3">Processed</p>
+                  <p className="text-sm font-bold text-gray-900 mt-1">
+                    {new Date(record.processed_date).toLocaleDateString()}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Earnings */}
-          <div className="mb-8">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">EARNINGS</h3>
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="py-2 text-gray-600">Basic Salary</td>
-                  <td className="py-2 text-right font-medium text-gray-900">Rs. {employee.salary.toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-600">House Rent Allowance</td>
-                  <td className="py-2 text-right font-medium text-gray-900">Rs. {Math.round(employee.salary * 0.1).toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-600">Travel Allowance</td>
-                  <td className="py-2 text-right font-medium text-gray-900">Rs. {Math.round(employee.salary * 0.03).toLocaleString()}</td>
-                </tr>
-                <tr className="bg-gray-50 font-bold">
-                  <td className="py-2 text-gray-900">Total Earnings</td>
-                  <td className="py-2 text-right text-gray-900">Rs. {gross.toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <table className="w-full text-sm mb-8">
+            <tbody className="divide-y divide-gray-200">
+              <tr><td className="py-2 text-gray-600">Basic Salary</td><td className="py-2 text-right font-medium">Rs. {Number(record.basic_salary).toLocaleString()}</td></tr>
+              <tr><td className="py-2 text-gray-600">Allowances</td><td className="py-2 text-right font-medium">Rs. {Number(record.allowances).toLocaleString()}</td></tr>
+              <tr className="bg-gray-50 font-bold"><td className="py-2">Gross Salary</td><td className="py-2 text-right">Rs. {Number(record.gross_salary).toLocaleString()}</td></tr>
+              <tr><td className="py-2 text-gray-600">Deductions</td><td className="py-2 text-right font-medium text-red-600">Rs. {Number(record.deductions).toLocaleString()}</td></tr>
+            </tbody>
+          </table>
 
-          {/* Deductions */}
-          <div className="mb-8">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">DEDUCTIONS</h3>
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="py-2 text-gray-600">PF (Employee 10%)</td>
-                  <td className="py-2 text-right font-medium text-gray-900">Rs. {Math.round(employee.salary * 0.1).toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-600">Income Tax</td>
-                  <td className="py-2 text-right font-medium text-gray-900">Rs. {Math.round(employee.salary * 0.05).toLocaleString()}</td>
-                </tr>
-                <tr className="bg-gray-50 font-bold">
-                  <td className="py-2 text-gray-900">Total Deductions</td>
-                  <td className="py-2 text-right text-gray-900">Rs. {deductions.toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Net Pay */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex justify-between items-center">
               <span className="text-sm font-bold text-gray-900">NET PAY</span>
-              <span className="text-2xl font-bold text-green-600">Rs. {net.toLocaleString()}</span>
-            </div>
-            <p className="text-xs text-gray-600 mt-2">Amount in Words: Forty Four Thousand Seven Hundred Rupees Only</p>
-          </div>
-
-          {/* Attendance */}
-          <div className="mb-8 pb-8 border-b border-gray-200">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">ATTENDANCE</h3>
-            <div className="grid grid-cols-4 gap-4 text-sm">
-              <div>
-                <p className="text-gray-600">Working Days</p>
-                <p className="font-bold text-gray-900">26</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Present</p>
-                <p className="font-bold text-gray-900">25</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Absent</p>
-                <p className="font-bold text-gray-900">1</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Late</p>
-                <p className="font-bold text-gray-900">0</p>
-              </div>
+              <span className="text-2xl font-bold text-green-600">Rs. {Number(record.net_salary).toLocaleString()}</span>
             </div>
           </div>
-
-          {/* Signatures */}
-          <div className="grid grid-cols-3 gap-8 text-center text-xs">
-            <div>
-              <div className="h-12 border-t border-gray-400 mb-1" />
-              <p className="font-medium text-gray-900">Employee Signature</p>
-            </div>
-            <div>
-              <div className="h-12 border-t border-gray-400 mb-1" />
-              <p className="font-medium text-gray-900">HR Manager</p>
-            </div>
-            <div>
-              <div className="h-12 border-t border-gray-400 mb-1" />
-              <p className="font-medium text-gray-900">Authorized Signatory</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2">
-            <Printer className="h-4 w-4" /> Print
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" /> Download PDF
-          </Button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +24,7 @@ interface PayrollGroup {
 }
 
 export default function PayrollPage() {
+  const router = useRouter();
   const [month, setMonth] = useState<string>("");
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +153,11 @@ export default function PayrollPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((payroll) => (
-                  <tr key={payroll.id} className="hover:bg-gray-50/50">
+                  <tr
+                    key={payroll.id}
+                    className="hover:bg-gray-50/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/hr/payroll/${encodeURIComponent(payroll.monthKey)}`)}
+                  >
                     <td className="px-4 py-3 font-medium text-gray-900">{payroll.month}</td>
                     <td className="px-4 py-3 text-gray-600">{payroll.year}</td>
                     <td className="px-4 py-3 text-gray-600">{payroll.employees}</td>

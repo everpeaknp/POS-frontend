@@ -122,7 +122,7 @@ export default function RequestForm({
         // Fetch products and users
         const [productsRes, usersRes] = await Promise.all([
           apiClient.get('/inventory/products/'),
-          apiClient.get('/users/'),
+          apiClient.get('/auth/users/'),
         ]);
         
         setProducts(productsRes.data.results || productsRes.data || []);

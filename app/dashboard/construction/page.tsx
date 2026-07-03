@@ -92,6 +92,13 @@ const moduleLinks = [
     color: 'bg-green-50 text-[#22C55E]',
   },
   {
+    href: '/dashboard/accounting/journal-entries',
+    label: 'Journal Entries',
+    sub: 'View GL entries',
+    icon: FileText,
+    color: 'bg-amber-50 text-amber-600',
+  },
+  {
     href: '/dashboard/construction/reports',
     label: 'View Reports',
     sub: 'Budget analysis',

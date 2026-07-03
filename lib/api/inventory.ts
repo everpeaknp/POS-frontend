@@ -341,11 +341,11 @@ export const inventoryApi = {
       apiClient.delete(`/inventory/bulk-pricing/${id}/`),
     
     byProduct: (productId: number) => 
-      apiClient.get<BulkPricing[]>(`/inventory/bulk-pricing/by_product/`, { params: { product: productId } }),
+      apiClient.get<BulkPricing[]>(`/inventory/bulk-pricing/by-product/${productId}/`),
     
     getPrice: (productId: number, quantity: number) => 
       apiClient.get<{ unit_price: number; discount_percent: number; final_price: number }>(
-        `/inventory/bulk-pricing/get_price/`, 
+        `/inventory/bulk-pricing/get-price/`, 
         { params: { product: productId, quantity } }
       ),
   },

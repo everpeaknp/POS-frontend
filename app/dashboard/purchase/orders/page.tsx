@@ -118,7 +118,7 @@ export default function PurchaseOrdersPage() {
                                 {[
                                   { icon: Eye, label: "View", action: () => router.push(`/dashboard/purchase/orders/${o.id}`) },
                                   { icon: Edit, label: "Edit", action: () => router.push(`/dashboard/purchase/orders/${o.id}/edit`) },
-                                  { icon: PackageCheck, label: "Receive Items", action: () => router.push(`/dashboard/purchase/orders/${o.id}/receive`) },
+                                  { icon: PackageCheck, label: "Receive Items", action: () => router.push(`/dashboard/purchase/orders/${o.id}?receive=1`) },
                                   { icon: X, label: "Cancel", action: () => handleCancelOrder(o.id), disabled: o.status === 'Cancelled' },
                                 ].map(({ icon: Icon, label, action, disabled }) => (
                                   <button key={label} onClick={() => { if (!disabled) { action(); setMenu(null); } }}

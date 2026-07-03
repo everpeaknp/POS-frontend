@@ -103,7 +103,7 @@ export const authApi = {
 
   // Get users list (with optional role filter)
   getUsers: async (params?: { role?: string }): Promise<User[]> => {
-    const response = await apiClient.get('/users/', { params });
+    const response = await apiClient.get('/auth/users/', { params });
     return response.data.results || response.data;
   },
 };

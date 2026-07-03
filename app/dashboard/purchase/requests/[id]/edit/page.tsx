@@ -1,86 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { LineItemsTable } from "@/components/purchase/LineItemsTable";
-import { mockPurchaseRequests } from "@/lib/mock-data/purchase";
-import type { LineItem } from "@/lib/mock-data/purchase";
-
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-sm">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</Label>
-      {children}
-    </div>
-  );
-}
-
-const seedItems: LineItem[] = [
-  { id: "1", product: "Cotton Fabric (per meter)", description: "For Q2 production", qty: 50, unit: "Meter", unitPrice: 450, discount: 0, tax: 13, amount: 25425 },
-];
+import RequestForm from "@/components/purchase/RequestForm";
+import { purchaseRequestsAPI } from "@/lib/api/purchase";
+import toast from "react-hot-toast";
 
 export default function EditPurchaseRequestPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const req = mockPurchaseRequests.find((r) => r.id === id) ?? mockPurchaseRequests[0];
-  const [items, setItems] = useState<LineItem[]>(seedItems);
-  const [priority, setPriority] = useState(req.priority);
+  const [loading, setLoading] = useState(true);
+  const [initialData, setInitialData] = useState<Record<string, unknown> | null>(null);
 
-  const priorityColors: Record<string, string> = {
-    Low: "border-gray-300 text-gray-600",
-    Medium: "border-yellow-400 text-yellow-700 bg-yellow-50",
-    High: "border-red-400 text-red-700 bg-red-50",
-  };
+  useEffect(() => {
+    const fetchRequest = async () => {
+      if (!id) return;
+      try {
+        const req = await purchaseRequestsAPI.get(id);
+        if (req.status !== "Draft" && req.status !== "Pending Approval") {
+          toast.error("Only draft or pending requests can be edited");
+          router.replace(`/dashboard/purchase/requests/${id}`);
+          return;
+        }
+        setInitialData({
+          request_number: req.request_number,
+          date: req.date,
+          requested_by: req.requested_by || "",
+          department: req.department,
+          required_by: req.required_by,
+          priority: req.priority,
+          status: req.status,
+          notes: req.notes || "",
+          lines: req.lines?.length
+            ? req.lines.map((line) => ({
+                product: line.product,
+                description: line.description || "",
+                quantity: String(line.quantity),
+                estimated_unit_price: String(line.estimated_unit_price),
+              }))
+            : [{ product: "", description: "", quantity: "", estimated_unit_price: "" }],
+        });
+      } catch (error: any) {
+        console.error("Error fetching request:", error);
+        toast.error("Failed to load purchase request");
+        router.replace("/dashboard/purchase/requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRequest();
+  }, [id, router]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Loading..." subtitle="Update purchase request" />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!initialData) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title={`Edit ${req.id}`} subtitle="Update purchase request" />
+      <DashHeader title={`Edit ${initialData.request_number as string}`} subtitle="Update purchase request" />
       <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 max-w-4xl">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Field label="PR #"><Input className="h-9 text-sm bg-gray-50 text-gray-500" value={req.id} readOnly /></Field>
-            <Field label="Request Date" required><Input className="h-9 text-sm border-gray-200" defaultValue={req.date} /></Field>
-            <Field label="Required By Date" required><Input className="h-9 text-sm border-gray-200" defaultValue={req.requiredBy} /></Field>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Requested By" required>
-              <select defaultValue={req.requestedBy} className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]">
-                <option>Ram Sharma</option><option>Sita Thapa</option><option>Hari KC</option><option>Gita Rai</option>
-              </select>
-            </Field>
-            <Field label="Department" required>
-              <Select defaultValue={req.department}>
-                <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                <SelectContent>{["Operations", "IT", "Admin", "Finance", "HR", "Sales"].map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-              </Select>
-            </Field>
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Priority</Label>
-            <div className="flex gap-2">
-              {["Low", "Medium", "High"].map((p) => (
-                <button key={p} onClick={() => setPriority(p)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium border-2 transition-colors ${priority === p ? priorityColors[p] : "border-gray-200 text-gray-500"}`}>
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
-            <LineItemsTable items={items} onChange={setItems} />
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
-            <Button variant="ghost" onClick={() => router.back()} className="gap-1.5 text-gray-500"><ArrowLeft className="h-4 w-4" /> Cancel</Button>
-            <div className="flex-1" />
-            <Button variant="outline" className="border-gray-200 text-gray-700">Save Draft</Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6">Update Request</Button>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 max-w-4xl">
+          <RequestForm
+            requestId={id}
+            initialData={initialData as any}
+            onSuccess={() => router.push(`/dashboard/purchase/requests/${id}`)}
+            onCancel={() => router.back()}
+          />
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Button variant="ghost" onClick={() => router.back()} className="gap-1.5 text-gray-500">
+              <ArrowLeft className="h-4 w-4" /> Cancel
+            </Button>
           </div>
         </div>
       </div>

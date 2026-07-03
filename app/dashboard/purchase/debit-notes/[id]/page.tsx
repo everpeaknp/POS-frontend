@@ -1,31 +1,75 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { Printer, ArrowLeft, CheckCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
-import { LineItemsTable } from "@/components/purchase/LineItemsTable";
-import { SummaryBox } from "@/components/purchase/SummaryBox";
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { AmountInWords } from "@/components/sales/AmountInWords";
-import { mockDebitNotes } from "@/lib/mock-data/purchase";
-
-const mockItems = [
-  { id: "1", product: "Cotton Fabric (per meter)", description: "Returned — damaged", qty: 10, unit: "Meter", unitPrice: 450, discount: 0, tax: 13, amount: 5085 },
-];
+import { debitNotesAPI, type DebitNote } from "@/lib/api/purchase";
+import { formatCurrency } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 export default function DebitNoteDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const dn = mockDebitNotes.find((d) => d.id === id) ?? mockDebitNotes[0];
+  const [dn, setDn] = useState<DebitNote | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const subtotal = mockItems.reduce((s, i) => s + i.qty * i.unitPrice, 0);
-  const totalTax = mockItems.reduce((s, i) => s + (i.qty * i.unitPrice * i.tax) / 100, 0);
-  const grandTotal = subtotal + totalTax;
+  useEffect(() => {
+    const fetchDebitNote = async () => {
+      if (!id) return;
+      try {
+        const data = await debitNotesAPI.get(id);
+        setDn(data);
+      } catch (error: any) {
+        console.error("Error fetching debit note:", error);
+        toast.error("Failed to load debit note details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDebitNote();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Loading..." subtitle="Debit Note" />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!dn) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Debit Note Not Found" subtitle="Debit Note" />
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <p className="text-gray-500 mb-4">The debit note you&apos;re looking for doesn&apos;t exist.</p>
+          <Link href="/dashboard/purchase/debit-notes">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Debit Notes
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const noteNumber = dn.debit_note_number || dn.note_number || dn.id;
+  const invoiceRef = dn.invoice_number || dn.purchase_invoice_number || dn.invoice || dn.purchase_invoice;
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title={dn.id} subtitle={`Debit Note · ${dn.date}`} />
+      <DashHeader
+        title={noteNumber}
+        subtitle={`Debit Note · ${dn.date}`}
+      />
       <div className="flex-1 p-6 space-y-4 max-w-5xl">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={dn.status} />
@@ -33,48 +77,72 @@ export default function DebitNoteDetailPage() {
           <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.print()}>
             <Printer className="h-3.5 w-3.5" /> Print
           </Button>
-          {dn.status === "Issued" && (
-            <Button size="sm" className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5" /> Apply to Invoice
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Debit Note Info</h3>
-            {[["Debit Note #", dn.id], ["Date", dn.date], ["Against Invoice", dn.invoiceRef], ["Reason", dn.reason], ["Status", dn.status]].map(([k, v]) => (
-              <div key={k} className="flex justify-between text-sm">
+            {[
+              ["Debit Note #", noteNumber],
+              ["Date", <FormattedDate key="date" value={dn.date} />],
+              ["Against Invoice", invoiceRef ? (
+                <Link
+                  key="inv"
+                  href={`/dashboard/purchase/invoices/${dn.invoice || dn.purchase_invoice}`}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  {invoiceRef}
+                </Link>
+              ) : "—"],
+              ["Reason", dn.reason],
+              ["Status", <StatusBadge key="status" status={dn.status} />],
+              ...(dn.created_by_name ? [["Created By", dn.created_by_name]] : []),
+            ].map(([k, v]) => (
+              <div key={String(k)} className="flex justify-between text-sm">
                 <span className="text-gray-500">{k}</span>
-                <span className={`font-medium ${k === "Against Invoice" ? "text-blue-600" : "text-gray-800"}`}>{v}</span>
+                <span className="font-medium text-gray-800">{v}</span>
               </div>
             ))}
           </div>
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Supplier</h3>
-            <p className="font-semibold text-gray-800">{dn.supplier}</p>
-            <p className="text-sm text-gray-500">Kathmandu, Nepal</p>
-            <p className="text-sm text-gray-500">PAN: 301234567</p>
+            <p className="font-semibold text-gray-800">{dn.supplier_name || dn.supplier}</p>
+            <div className="flex justify-between text-sm pt-2">
+              <span className="text-gray-500">Amount</span>
+              <span className="font-bold text-[#22C55E]">{formatCurrency(dn.amount)}</span>
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Items</h3>
-          <LineItemsTable items={mockItems} onChange={() => {}} readOnly />
-          <div className="flex justify-end mt-4">
-            <SummaryBox subtotal={subtotal} totalDiscount={0} totalTax={totalTax} grandTotal={grandTotal} />
+          <div className="flex justify-end">
+            <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-3">
+              <span className="text-sm text-gray-600">Debit Amount: </span>
+              <span className="font-bold text-[#22C55E]">{formatCurrency(dn.amount)}</span>
+            </div>
           </div>
-          <div className="mt-3"><AmountInWords amount={grandTotal} /></div>
+          <div className="mt-3"><AmountInWords amount={dn.amount} /></div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-amber-800">Reason: {dn.reason}</p>
-          <p className="text-xs text-amber-600 mt-1">This debit note is issued against {dn.invoiceRef} for Rs. {dn.amount.toLocaleString()}</p>
-        </div>
+        {(dn.description || dn.reason) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-sm font-medium text-amber-800">Reason: {dn.reason}</p>
+            {dn.description && (
+              <p className="text-xs text-amber-600 mt-1">{dn.description}</p>
+            )}
+            {invoiceRef && (
+              <p className="text-xs text-amber-600 mt-1">
+                This debit note is issued against {invoiceRef} for {formatCurrency(dn.amount)}
+              </p>
+            )}
+          </div>
+        )}
 
-        <Button variant="ghost" onClick={() => router.back()} className="gap-1.5 text-gray-500">
-          <ArrowLeft className="h-4 w-4" /> Back to Debit Notes
-        </Button>
+        <Link href="/dashboard/purchase/debit-notes">
+          <Button variant="ghost" className="gap-1.5 text-gray-500">
+            <ArrowLeft className="h-4 w-4" /> Back to Debit Notes
+          </Button>
+        </Link>
       </div>
     </div>
   );

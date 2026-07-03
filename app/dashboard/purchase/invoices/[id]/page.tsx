@@ -1,125 +1,277 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Printer, CreditCard } from "lucide-react";
+import Link from "next/link";
+import { Printer, CreditCard, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
-import { LineItemsTable } from "@/components/purchase/LineItemsTable";
-import { SummaryBox } from "@/components/purchase/SummaryBox";
-import { PaymentModal } from "@/components/purchase/PaymentModal";
+import { FormattedDate } from "@/components/shared/FormattedDate";
 import { AmountInWords } from "@/components/sales/AmountInWords";
-import { mockPurchaseInvoices } from "@/lib/mock-data/purchase";
-
-const mockItems = [
-  { id: "1", product: "Cotton Fabric (per meter)", description: "White, 60 GSM", qty: 100, unit: "Meter", unitPrice: 450, discount: 5, tax: 13, amount: 48217 },
-  { id: "2", product: "Silk Fabric (per meter)", description: "Red", qty: 30, unit: "Meter", unitPrice: 1200, discount: 0, tax: 13, amount: 40680 },
-];
+import { purchaseInvoicesAPI, type PurchaseInvoice } from "@/lib/api/purchase";
+import { formatCurrency } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 export default function PurchaseInvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const invoice = mockPurchaseInvoices.find((i) => i.id === id) ?? mockPurchaseInvoices[0];
-  const [printView, setPrintView] = useState(false);
+  const [invoice, setInvoice] = useState<PurchaseInvoice | null>(null);
+  const [loading, setLoading] = useState(true);
   const [payModal, setPayModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    amount: 0,
+    method: "Bank Transfer",
+    reference: "",
+  });
 
-  const subtotal = mockItems.reduce((s, i) => s + i.qty * i.unitPrice, 0);
-  const totalDiscount = mockItems.reduce((s, i) => s + (i.qty * i.unitPrice * i.discount) / 100, 0);
-  const totalTax = mockItems.reduce((s, i) => { const b = i.qty * i.unitPrice - (i.qty * i.unitPrice * i.discount) / 100; return s + (b * i.tax) / 100; }, 0);
-  const grandTotal = subtotal - totalDiscount + totalTax;
+  const fetchInvoice = async () => {
+    if (!id) return;
+    try {
+      const data = await purchaseInvoicesAPI.get(id);
+      setInvoice(data);
+      setPaymentForm((prev) => ({ ...prev, amount: data.balance }));
+    } catch (error: any) {
+      console.error("Error fetching invoice:", error);
+      toast.error("Failed to load invoice details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (printView) {
+  useEffect(() => {
+    fetchInvoice();
+  }, [id]);
+
+  const handleRecordPayment = async () => {
+    if (!invoice) return;
+    if (paymentForm.amount <= 0) {
+      toast.error("Payment amount must be greater than zero");
+      return;
+    }
+    if (paymentForm.amount > invoice.balance) {
+      toast.error("Payment amount cannot exceed balance due");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const updated = await purchaseInvoicesAPI.recordPayment(
+        invoice.id,
+        paymentForm.amount,
+        paymentForm.date,
+        paymentForm.method,
+        paymentForm.reference || undefined,
+      );
+      setInvoice(updated);
+      setPayModal(false);
+      toast.success(`Payment of ${formatCurrency(paymentForm.amount)} recorded`);
+    } catch (error: any) {
+      console.error("Error recording payment:", error);
+      toast.error(error.response?.data?.detail || "Failed to record payment");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-start justify-center py-8 px-4">
-        <div className="bg-white w-full max-w-[794px] p-12 shadow-lg print:shadow-none">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <p className="text-2xl font-bold text-[#22C55E]">Khata</p>
-              <p className="text-sm text-gray-600 mt-1">FashionNep Pvt. Ltd.</p>
-              <p className="text-xs text-gray-500">Thamel, Kathmandu, Nepal</p>
-              <p className="text-xs text-gray-500">VAT: 123456789</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Purchase Invoice</p>
-              <p className="text-sm text-gray-600 mt-1">Invoice #: {invoice.id}</p>
-              <p className="text-xs text-gray-500">Date: {invoice.date}</p>
-              <p className="text-xs text-gray-500">Due: {invoice.dueDate}</p>
-              <p className="text-xs text-gray-500">PO Ref: {invoice.poRef}</p>
-            </div>
-          </div>
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Bill From</p>
-            <p className="font-semibold text-gray-800">{invoice.supplier}</p>
-            <p className="text-sm text-gray-600">Kathmandu, Nepal</p>
-            <p className="text-sm text-gray-600">PAN: 301234567</p>
-          </div>
-          <LineItemsTable items={mockItems} onChange={() => {}} readOnly />
-          <div className="flex justify-end mt-6">
-            <SummaryBox subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} />
-          </div>
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <AmountInWords amount={grandTotal} />
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-8">
-            <div className="text-center"><div className="border-t border-gray-300 pt-2 mt-12"><p className="text-xs text-gray-500">Received By</p></div></div>
-            <div className="text-center"><div className="border-t border-gray-300 pt-2 mt-12"><p className="text-xs text-gray-500">Authorized By</p></div></div>
-          </div>
-          <p className="text-center text-xs text-gray-400 mt-8">Thank you for your business!</p>
-          <div className="flex gap-2 mt-6 print:hidden">
-            <Button variant="outline" onClick={() => setPrintView(false)}>← Normal View</Button>
-            <Button onClick={() => window.print()} className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-              <Printer className="h-4 w-4" /> Print
-            </Button>
-          </div>
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Loading..." subtitle="Purchase Invoice" />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
         </div>
       </div>
     );
   }
 
+  if (!invoice) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Invoice Not Found" subtitle="Purchase Invoice" />
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <p className="text-gray-500 mb-4">The invoice you&apos;re looking for doesn&apos;t exist.</p>
+          <Link href="/dashboard/purchase/invoices">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Invoices
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const canRecordPayment = invoice.balance > 0 && invoice.status !== "Paid";
+
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title={invoice.id} subtitle={`Purchase Invoice · ${invoice.date}`} />
+      <DashHeader
+        title={invoice.invoice_number}
+        subtitle={`Purchase Invoice · ${invoice.date}`}
+      />
       <div className="flex-1 p-6 space-y-4 max-w-5xl">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={invoice.status} />
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setPrintView(true)}>
-            <Printer className="h-3.5 w-3.5" /> Print View
+          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.print()}>
+            <Printer className="h-3.5 w-3.5" /> Print
           </Button>
-          <Button size="sm" className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setPayModal(true)}>
-            <CreditCard className="h-3.5 w-3.5" /> Record Payment
-          </Button>
+          {canRecordPayment && (
+            <Button
+              size="sm"
+              className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              onClick={() => {
+                setPaymentForm((prev) => ({ ...prev, amount: invoice.balance }));
+                setPayModal(true);
+              }}
+            >
+              <CreditCard className="h-3.5 w-3.5" /> Record Payment
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice Info</h3>
-            {[["Invoice #", invoice.id], ["Date", invoice.date], ["Due Date", invoice.dueDate], ["PO Reference", invoice.poRef], ["Status", invoice.status]].map(([k, v]) => (
-              <div key={k} className="flex justify-between text-sm">
-                <span className="text-gray-500">{k}</span><span className="font-medium text-gray-800">{v}</span>
+            {[
+              ["Invoice #", invoice.invoice_number],
+              ["Date", <FormattedDate key="date" value={invoice.date} />],
+              ["Due Date", invoice.due_date ? <FormattedDate key="due" value={invoice.due_date} /> : "—"],
+              ["PO Reference", invoice.purchase_order_number || invoice.purchase_order || "—"],
+              ["Supplier", invoice.supplier_name || invoice.supplier],
+              ["Status", <StatusBadge key="status" status={invoice.status} />],
+            ].map(([k, v]) => (
+              <div key={String(k)} className="flex justify-between text-sm">
+                <span className="text-gray-500">{k}</span>
+                <span className="font-medium text-gray-800">{v}</span>
               </div>
             ))}
           </div>
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment Summary</h3>
-            {[["Total Amount", `Rs. ${invoice.amount.toLocaleString()}`], ["Paid", `Rs. ${invoice.paid.toLocaleString()}`], ["Balance Due", `Rs. ${invoice.balance.toLocaleString()}`]].map(([k, v]) => (
+            {[
+              ["Subtotal", formatCurrency(invoice.subtotal)],
+              ["Tax", formatCurrency(invoice.tax_amount)],
+              ["Total Amount", formatCurrency(invoice.total_amount)],
+              ["Paid", formatCurrency(invoice.paid_amount)],
+              ["Balance Due", formatCurrency(invoice.balance)],
+            ].map(([k, v]) => (
               <div key={k} className="flex justify-between text-sm">
                 <span className="text-gray-500">{k}</span>
-                <span className={`font-medium ${k === "Balance Due" && invoice.balance > 0 ? "text-red-500" : "text-gray-800"}`}>{v}</span>
+                <span className={`font-medium ${k === "Balance Due" && invoice.balance > 0 ? "text-red-500" : "text-gray-800"}`}>
+                  {v}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <LineItemsTable items={mockItems} onChange={() => {}} readOnly />
-          <div className="flex justify-end mt-4">
-            <SummaryBox subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} />
+          <div className="flex justify-end">
+            <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-3 space-y-1 min-w-[200px]">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Tax</span>
+                <span className="font-medium">{formatCurrency(invoice.tax_amount)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t pt-1">
+                <span className="text-gray-700 font-semibold">Total</span>
+                <span className="font-bold text-[#22C55E]">{formatCurrency(invoice.total_amount)}</span>
+              </div>
+            </div>
           </div>
-          <div className="mt-3"><AmountInWords amount={grandTotal} /></div>
+          <div className="mt-3"><AmountInWords amount={invoice.total_amount} /></div>
         </div>
+
+        {invoice.notes && (
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Notes</h3>
+            <p className="text-sm text-gray-600 whitespace-pre-wrap">{invoice.notes}</p>
+          </div>
+        )}
+
+        <Link href="/dashboard/purchase/invoices">
+          <Button variant="ghost" className="gap-1.5 text-gray-500">
+            <ArrowLeft className="h-4 w-4" /> Back to Invoices
+          </Button>
+        </Link>
       </div>
-      <PaymentModal open={payModal} onClose={() => setPayModal(false)} invoiceId={invoice.id} balance={invoice.balance} />
+
+      <Dialog open={payModal} onOpenChange={setPayModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment — {invoice.invoice_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-sm">Payment Date</Label>
+                <Input
+                  type="date"
+                  value={paymentForm.date}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                  className="h-9"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-sm">Amount (Rs.)</Label>
+                <Input
+                  type="number"
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })}
+                  className="h-9"
+                  max={invoice.balance}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-sm">Payment Method</Label>
+              <Select
+                value={paymentForm.method}
+                onValueChange={(v) => setPaymentForm({ ...paymentForm, method: v || "Bank Transfer" })}
+              >
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["Cash", "Bank Transfer", "Cheque", "eSewa", "Khalti"].map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-sm">Reference Number</Label>
+              <Input
+                value={paymentForm.reference}
+                onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+                className="h-9"
+                placeholder="Txn ID / Cheque No."
+              />
+            </div>
+            <p className="text-xs text-gray-500">Balance due: {formatCurrency(invoice.balance)}</p>
+            <div className="flex gap-2 pt-1">
+              <Button
+                onClick={handleRecordPayment}
+                disabled={submitting}
+                className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Save Payment
+              </Button>
+              <Button variant="outline" onClick={() => setPayModal(false)} className="flex-1" disabled={submitting}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
