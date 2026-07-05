@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-export default function HrAttendanceEmployeeRedirect({
+export default async function HrAttendanceEmployeeRedirect({
   params,
 }: {
   params: Promise<{ employeeId: string }>;

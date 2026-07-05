@@ -13,6 +13,7 @@ import { LineItemsTable } from "@/components/sales/LineItemsTable";
 import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
 import { PrintableQuotation } from "@/components/sales/PrintableQuotation";
 import { quotationAPI, type Quotation } from "@/lib/api/sales";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -22,6 +23,7 @@ export default function QuotationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -277,6 +279,7 @@ export default function QuotationDetailPage() {
               variant="outline" 
               size="sm" 
               onClick={handlePrint}
+              disabled={!companyInfo}
               className="gap-1.5 h-8"
             >
               <Printer className="h-3.5 w-3.5" /> Print / PDF
@@ -413,10 +416,11 @@ export default function QuotationDetailPage() {
         </div>
       </div>
 
-      {/* Hidden Printable Quotation */}
-      <div className="hidden">
-        <PrintableQuotation ref={printRef} quotation={quotation} />
-      </div>
+      {companyInfo && quotation && (
+        <div className="hidden">
+          <PrintableQuotation ref={printRef} quotation={quotation} companyInfo={companyInfo} />
+        </div>
+      )}
     </div>
   );
 }

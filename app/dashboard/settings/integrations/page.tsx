@@ -74,10 +74,13 @@ const INTEGRATIONS: Array<{
   {
     id: "api",
     name: "REST API",
-    description: "Use Khata APIs with your own integrations. API docs available at /api/docs/.",
+    description: "Use Khata APIs with your own integrations.",
     icon: Code2,
     iconClassName: "bg-gray-100 text-gray-700",
     statusKey: "connected",
+    href: process.env.NEXT_PUBLIC_API_URL
+      ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}/api/docs/`
+      : "http://localhost:8000/api/docs/",
   },
 ];
 
@@ -145,13 +148,15 @@ export default function IntegrationsPage() {
                     }
                   />
                   {item.href && status !== "coming_soon" && (
-                    <Link
+                    <a
                       href={item.href}
+                      target={item.id === "api" ? "_blank" : undefined}
+                      rel={item.id === "api" ? "noopener noreferrer" : undefined}
                       className="absolute top-5 right-5 text-gray-400 hover:text-gray-600"
                       title="Open settings"
                     >
                       <ExternalLink className="h-4 w-4" />
-                    </Link>
+                    </a>
                   )}
                 </div>
               );

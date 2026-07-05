@@ -113,6 +113,25 @@ export interface ProductActivity {
   sales_orders: ProductLinkedSalesOrder[];
 }
 
+export interface CustomerSpecificPrice {
+  id: number;
+  customer: number;
+  customer_name?: string;
+  product: number;
+  product_name?: string;
+  product_sku?: string;
+  unit_price: number | string;
+  min_quantity: number | string;
+  valid_from: string;
+  valid_until?: string | null;
+  is_active: boolean;
+  notes?: string;
+  created_by?: number;
+  created_by_name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BulkPricing {
   id: number;
   product: number;
@@ -348,6 +367,26 @@ export const inventoryApi = {
         `/inventory/bulk-pricing/get-price/`, 
         { params: { product: productId, quantity } }
       ),
+  },
+
+  customerPrices: {
+    list: (params?: { customer?: string; product?: string }) =>
+      apiClient.get<PaginatedResponse<CustomerSpecificPrice>>('/inventory/customer-prices/', { params }),
+
+    get: (id: number) =>
+      apiClient.get<CustomerSpecificPrice>(`/inventory/customer-prices/${id}/`),
+
+    byCustomer: (customerId: string) =>
+      apiClient.get<CustomerSpecificPrice[]>(`/inventory/customer-prices/by_customer/${customerId}/`),
+
+    create: (data: Partial<CustomerSpecificPrice>) =>
+      apiClient.post<CustomerSpecificPrice>('/inventory/customer-prices/', data),
+
+    update: (id: number, data: Partial<CustomerSpecificPrice>) =>
+      apiClient.patch<CustomerSpecificPrice>(`/inventory/customer-prices/${id}/`, data),
+
+    delete: (id: number) =>
+      apiClient.delete(`/inventory/customer-prices/${id}/`),
   },
 };
 

@@ -12,8 +12,9 @@ import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { customerAPI, salesOrderAPI, invoiceAPI, customerLedgerAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
+import { CustomerPricingPanel } from "@/components/sales/CustomerPricingPanel";
 
-const tabs = ["Overview", "Orders", "Invoices", "Credit Notes", "Ledger"];
+const tabs = ["Overview", "Orders", "Invoices", "Credit Notes", "Ledger", "Pricing"];
 
 export default function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -292,6 +293,10 @@ export default function CustomerProfilePage() {
 
             {activeTab === "Credit Notes" && (
               <p className="text-sm text-gray-400 py-6 text-center">No credit notes found</p>
+            )}
+
+            {activeTab === "Pricing" && (
+              <CustomerPricingPanel customerId={id} />
             )}
             </div>
           </div>

@@ -3,13 +3,15 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Eye, Edit, CreditCard, Printer, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Edit, CreditCard, Printer, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
+import { PaymentModal } from "@/components/purchase/PaymentModal";
 import { purchaseInvoicesAPI, type PurchaseInvoice } from "@/lib/api/purchase";
+import { downloadCsv } from "@/lib/utils/csv";
 import toast from "react-hot-toast";
 
 const STATUSES = ["All", "Received", "Partially Paid", "Paid", "Overdue"];
@@ -21,6 +23,12 @@ export default function PurchaseInvoicesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [menu, setMenu] = useState<string | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{
+    open: boolean;
+    id: string;
+    invoiceNumber: string;
+    balance: number;
+  }>({ open: false, id: "", invoiceNumber: "", balance: 0 });
 
   useEffect(() => {
     loadInvoices();
@@ -48,6 +56,41 @@ export default function PurchaseInvoicesPage() {
     return matchSearch;
   });
 
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("No invoices to export");
+      return;
+    }
+    downloadCsv(
+      `purchase-invoices-${new Date().toISOString().split("T")[0]}.csv`,
+      ["Invoice #", "Date", "Due Date", "Supplier", "Amount", "Paid", "Balance", "Status"],
+      filtered.map((inv) => [
+        inv.invoice_number,
+        inv.date,
+        inv.due_date || "",
+        inv.supplier_name || inv.supplier,
+        String(inv.amount),
+        String(inv.paid_amount),
+        String(inv.balance),
+        inv.status,
+      ]),
+    );
+    toast.success("CSV exported");
+  };
+
+  const handleRecordPayment = (inv: PurchaseInvoice) => {
+    if (inv.balance <= 0 || inv.status === "Paid") {
+      toast.error("No balance due on this invoice");
+      return;
+    }
+    setPaymentModal({
+      open: true,
+      id: inv.id,
+      invoiceNumber: inv.invoice_number,
+      balance: inv.balance,
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Purchase Invoices" subtitle="Manage supplier invoices and payables" />
@@ -62,7 +105,9 @@ export default function PurchaseInvoicesPage() {
             <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200">Export CSV</Button>
+          <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200 gap-1.5" onClick={handleExportCsv}>
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/invoices/new")}>
             <Plus className="h-4 w-4" /> New Invoice
           </Button>
@@ -101,7 +146,7 @@ export default function PurchaseInvoicesPage() {
                             <div className="absolute right-0 top-8 z-10 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[160px]">
                               {[
                                 { icon: Eye, label: "View", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}`) },
-                                { icon: CreditCard, label: "Record Payment", action: () => {} },
+                                { icon: CreditCard, label: "Record Payment", action: () => handleRecordPayment(inv) },
                                 { icon: Edit, label: "Edit", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}/edit`) },
                                 { icon: Printer, label: "Print", action: () => router.push(`/dashboard/purchase/invoices/${inv.id}?print=1`) },
                               ].map(({ icon: Icon, label, action }) => (
@@ -122,6 +167,15 @@ export default function PurchaseInvoicesPage() {
           </div>
         </div>
       </div>
+
+      <PaymentModal
+        open={paymentModal.open}
+        onClose={() => setPaymentModal({ open: false, id: "", invoiceNumber: "", balance: 0 })}
+        invoiceId={paymentModal.id}
+        invoiceNumber={paymentModal.invoiceNumber}
+        balance={paymentModal.balance}
+        onSuccess={loadInvoices}
+      />
     </div>
   );
 }
