@@ -50,7 +50,7 @@ const reportMeta: Record<
   bulk: {
     title: "Bulk Pricing Rules",
     description: "Active volume discount rules",
-    href: "/dashboard/inventory/bulk-pricing",
+    href: "/dashboard/hardware/bulk-pricing",
   },
 };
 
@@ -114,7 +114,7 @@ export default function HardwareReportsPage() {
     }
 
     if (!reportData) {
-      return <p className="text-gray-500 py-8 text-center">No data available</p>;
+      return <p className="text-gray-500 dark:text-muted-foreground py-8 text-center">No data available</p>;
     }
 
     const data = reportData as Record<string, unknown>;
@@ -122,11 +122,11 @@ export default function HardwareReportsPage() {
     if (activeReport === "sales" && data.top_products) {
       const products = data.top_products as Array<{ name: string; revenue: number; quantity: number }>;
       return (
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 dark:divide-border">
           {products.slice(0, 8).map((p, i) => (
-            <li key={i} className="flex justify-between py-2 text-sm">
+            <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
               <span>{p.name}</span>
-              <span className="font-medium">{formatNPR(p.revenue)}</span>
+              <span className="font-medium tabular-nums">{formatNPR(p.revenue)}</span>
             </li>
           ))}
         </ul>
@@ -136,13 +136,13 @@ export default function HardwareReportsPage() {
     if (activeReport === "inventory" && data.total_value !== undefined) {
       return (
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Total Value</p>
-            <p className="text-xl font-bold">{formatNPR(Number(data.total_value))}</p>
+          <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+            <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Value</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(data.total_value))}</p>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Products</p>
-            <p className="text-xl font-bold">{String(data.total_products ?? "—")}</p>
+          <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+            <p className="text-xs text-gray-500 dark:text-muted-foreground">Products</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(data.total_products ?? "—")}</p>
           </div>
         </div>
       );
@@ -152,23 +152,23 @@ export default function HardwareReportsPage() {
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500">Total Outstanding</p>
-              <p className="text-xl font-bold text-red-600">
+            <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Outstanding</p>
+              <p className="text-xl font-medium text-red-600 dark:text-red-400 tabular-nums">
                 {formatNPR(Number(data.total_outstanding ?? 0))}
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500">Customers with Balance</p>
-              <p className="text-xl font-bold">{String(data.customers_with_balance ?? 0)}</p>
+            <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Customers with Balance</p>
+              <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(data.customers_with_balance ?? 0)}</p>
             </div>
           </div>
           {Array.isArray(data.top_debtors) && (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-border">
               {(data.top_debtors as Array<{ name: string; balance: number }>).slice(0, 5).map((d, i) => (
-                <li key={i} className="flex justify-between py-2 text-sm">
+                <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
                   <span>{d.name}</span>
-                  <span className="font-medium text-red-600">{formatNPR(d.balance)}</span>
+                  <span className="font-medium text-red-600 dark:text-red-400 tabular-nums">{formatNPR(d.balance)}</span>
                 </li>
               ))}
             </ul>
@@ -179,13 +179,13 @@ export default function HardwareReportsPage() {
 
     if (activeReport === "products" && Array.isArray(data)) {
       return (
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 dark:divide-border">
           {(data as Array<{ product_name?: string; name?: string; total_sales?: number; revenue?: number }>)
             .slice(0, 10)
             .map((p, i) => (
-              <li key={i} className="flex justify-between py-2 text-sm">
+              <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
                 <span>{p.product_name || p.name}</span>
-                <span className="font-medium">{formatNPR(Number(p.total_sales ?? p.revenue ?? 0))}</span>
+                <span className="font-medium tabular-nums">{formatNPR(Number(p.total_sales ?? p.revenue ?? 0))}</span>
               </li>
             ))}
         </ul>
@@ -195,13 +195,13 @@ export default function HardwareReportsPage() {
     if (activeReport === "payments" && data.total_sales !== undefined) {
       return (
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Total Sales</p>
-            <p className="text-xl font-bold">{formatNPR(Number(data.total_sales))}</p>
+          <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+            <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Sales</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(data.total_sales))}</p>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Orders</p>
-            <p className="text-xl font-bold">{String(data.total_orders ?? "—")}</p>
+          <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+            <p className="text-xs text-gray-500 dark:text-muted-foreground">Orders</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(data.total_orders ?? "—")}</p>
           </div>
         </div>
       );
@@ -212,24 +212,24 @@ export default function HardwareReportsPage() {
         ? data
         : (data as { results?: unknown[] }).results ?? [];
       return (
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 dark:divide-border">
           {(rules as Array<{ product_name?: string; min_quantity?: number; discount_percent?: number }>)
             .slice(0, 10)
             .map((r, i) => (
-              <li key={i} className="flex justify-between py-2 text-sm">
+              <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
                 <span>{r.product_name || "Product rule"}</span>
-                <span className="text-gray-600">
+                <span className="text-gray-600 dark:text-muted-foreground">
                   {r.min_quantity}+ qty · {r.discount_percent}% off
                 </span>
               </li>
             ))}
-          {rules.length === 0 && <li className="py-4 text-gray-500 text-center">No bulk pricing rules</li>}
+          {rules.length === 0 && <li className="py-4 text-gray-500 dark:text-muted-foreground text-center">No bulk pricing rules</li>}
         </ul>
       );
     }
 
     return (
-      <pre className="text-xs bg-gray-50 p-4 rounded-lg overflow-auto max-h-64">
+      <pre className="text-xs bg-gray-50 dark:bg-muted/30 border border-gray-100 dark:border-border p-4 rounded-lg overflow-auto max-h-64 text-gray-800 dark:text-foreground">
         {JSON.stringify(reportData, null, 2)}
       </pre>
     );
@@ -239,17 +239,17 @@ export default function HardwareReportsPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader title="Hardware Reports" subtitle="Live reports from your business data" />
       <div className="flex-1 p-6 space-y-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-2">Start Date</label>
               <DateInput
                 value={dateRange.start}
                 onChange={(date) => setDateRange({ ...dateRange, start: date })}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-2">End Date</label>
               <DateInput
                 value={dateRange.end}
                 onChange={(date) => setDateRange({ ...dateRange, end: date })}
@@ -267,22 +267,22 @@ export default function HardwareReportsPage() {
                 key={key}
                 type="button"
                 onClick={() => setActiveReport(key)}
-                className={`text-left bg-white rounded-xl border p-5 shadow-sm transition-all ${
+                className={`text-left bg-white dark:bg-card rounded-xl border p-5 shadow-sm transition-all ${
                   isActive
                     ? "border-[#22C55E] ring-1 ring-[#22C55E]"
-                    : "border-gray-100 hover:border-gray-200"
+                    : "border-gray-100 dark:border-border hover:border-gray-200 dark:hover:border-border"
                 }`}
               >
-                <h3 className="text-base font-semibold text-gray-900 mb-1">{meta.title}</h3>
-                <p className="text-sm text-gray-600">{meta.description}</p>
+                <h3 className="text-base font-medium text-gray-900 dark:text-foreground mb-1">{meta.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-muted-foreground">{meta.description}</p>
               </button>
             );
           })}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">{reportMeta[activeReport].title}</h3>
+            <h3 className="font-medium text-gray-900 dark:text-foreground">{reportMeta[activeReport].title}</h3>
             <div className="flex gap-2">
               {reportMeta[activeReport].href && (
                 <Link href={reportMeta[activeReport].href!}>

@@ -299,7 +299,7 @@ export interface MainDashboardData {
         status?: string;
       }>;
     }>;
-    tiles?: Array<{ label: string; value: string; tone?: string }>;
+    tiles?: Array<{ label: string; value: string; tone?: 'success' | 'warning' | 'danger' | 'info' }>;
   }>;
 }
 

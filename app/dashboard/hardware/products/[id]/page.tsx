@@ -1,20 +1,27 @@
-'use client';
+"use client";
 
-import { useRouter, useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
+import { HardwarePageShell } from "@/components/dashboard/HardwarePageShell";
 
 export default function HardwareProductDetailPage() {
   const router = useRouter();
   const params = useParams();
 
   useEffect(() => {
-    // Redirect to inventory product detail
-    router.push(`/dashboard/inventory/products/${params.id}`);
+    if (params.id) {
+      router.replace(`/dashboard/inventory/products/${params.id}`);
+    }
   }, [router, params.id]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-    </div>
+    <HardwarePageShell
+      title="Product"
+      subtitle="Opening product details…"
+      variant="redirect"
+      loading
+    >
+      {null}
+    </HardwarePageShell>
   );
 }

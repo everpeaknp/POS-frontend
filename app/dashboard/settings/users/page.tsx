@@ -52,6 +52,7 @@ const modules = [
   { name: "Inventory", actions: ["View", "Create", "Edit", "Delete"] },
   { name: "Accounting", actions: ["View", "Create", "Edit", "Delete"] },
   { name: "Construction", actions: ["View", "Create", "Edit", "Delete"] },
+  { name: "Hardware", actions: ["View", "Create", "Edit", "Delete"] },
   { name: "HR", actions: ["View", "Create", "Edit", "Delete"] },
   { name: "POS", actions: ["View", "Create", "Edit", "Delete"] },
   { name: "Reports", actions: ["View", "Export"] },

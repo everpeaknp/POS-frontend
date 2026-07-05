@@ -1,3 +1,4 @@
+import type { IconType } from "react-icons";
 import {
   BarChart3,
   Package,
@@ -10,14 +11,13 @@ import {
   Monitor,
   Settings,
   LayoutDashboard,
-  type LucideIcon,
 } from "lucide-react";
 
 export interface OrgModuleDefinition {
   id: string;
   name: string;
   description: string;
-  icon: LucideIcon;
+  icon: IconType;
   recommended?: boolean;
   defaultEnabled?: boolean;
   required?: boolean;
@@ -130,9 +130,20 @@ export function isRequiredModule(moduleId: string): boolean {
   return (REQUIRED_MODULE_IDS as readonly string[]).includes(moduleId);
 }
 
-export function isModuleActive(activeModules: string[] | undefined, moduleId: string): boolean {
+export function isModuleInActiveList(
+  activeModules: string[] | undefined,
+  moduleId: string
+): boolean {
   const normalized = moduleId.toLowerCase();
   return (activeModules || []).some((m) => m.toLowerCase() === normalized);
+}
+
+/** Whether a module is effectively enabled (core modules are always on). */
+export function isModuleActive(activeModules: string[] | undefined, moduleId: string): boolean {
+  if (isRequiredModule(moduleId)) {
+    return true;
+  }
+  return isModuleInActiveList(activeModules, moduleId);
 }
 
 export type ModuleCatalogSectionKey = "required" | "recommended" | "other";
@@ -169,8 +180,8 @@ export function getModuleCatalogSections(): ModuleCatalogSection[] {
   );
 
   return [
-    { key: "required", label: "Required", modules: required },
-    { key: "recommended", label: "Recommended", modules: recommended },
-    { key: "other", label: "Other modules", modules: other },
+    { key: "required" as const, label: "Required", modules: required },
+    { key: "recommended" as const, label: "Recommended", modules: recommended },
+    { key: "other" as const, label: "Other modules", modules: other },
   ].filter((section) => section.modules.length > 0);
 }

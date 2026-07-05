@@ -7,8 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -129,10 +129,31 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-normal;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.011em;
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  strong,
+  b {
+    font-weight: 500;
+  }
+  .tabular-nums,
+  [data-slot="card-title"],
+  table td.font-medium,
+  table th {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Override browser autofill (pink/yellow highlights) to match app fields */
@@ -186,6 +207,19 @@
 }
 
 @layer utilities {
+  .font-bold {
+    font-weight: 500 !important;
+  }
+
+  .font-semibold {
+    font-weight: 500 !important;
+  }
+
+  .font-extrabold,
+  .font-black {
+    font-weight: 600 !important;
+  }
+
   .scrollbar-green {
     scrollbar-width: thin;
     scrollbar-color: #15803d rgba(255, 255, 255, 0.06);

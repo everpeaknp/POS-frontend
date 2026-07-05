@@ -12,7 +12,7 @@ export function DashHeader({ title, subtitle }: DashHeaderProps) {
   return (
     <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
       <div>
-        <h1 className="text-lg font-bold text-foreground">{title}</h1>
+        <h1 className="text-lg font-medium text-foreground tracking-tight">{title}</h1>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
 

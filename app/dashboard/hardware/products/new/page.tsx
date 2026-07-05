@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { HardwarePageShell } from "@/components/dashboard/HardwarePageShell";
 
 export default function NewHardwareProductPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to inventory product creation
-    router.push('/dashboard/inventory/products/new');
+    router.replace("/dashboard/inventory/products/new");
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-    </div>
+    <HardwarePageShell
+      title="New Product"
+      subtitle="Opening product form…"
+      variant="redirect"
+      loading
+    >
+      {null}
+    </HardwarePageShell>
   );
 }

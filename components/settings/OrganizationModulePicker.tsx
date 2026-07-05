@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   getModuleCatalogSections,
   isModuleActive,
+  isModuleInActiveList,
   isRequiredModule,
   ORG_MODULE_CATALOG,
   type OrgModuleDefinition,
@@ -50,7 +51,7 @@ export function OrganizationModulePicker({
       return;
     }
 
-    const enabled = isModuleActive(activeModules, moduleId);
+    const enabled = isModuleInActiveList(activeModules, moduleId);
     setTogglingId(moduleId);
 
     try {
@@ -81,107 +82,103 @@ export function OrganizationModulePicker({
     const isLoading = togglingId === module.id;
     const IconComponent = module.icon;
     const isRequired = isRequiredModule(module.id) || module.required;
+    const interactive = canEdit && !isRequired && !isLoading;
 
     return (
       <div
         key={module.id}
-        onClick={() => !isLoading && canEdit && toggleModule(module.id)}
-        className={`relative border rounded-xl p-5 transition-all flex flex-col ${
+        onClick={() => interactive && toggleModule(module.id)}
+        className={`group relative flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-all ${
           isSelected
-            ? "border-[#22C55E] bg-green-50/60 dark:bg-green-950/20 shadow-sm"
-            : "border-gray-200 dark:border-border bg-white dark:bg-card hover:border-gray-300 dark:hover:border-border/80 hover:shadow-sm"
-        } ${canEdit && !isLoading ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
+            ? "border-[#22C55E]/40 bg-[#22C55E]/[0.06] dark:bg-green-500/10"
+            : "border-gray-100 dark:border-border bg-white dark:bg-card hover:border-gray-200 dark:hover:border-border/80"
+        } ${interactive ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
       >
-        <div className="flex items-start gap-4 flex-1">
-          <div className="flex-shrink-0 mt-1">
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-[#22C55E]" />
-            ) : (
-              <Checkbox
-                checked={isSelected}
-                disabled={!canEdit || isRequired}
-                onCheckedChange={() => toggleModule(module.id)}
-                onClick={(e) => e.stopPropagation()}
-                className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E] h-5 w-5"
-              />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className={`p-2 rounded-lg ${
-                  isSelected ? "bg-green-100 dark:bg-green-900/40" : "bg-gray-100 dark:bg-muted"
-                }`}
-              >
-                <IconComponent
-                  className={`h-5 w-5 ${
-                    isSelected ? "text-[#22C55E]" : "text-gray-600 dark:text-muted-foreground"
-                  }`}
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-foreground">
-                {module.name}
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-muted-foreground leading-relaxed">
-              {module.description}
-            </p>
-          </div>
-
-          {isSelected && !isLoading && (
-            <div className="flex-shrink-0">
-              <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          )}
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+            isSelected
+              ? "bg-[#22C55E]/15 text-[#22C55E]"
+              : "bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground"
+          }`}
+        >
+          <IconComponent className="h-[18px] w-[18px]" />
         </div>
 
-        {(isRequired || module.recommended) && (
-          <div className="flex justify-end mt-auto pt-3">
-            {isRequired ? (
-              <span className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold px-2 py-1 rounded-full">
-                Required
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-foreground">
+              {module.name}
+            </h3>
+            {isRequired && (
+              <span className="rounded-full bg-gray-100 dark:bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
+                Always on
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-[#16A34A] dark:text-green-400 text-xs font-semibold px-2 py-1 rounded-full">
+            )}
+            {!isRequired && module.recommended && (
+              <span className="rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
                 Recommended
               </span>
             )}
           </div>
-        )}
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-muted-foreground line-clamp-1">
+            {module.description}
+          </p>
+        </div>
+
+        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-[#22C55E]" />
+          ) : isRequired ? (
+            <div
+              className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white"
+              aria-label={`${module.name} enabled`}
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </div>
+          ) : (
+            <Checkbox
+              checked={isSelected}
+              disabled={!canEdit}
+              onCheckedChange={() => toggleModule(module.id)}
+              className="h-5 w-5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+            />
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="space-y-8">
-        {getModuleCatalogSections().map((section) => (
-          <div key={section.key} className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-foreground">
+    <div className="space-y-8">
+      {getModuleCatalogSections().map((section) => (
+        <section key={section.key} className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3 border-b border-gray-100 dark:border-border pb-2">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
               {section.label}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {section.modules.map((module) => renderModuleCard(module))}
-            </div>
+            <span className="text-xs text-gray-400 dark:text-muted-foreground tabular-nums">
+              {section.modules.filter((m) => isModuleActive(activeModules, m.id)).length}/
+              {section.modules.length}
+            </span>
           </div>
-        ))}
-      </div>
+          <div
+            className={
+              section.key === "required"
+                ? "grid grid-cols-1 gap-2"
+                : section.key === "other"
+                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2"
+                  : "grid grid-cols-1 md:grid-cols-2 gap-2"
+            }
+          >
+            {section.modules.map((module) => renderModuleCard(module))}
+          </div>
+        </section>
+      ))}
 
-      <div className="text-center">
-        <p className="text-sm text-gray-600 dark:text-muted-foreground">
-          {selectedCount} {selectedCount === 1 ? "module" : "modules"} enabled
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-green-100 dark:border-green-900/40 bg-green-50/80 dark:bg-green-950/20 px-4 py-3">
-        <p className="text-sm text-green-900 dark:text-green-100">
-          <strong className="font-semibold">Note:</strong> Dashboard, Accounting, and Settings stay enabled for every
-          organization. Disabled modules are hidden from the sidebar for your team.
-        </p>
-      </div>
+      <p className="text-xs text-gray-500 dark:text-muted-foreground text-center pt-2">
+        {selectedCount} of {ORG_MODULE_CATALOG.length} modules enabled · Disabled modules are hidden
+        from the sidebar
+      </p>
     </div>
   );
 }

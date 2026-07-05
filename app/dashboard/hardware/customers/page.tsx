@@ -1,17 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { customerAPI, Customer } from '@/lib/api/sales';
-import { formatNPR } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  HardwarePageShell,
+  hardwareInputClass,
+  hardwareTableWrapClass,
+} from "@/components/dashboard/HardwarePageShell";
+import { customerAPI, type Customer } from "@/lib/api/sales";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 export default function HardwareCustomersPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchCustomers();
@@ -21,115 +28,118 @@ export default function HardwareCustomersPage() {
     try {
       setLoading(true);
       const response = await customerAPI.list();
-      // Handle paginated response
       const data = response.data;
-      const customerList = Array.isArray(data) ? data : (data.results || []);
-      setCustomers(customerList);
-    } catch (error: any) {
-      console.error('Failed to fetch customers:', error);
-      toast.error('Failed to load customers');
+      setCustomers(Array.isArray(data) ? data : data.results || []);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast.error("Failed to load customers");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hardware Customers</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage hardware customers with credit limits and payment tracking
-          </p>
+    <HardwarePageShell
+      title="Hardware Customers"
+      subtitle="Manage customers with credit limits and payment tracking"
+      loading={loading}
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={hardwareInputClass}
+          />
         </div>
-        <Link
-          href="/dashboard/hardware/customers/new"
-          className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium"
-        >
-          + New Customer
+        <Link href="/dashboard/hardware/customers/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Customer
+          </Button>
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <input
-          type="text"
-          placeholder="Search customers..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-        />
-      </div>
-
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Credit Limit</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+      <div className={hardwareTableWrapClass}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-                  </div>
-                </td>
+                {["Name", "Contact", "Credit Limit", "Balance", ""].map((h) => (
+                  <th
+                    key={h || "actions"}
+                    className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
+                      h === "" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {h === "" ? "Actions" : h}
+                  </th>
+                ))}
               </tr>
-            ) : filteredCustomers.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  No customers found
-                </td>
-              </tr>
-            ) : (
-              filteredCustomers.map((customer) => (
-                <tr
-                  key={customer.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/hardware/customers/${customer.id}`)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{customer.email || customer.phone}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatNPR(customer.credit_limit || 0)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-medium ${(customer.current_balance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatNPR(customer.current_balance || 0)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/dashboard/hardware/customers/${customer.id}`);
-                      }}
-                      className="text-[#22C55E] hover:text-[#16A34A]"
-                    >
-                      View
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-border">
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
+                    No customers found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <tr
+                    key={customer.id}
+                    className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => router.push(`/dashboard/hardware/customers/${customer.id}`)}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
+                      {customer.name}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground">
+                      {customer.email || customer.phone || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-foreground tabular-nums">
+                      {formatNPR(customer.credit_limit || 0)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-sm font-medium tabular-nums ${
+                          (customer.current_balance || 0) > 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
+                        {formatNPR(customer.current_balance || 0)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/dashboard/hardware/customers/${customer.id}`);
+                        }}
+                        className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </HardwarePageShell>
   );
 }

@@ -1,19 +1,37 @@
-'use client';
+"use client";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { salesOrderAPI, SalesOrder } from '@/lib/api/sales';
-import { formatNPR } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  HardwarePageShell,
+  hardwareInputClass,
+  hardwareTableWrapClass,
+} from "@/components/dashboard/HardwarePageShell";
+import { salesOrderAPI, type SalesOrder } from "@/lib/api/sales";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+const STATUS_STYLES: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-700 dark:bg-muted dark:text-muted-foreground",
+  confirmed: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
+  processing: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+  shipped: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
+  delivered: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400",
+};
+
+const STATUS_FILTERS = ["all", "draft", "confirmed", "processing", "delivered"] as const;
 
 export default function HardwareOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchOrders();
@@ -22,178 +40,137 @@ export default function HardwareOrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const params: any = {};
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
+      const params: Record<string, string> = {};
+      if (statusFilter !== "all") params.status = statusFilter;
       const response = await salesOrderAPI.list(params);
-      // Handle paginated response
       const data = response.data;
-      const orderList = Array.isArray(data) ? data : (data.results || []);
-      setOrders(orderList);
-    } catch (error: any) {
-      console.error('Failed to fetch orders:', error);
-      toast.error('Failed to load hardware orders');
+      setOrders(Array.isArray(data) ? data : data.results || []);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      toast.error("Failed to load hardware orders");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredOrders = orders.filter((order) =>
-    order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hardware Sales Orders</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage hardware sales with credit support and bulk pricing
-          </p>
+    <HardwarePageShell
+      title="Hardware Orders"
+      subtitle="Sales orders with credit support and bulk pricing"
+      loading={loading}
+    >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by order number or customer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={hardwareInputClass}
+          />
         </div>
-        <Link
-          href="/dashboard/hardware/orders/new"
-          className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium"
-        >
-          + New Order
-        </Link>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search by order number or customer..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-            />
-          </div>
-          <div className="flex gap-2">
-            {['all', 'draft', 'confirmed', 'processing', 'delivered'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  statusFilter === status
-                    ? 'bg-[#22C55E] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {STATUS_FILTERS.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(status)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                statusFilter === status
+                  ? "bg-[#22C55E] text-white"
+                  : "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80"
+              }`}
+            >
+              {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
+          <Link href="/dashboard/hardware/orders/new">
+            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 ml-1">
+              <Plus className="h-4 w-4" />
+              New Order
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order #
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+      <div className={hardwareTableWrapClass}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-                  </div>
-                </td>
+                {["Order #", "Customer", "Date", "Total", "Status", ""].map((h) => (
+                  <th
+                    key={h || "actions"}
+                    className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
+                      h === "" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {h === "" ? "Actions" : h}
+                  </th>
+                ))}
               </tr>
-            ) : filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                  No hardware orders found
-                </td>
-              </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/hardware/orders/${order.id}`)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{order.customer_name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      <FormattedDate value={order.date} />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{formatNPR(order.total)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/dashboard/hardware/orders/${order.id}`);
-                      }}
-                      className="text-[#22C55E] hover:text-[#16A34A]"
-                    >
-                      View
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-border">
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
+                    No hardware orders found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => router.push(`/dashboard/hardware/orders/${order.id}`)}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
+                      {order.order_number}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground">
+                      {order.customer_name}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground">
+                      <FormattedDate value={order.date} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-foreground tabular-nums">
+                      {formatNPR(order.total)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          STATUS_STYLES[order.status] || STATUS_STYLES.draft
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/dashboard/hardware/orders/${order.id}`);
+                        }}
+                        className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </HardwarePageShell>
   );
 }

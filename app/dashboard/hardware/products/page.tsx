@@ -1,188 +1,155 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { inventoryApi, Product } from '@/lib/api/inventory';
-import { formatNPR } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  HardwarePageShell,
+  hardwareInputClass,
+  hardwareTableWrapClass,
+} from "@/components/dashboard/HardwarePageShell";
+import { inventoryApi, type Product } from "@/lib/api/inventory";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+function stockBadge(product: Product) {
+  const stock = product.total_stock || 0;
+  const reorder = product.reorder_level || 0;
+  if (stock === 0) return { label: "Out of Stock", className: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400" };
+  if (stock <= reorder) return { label: "Low Stock", className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" };
+  return { label: "In Stock", className: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400" };
+}
 
 export default function HardwareProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchProducts();
-  }, [categoryFilter]);
+  }, []);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const params: any = {};
-      if (categoryFilter !== 'all') {
-        params.category = categoryFilter;
-      }
-      const response = await inventoryApi.products.list(params);
-      // Handle paginated response
+      const response = await inventoryApi.products.list();
       const data = response.data;
-      const productList = Array.isArray(data) ? data : (data.results || []);
-      setProducts(productList);
-    } catch (error: any) {
-      console.error('Failed to fetch products:', error);
-      toast.error('Failed to load hardware products');
+      setProducts(Array.isArray(data) ? data : data.results || []);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      toast.error("Failed to load hardware products");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStockStatusColor = (product: Product) => {
-    const stock = product.total_stock || 0;
-    const reorder = product.reorder_level || 0;
-    
-    if (stock === 0) return 'bg-red-100 text-red-800';
-    if (stock <= reorder) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
-  };
-
-  const getStockStatusLabel = (product: Product) => {
-    const stock = product.total_stock || 0;
-    const reorder = product.reorder_level || 0;
-    
-    if (stock === 0) return 'Out of Stock';
-    if (stock <= reorder) return 'Low Stock';
-    return 'In Stock';
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hardware Products</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage hardware inventory with bulk pricing and stock tracking
-          </p>
+    <HardwarePageShell
+      title="Hardware Products"
+      subtitle="Manage hardware inventory with bulk pricing and stock tracking"
+      loading={loading}
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or SKU..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={hardwareInputClass}
+          />
         </div>
-        <Link
-          href="/dashboard/hardware/products/new"
-          className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium"
-        >
-          + New Product
+        <Link href="/dashboard/hardware/products/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Product
+          </Button>
         </Link>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search products by name or SKU..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Products Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Product
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SKU
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stock
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+      <div className={hardwareTableWrapClass}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-                  </div>
-                </td>
+                {["Product", "SKU", "Category", "Price", "Stock", "Status", ""].map((h) => (
+                  <th
+                    key={h || "actions"}
+                    className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
+                      h === "" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {h === "" ? "Actions" : h}
+                  </th>
+                ))}
               </tr>
-            ) : filteredProducts.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  No hardware products found
-                </td>
-              </tr>
-            ) : (
-              filteredProducts.map((product) => (
-                <tr
-                  key={product.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/hardware/products/${product.id}`)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{product.sku || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{product.category_name || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{formatNPR(product.selling_price)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {product.total_stock || 0} {product.unit_name || 'units'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStockStatusColor(product)}`}>
-                      {getStockStatusLabel(product)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/dashboard/hardware/products/${product.id}`);
-                      }}
-                      className="text-[#22C55E] hover:text-[#16A34A] mr-3"
-                    >
-                      View
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-border">
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
+                    No hardware products found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredProducts.map((product) => {
+                  const badge = stockBadge(product);
+                  return (
+                    <tr
+                      key={product.id}
+                      className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => router.push(`/dashboard/hardware/products/${product.id}`)}
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
+                        {product.name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground font-mono text-xs">
+                        {product.sku || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground">
+                        {product.category_name || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-foreground tabular-nums">
+                        {formatNPR(product.selling_price)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-foreground tabular-nums">
+                        {product.total_stock || 0} {product.unit_name || "units"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
+                          {badge.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/dashboard/hardware/products/${product.id}`);
+                          }}
+                          className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </HardwarePageShell>
   );
 }

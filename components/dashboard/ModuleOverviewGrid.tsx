@@ -29,7 +29,7 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
                         <Icon className="h-[18px] w-[18px] text-[#22C55E]" />
                       </div>
                     ) : null}
-                    <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-foreground">
+                    <h3 className="truncate text-sm font-medium text-gray-900 dark:text-foreground">
                       {module.title}
                     </h3>
                   </div>
@@ -46,7 +46,7 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
                           {stat.label}
                         </p>
                         <div className="mt-1 flex items-baseline gap-1.5">
-                          <p className="truncate text-lg font-bold tabular-nums text-gray-900 dark:text-foreground">
+                          <p className="truncate text-lg font-medium tabular-nums text-gray-900 dark:text-foreground">
                             {stat.value}
                           </p>
                           {typeof stat.change === "number" ? (
