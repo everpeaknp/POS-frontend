@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Loader2, AlertCircle, CheckCircle2, Circle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -29,9 +29,6 @@ export default function AccountingDashboard() {
     incomeTotal: number;
     expenseTotal: number;
   } | null>(null);
-  const [glSummary, setGlSummary] = useState<Awaited<
-    ReturnType<typeof journalEntriesAPI.glIntegrationSummary>
-  > | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -46,12 +43,11 @@ export default function AccountingDashboard() {
       const fromDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
       const toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
 
-      const [accounts, journalEntries, profitLoss, balanceSheet, gl] = await Promise.all([
+      const [accounts, journalEntries, profitLoss, balanceSheet] = await Promise.all([
         accountsAPI.list(),
         journalEntriesAPI.list({ ordering: "-date" }),
         accountsAPI.profitLoss({ from_date: fromDate, to_date: toDate }),
         accountsAPI.balanceSheet(),
-        journalEntriesAPI.glIntegrationSummary().catch(() => null),
       ]);
 
       const totalAssets = balanceSheet?.assets?.total || 0;
@@ -84,7 +80,6 @@ export default function AccountingDashboard() {
         incomeTotal: profitLoss?.income?.total || 0,
         expenseTotal: profitLoss?.expenses?.total || 0,
       });
-      setGlSummary(gl);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
       setError("Failed to load dashboard data. Ensure you have selected an organization with accounting data.");
@@ -229,79 +224,6 @@ export default function AccountingDashboard() {
             )}
           </div>
         </div>
-
-        {glSummary && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700">Construction &amp; payroll GL integration</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Auto-posted journal entries from construction and HR ({glSummary.total_posted} total posted)
-                </p>
-              </div>
-              <Link
-                href="/dashboard/construction"
-                className="text-xs text-[#22C55E] hover:underline"
-              >
-                Go to Construction →
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
-              {[
-                { label: "Material (MC-)", key: "material_consumption" },
-                { label: "Labor (ATT-)", key: "labor_wage" },
-                { label: "Equipment (EQ-)", key: "equipment_usage" },
-                { label: "Site expense (DL-)", key: "daily_log_expense" },
-                { label: "Payroll (PAY-)", key: "payroll" },
-              ].map(({ label, key }) => {
-                const count = glSummary.by_prefix[key] ?? 0;
-                return (
-                  <div
-                    key={key}
-                    className={`rounded-lg border p-3 text-center ${
-                      count > 0 ? "border-green-200 bg-green-50" : "border-gray-100 bg-gray-50"
-                    }`}
-                  >
-                    <p className="text-xs text-gray-500">{label}</p>
-                    <p className="text-lg font-bold text-gray-900 mt-1">{count}</p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Verification checklist</p>
-              <ul className="space-y-2">
-                {glSummary.checklist.map((item) => {
-                  const prefixMap: Record<number, string> = {
-                    1: "material_consumption",
-                    2: "labor_wage",
-                    3: "equipment_usage",
-                    4: "daily_log_expense",
-                    5: "payroll",
-                  };
-                  const done = (glSummary.by_prefix[prefixMap[item.step]] ?? 0) > 0;
-                  return (
-                    <li key={item.step} className="flex items-start gap-2 text-xs text-gray-600">
-                      {done ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                      ) : (
-                        <Circle className="h-4 w-4 text-gray-300 shrink-0" />
-                      )}
-                      <span>
-                        <span className="font-medium text-gray-800">{item.action}</span>
-                        {" — "}
-                        {item.expect}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="text-[10px] text-gray-400 mt-3">
-                CLI: <code className="bg-gray-100 px-1 rounded">python manage.py verify_gl_integration</code>
-              </p>
-            </div>
-          </div>
-        )}
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
