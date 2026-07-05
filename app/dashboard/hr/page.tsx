@@ -26,7 +26,10 @@ import {
 } from "recharts";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
+import { usePermissions } from "@/lib/hooks/usePermissions";
+import { tenantApi } from "@/lib/api/tenant";
 import {
   getHRDashboard,
   getHRReports,
@@ -83,9 +86,31 @@ function leaveStatusClass(status: string) {
   }
 }
 
+function buildDashboardFromReports(reports: HRReports) {
+  return {
+    stats: {
+      total_employees: reports.summary.total_employees,
+      active_employees: reports.summary.active_employees,
+      inactive_employees: 0,
+      terminated_employees: 0,
+      total_salary: 0,
+      average_salary: reports.summary.avg_salary,
+    },
+    departments: reports.department_data.map((d) => ({
+      id: d.name,
+      name: d.name,
+      emp_count: d.employee_count,
+    })),
+    employment_types: reports.employment_type_data,
+    recent_employees: [],
+  };
+}
+
 export default function HRDashboardPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { hasModuleAccess, canView } = usePermissions();
   const [loading, setLoading] = useState(true);
+  const [enablingModule, setEnablingModule] = useState(false);
   const [dashboard, setDashboard] = useState<Awaited<ReturnType<typeof getHRDashboard>> | null>(null);
   const [reports, setReports] = useState<HRReports | null>(null);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -94,33 +119,83 @@ export default function HRDashboardPage() {
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Employee and payroll management`;
+  const hrModuleActive = hasModuleAccess("hr");
+  const canEnableHr = user?.role === "admin" && !!user?.tenant?.slug;
 
   useEffect(() => {
+    if (!hrModuleActive) {
+      setLoading(false);
+      return;
+    }
     fetchDashboardData();
-  }, []);
+  }, [hrModuleActive]);
+
+  const handleEnableHrModule = async () => {
+    if (!user?.tenant?.slug) return;
+
+    try {
+      setEnablingModule(true);
+      await tenantApi.activateModule(user.tenant.slug, "hr");
+      await refreshUser();
+      toast.success("HR & Payroll module enabled");
+    } catch (error) {
+      console.error("Failed to enable HR module:", error);
+      toast.error("Failed to enable HR module");
+    } finally {
+      setEnablingModule(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
+    if (!canView("hr")) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const [dashboardData, reportsData, leavesData, payrollsData] = await Promise.all([
-        getHRDashboard(),
-        getHRReports(),
-        getLeaveRequests(),
-        getPayrolls(),
-      ]);
-      setDashboard(dashboardData);
-      setReports(reportsData);
-      const leaves = leavesData.results || [];
-      setLeaveRequests(leaves);
+      const [dashboardResult, reportsResult, leavesResult, payrollsResult] =
+        await Promise.allSettled([
+          getHRDashboard(),
+          getHRReports(),
+          getLeaveRequests(),
+          getPayrolls(),
+        ]);
 
-      const payrolls = payrollsData.results || [];
-      const now = new Date();
-      const currentMonth = now.toLocaleString("en-US", { month: "long" });
-      const currentYear = now.getFullYear();
-      const monthTotal = payrolls
-        .filter((p) => p.month === currentMonth && p.year === currentYear)
-        .reduce((sum, p) => sum + (p.net_salary ?? 0), 0);
-      setPayrollTotal(monthTotal);
+      if (dashboardResult.status === "fulfilled") {
+        setDashboard(dashboardResult.value);
+      } else if (reportsResult.status === "fulfilled") {
+        setDashboard(buildDashboardFromReports(reportsResult.value));
+      }
+
+      if (reportsResult.status === "fulfilled") {
+        setReports(reportsResult.value);
+      }
+
+      if (leavesResult.status === "fulfilled") {
+        setLeaveRequests(leavesResult.value.results || []);
+      }
+
+      if (payrollsResult.status === "fulfilled") {
+        const payrolls = payrollsResult.value.results || [];
+        const now = new Date();
+        const currentMonth = now.toLocaleString("en-US", { month: "long" });
+        const currentYear = now.getFullYear();
+        const monthTotal = payrolls
+          .filter((p) => p.month === currentMonth && p.year === currentYear)
+          .reduce((sum, p) => sum + (p.net_salary ?? 0), 0);
+        setPayrollTotal(monthTotal);
+      }
+
+      const allFailed =
+        dashboardResult.status === "rejected" &&
+        reportsResult.status === "rejected" &&
+        leavesResult.status === "rejected" &&
+        payrollsResult.status === "rejected";
+
+      if (allFailed) {
+        toast.error("Failed to load HR overview");
+      }
     } catch (error) {
       console.error("Failed to fetch HR dashboard data:", error);
       toast.error("Failed to load HR overview");
@@ -212,6 +287,37 @@ export default function HRDashboardPage() {
       highlight: false,
     },
   ];
+
+  if (!hrModuleActive) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="HR" subtitle={subtitle} />
+        <div className="flex-1 p-6">
+          <div className="max-w-xl mx-auto bg-card rounded-xl border border-border p-8 text-center shadow-sm">
+            <Users className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold text-foreground">HR & Payroll is not enabled</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              This organization has not activated the HR module yet. Enable it to manage employees,
+              attendance, leave, and payroll.
+            </p>
+            {canEnableHr ? (
+              <Button
+                className="mt-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                onClick={handleEnableHrModule}
+                disabled={enablingModule}
+              >
+                {enablingModule ? "Enabling..." : "Enable HR & Payroll"}
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-6">
+                Contact your organization admin to enable this module.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

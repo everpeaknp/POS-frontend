@@ -88,7 +88,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={handleOpen}
-        className="relative p-2 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
+        className="relative p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
@@ -100,9 +100,9 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-100 z-50 flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-900">Notifications</p>
+        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-popover rounded-lg shadow-lg border border-border z-50 flex flex-col">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">Notifications</p>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -117,23 +117,23 @@ export function NotificationBell() {
           <div className="overflow-y-auto flex-1">
             {loading && items.length === 0 ? (
               <div className="p-6 flex justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
               </div>
             ) : items.length === 0 ? (
-              <p className="p-6 text-sm text-gray-500 text-center">No notifications yet</p>
+              <p className="p-6 text-sm text-muted-foreground text-center">No notifications yet</p>
             ) : (
               items.map((n) => (
                 <button
                   key={n.id}
                   type="button"
                   onClick={() => markRead(n)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 border-l-4 ${
+                  className={`w-full text-left px-4 py-3 border-b border-border hover:bg-accent border-l-4 ${
                     levelColors[n.level] || levelColors.info
                   } ${n.is_read ? "opacity-70" : ""}`}
                 >
-                  <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
-                  <p className="text-[10px] text-gray-400 mt-1">
+                  <p className="text-sm font-medium text-foreground">{n.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">
                     {new Date(n.created_at).toLocaleString()}
                   </p>
                 </button>
@@ -141,10 +141,10 @@ export function NotificationBell() {
             )}
           </div>
 
-          <div className="px-4 py-2 border-t border-gray-100 text-center">
+          <div className="px-4 py-2 border-t border-border text-center">
             <Link
               href="/dashboard/construction"
-              className="text-xs text-gray-500 hover:text-[#22C55E]"
+              className="text-xs text-muted-foreground hover:text-[#22C55E]"
               onClick={() => setOpen(false)}
             >
               Budget alerts appear here from construction sites

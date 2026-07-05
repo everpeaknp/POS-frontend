@@ -30,26 +30,26 @@ export function DeleteConfirmDialog({
         aria-hidden
       />
       <div
-        className="fixed left-1/2 top-[40vh] -translate-x-1/2 z-50 bg-white rounded-xl shadow-xl border border-gray-100 p-6 w-full max-w-md"
+        className="fixed left-1/2 top-[40vh] -translate-x-1/2 z-50 bg-card rounded-xl shadow-xl border border-border p-6 w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-dialog-title"
       >
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-            <Trash2 className="h-5 w-5 text-red-600" />
+          <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
+            <Trash2 className="h-5 w-5 text-red-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 id="delete-dialog-title" className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 id="delete-dialog-title" className="text-lg font-semibold text-foreground mb-1">
               {title}
             </h3>
-            <p className="text-sm text-gray-600 mb-4">{description}</p>
+            <p className="text-sm text-muted-foreground mb-4">{description}</p>
             <div className="flex gap-3 justify-end">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onCancel}
-                className="border-gray-300 text-gray-700"
+                className="border-border text-foreground"
                 disabled={confirming}
               >
                 Cancel

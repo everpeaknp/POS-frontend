@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { authApi, User, LoginCredentials, RegisterData } from '@/lib/api/auth';
 import { tenantApi, type Tenant } from '@/lib/api/tenant';
+import { notifyAppearanceRefresh } from '@/lib/theme';
 
 interface AuthContextType {
   user: User | null;
@@ -78,7 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const userData = await authApi.getProfile();
       setUser(userData);
-      
+      notifyAppearanceRefresh();
+
       router.push('/erp');
     } catch (error) {
       console.error('Login failed:', error);

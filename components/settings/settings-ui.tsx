@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const settingsInputClass =
-  "w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 [color-scheme:light] transition-colors focus:outline-none focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] disabled:bg-gray-50 disabled:text-gray-600 disabled:cursor-not-allowed";
+  "w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed";
 
 export function SettingsPageContent({ children }: { children: React.ReactNode }) {
   return <div className="space-y-6">{children}</div>;
@@ -22,8 +22,8 @@ export function SettingsCard({
       className={cn(
         "rounded-xl border shadow-sm overflow-hidden",
         variant === "danger"
-          ? "bg-red-50/40 border-red-100"
-          : "bg-white border-gray-100",
+          ? "bg-red-50/40 border-red-100 dark:bg-red-950/30 dark:border-red-900/40"
+          : "bg-card border-border",
         className
       )}
     >
@@ -49,7 +49,7 @@ export function SettingsCardHeader({
     <div
       className={cn(
         "px-6 py-4 border-b flex items-center justify-between gap-4",
-        variant === "danger" ? "border-red-100" : "border-gray-100"
+        variant === "danger" ? "border-red-100 dark:border-red-900/40" : "border-border"
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -57,18 +57,18 @@ export function SettingsCardHeader({
           <div
             className={cn(
               "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-              variant === "danger" ? "bg-red-100" : "bg-[#22C55E]/10"
+              variant === "danger" ? "bg-red-100 dark:bg-red-900/40" : "bg-[#22C55E]/10"
             )}
           >
-            <Icon className={cn("h-4 w-4", variant === "danger" ? "text-red-600" : "text-[#22C55E]")} />
+            <Icon className={cn("h-4 w-4", variant === "danger" ? "text-red-600 dark:text-red-400" : "text-[#22C55E]")} />
           </div>
         )}
         <div className="min-w-0">
-          <h2 className={cn("text-sm font-semibold", variant === "danger" ? "text-red-900" : "text-gray-900")}>
+          <h2 className={cn("text-sm font-semibold", variant === "danger" ? "text-red-900 dark:text-red-200" : "text-foreground")}>
             {title}
           </h2>
           {description && (
-            <p className={cn("text-xs mt-0.5", variant === "danger" ? "text-red-700/80" : "text-gray-500")}>
+            <p className={cn("text-xs mt-0.5", variant === "danger" ? "text-red-700/80 dark:text-red-300/80" : "text-muted-foreground")}>
               {description}
             </p>
           )}
@@ -100,9 +100,9 @@ export function SettingsField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-foreground">{label}</label>
       {children}
-      {hint && <p className="text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function SettingsSwitch({
         onChange={onChange}
         disabled={disabled}
       />
-      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#22C55E] peer-disabled:opacity-50 peer-disabled:cursor-not-allowed" />
+      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#22C55E] peer-disabled:opacity-50 peer-disabled:cursor-not-allowed" />
     </label>
   );
 }
@@ -146,16 +146,16 @@ export function SettingsToggleRow({
   icon?: LucideIcon;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-50 last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3 border-b border-border/60 last:border-0">
       <div className="flex items-center gap-3 min-w-0">
         {Icon && (
-          <div className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg bg-gray-50 text-gray-400 shrink-0">
+          <div className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg bg-muted text-muted-foreground shrink-0">
             <Icon className="w-4 h-4" />
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900">{title}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         </div>
       </div>
       <SettingsSwitch checked={checked} onChange={onChange} disabled={disabled} />
@@ -171,9 +171,9 @@ export function SettingsNotice({
   variant?: "info" | "warning" | "success";
 }) {
   const styles = {
-    info: "bg-blue-50 border-blue-100 text-blue-900",
-    warning: "bg-amber-50 border-amber-100 text-amber-900",
-    success: "bg-emerald-50 border-emerald-100 text-emerald-900",
+    info: "bg-blue-50 border-blue-100 text-blue-900 dark:bg-blue-950/40 dark:border-blue-900/50 dark:text-blue-100",
+    warning: "bg-amber-50 border-amber-100 text-amber-900 dark:bg-amber-950/40 dark:border-amber-900/50 dark:text-amber-100",
+    success: "bg-emerald-50 border-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-100",
   };
 
   return (

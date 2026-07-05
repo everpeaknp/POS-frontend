@@ -10,8 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import apiClient from "@/lib/api/client";
 import { useAuth } from "@/lib/context/AuthContext";
 import { invitationApi, Invitation } from "@/lib/api/tenant";
-import { permissionsApi, PermissionsMatrix } from "@/lib/api/auth";
-import { getEmployees, Employee } from "@/lib/api/hr";
+import { permissionsApi, PermissionsMatrix, usersApi, EmployeeInviteOption } from "@/lib/api/auth";
 import toast from "react-hot-toast";
 
 interface User {
@@ -83,7 +82,7 @@ export default function UsersPage() {
   });
   const [errors, setErrors] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<EmployeeInviteOption[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [userForPermissions, setUserForPermissions] = useState<User | null>(null);
@@ -108,8 +107,13 @@ export default function UsersPage() {
     fetchPermissions();
     fetchUsers();
     fetchInvitations();
-    fetchEmployees();
   }, []);
+
+  useEffect(() => {
+    if (permissions && canManageUsers()) {
+      fetchEmployees();
+    }
+  }, [permissions, currentUser?.role]);
 
   const fetchPermissions = async () => {
     try {
@@ -153,15 +157,14 @@ export default function UsersPage() {
 
   const fetchEmployees = async () => {
     try {
-      console.log('Fetching employees from HR module...');
-      const response = await getEmployees();
-      console.log('Employees API Response:', response);
-      console.log('Employees Results:', response.results);
+      const response = await usersApi.getEmployeeInviteOptions();
       setEmployees(response.results || []);
-      console.log('Employees set in state:', response.results?.length || 0, 'employees');
-    } catch (error: any) {
-      console.error("Failed to fetch employees:", error);
-      // Don't show error - HR module might not be enabled
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status !== 403) {
+        console.error("Failed to fetch employee invite options:", error);
+      }
+      setEmployees([]);
     }
   };
 
@@ -189,16 +192,9 @@ export default function UsersPage() {
   }, [searchParams, permissions, handleInvite, router]);
 
   const handleEmployeeSelect = (employeeId: string) => {
-    console.log('=== Employee Selection Debug ===');
-    console.log('Selected Employee ID:', employeeId, 'Type:', typeof employeeId);
-    console.log('All Employees:', employees);
-    console.log('Employee IDs in array:', employees.map(e => ({ id: e.id, type: typeof e.id })));
-    
     setSelectedEmployee(employeeId);
-    
+
     if (!employeeId) {
-      // Clear form if no employee selected
-      console.log('Clearing form - no employee selected');
       setInviteData({
         invited_user_email: "",
         role: "viewer",
@@ -207,39 +203,18 @@ export default function UsersPage() {
       return;
     }
 
-    // Try to find employee - handle both string and number IDs
-    const employee = employees.find(e => String(e.id) === String(employeeId));
-    console.log('Found Employee:', employee);
-    
+    const employee = employees.find((e) => String(e.id) === String(employeeId));
+
     if (employee) {
-      // Map employee designation to appropriate role
       const suggestedRole = mapDesignationToRole(employee.designation);
-      console.log('Employee Designation:', employee.designation);
-      console.log('Suggested Role:', suggestedRole);
-      console.log('Employee Email:', employee.email);
-      
-      const newInviteData = {
+      setInviteData({
         invited_user_email: employee.email,
         role: suggestedRole,
         message: `Hi ${employee.name},\n\nYou are invited to join our organization as ${employee.designation}.\n\nBest regards`,
-      };
-      
-      console.log('Setting Invite Data:', newInviteData);
-      console.log('Current inviteData before update:', inviteData);
-      
-      setInviteData(newInviteData);
-      
-      // Add a small delay to check if state updated
-      setTimeout(() => {
-        console.log('InviteData after setState (should be updated):', newInviteData);
-      }, 100);
-      
-      // Visual confirmation
+      });
       toast.success(`Auto-filled: ${employee.name} (${suggestedRole})`);
     } else {
-      console.log('ERROR: Employee not found in list');
-      console.log('Tried to find ID:', employeeId, 'in employees:', employees.map(e => e.id));
-      toast.error('Employee not found - check console for details');
+      toast.error("Employee not found");
     }
   };
 

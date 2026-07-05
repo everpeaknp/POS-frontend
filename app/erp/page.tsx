@@ -89,7 +89,7 @@ export default function ErpPage() {
 
   if (!user || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F3F4F6]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F3F4F6] dark:bg-background">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#22C55E] border-t-transparent" />
       </div>
     );
@@ -140,9 +140,9 @@ export default function ErpPage() {
     };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col">
+    <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
       {/* Top bar */}
-      <header className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
+      <header className="bg-white dark:bg-card border-b border-gray-100 dark:border-border shadow-sm sticky top-0 z-20">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <TiggLogo size="md" />
           <UserMenuDropdown detail="email" />
@@ -160,18 +160,18 @@ export default function ErpPage() {
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{pageMeta.title}</h1>
-              <p className="text-sm text-gray-500 mt-1">{pageMeta.subtitle}</p>
+              <h1 className="text-xl font-bold text-foreground">{pageMeta.title}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{pageMeta.subtitle}</p>
             </div>
             {activeTab === "organizations" && (
               <div className="relative w-full sm:w-72 shrink-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search organizations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 border-gray-200 bg-white focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/20"
+                  className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/20"
                   disabled={hasNoTenants}
                 />
               </div>
@@ -181,7 +181,7 @@ export default function ErpPage() {
           {activeTab === "organizations" && (
             <>
               {hasNoTenants ? (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={Building2}
                     title="No organization yet"
@@ -196,7 +196,7 @@ export default function ErpPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={SearchX}
                     title="No organizations found"
@@ -209,7 +209,7 @@ export default function ErpPage() {
           )}
 
           {activeTab === "requests" && (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
               <EmptyState
                 icon={ClipboardList}
                 title="No pending requests"
@@ -221,7 +221,7 @@ export default function ErpPage() {
 
           {activeTab === "invitation" && (
             invitations.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                 <EmptyState
                   icon={Mail}
                   title="No invitations"
@@ -234,7 +234,7 @@ export default function ErpPage() {
                 {invitations.map((invitation) => (
                   <div
                     key={invitation.id}
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6 hover:border-green-100 hover:shadow-md transition-all"
+                    className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-5 sm:p-6 hover:border-[#22C55E]/30 hover:shadow-md transition-all"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -243,34 +243,34 @@ export default function ErpPage() {
                             {invitation.tenant_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                            <h3 className="text-base font-semibold text-foreground truncate">
                               {invitation.tenant_name}
                             </h3>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               Invited by {invitation.invited_by_name}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <span className="text-gray-500">Role:</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-[#16A34A] capitalize">
+                          <span className="text-muted-foreground">Role:</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#22C55E]/15 text-[#22C55E] capitalize">
                             {invitation.role}
                           </span>
                           {invitation.is_expired && (
-                            <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded-full text-xs font-medium">
+                            <span className="px-2 py-0.5 bg-red-500/15 text-red-500 rounded-full text-xs font-medium">
                               Expired
                             </span>
                           )}
                         </div>
 
                         {invitation.message && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                            <p className="text-sm text-gray-700">{invitation.message}</p>
+                          <div className="mt-3 p-3 bg-muted rounded-lg border border-border">
+                            <p className="text-sm text-foreground">{invitation.message}</p>
                           </div>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 mt-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-3">
                           <span>Sent {new Date(invitation.created_at).toLocaleDateString()}</span>
                           <span>Expires {new Date(invitation.expires_at).toLocaleDateString()}</span>
                         </div>
@@ -288,7 +288,7 @@ export default function ErpPage() {
                           <Button
                             variant="outline"
                             onClick={() => handleDeclineInvitation(invitation.id)}
-                            className="h-9 gap-1.5 border-gray-200"
+                            className="h-9 gap-1.5 border-border"
                           >
                             <X className="h-4 w-4" />
                             Decline

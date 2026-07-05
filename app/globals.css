@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -81,6 +81,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --autofill-bg: #ffffff;
+  --autofill-text: #111827;
+  --surface-muted: #f3f4f6;
 }
 
 .dark {
@@ -115,6 +118,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --autofill-bg: oklch(0.205 0 0);
+  --autofill-text: oklch(0.985 0 0);
+  --surface-muted: oklch(0.18 0 0);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -161,7 +168,20 @@
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"] {
-    color-scheme: light;
+    color-scheme: light dark;
+  }
+
+  html[data-reduce-motion="true"] *,
+  html[data-reduce-motion="true"] *::before,
+  html[data-reduce-motion="true"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html[data-compact="true"] {
+    font-size: 14px;
   }
 }
 

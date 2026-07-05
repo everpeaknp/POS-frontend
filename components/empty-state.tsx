@@ -47,12 +47,12 @@ export function EmptyState({
 
   return (
     <div className="flex flex-col items-center justify-center py-28 gap-5">
-      <div className="w-24 h-24 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center">
-        <Icon className="h-12 w-12 text-green-600" />
+      <div className="w-24 h-24 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center">
+        <Icon className="h-12 w-12 text-[#22C55E]" />
       </div>
       <div className="text-center">
-        <p className="text-gray-800 text-base font-semibold">{title}</p>
-        {displayDescription && <p className="text-gray-400 text-sm mt-1">{displayDescription}</p>}
+        <p className="text-foreground text-base font-semibold">{title}</p>
+        {displayDescription && <p className="text-muted-foreground text-sm mt-1">{displayDescription}</p>}
       </div>
       {shouldShowButton && (
         <Button 

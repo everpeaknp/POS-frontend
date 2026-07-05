@@ -120,6 +120,20 @@ export interface PermissionsMatrix {
   Viewer?: Record<string, boolean>;
 }
 
+export interface EmployeeInviteOption {
+  id: string;
+  name: string;
+  email: string;
+  designation: string;
+}
+
+export const usersApi = {
+  getEmployeeInviteOptions: async (): Promise<{ results: EmployeeInviteOption[] }> => {
+    const response = await apiClient.get('/auth/users/employee-invite-options/');
+    return response.data;
+  },
+};
+
 export const permissionsApi = {
   // Get full permissions matrix (admin/manager settings only)
   getPermissions: async (): Promise<PermissionsMatrix> => {

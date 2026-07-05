@@ -97,21 +97,21 @@ export default function ProfilePage() {
       />
 
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
+        <div className="bg-card rounded-xl border border-border shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
           {user && (
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pb-2 border-b border-border">
               <span>
                 Username:{" "}
-                <span className="font-medium text-gray-700">{user.username}</span>
+                <span className="font-medium text-foreground">{user.username}</span>
               </span>
               <span>
                 Role:{" "}
-                <span className="font-medium text-gray-700 capitalize">{user.role}</span>
+                <span className="font-medium text-foreground capitalize">{user.role}</span>
               </span>
               {user.tenant && (
                 <span>
                   Organization:{" "}
-                  <span className="font-medium text-gray-700">{user.tenant.name}</span>
+                  <span className="font-medium text-foreground">{user.tenant.name}</span>
                 </span>
               )}
             </div>
@@ -119,14 +119,14 @@ export default function ProfilePage() {
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+              <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2 mb-4">
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="First name" required>
                     <Input
-                      className="h-9 text-sm border-gray-200"
+                      className="h-9 text-sm border-border"
                       value={formData.first_name}
                       onChange={(e) => updateField("first_name", e.target.value)}
                       disabled={isLoading}
@@ -135,7 +135,7 @@ export default function ProfilePage() {
 
                   <Field label="Last name" required>
                     <Input
-                      className="h-9 text-sm border-gray-200"
+                      className="h-9 text-sm border-border"
                       value={formData.last_name}
                       onChange={(e) => updateField("last_name", e.target.value)}
                       disabled={isLoading}
@@ -146,7 +146,7 @@ export default function ProfilePage() {
                     <div className="relative">
                       <Input
                         type="email"
-                        className="h-9 text-sm border-gray-200 bg-gray-50 text-gray-600 pr-10"
+                        className="h-9 text-sm border-border bg-muted text-muted-foreground pr-10"
                         value={formData.email}
                         readOnly
                         disabled
@@ -158,7 +158,7 @@ export default function ProfilePage() {
                   <Field label="Phone number">
                     <Input
                       type="tel"
-                      className="h-9 text-sm border-gray-200"
+                      className="h-9 text-sm border-border"
                       placeholder="+977 98XXXXXXXX"
                       value={formData.phone}
                       onChange={(e) => updateField("phone", e.target.value)}
@@ -178,7 +178,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Your email is verified. To change it, go to{" "}
               <Link href="/settings/security" className="font-medium text-[#22C55E] hover:underline">
                 Security settings
@@ -186,7 +186,7 @@ export default function ProfilePage() {
               .
             </div>
 
-            <div className="pt-2 border-t border-gray-100">
+            <div className="pt-2 border-t border-border">
               <Button
                 type="submit"
                 disabled={isLoading}

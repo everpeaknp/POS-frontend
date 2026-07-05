@@ -14,12 +14,13 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { useApi } from "@/lib/hooks/useApi";
 import { salesDashboardAPI } from "@/lib/api/sales";
+import { useAppearance } from "@/lib/context/AppearanceContext";
 
 const statCards = [
-  { key: "revenue", label: "Total Revenue", icon: DollarSign, color: "#22C55E", bg: "#F0FDF4" },
-  { key: "orders", label: "Total Orders", icon: ShoppingBag, color: "#3B82F6", bg: "#EFF6FF" },
-  { key: "customers", label: "Total Customers", icon: Users, color: "#8B5CF6", bg: "#F5F3FF" },
-  { key: "products", label: "Total Products", icon: Package, color: "#F59E0B", bg: "#FFFBEB" },
+  { key: "revenue", label: "Total Revenue", icon: DollarSign, iconClass: "text-emerald-500", wrapClass: "bg-emerald-500/15" },
+  { key: "orders", label: "Total Orders", icon: ShoppingBag, iconClass: "text-blue-500", wrapClass: "bg-blue-500/15" },
+  { key: "customers", label: "Total Customers", icon: Users, iconClass: "text-violet-500", wrapClass: "bg-violet-500/15" },
+  { key: "products", label: "Total Products", icon: Package, iconClass: "text-amber-500", wrapClass: "bg-amber-500/15" },
 ];
 
 const statusStyle: Record<string, string> = {
@@ -35,6 +36,7 @@ type Period = "today" | "week" | "month" | "year";
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<Period>("month");
+  const { isDark } = useAppearance();
   
   const { data, loading, error, refetch } = useApi(
     () => salesDashboardAPI.get(period),
@@ -87,7 +89,7 @@ export default function DashboardPage() {
       <div className="flex-1 p-6 space-y-6">
         {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {statCards.map(({ key, label, icon: Icon, color, bg }) => {
+          {statCards.map(({ key, label, icon: Icon, iconClass, wrapClass }) => {
             const value = key === "revenue" ? stats.revenue : 
                          key === "orders" ? stats.orders.toLocaleString() :
                          key === "customers" ? stats.customers.toLocaleString() :
@@ -98,13 +100,13 @@ export default function DashboardPage() {
                           stats.productsChange;
             
             return (
-              <div key={key} className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
-                  <Icon className="h-6 w-6" style={{ color }} />
+              <div key={key} className="bg-card rounded-xl border border-border p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${wrapClass}`}>
+                  <Icon className={`h-6 w-6 ${iconClass}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-2xl font-bold text-gray-900 truncate">{value}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                  <p className="text-2xl font-bold text-foreground truncate">{value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                   <div className={`inline-flex items-center gap-0.5 text-xs font-medium mt-1 ${change >= 0 ? "text-green-600" : "text-red-500"}`}>
                     {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                     {Math.abs(change)}% vs last period
@@ -116,19 +118,19 @@ export default function DashboardPage() {
         </div>
 
         {/* Revenue chart */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Revenue Overview</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Track your earnings over time</p>
+              <h2 className="text-base font-semibold text-foreground">Revenue Overview</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Track your earnings over time</p>
             </div>
-            <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-0.5">
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5">
               {(["today", "week", "month", "year"] as Period[]).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
-                    period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    period === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {p}
@@ -144,16 +146,22 @@ export default function DashboardPage() {
                   <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis dataKey="time" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "oklch(1 0 0 / 8%)" : "#F3F4F6"} />
+              <XAxis dataKey="time" tick={{ fontSize: 11, fill: isDark ? "#9CA3AF" : "#9CA3AF" }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                tick={{ fontSize: 11, fill: isDark ? "#9CA3AF" : "#9CA3AF" }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
               />
               <Tooltip
-                contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "12px" }}
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: isDark ? "1px solid oklch(1 0 0 / 12%)" : "1px solid #E5E7EB",
+                  background: isDark ? "oklch(0.205 0 0)" : "#ffffff",
+                  color: isDark ? "oklch(0.985 0 0)" : "#111827",
+                  fontSize: "12px",
+                }}
                 formatter={(v) => [`Rs. ${Number(v).toLocaleString()}`, "Revenue"] as [string, string]}
               />
               <Area
@@ -172,24 +180,24 @@ export default function DashboardPage() {
         {/* Orders + Products */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Orders */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Recent Orders</h2>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-foreground mb-4">Recent Orders</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left text-xs font-medium text-gray-400 pb-2">Order ID</th>
-                    <th className="text-left text-xs font-medium text-gray-400 pb-2">Customer</th>
-                    <th className="text-left text-xs font-medium text-gray-400 pb-2">Amount</th>
-                    <th className="text-left text-xs font-medium text-gray-400 pb-2">Status</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-2">Order ID</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-2">Customer</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-2">Amount</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-2">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {recentOrders.map((o) => (
-                    <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-2.5 font-mono text-xs text-gray-500">{o.id}</td>
-                      <td className="py-2.5 font-medium text-gray-800">{o.customer}</td>
-                      <td className="py-2.5 text-gray-700">{o.amount}</td>
+                    <tr key={o.id} className="hover:bg-accent/50 transition-colors">
+                      <td className="py-2.5 font-mono text-xs text-muted-foreground">{o.id}</td>
+                      <td className="py-2.5 font-medium text-foreground">{o.customer}</td>
+                      <td className="py-2.5 text-foreground">{o.amount}</td>
                       <td className="py-2.5">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusStyle[o.status]}`}>
                           {o.status}
@@ -203,16 +211,16 @@ export default function DashboardPage() {
           </div>
 
           {/* Top Products */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Top Products</h2>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-foreground mb-4">Top Products</h2>
             <div className="space-y-4">
               {topProducts.map((p) => (
                 <div key={p.name}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-medium text-gray-700">{p.name}</span>
-                    <span className="text-xs text-gray-400">{p.sales} sold</span>
+                    <span className="text-sm font-medium text-foreground">{p.name}</span>
+                    <span className="text-xs text-muted-foreground">{p.sales} sold</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-[#22C55E] transition-all"
                       style={{ width: `${(p.sales / p.max) * 100}%` }}
@@ -227,8 +235,8 @@ export default function DashboardPage() {
         {/* Customers + Inventory summary */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Customers */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Recent Customers</h2>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-foreground mb-4">Recent Customers</h2>
             <div className="space-y-3">
               {recentCustomers.map((c, index) => (
                 <div key={`${c.name}-${c.joined}-${index}`} className="flex items-center gap-3">
@@ -236,24 +244,24 @@ export default function DashboardPage() {
                     {c.initials}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-800 truncate">{c.name}</p>
-                    <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                   </div>
-                  <span className="text-xs text-gray-400 shrink-0">{c.joined}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{c.joined}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Quick stats */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Inventory Summary</h2>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-foreground mb-4">Inventory Summary</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "In Stock", value: inventorySummary.inStock.toString(), color: "bg-green-50 text-green-700 border-green-100" },
-                { label: "Low Stock", value: inventorySummary.lowStock.toString(), color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                { label: "Out of Stock", value: inventorySummary.outOfStock.toString(), color: "bg-red-50 text-red-700 border-red-100" },
-                { label: "Total SKUs", value: inventorySummary.totalSKUs.toString(), color: "bg-blue-50 text-blue-700 border-blue-100" },
+                { label: "In Stock", value: inventorySummary.inStock.toString(), color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/20" },
+                { label: "Low Stock", value: inventorySummary.lowStock.toString(), color: "bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/20" },
+                { label: "Out of Stock", value: inventorySummary.outOfStock.toString(), color: "bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/20" },
+                { label: "Total SKUs", value: inventorySummary.totalSKUs.toString(), color: "bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/20" },
               ].map((item) => (
                 <div key={item.label} className={`rounded-xl border p-4 ${item.color}`}>
                   <p className="text-2xl font-bold">{item.value}</p>

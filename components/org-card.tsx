@@ -104,9 +104,9 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-green-100 transition-all">
+    <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-[#22C55E]/30 transition-all">
       <div className="flex items-start justify-between gap-2">
-        <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-lg font-bold border border-green-100 overflow-hidden shrink-0">
+        <div className="w-12 h-12 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-lg font-bold border border-[#22C55E]/20 overflow-hidden shrink-0">
           {org.logo ? (
             <img src={org.logo} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -115,7 +115,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]/30"
+            className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]/30"
             aria-label="Options"
           >
             <MoreVertical className="h-4 w-4" />
@@ -139,18 +139,18 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
         </DropdownMenu>
       </div>
       <div>
-        <h3 className="font-semibold text-gray-900 text-base">{org.workspace_name || org.name}</h3>
-        <p className="text-xs text-gray-400 mt-0.5 font-mono">{org.subdomain}</p>
+        <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
+        <p className="text-xs text-muted-foreground mt-0.5 font-mono">{org.subdomain}</p>
         {org.user_role && (
-          <p className="text-xs text-gray-500 capitalize mt-1">
-            Role: <span className="font-medium text-gray-700">{org.user_role}</span>
+          <p className="text-xs text-muted-foreground capitalize mt-1">
+            Role: <span className="font-medium text-foreground">{org.user_role}</span>
           </p>
         )}
       </div>
       {org.status === "trial" && org.trialDaysLeft > 0 && (
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
           <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-          <span className="text-xs text-amber-700 font-medium">Trial ends in {org.trialDaysLeft} days</span>
+          <span className="text-xs text-amber-600 dark:text-amber-300 font-medium">Trial ends in {org.trialDaysLeft} days</span>
         </div>
       )}
       <div className="flex flex-col sm:flex-row gap-2 pt-1 mt-auto">
@@ -164,7 +164,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-9 gap-1.5"
+              className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-[#22C55E]/10 text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenPOS}
               disabled={isOpeningPos || isOpening}
             >
@@ -172,8 +172,8 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
             </Button>
           </>
         ) : (
-          <div className="flex-1 text-center py-2 px-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-xs text-gray-500">Accept invitation to access this organization</p>
+          <div className="flex-1 text-center py-2 px-3 bg-muted border border-border rounded-lg">
+            <p className="text-xs text-muted-foreground">Accept invitation to access this organization</p>
           </div>
         )}
       </div>

@@ -1,80 +1,123 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { userApi } from "@/lib/api/user";
 import type { AppearancePreferences } from "@/lib/types/user";
+import {
+  AUTH_LOGIN_EVENT,
+  applyAppearancePreferences,
+  applyCachedAppearancePreferences,
+  cacheAppearancePreferences,
+  defaultAppearancePreferences,
+  resolveIsDark,
+} from "@/lib/theme";
 
 type AppearanceContextValue = {
-  preferences: AppearancePreferences | null;
+  preferences: AppearancePreferences;
   loading: boolean;
+  isDark: boolean;
   refresh: () => Promise<void>;
   updatePreferences: (data: Partial<AppearancePreferences>) => Promise<void>;
 };
 
-const defaultPreferences: AppearancePreferences = {
-  theme: "light",
-  language: "en-US",
-  timezone: "UTC",
-  date_calendar_system: "AD",
-  compact_mode: false,
-  smooth_animations: true,
-};
-
 const AppearanceContext = createContext<AppearanceContextValue | undefined>(undefined);
 
-function applyTheme(theme: AppearancePreferences["theme"]) {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const isDark = theme === "dark" || (theme === "system" && prefersDark);
-  root.classList.toggle("dark", isDark);
-  root.dataset.compact = "false";
-}
-
-function applyCompactMode(compact: boolean) {
-  if (typeof document === "undefined") return;
-  document.documentElement.dataset.compact = compact ? "true" : "false";
-}
-
 export function AppearanceProvider({ children }: { children: React.ReactNode }) {
-  const [preferences, setPreferences] = useState<AppearancePreferences | null>(null);
+  const [preferences, setPreferences] = useState<AppearancePreferences>(defaultAppearancePreferences);
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
-  const refresh = async () => {
-    try {
-      const prefs = await userApi.getAppearancePreferences();
-      setPreferences(prefs);
-      applyTheme(prefs.theme);
-      applyCompactMode(prefs.compact_mode);
-    } catch {
-      setPreferences(defaultPreferences);
-      applyTheme(defaultPreferences.theme);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const syncResolvedTheme = useCallback((prefs: AppearancePreferences) => {
+    applyAppearancePreferences(prefs);
+    setIsDark(resolveIsDark(prefs.theme));
+  }, []);
 
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     const token = localStorage.getItem("access_token");
     if (!token) {
+      applyCachedAppearancePreferences();
+      setPreferences(readCachedOrDefault());
+      setIsDark(resolveIsDark(readCachedOrDefault().theme));
       setLoading(false);
       return;
     }
+
+    try {
+      const prefs = await userApi.getAppearancePreferences();
+      setPreferences(prefs);
+      cacheAppearancePreferences(prefs);
+      syncResolvedTheme(prefs);
+    } catch {
+      const cached = readCachedOrDefault();
+      setPreferences(cached);
+      syncResolvedTheme(cached);
+    } finally {
+      setLoading(false);
+    }
+  }, [syncResolvedTheme]);
+
+  useEffect(() => {
+    applyCachedAppearancePreferences();
+    setIsDark(resolveIsDark(readCachedOrDefault().theme));
     refresh();
-  }, []);
+  }, [refresh]);
+
+  useEffect(() => {
+    const onAuthLogin = () => {
+      void refresh();
+    };
+    window.addEventListener(AUTH_LOGIN_EVENT, onAuthLogin);
+    return () => window.removeEventListener(AUTH_LOGIN_EVENT, onAuthLogin);
+  }, [refresh]);
+
+  useEffect(() => {
+    if (preferences.theme !== "system") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => {
+      syncResolvedTheme(preferences);
+    };
+
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [preferences, syncResolvedTheme]);
 
   const updatePreferences = async (data: Partial<AppearancePreferences>) => {
-    const updated = await userApi.updateAppearancePreferences(data);
-    setPreferences(updated);
-    if (data.theme !== undefined) applyTheme(updated.theme);
-    if (data.compact_mode !== undefined) applyCompactMode(updated.compact_mode);
+    const previous = preferences;
+    const optimistic = { ...preferences, ...data };
+    setPreferences(optimistic);
+    cacheAppearancePreferences(optimistic);
+    syncResolvedTheme(optimistic);
+
+    try {
+      const updated = await userApi.updateAppearancePreferences(data);
+      setPreferences(updated);
+      cacheAppearancePreferences(updated);
+      syncResolvedTheme(updated);
+    } catch (error) {
+      setPreferences(previous);
+      cacheAppearancePreferences(previous);
+      syncResolvedTheme(previous);
+      throw error;
+    }
   };
 
   return (
-    <AppearanceContext.Provider value={{ preferences, loading, refresh, updatePreferences }}>
+    <AppearanceContext.Provider value={{ preferences, loading, isDark, refresh, updatePreferences }}>
       {children}
     </AppearanceContext.Provider>
   );
+}
+
+function readCachedOrDefault(): AppearancePreferences {
+  if (typeof window === "undefined") return defaultAppearancePreferences;
+  try {
+    const raw = localStorage.getItem("khata-appearance");
+    if (!raw) return defaultAppearancePreferences;
+    return { ...defaultAppearancePreferences, ...JSON.parse(raw) };
+  } catch {
+    return defaultAppearancePreferences;
+  }
 }
 
 export function useAppearance() {
