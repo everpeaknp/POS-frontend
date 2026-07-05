@@ -97,7 +97,24 @@ export default function OrganizationModulesPage() {
   }
 
   if (!tenantMeta?.slug) {
-    return null;
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Modules" subtitle="Choose which Khata modules your organization uses" />
+        <div className="flex-1 p-6">
+          <div className="rounded-xl border border-gray-100 dark:border-border bg-white dark:bg-card p-10 text-center">
+            <p className="text-sm text-gray-600 dark:text-muted-foreground">
+              No organization selected. Open a Khata from ERP to manage modules.
+            </p>
+            <Link
+              href="/erp"
+              className="inline-flex mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A]"
+            >
+              Go to ERP
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

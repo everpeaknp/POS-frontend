@@ -119,26 +119,48 @@ export default function HardwareReportsPage() {
 
     const data = reportData as Record<string, unknown>;
 
-    if (activeReport === "sales" && data.top_products) {
-      const products = data.top_products as Array<{ name: string; revenue: number; quantity: number }>;
+    if (activeReport === "sales") {
+      const customers = (data.top_customers as Array<{
+        customer_name: string;
+        total_amount: number;
+        total_orders?: number;
+      }>) ?? [];
       return (
-        <ul className="divide-y divide-gray-100 dark:divide-border">
-          {products.slice(0, 8).map((p, i) => (
-            <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
-              <span>{p.name}</span>
-              <span className="font-medium tabular-nums">{formatNPR(p.revenue)}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Sales</p>
+              <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">
+                {formatNPR(Number(data.total_sales ?? 0))}
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Orders</p>
+              <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">
+                {String(data.total_orders ?? "—")}
+              </p>
+            </div>
+          </div>
+          {customers.length > 0 && (
+            <ul className="divide-y divide-gray-100 dark:divide-border">
+              {customers.slice(0, 8).map((c, i) => (
+                <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
+                  <span>{c.customer_name}</span>
+                  <span className="font-medium tabular-nums">{formatNPR(Number(c.total_amount))}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       );
     }
 
-    if (activeReport === "inventory" && data.total_value !== undefined) {
+    if (activeReport === "inventory" && data.total_inventory_value !== undefined) {
       return (
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
             <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Value</p>
-            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(data.total_value))}</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(data.total_inventory_value))}</p>
           </div>
           <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
             <p className="text-xs text-gray-500 dark:text-muted-foreground">Products</p>
@@ -149,6 +171,8 @@ export default function HardwareReportsPage() {
     }
 
     if (activeReport === "credit") {
+      const debtors =
+        (data.top_debtors as Array<{ customer_name: string; outstanding_balance: number }>) ?? [];
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -160,15 +184,19 @@ export default function HardwareReportsPage() {
             </div>
             <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
               <p className="text-xs text-gray-500 dark:text-muted-foreground">Customers with Balance</p>
-              <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(data.customers_with_balance ?? 0)}</p>
+              <p className="text-xl font-medium text-gray-900 dark:text-foreground">
+                {String(data.total_customers_with_credit ?? 0)}
+              </p>
             </div>
           </div>
-          {Array.isArray(data.top_debtors) && (
+          {debtors.length > 0 && (
             <ul className="divide-y divide-gray-100 dark:divide-border">
-              {(data.top_debtors as Array<{ name: string; balance: number }>).slice(0, 5).map((d, i) => (
+              {debtors.slice(0, 5).map((d, i) => (
                 <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
-                  <span>{d.name}</span>
-                  <span className="font-medium text-red-600 dark:text-red-400 tabular-nums">{formatNPR(d.balance)}</span>
+                  <span>{d.customer_name}</span>
+                  <span className="font-medium text-red-600 dark:text-red-400 tabular-nums">
+                    {formatNPR(Number(d.outstanding_balance))}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -177,31 +205,38 @@ export default function HardwareReportsPage() {
       );
     }
 
-    if (activeReport === "products" && Array.isArray(data)) {
+    if (activeReport === "products") {
+      const products =
+        (data as { products?: Array<{ product_name?: string; revenue?: number }> }).products ?? [];
+      if (products.length === 0) {
+        return <p className="text-gray-500 dark:text-muted-foreground py-8 text-center">No product sales in this period</p>;
+      }
       return (
         <ul className="divide-y divide-gray-100 dark:divide-border">
-          {(data as Array<{ product_name?: string; name?: string; total_sales?: number; revenue?: number }>)
-            .slice(0, 10)
-            .map((p, i) => (
-              <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
-                <span>{p.product_name || p.name}</span>
-                <span className="font-medium tabular-nums">{formatNPR(Number(p.total_sales ?? p.revenue ?? 0))}</span>
-              </li>
-            ))}
+          {products.slice(0, 10).map((p, i) => (
+            <li key={i} className="flex justify-between py-2 text-sm text-gray-900 dark:text-foreground">
+              <span>{p.product_name}</span>
+              <span className="font-medium tabular-nums">{formatNPR(Number(p.revenue ?? 0))}</span>
+            </li>
+          ))}
         </ul>
       );
     }
 
-    if (activeReport === "payments" && data.total_sales !== undefined) {
+    if (activeReport === "payments") {
+      const summary = (data as { summary?: { total_sales?: number; total_orders?: number } }).summary;
+      if (!summary) {
+        return <p className="text-gray-500 dark:text-muted-foreground py-8 text-center">No payment data available</p>;
+      }
       return (
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
             <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Sales</p>
-            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(data.total_sales))}</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums">{formatNPR(Number(summary.total_sales ?? 0))}</p>
           </div>
           <div className="p-4 bg-gray-50 dark:bg-muted/30 rounded-lg border border-gray-100 dark:border-border">
             <p className="text-xs text-gray-500 dark:text-muted-foreground">Orders</p>
-            <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(data.total_orders ?? "—")}</p>
+            <p className="text-xl font-medium text-gray-900 dark:text-foreground">{String(summary.total_orders ?? "—")}</p>
           </div>
         </div>
       );

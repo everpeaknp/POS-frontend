@@ -149,9 +149,8 @@ export default function HardwareDashboardPage() {
       const lowStock = Array.isArray(lowStockResponse.data) ? lowStockResponse.data : [];
 
       const bulkPricingResponse = await inventoryApi.bulkPricing.list();
-      const bulkPricing = Array.isArray(bulkPricingResponse.data)
-        ? bulkPricingResponse.data
-        : [];
+      const bulkData = bulkPricingResponse.data;
+      const bulkPricing = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
 
       setStats({
         totalProducts: products.length,

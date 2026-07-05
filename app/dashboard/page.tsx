@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<UnifiedDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { isDark } = useAppearance();
   const { user } = useAuth();
 
@@ -34,11 +35,13 @@ export default function DashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const dashboardData = await reportsAPI.mainDashboard({ period });
       setData(dashboardData);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      setLoadError("Could not load dashboard data. Please try again.");
       setData(createEmptyUnifiedDashboard(period));
     } finally {
       setLoading(false);
@@ -87,6 +90,18 @@ export default function DashboardPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader title="Dashboard" subtitle={subtitle} />
       <div className="flex-1 p-6 space-y-8">
+        {loadError && (
+          <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 dark:border-amber-500/20 dark:bg-amber-500/5 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3">
+            <span>{loadError}</span>
+            <button
+              type="button"
+              onClick={() => loadDashboard()}
+              className="text-xs font-medium text-[#22C55E] hover:text-[#16A34A] shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         {data.modules.length === 0 ? (
           <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-10 text-center shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-foreground">

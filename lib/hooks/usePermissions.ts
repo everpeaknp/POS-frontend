@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { permissionsApi, PermissionsMatrix } from '@/lib/api/auth';
+import { isModuleActive } from '@/lib/modules/catalog';
 
 export interface PermissionCheck {
   module: string;
@@ -58,11 +59,7 @@ export function usePermissions() {
    */
   const hasModuleAccess = (module: string): boolean => {
     if (!user?.tenant) return false;
-
-    const normalizedModule = module.toLowerCase();
-    const activeModules = user.tenant.active_modules || [];
-
-    return activeModules.some(m => m.toLowerCase() === normalizedModule);
+    return isModuleActive(user.tenant.active_modules, module.toLowerCase());
   };
 
   const getRoleKey = (): string | null => {
@@ -70,43 +67,72 @@ export function usePermissions() {
     return user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
   };
 
-  const hasPermission = (module: string, action: string): boolean => {
-    if (!user?.role) return false;
-    if (!hasModuleAccess(module)) return false;
+  const toMatrixModuleKey = (module: string): string => {
+    const lowerModule = module.toLowerCase();
+    if (lowerModule === 'pos') return 'POS';
+    if (lowerModule === 'hr') return 'HR';
+    return module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
+  };
 
-    const roleKey = getRoleKey();
-    if (!roleKey) return false;
-
-    // Use profile module flags as fallback when matrix is unavailable
-    if (!permissions || !(roleKey in permissions)) {
-      const moduleKey = module.toLowerCase() as keyof NonNullable<typeof user.permissions>['modules'];
-      const hasMod = user.permissions?.modules?.[moduleKey];
-      if (!hasMod) return false;
+  const profileModuleAllowed = (module: string, action: string): boolean => {
+    if (!user) return false;
+    const moduleKey = module.toLowerCase() as keyof NonNullable<typeof user.permissions>['modules'];
+    const hasMod = user.permissions?.modules?.[moduleKey];
+    if (hasMod) {
       if (action === 'View') return true;
       if (user.role === 'admin') return true;
       if (user.role === 'viewer') return false;
       return user.permissions?.can_edit_data ?? false;
     }
+    // Core / enabled modules for admins when profile flags are incomplete
+    if (user.role === 'admin' && hasModuleAccess(module)) {
+      return true;
+    }
+    return hasModuleAccess(module) && action === 'View';
+  };
 
-    let moduleKey: string;
-    const lowerModule = module.toLowerCase();
-    if (lowerModule === 'pos') {
-      moduleKey = 'POS';
-    } else if (lowerModule === 'hr') {
-      moduleKey = 'HR';
-    } else {
-      moduleKey = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
+  const getRolePermissions = (): Record<string, boolean> | null => {
+    if (!permissions) return null;
+
+    const roleKey = getRoleKey();
+    if (roleKey && permissions[roleKey as keyof PermissionsMatrix]) {
+      return permissions[roleKey as keyof PermissionsMatrix] ?? null;
     }
 
-    const rolePermissions = permissions[roleKey as keyof PermissionsMatrix];
-    if (!rolePermissions) return false;
+    // /auth/permissions/me/ returns a single-role slice — use whichever role is present
+    const entries = Object.values(permissions).filter(
+      (value): value is Record<string, boolean> =>
+        Boolean(value) && typeof value === 'object'
+    );
+    return entries[0] ?? null;
+  };
 
-    const permissionKey = `${moduleKey}-${action}`;
-    return rolePermissions[permissionKey] === true;
+  const hasPermission = (module: string, action: string): boolean => {
+    if (!user?.role) return false;
+    if (!hasModuleAccess(module)) return false;
+
+    if (user.role === 'admin') {
+      return true;
+    }
+
+    const rolePermissions = getRolePermissions();
+    if (!rolePermissions) {
+      return profileModuleAllowed(module, action);
+    }
+
+    const permissionKey = `${toMatrixModuleKey(module)}-${action}`;
+    const allowed = rolePermissions[permissionKey];
+    if (allowed === true) return true;
+    if (allowed === false) return false;
+
+    return profileModuleAllowed(module, action);
   };
 
   const canView = (module: string) => {
     if (!hasModuleAccess(module)) return false;
+    if (loading) {
+      return profileModuleAllowed(module, 'View');
+    }
     return hasPermission(module, 'View');
   };
 

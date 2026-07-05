@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 const publicRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password'];
 
 // Routes that require authentication
-const protectedRoutes = ['/dashboard', '/erp'];
+const protectedRoutes = ['/dashboard', '/erp', '/settings'];
 
 // Module-based route protection mapping
 const moduleRoutes: Record<string, string> = {

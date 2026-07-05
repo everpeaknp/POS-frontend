@@ -8,7 +8,7 @@ import { usePermissions } from '@/lib/hooks/usePermissions';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'admin' | 'manager' | 'supervisor' | 'accountant' | 'viewer';
-  requiredModule?: 'sales' | 'purchase' | 'inventory' | 'construction' | 'accounting' | 'reports' | 'pos' | 'hr';
+  requiredModule?: 'sales' | 'purchase' | 'inventory' | 'construction' | 'accounting' | 'reports' | 'pos' | 'hr' | 'hardware' | 'settings' | 'dashboard';
   requireFinancialAccess?: boolean;
   requireEditAccess?: boolean;
   fallbackPath?: string;
@@ -122,7 +122,7 @@ export function ProtectedRoute({
 interface PermissionGateProps {
   children: React.ReactNode;
   requiredRole?: 'admin' | 'manager' | 'supervisor' | 'accountant' | 'viewer';
-  requiredModule?: 'sales' | 'purchase' | 'inventory' | 'construction' | 'accounting' | 'reports' | 'pos' | 'hr';
+  requiredModule?: 'sales' | 'purchase' | 'inventory' | 'construction' | 'accounting' | 'reports' | 'pos' | 'hr' | 'hardware' | 'settings' | 'dashboard';
   requireFinancialAccess?: boolean;
   requireEditAccess?: boolean;
   fallback?: React.ReactNode;

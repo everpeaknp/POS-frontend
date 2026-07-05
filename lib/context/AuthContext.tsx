@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
           console.error('[AuthContext] Failed to load user:', error);
           
-          if (error?.response?.status === 403 || error?.response?.status === 401) {
+          if (error?.response?.status === 401) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             document.cookie = 'access_token=; path=/; max-age=0';

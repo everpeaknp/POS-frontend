@@ -38,7 +38,7 @@ export interface UserPermissions {
   can_manage_users: boolean;
   can_view_financials: boolean;
   can_edit_data: boolean;
-  modules: {
+    modules: {
     sales: boolean;
     purchase: boolean;
     inventory: boolean;
@@ -47,6 +47,9 @@ export interface UserPermissions {
     reports: boolean;
     pos: boolean;
     hr: boolean;
+    hardware: boolean;
+    settings: boolean;
+    dashboard: boolean;
   };
 }
 

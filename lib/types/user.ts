@@ -42,6 +42,9 @@ export interface UserPermissions {
     reports: boolean;
     pos: boolean;
     hr: boolean;
+    hardware: boolean;
+    settings: boolean;
+    dashboard: boolean;
   };
 }
 

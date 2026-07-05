@@ -2,23 +2,30 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
-// Suppress axios console errors for expected HTTP error codes
-// Override console.error temporarily to filter out axios errors
-const originalConsoleError = console.error;
-console.error = (...args: any[]) => {
-  // Check if this is an axios error with an expected status code
-  const errorString = args[0]?.toString() || '';
-  if (errorString.includes('AxiosError') && 
-      (errorString.includes('status code 400') || 
-       errorString.includes('status code 401') || 
-       errorString.includes('status code 403') || 
-       errorString.includes('status code 404'))) {
-    // Suppress this error - it will be handled by toast messages
-    return;
+function persistAccessToken(access: string) {
+  localStorage.setItem('access_token', access);
+  if (typeof document !== 'undefined') {
+    document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`;
   }
-  // Log all other errors normally
-  originalConsoleError.apply(console, args);
-};
+}
+
+function persistRefreshToken(refresh: string) {
+  localStorage.setItem('refresh_token', refresh);
+  if (typeof document !== 'undefined') {
+    document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`;
+  }
+}
+
+function clearAuthStorage() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('session_id');
+  if (typeof document !== 'undefined') {
+    document.cookie = 'access_token=; path=/; max-age=0';
+    document.cookie = 'refresh_token=; path=/; max-age=0';
+  }
+}
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -104,11 +111,10 @@ apiClient.interceptors.response.use(
         });
 
         const { access, refresh } = response.data;
-        
-        // Store new tokens
-        localStorage.setItem('access_token', access);
+
+        persistAccessToken(access);
         if (refresh) {
-          localStorage.setItem('refresh_token', refresh);
+          persistRefreshToken(refresh);
         }
 
         // Update authorization header
@@ -127,10 +133,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('session_id');
+        clearAuthStorage();
         
         // Redirect to login
         if (typeof window !== 'undefined') {
