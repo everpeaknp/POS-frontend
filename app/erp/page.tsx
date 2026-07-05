@@ -5,20 +5,18 @@ import { useRouter } from "next/navigation";
 import {
   Search,
   Plus,
-  Settings,
-  LogOut,
   Building2,
   ClipboardList,
   Mail,
   SearchX,
   Check,
   X,
-  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TiggLogo } from "@/components/tigg-logo";
+import { UserMenuDropdown } from "@/components/shared/UserMenuDropdown";
 import { OrgTabs } from "@/components/org-tabs";
 import { OrgCard } from "@/components/org-card";
 import { EmptyState } from "@/components/empty-state";
@@ -29,13 +27,12 @@ import toast from "react-hot-toast";
 
 export default function ErpPage() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("organizations");
   const [searchQuery, setSearchQuery] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -89,17 +86,6 @@ export default function ErpPage() {
       toast.error("Failed to decline invitation");
     }
   };
-
-  const handleLogout = async () => {
-    await logout();
-    router.push("/auth/login");
-  };
-
-  const getUserInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  };
-
-  const avatarUrl = getMediaUrl(user?.avatar);
 
   if (!user || loading) {
     return (
@@ -159,66 +145,7 @@ export default function ErpPage() {
       <header className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <TiggLogo size="md" />
-          <div className="relative">
-            <button
-              onClick={() => setProfileMenuOpen((open) => !open)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E] focus-visible:ring-offset-2"
-              aria-label="User menu"
-              aria-expanded={profileMenuOpen}
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#22C55E] text-white text-sm font-semibold overflow-hidden">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  getUserInitials(user.first_name, user.last_name)
-                )}
-              </span>
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-900 leading-tight">
-                  {user.first_name} {user.last_name}
-                </p>
-                <p className="text-xs text-gray-500">{user.email}</p>
-              </div>
-              <ChevronDown className="hidden sm:block h-4 w-4 text-gray-400" />
-            </button>
-            {profileMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setProfileMenuOpen(false)}
-                  aria-hidden
-                />
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-40">
-                  <div className="px-4 py-3 border-b border-gray-100 sm:hidden">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      router.push("/settings/profile");
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <Settings className="h-4 w-4 text-gray-400" />
-                    Settings
-                  </button>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <UserMenuDropdown detail="email" />
         </div>
       </header>
 
