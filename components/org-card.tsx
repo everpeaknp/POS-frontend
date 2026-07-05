@@ -30,8 +30,10 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   const handleOpenKhata = async () => {
     try {
       setIsOpening(true);
-      await switchOrganization(org.slug);
-      toast.success(`Opened ${org.workspace_name || org.name}`);
+      const switchedTenant = await tenantApi.switch(org.slug);
+      localStorage.setItem("active_tenant_slug", switchedTenant.slug);
+      window.open("/dashboard", "_blank", "noopener,noreferrer");
+      toast.success(`Opened ${org.workspace_name || org.name} in a new tab`);
     } catch (error: unknown) {
       console.error("Failed to switch organization:", error);
       const err = error as { response?: { data?: { error?: string; detail?: string }; status?: number } };
@@ -102,13 +104,20 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3 h-full min-h-[220px] hover:shadow-md hover:border-green-100 transition-all group">
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl border border-green-100">
-          {org.icon}
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-green-100 transition-all">
+      <div className="flex items-start justify-between gap-2">
+        <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-lg font-bold border border-green-100 overflow-hidden shrink-0">
+          {org.logo ? (
+            <img src={org.logo} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[#16A34A]">{org.icon}</span>
+          )}
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger className="text-gray-300 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-50 focus:outline-none opacity-0 group-hover:opacity-100 transition-all" aria-label="Options">
+          <DropdownMenuTrigger
+            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]/30"
+            aria-label="Options"
+          >
             <MoreVertical className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -144,10 +153,10 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
           <span className="text-xs text-amber-700 font-medium">Trial ends in {org.trialDaysLeft} days</span>
         </div>
       )}
-      <div className="flex gap-2 pt-1 mt-auto">
+      <div className="flex flex-col sm:flex-row gap-2 pt-1 mt-auto">
         {isMember ? (
           <>
-            <Button size="sm" className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-8 gap-1.5"
+            <Button size="sm" className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenKhata}
               disabled={isOpening}>
               <ExternalLink className="h-3 w-3" /> {isOpening ? "Opening..." : "Open Khata"}
@@ -155,7 +164,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-8 gap-1.5"
+              className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-green-50 text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenPOS}
               disabled={isOpeningPos || isOpening}
             >

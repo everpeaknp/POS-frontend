@@ -4,6 +4,7 @@ export interface Organization {
   name: string;
   subdomain: string;
   icon: string;
+  logo?: string;
   trialDaysLeft: number;
   status: "trial" | "active" | "expired";
   user_role?: string;
