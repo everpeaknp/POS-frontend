@@ -12,6 +12,7 @@ export default function AppearancePage() {
     theme: 'light',
     language: 'en-US',
     timezone: 'UTC',
+    date_calendar_system: 'AD',
     compact_mode: false,
     smooth_animations: true,
   });

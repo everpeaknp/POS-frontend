@@ -114,7 +114,7 @@ export default function NewBankAccountPage() {
         type: formData.type,
         branch: formData.branch.trim(),
         swift_code: formData.swift_code.trim(),
-        gl_account: Number(formData.gl_account) || formData.gl_account,
+        gl_account: String(formData.gl_account),
         balance: parseFloat(formData.balance) || 0,
         status: formData.status,
       });

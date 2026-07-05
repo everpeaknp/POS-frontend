@@ -124,7 +124,7 @@ export default function EditBankAccountPage() {
         type: formData.type,
         branch: formData.branch.trim(),
         swift_code: formData.swift_code.trim(),
-        gl_account: Number(formData.gl_account) || formData.gl_account,
+        gl_account: String(formData.gl_account),
         status: formData.status,
       });
       toast.success('Bank account updated successfully');

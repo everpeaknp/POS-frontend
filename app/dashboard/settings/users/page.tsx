@@ -101,7 +101,7 @@ export default function UsersPage() {
     
     // Check Settings-Edit permission
     const rolePermissions = permissions[roleKey as keyof PermissionsMatrix];
-    return rolePermissions['Settings-Edit'] === true;
+    return rolePermissions?.['Settings-Edit'] === true;
   };
 
   useEffect(() => {

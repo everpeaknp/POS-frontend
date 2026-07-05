@@ -10,7 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
-import { customerAPI, salesOrderAPI, invoiceAPI, customerLedgerAPI } from "@/lib/api/sales";
+import { customerAPI, salesOrderAPI, invoiceAPI, customerLedgerAPI, creditNoteAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
 import { CustomerPricingPanel } from "@/components/sales/CustomerPricingPanel";
 
@@ -38,6 +38,11 @@ export default function CustomerProfilePage() {
   const { data: ledgerData, loading: ledgerLoading } = useApi(
     () => customerLedgerAPI.list({ customer: id }),
     { immediate: activeTab === "Ledger", deps: [id, activeTab] }
+  );
+
+  const { data: creditNotesData, loading: creditNotesLoading } = useApi(
+    () => creditNoteAPI.list({ customer: id }),
+    { immediate: activeTab === "Credit Notes", deps: [id, activeTab] }
   );
 
   if (customerLoading) {
@@ -71,6 +76,7 @@ export default function CustomerProfilePage() {
   const orders = ordersData?.data?.results || [];
   const invoices = invoicesData?.data?.results || [];
   const ledger = ledgerData || [];
+  const creditNotes = creditNotesData?.data?.results || [];
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -292,7 +298,37 @@ export default function CustomerProfilePage() {
             )}
 
             {activeTab === "Credit Notes" && (
-              <p className="text-sm text-gray-400 py-6 text-center">No credit notes found</p>
+              creditNotesLoading ? (
+                <SkeletonTable rows={3} />
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      {["Credit Note #", "Date", "Invoice", "Amount", "Reason", "Status"].map((h) => (
+                        <th key={h} className="text-left text-xs text-gray-400 font-medium pb-2 px-2">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {creditNotes.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-sm text-gray-400">No credit notes</td>
+                      </tr>
+                    ) : (
+                      creditNotes.map((cn: any) => (
+                        <tr key={cn.id} className="hover:bg-gray-50/50">
+                          <td className="px-2 py-2.5 font-mono text-xs text-[#22C55E]">{cn.credit_note_number}</td>
+                          <td className="px-2 py-2.5 text-gray-600"><FormattedDate value={cn.date} /></td>
+                          <td className="px-2 py-2.5 text-gray-600">{cn.invoice_number || "—"}</td>
+                          <td className="px-2 py-2.5 font-medium">{formatCurrency(cn.amount)}</td>
+                          <td className="px-2 py-2.5 text-gray-600">{cn.reason}</td>
+                          <td className="px-2 py-2.5"><StatusBadge status={cn.status} /></td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )
             )}
 
             {activeTab === "Pricing" && (

@@ -124,7 +124,7 @@ export default function NewTaxRulePage() {
         type: formData.type,
         rate: parseFloat(formData.rate),
         applicable_on: formData.applicable_on,
-        account: Number(formData.account) || formData.account,
+        account: String(formData.account),
         status: formData.status,
         description: formData.description.trim(),
       });

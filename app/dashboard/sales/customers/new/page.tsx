@@ -324,8 +324,7 @@ export default function NewCustomerPage() {
               <Field label="As of Date">
                 <DateInput 
                   
-                  className="h-9 text-sm border-gray-200" 
-                  placeholder="2082-01-01"
+                  className="h-9 text-sm border-gray-200"
                   value={form.opening_balance_date}
                   onChange={(date) => setForm({ ...form, opening_balance_date: date})}
                 />

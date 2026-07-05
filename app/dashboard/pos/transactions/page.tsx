@@ -155,7 +155,7 @@ export default function POSTransactionsPage() {
                 className="md:col-span-2"
               />
               
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -167,7 +167,7 @@ export default function POSTransactionsPage() {
                 </SelectContent>
               </Select>
               
-              <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Payment" />
                 </SelectTrigger>
@@ -246,7 +246,7 @@ export default function POSTransactionsPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleCancelTransaction(transaction.id!, transaction.transaction_number)}
+                              onClick={() => handleCancelTransaction(transaction.id!, transaction.transaction_number || transaction.id!)}
                               className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                             >
                               <X className="h-4 w-4" />

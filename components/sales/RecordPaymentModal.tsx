@@ -84,7 +84,7 @@ export function RecordPaymentModal({ open, onClose, invoiceId, balance, onSucces
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-sm">Payment Method</Label>
-            <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
+            <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v ?? "cash" })}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[

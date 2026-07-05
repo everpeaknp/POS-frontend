@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useReactToPrint } from "react-to-print";
 import { Printer, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/shared/DateInput";
@@ -11,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { JournalStatusBadge, JournalTypeBadge } from "@/components/accounting/JournalStatusBadge";
 import { JournalLinesTable } from "@/components/accounting/JournalLinesTable";
+import { PrintableJournalEntry } from "@/components/print/PrintableJournalEntry";
 import { journalEntriesAPI, JournalEntry } from "@/lib/api/accounting";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import toast from "react-hot-toast";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
@@ -25,6 +28,13 @@ export default function JournalEntryDetailPage() {
   const [reverseModal, setReverseModal] = useState(false);
   const [reversalDate, setReversalDate] = useState(new Date().toISOString().split('T')[0]);
   const [reversing, setReversing] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${entry?.entry_number || "JournalEntry"}_${new Date().toISOString().split("T")[0]}`,
+  });
 
   useEffect(() => {
     if (id) {
@@ -140,7 +150,7 @@ export default function JournalEntryDetailPage() {
           )}
           {entry.status === "posted" && (
             <>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 border-gray-200 text-gray-600" onClick={() => window.print()}>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 border-gray-200 text-gray-600" onClick={() => handlePrint()} disabled={!companyInfo}>
                 <Printer className="h-3.5 w-3.5" /> Print
               </Button>
               <Button variant="outline" size="sm" className="h-8 gap-1.5 border-red-200 text-red-600 hover:bg-red-50" onClick={() => setReverseModal(true)}>
@@ -215,6 +225,12 @@ export default function JournalEntryDetailPage() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {companyInfo && entry && (
+        <div className="hidden">
+          <PrintableJournalEntry ref={printRef} entry={entry} companyInfo={companyInfo} />
         </div>
       )}
     </div>

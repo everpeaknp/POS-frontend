@@ -3,20 +3,31 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { AmountInWords } from "@/components/sales/AmountInWords";
+import { PrintableDebitNote } from "@/components/print/PrintableDebitNote";
 import { debitNotesAPI, type DebitNote } from "@/lib/api/purchase";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function DebitNoteDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
   const [dn, setDn] = useState<DebitNote | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${dn?.debit_note_number || dn?.note_number || "DebitNote"}_${new Date().toISOString().split("T")[0]}`,
+  });
 
   useEffect(() => {
     const fetchDebitNote = async () => {
@@ -74,7 +85,7 @@ export default function DebitNoteDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={dn.status} />
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.print()}>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => handlePrint()} disabled={!companyInfo}>
             <Printer className="h-3.5 w-3.5" /> Print
           </Button>
         </div>
@@ -144,6 +155,12 @@ export default function DebitNoteDetailPage() {
           </Button>
         </Link>
       </div>
+
+      {companyInfo && dn && (
+        <div className="hidden">
+          <PrintableDebitNote ref={printRef} debitNote={dn} companyInfo={companyInfo} />
+        </div>
+      )}
     </div>
   );
 }

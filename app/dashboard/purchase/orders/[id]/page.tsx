@@ -10,6 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { LineItemsTable } from "@/components/purchase/LineItemsTable";
 import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
+import { ReceiveItemsModal } from "@/components/purchase/ReceiveItemsModal";
 import { purchaseOrdersAPI, type PurchaseOrder } from "@/lib/api/purchase";
 import { inventoryApi, type ProductActivity, type Warehouse } from "@/lib/api/inventory";
 import { formatCurrency } from "@/lib/utils";
@@ -22,33 +23,25 @@ export default function PurchaseOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
-  const [receivingQuantities, setReceivingQuantities] = useState<Record<string, number>>({});
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [receiveWarehouseId, setReceiveWarehouseId] = useState<string>("");
 
   useEffect(() => {
     inventoryApi.warehouses.list({ is_active: true }).then((res) => {
-      const list = res.data.results || [];
-      setWarehouses(list);
-      if (list.length > 0) {
-        setReceiveWarehouseId(String(list[0].id));
-      }
+      setWarehouses(res.data.results || []);
     }).catch(() => {});
   }, []);
+
+  const refreshOrder = async () => {
+    if (!id) return;
+    const data = await purchaseOrdersAPI.get(id);
+    setOrder(data);
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
         const data = await purchaseOrdersAPI.get(id);
         setOrder(data);
-        
-        // Initialize receiving quantities
-        const initialQuantities: Record<string, number> = {};
-        data.lines?.forEach(line => {
-          const remaining = Number(line.quantity) - Number(line.received_quantity || 0);
-          initialQuantities[line.id || ''] = remaining > 0 ? remaining : 0;
-        });
-        setReceivingQuantities(initialQuantities);
       } catch (error: any) {
         console.error('Error fetching order:', error);
         toast.error("Failed to load order details");
@@ -67,49 +60,6 @@ export default function PurchaseOrderDetailPage() {
       setShowReceiveModal(true);
     }
   }, [searchParams, order, loading]);
-
-  const handleReceiveItems = async () => {
-    if (!order) return;
-    
-    // Filter lines with quantities to receive
-    const itemsToReceive = Object.entries(receivingQuantities)
-      .filter(([_, qty]) => qty > 0)
-      .map(([lineId, quantity]) => ({ line_id: lineId, quantity }));
-    
-    if (itemsToReceive.length === 0) {
-      toast.error("Please enter quantities to receive");
-      return;
-    }
-    
-    setUpdating(true);
-    try {
-      await purchaseOrdersAPI.receiveItems(
-        order.id,
-        itemsToReceive,
-        receiveWarehouseId || undefined,
-      );
-      toast.success(`Items received for ${order.po_number}`);
-      
-      // Refresh order data
-      const data = await purchaseOrdersAPI.get(id);
-      setOrder(data);
-      
-      // Reset receiving quantities
-      const newQuantities: Record<string, number> = {};
-      data.lines?.forEach(line => {
-        const remaining = Number(line.quantity) - Number(line.received_quantity || 0);
-        newQuantities[line.id || ''] = remaining > 0 ? remaining : 0;
-      });
-      setReceivingQuantities(newQuantities);
-      
-      setShowReceiveModal(false);
-    } catch (error: any) {
-      console.error('Error receiving items:', error);
-      toast.error("Failed to receive items");
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const handleStatusUpdate = async (newStatus: string) => {
     if (!order) return;
@@ -465,100 +415,14 @@ export default function PurchaseOrderDetailPage() {
         </div>
       </div>
 
-      {/* Receive Items Modal */}
-      {showReceiveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">Receive Items</h2>
-              <p className="text-sm text-gray-500 mt-1">Enter quantities received for each item</p>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              {warehouses.length > 0 && (
-                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700 block mb-2">
-                    Receive into warehouse
-                  </label>
-                  <select
-                    value={receiveWarehouseId}
-                    onChange={(e) => setReceiveWarehouseId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                  >
-                    {warehouses.map((wh) => (
-                      <option key={wh.id} value={wh.id}>
-                        {wh.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {order.lines?.map(line => {
-                const ordered = Number(line.quantity);
-                const received = Number(line.received_quantity || 0);
-                const remaining = ordered - received;
-                
-                return (
-                  <div key={line.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-medium text-gray-900">{line.product_name}</p>
-                        <p className="text-sm text-gray-500">
-                          Ordered: {ordered} | Received: {received} | Remaining: {remaining}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-600 min-w-[120px]">Receive Quantity:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max={remaining}
-                        value={receivingQuantities[line.id || ''] || 0}
-                        onChange={(e) => {
-                          const value = Math.min(Number(e.target.value), remaining);
-                          setReceivingQuantities(prev => ({
-                            ...prev,
-                            [line.id || '']: value
-                          }));
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowReceiveModal(false)}
-                disabled={updating}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleReceiveItems}
-                disabled={updating}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                {updating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Receiving...
-                  </>
-                ) : (
-                  <>
-                    <Package className="h-4 w-4 mr-2" />
-                    Receive Items
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+      {order && (
+        <ReceiveItemsModal
+          open={showReceiveModal}
+          onClose={() => setShowReceiveModal(false)}
+          order={order}
+          warehouses={warehouses}
+          onSuccess={refreshOrder}
+        />
       )}
     </div>
   );

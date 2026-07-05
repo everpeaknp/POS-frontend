@@ -154,7 +154,7 @@ export default function EquipmentUsagePage() {
           <form onSubmit={handleSubmit} className="space-y-4 pt-1">
             <div>
               <Label>Equipment *</Label>
-              <Select value={form.equipment} onValueChange={(v) => setForm({ ...form, equipment: v })}>
+              <Select value={form.equipment} onValueChange={(v) => setForm({ ...form, equipment: v ?? "" })}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select equipment" /></SelectTrigger>
                 <SelectContent>
                   {equipment.map((e) => (
@@ -165,7 +165,7 @@ export default function EquipmentUsagePage() {
             </div>
             <div>
               <Label>Site *</Label>
-              <Select value={form.site} onValueChange={(v) => setForm({ ...form, site: v })}>
+              <Select value={form.site} onValueChange={(v) => setForm({ ...form, site: v ?? "" })}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select site" /></SelectTrigger>
                 <SelectContent>
                   {sites.map((s) => (

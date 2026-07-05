@@ -23,7 +23,7 @@ const productSchema = z.object({
       message: 'Must be a valid positive number',
     }),
   description: z.string().optional(),
-  status: z.enum(['active', 'inactive']).default('active'),
+  status: z.enum(['active', 'inactive']),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -46,8 +46,9 @@ export default function ExampleForm({
     reset,
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       status: 'active',
+      ...initialData,
     },
   });
 
