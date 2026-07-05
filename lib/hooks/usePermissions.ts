@@ -20,7 +20,7 @@ export function usePermissions() {
     }
 
     loadPermissions();
-  }, [user?.id, user?.tenant?.id, user?.role]);
+  }, [user?.id, user?.tenant?.id, user?.role, user?.tenant?.active_modules?.join(',')]);
 
   const loadPermissions = async () => {
     if (!user) {

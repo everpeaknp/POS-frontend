@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { UnifiedDashboardData } from '@/lib/dashboard/types';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -281,14 +282,25 @@ export interface InventorySummary {
 }
 
 export interface MainDashboardData {
-  stats: MainDashboardStats;
-  revenueData: {
-    [key: string]: RevenueDataPoint[];
-  };
-  recentOrders: RecentOrder[];
-  topProducts: TopProduct[];
-  recentCustomers: RecentCustomer[];
-  inventorySummary: InventorySummary;
+  activeModules: string[];
+  period: 'today' | 'week' | 'month' | 'year';
+  modules: Array<{
+    id: string;
+    title: string;
+    href: string;
+    stats: Array<{ label: string; value: string; change?: number }>;
+    chart?: { data: Array<{ time: string; value: number }> };
+    lists?: Array<{
+      title: string;
+      items: Array<{
+        primary: string;
+        secondary?: string;
+        meta?: string;
+        status?: string;
+      }>;
+    }>;
+    tiles?: Array<{ label: string; value: string; tone?: string }>;
+  }>;
 }
 
 // ============================================================================
@@ -406,12 +418,18 @@ export const reportsAPI = {
    */
   mainDashboard: async (params?: {
     period?: 'today' | 'week' | 'month' | 'year';
-  }) => {
+  }): Promise<UnifiedDashboardData> => {
+    const period = params?.period ?? 'month';
     const response = await apiClient.get<MainDashboardData>(
       '/reports/main-dashboard/',
-      { params }
+      { params: { period } }
     );
-    return response.data;
+    const payload = response.data;
+    return {
+      period: payload.period ?? period,
+      activeModules: payload.activeModules ?? [],
+      modules: payload.modules ?? [],
+    };
   },
 
   /**

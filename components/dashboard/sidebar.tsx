@@ -42,7 +42,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", requiredModule: "dashboard" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   {
     label: "Sales", 
     icon: TrendingUp,
@@ -188,6 +188,7 @@ const navItems: NavItem[] = [
     requiredRoles: ["admin", "manager"],
     children: [
       { label: "Organization Settings", href: "/dashboard/settings/org" },
+      { label: "Modules", href: "/dashboard/settings/modules" },
       { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite" },
       { label: "Integrations", href: "/dashboard/settings/integrations" },
       { label: "Audit Logs", href: "/dashboard/settings/audit" },
@@ -285,20 +286,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   // Filter nav items based on user permissions
   const filteredNavItems = navItems.filter((item) => {
-    // Check if user has required role
+    // Tenant module must be active before role checks (admins don't bypass disabled modules)
+    if (item.requiredModule && !permissions.canView(item.requiredModule)) {
+      return false;
+    }
+
     if (item.requiredRoles && user) {
-      // Admin can see everything
       if (user.role === 'admin') {
         return true;
       }
       if (!item.requiredRoles.includes(user.role)) {
-        return false;
-      }
-    }
-
-    // Check if user has module access via permissions
-    if (item.requiredModule) {
-      if (!permissions.canView(item.requiredModule)) {
         return false;
       }
     }

@@ -1,111 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Check, 
-  BarChart3,
-  Package,
-  DollarSign,
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  HardHat,
-  Wrench,
-  Monitor,
-  Settings,
-  type LucideIcon
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-
-interface Module {
-  id: string;
-  name: string;
-  description: string;
-  icon: LucideIcon;
-  recommended?: boolean;
-  defaultEnabled?: boolean;
-}
-
-const availableModules: Module[] = [
-  {
-    id: "accounting",
-    name: "Accounting",
-    description: "Core accounting features including chart of accounts, journal entries, and financial reports",
-    icon: BarChart3,
-    defaultEnabled: true,
-    recommended: true,
-  },
-  {
-    id: "inventory",
-    name: "Inventory Management",
-    description: "Track products, stock levels, warehouses, and inventory movements",
-    icon: Package,
-    defaultEnabled: true,
-    recommended: true,
-  },
-  {
-    id: "sales",
-    name: "Sales & Billing",
-    description: "Manage quotations, sales orders, invoices, and customer payments",
-    icon: DollarSign,
-    defaultEnabled: true,
-    recommended: true,
-  },
-  {
-    id: "purchase",
-    name: "Purchase Management",
-    description: "Handle purchase orders, supplier management, and procurement",
-    icon: ShoppingCart,
-    defaultEnabled: true,
-    recommended: true,
-  },
-  {
-    id: "reports",
-    name: "Reports & Analytics",
-    description: "Generate business insights with comprehensive reporting tools",
-    icon: TrendingUp,
-    defaultEnabled: true,
-  },
-  {
-    id: "settings",
-    name: "Settings",
-    description: "Organization settings, user management, permissions, and system configuration",
-    icon: Settings,
-    defaultEnabled: true,
-  },
-  {
-    id: "pos",
-    name: "Point of Sale (POS)",
-    description: "Fast billing, transaction management, discounts, and daily sales reports",
-    icon: Monitor,
-    defaultEnabled: false,
-  },
-  {
-    id: "hr",
-    name: "HR & Payroll",
-    description: "Employee management, attendance tracking, leave requests, and payroll processing",
-    icon: Users,
-    defaultEnabled: false,
-  },
-  {
-    id: "construction",
-    name: "Construction Management",
-    description: "Site management, worker tracking, equipment, and material consumption",
-    icon: HardHat,
-    defaultEnabled: false,
-  },
-  {
-    id: "hardware",
-    name: "Hardware Business",
-    description: "Specialized features for hardware stores including bulk pricing and credit management",
-    icon: Wrench,
-    defaultEnabled: false,
-  },
-];
+import {
+  getDefaultSelectedModuleIds,
+  getModuleCatalogSections,
+  isRequiredModule,
+  normalizeModuleList,
+  type OrgModuleDefinition,
+} from "@/lib/modules/catalog";
 
 interface ModuleSelectionProps {
   organizationData: {
@@ -125,21 +31,22 @@ interface ModuleSelectionProps {
 }
 
 export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSelectionProps) {
-  const [selectedModules, setSelectedModules] = useState<string[]>(
-    availableModules.filter(m => m.defaultEnabled).map(m => m.id)
-  );
+  const [selectedModules, setSelectedModules] = useState<string[]>(getDefaultSelectedModuleIds());
 
   const toggleModule = (moduleId: string) => {
-    // Prevent deselecting accounting - it's a core module
-    if (moduleId === 'accounting') {
-      toast.error("Accounting is a core module and cannot be deselected");
+    if (isRequiredModule(moduleId)) {
+      const label =
+        moduleId === "accounting"
+          ? "Accounting"
+          : moduleId === "settings"
+            ? "Settings"
+            : "Dashboard";
+      toast.error(`${label} is a core module and cannot be deselected`);
       return;
     }
-    
-    setSelectedModules(prev => 
-      prev.includes(moduleId)
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
+
+    setSelectedModules((prev) =>
+      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]
     );
   };
 
@@ -148,103 +55,94 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
       toast.error("Please select at least one module");
       return;
     }
-    
-    // Ensure accounting is always included
-    const modulesToSend = selectedModules.includes('accounting') 
-      ? selectedModules 
-      : [...selectedModules, 'accounting'];
-    
-    // Ensure settings is always included for admin access
-    const finalModules = modulesToSend.includes('settings')
-      ? modulesToSend
-      : [...modulesToSend, 'settings'];
-    
-    onNext(finalModules);
+
+    onNext(normalizeModuleList(selectedModules));
+  };
+
+  const renderModuleCard = (module: OrgModuleDefinition) => {
+    const isSelected = selectedModules.includes(module.id);
+    const IconComponent = module.icon;
+
+    return (
+      <div
+        key={module.id}
+        onClick={() => toggleModule(module.id)}
+        className={`relative border rounded-xl p-5 cursor-pointer transition-all flex flex-col ${
+          isSelected
+            ? "border-[#22C55E] bg-green-50/60 shadow-sm"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+        }`}
+      >
+        <div className="flex items-start gap-4 flex-1">
+          <div className="flex-shrink-0 mt-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => toggleModule(module.id)}
+              className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E] h-5 w-5"
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`p-2 rounded-lg ${isSelected ? "bg-green-100" : "bg-gray-100"}`}>
+                <IconComponent
+                  className={`h-5 w-5 ${isSelected ? "text-[#22C55E]" : "text-gray-600"}`}
+                />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">{module.name}</h3>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">{module.description}</p>
+          </div>
+
+          {isSelected && (
+            <div className="flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {(module.required || module.recommended) && (
+          <div className="flex justify-end mt-auto pt-3">
+            {module.required ? (
+              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                Required
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
+                Recommended
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {availableModules.map((module) => {
-          const isSelected = selectedModules.includes(module.id);
-          const IconComponent = module.icon;
-          
-          return (
-            <div
-              key={module.id}
-              onClick={() => toggleModule(module.id)}
-              className={`relative border rounded-xl p-5 cursor-pointer transition-all flex flex-col ${
-                isSelected
-                  ? 'border-[#22C55E] bg-green-50/60 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-              }`}
-            >
-              <div className="flex items-start gap-4 flex-1">
-                {/* Checkbox */}
-                <div className="flex-shrink-0 mt-1">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => toggleModule(module.id)}
-                    className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E] h-5 w-5"
-                  />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 rounded-lg ${
-                      isSelected ? 'bg-green-100' : 'bg-gray-100'
-                    }`}>
-                      <IconComponent className={`h-5 w-5 ${
-                        isSelected ? 'text-[#22C55E]' : 'text-gray-600'
-                      }`} />
-                    </div>
-                    <h3 className="text-base font-semibold text-gray-900">{module.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {module.description}
-                  </p>
-                </div>
-
-                {/* Selected Indicator */}
-                {isSelected && (
-                  <div className="flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {(module.id === 'accounting' || module.recommended) && (
-                <div className="flex justify-end mt-auto pt-3">
-                  {module.id === 'accounting' ? (
-                    <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
-                      ✓ Required
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
-                      Recommended
-                    </span>
-                  )}
-                </div>
-              )}
+      <div className="space-y-8">
+        {getModuleCatalogSections().map((section) => (
+          <div key={section.key} className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700">{section.label}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {section.modules.map((module) => renderModuleCard(module))}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
-      {/* Selected Count */}
       <div className="text-center">
         <p className="text-sm text-gray-600">
-          {selectedModules.length} {selectedModules.length === 1 ? 'module' : 'modules'} selected
+          {selectedModules.length} {selectedModules.length === 1 ? "module" : "modules"} selected
         </p>
       </div>
 
-      {/* Info Box */}
       <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
         <p className="text-sm text-green-900">
-          <strong className="font-semibold">Note:</strong> Accounting and Settings are always included. You can change other modules later from organization settings.
+          <strong className="font-semibold">Note:</strong> Dashboard, Accounting, and Settings are always included.
+          You can change other modules later from Settings → Modules.
         </p>
       </div>
 
