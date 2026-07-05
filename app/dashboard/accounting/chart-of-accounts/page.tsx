@@ -17,8 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { accountsAPI, Account } from "@/lib/api/accounting";
+import { getErrorMessage } from "@/lib/utils/form-errors";
 import toast from "react-hot-toast";
 
 const TYPES = ["All", "Assets", "Liabilities", "Equity", "Income", "Expense"] as const;
@@ -44,6 +46,8 @@ export default function ChartOfAccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchAccounts();
@@ -70,16 +74,18 @@ export default function ChartOfAccountsPage() {
     }
   };
 
-  const handleDelete = async (acc: Account) => {
-    if (!confirm(`Delete account "${acc.code} — ${acc.name}"? This cannot be undone.`)) return;
+  const handleDelete = async () => {
+    if (!accountToDelete) return;
+    setDeleting(true);
     try {
-      await accountsAPI.delete(acc.id);
+      await accountsAPI.delete(accountToDelete.id);
       toast.success("Account deleted");
+      setAccountToDelete(null);
       fetchAccounts();
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { detail?: string; error?: string } } };
-      const message = axiosErr.response?.data?.detail || axiosErr.response?.data?.error || "Failed to delete account";
-      toast.error(message);
+      toast.error(getErrorMessage(err));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -357,7 +363,7 @@ export default function ChartOfAccountsPage() {
                                 size="sm"
                                 className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
                                 title="Delete account"
-                                onClick={() => handleDelete(acc)}
+                                onClick={() => setAccountToDelete(acc)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -373,6 +379,23 @@ export default function ChartOfAccountsPage() {
           </div>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!accountToDelete}
+        title="Delete account"
+        description={
+          <>
+            Are you sure you want to delete{" "}
+            <span className="font-medium text-gray-900">
+              {accountToDelete?.code} — {accountToDelete?.name}
+            </span>
+            ? This action cannot be undone.
+          </>
+        }
+        confirming={deleting}
+        onCancel={() => setAccountToDelete(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

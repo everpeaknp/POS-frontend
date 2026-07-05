@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { accountsAPI, type Account } from "@/lib/api/accounting";
+import { getErrorMessage } from "@/lib/utils/form-errors";
 
 const SUB_TYPES: Record<string, string[]> = {
   Assets: ["Cash", "Bank", "Receivable", "Current Asset", "Fixed Asset", "Other Asset"],
@@ -37,6 +39,7 @@ export default function EditAccountPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [formData, setFormData] = useState({
     code: "",
@@ -119,18 +122,16 @@ export default function EditAccountPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete account "${formData.code} — ${formData.name}"? This cannot be undone.`)) return;
     setDeleting(true);
     try {
       await accountsAPI.delete(id);
       toast.success("Account deleted");
       router.push("/dashboard/accounting/chart-of-accounts");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string; error?: string } } };
-      const message = err.response?.data?.detail || err.response?.data?.error || "Failed to delete account";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     } finally {
       setDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -278,7 +279,7 @@ export default function EditAccountPage() {
               type="button"
               variant="outline"
               className="text-red-600 border-red-200 hover:bg-red-50"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteDialog(true)}
               disabled={deleting || submitting}
             >
               {deleting ? "Deleting..." : "Delete Account"}
@@ -294,6 +295,23 @@ export default function EditAccountPage() {
           </div>
         </form>
       </div>
+
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        title="Delete account"
+        description={
+          <>
+            Are you sure you want to delete{" "}
+            <span className="font-medium text-gray-900">
+              {formData.code} — {formData.name}
+            </span>
+            ? This action cannot be undone.
+          </>
+        }
+        confirming={deleting}
+        onCancel={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

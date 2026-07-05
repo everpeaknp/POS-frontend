@@ -91,6 +91,28 @@ export function mapDjangoErrorsToForm<T extends FieldValues>(
  * }
  * ```
  */
+/**
+ * Strip server URLs and HTML error pages from messages shown in toasts.
+ */
+function sanitizeErrorMessage(message: string): string {
+  if (!message || typeof message !== 'string') {
+    return 'An error occurred. Please try again.';
+  }
+
+  if (message.includes('<!DOCTYPE') || message.includes('<html')) {
+    return 'Something went wrong on the server. Please try again.';
+  }
+
+  const cleaned = message
+    .replace(/https?:\/\/[^\s'"]+/gi, '')
+    .replace(/127\.0\.0\.1(?::\d+)?/g, '')
+    .replace(/localhost(?::\d+)?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  return cleaned || 'An error occurred. Please try again.';
+}
+
 export function getErrorMessage(error: any): string {
   // Network error
   if (!error.response) {
@@ -98,28 +120,49 @@ export function getErrorMessage(error: any): string {
       return 'Request timeout. Please try again.';
     }
     if (error.message === 'Network Error') {
-      return 'Network error. Please check your connection.';
+      return 'Network error. Please check your connection and try again.';
     }
-    return error.message || 'An unexpected error occurred';
+    return sanitizeErrorMessage(error.message || 'An unexpected error occurred');
   }
 
   const data = error.response.data;
 
   // No data in response
   if (!data) {
+    if (error.response.status === 500) {
+      return 'Could not complete this action. Please try again.';
+    }
     return `Error ${error.response.status}: ${error.response.statusText}`;
+  }
+
+  if (typeof data === 'string') {
+    return sanitizeErrorMessage(data);
   }
 
   // Check for detail field (most common)
   if (data.detail) {
-    return data.detail;
+    const detail = Array.isArray(data.detail) ? data.detail[0] : data.detail;
+    if (typeof detail === 'string') {
+      return sanitizeErrorMessage(detail);
+    }
+    if (typeof detail === 'object' && detail !== null) {
+      return sanitizeErrorMessage(JSON.stringify(detail));
+    }
+  }
+
+  if (data.error) {
+    const errMsg = Array.isArray(data.error) ? data.error[0] : data.error;
+    if (typeof errMsg === 'string') {
+      return sanitizeErrorMessage(errMsg);
+    }
   }
 
   // Check for non_field_errors
   if (data.non_field_errors) {
-    return Array.isArray(data.non_field_errors)
+    const msg = Array.isArray(data.non_field_errors)
       ? data.non_field_errors[0]
       : data.non_field_errors;
+    return sanitizeErrorMessage(String(msg));
   }
 
   // Get first field error
@@ -127,7 +170,11 @@ export function getErrorMessage(error: any): string {
   if (firstField && data[firstField]) {
     const message = data[firstField];
     const errorText = Array.isArray(message) ? message[0] : message;
-    return `${firstField}: ${errorText}`;
+    return sanitizeErrorMessage(`${firstField}: ${errorText}`);
+  }
+
+  if (error.response.status === 500) {
+    return 'Could not complete this action. Please try again.';
   }
 
   // Fallback
