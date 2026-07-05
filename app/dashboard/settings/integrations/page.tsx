@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { SettingsNav } from "@/components/settings/SettingsNav";
 import { IntegrationCard } from "@/components/settings/IntegrationCard";
 import { billingApi } from "@/lib/api/billing";
 import toast from "react-hot-toast";
@@ -35,7 +34,7 @@ const INTEGRATIONS: Array<{
     icon: CreditCard,
     iconClassName: "bg-green-50 text-green-600",
     statusKey: "esewa",
-    href: "/dashboard/settings/billing",
+    href: "/settings/billing",
   },
   {
     id: "smtp",
@@ -108,8 +107,6 @@ export default function IntegrationsPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader title="Integrations" subtitle="Connect payments, email, and third-party services" />
       <div className="flex-1 p-6 space-y-6">
-        <SettingsNav />
-
         <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-900">
           <Plug className="h-5 w-5 shrink-0 mt-0.5" />
           <div>
@@ -117,7 +114,7 @@ export default function IntegrationsPage() {
             <p className="text-blue-800/80 mt-1">
               eSewa and SMTP are configured by your platform administrator. Organization admins manage
               subscriptions under{" "}
-              <Link href="/dashboard/settings/billing" className="underline font-medium">
+              <Link href="/settings/billing" className="underline font-medium">
                 Billing
               </Link>
               .

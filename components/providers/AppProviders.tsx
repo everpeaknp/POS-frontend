@@ -2,11 +2,14 @@
 
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { DateSystemProvider } from "@/lib/context/DateSystemContext";
+import { AppearanceProvider } from "@/lib/context/AppearanceContext";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <DateSystemProvider>{children}</DateSystemProvider>
+      <AppearanceProvider>
+        <DateSystemProvider>{children}</DateSystemProvider>
+      </AppearanceProvider>
     </AuthProvider>
   );
 }

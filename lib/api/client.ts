@@ -55,6 +55,10 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const sessionId = localStorage.getItem('session_id');
+    if (sessionId && config.headers) {
+      config.headers['X-Session-Id'] = sessionId;
+    }
     return config;
   },
   (error) => {
@@ -126,6 +130,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('session_id');
         
         // Redirect to login
         if (typeof window !== 'undefined') {

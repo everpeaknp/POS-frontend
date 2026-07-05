@@ -187,10 +187,8 @@ const navItems: NavItem[] = [
     requiredModule: "settings",
     requiredRoles: ["admin", "manager"],
     children: [
-      { label: "Overview", href: "/dashboard/settings", exact: true },
       { label: "Organization Settings", href: "/dashboard/settings/org" },
       { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite" },
-      { label: "Billing & Subscription", href: "/dashboard/settings/billing" },
       { label: "Integrations", href: "/dashboard/settings/integrations" },
       { label: "Audit Logs", href: "/dashboard/settings/audit" },
     ],

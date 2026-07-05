@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { ArrowLeft, Globe, Monitor, Smartphone, Trash2, ShieldCheck, MapPin, Activity, Loader2 } from "lucide-react";
+import { Globe, Monitor, Smartphone, Trash2, ShieldCheck, MapPin, Activity, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { userApi } from "@/lib/api/user";
 import type { Session } from "@/lib/types/user";
 import toast from "react-hot-toast";
+import { SettingsPageShell } from "@/components/settings/SettingsPageShell";
+import {
+  SettingsCard,
+  SettingsCardBody,
+  SettingsCardHeader,
+  SettingsNotice,
+  SettingsPageContent,
+} from "@/components/settings/settings-ui";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -30,144 +38,121 @@ export default function SessionsPage() {
   const handleRevokeSession = async (sessionId: string) => {
     try {
       await userApi.revokeSession(sessionId);
-      toast.success("Session revoked successfully");
-      // Remove from list
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      toast.success("Session revoked");
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (error) {
       console.error("Failed to revoke session:", error);
       toast.error("Failed to revoke session");
     }
   };
 
+  const handleRevokeOthers = async () => {
+    try {
+      const result = await userApi.revokeOtherSessions();
+      toast.success(result.message);
+      await loadSessions();
+    } catch {
+      toast.error("Failed to revoke sessions");
+    }
+  };
+
   const getDeviceIcon = (device: string) => {
-    if (device.toLowerCase().includes('iphone') || device.toLowerCase().includes('mobile')) {
+    if (device.toLowerCase().includes("iphone") || device.toLowerCase().includes("mobile")) {
       return Smartphone;
     }
     return Monitor;
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] text-[#111827]">
-      <div className="max-w-[850px] mx-auto px-6 py-16">
-        
-        {/* Navigation & Header */}
-        <div className="mb-12">
-          <Link
-            href="/settings"
-            className="group inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#22C55E] transition-all mb-6"
-          >
-            <div className="p-1.5 rounded-lg bg-gray-50 group-hover:bg-[#22C55E]/10 transition-colors">
-              <ArrowLeft className="h-4 w-4 stroke-[3px]" />
-            </div>
-            Back to Settings
-          </Link>
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-4xl font-black tracking-tight text-gray-900">Active Sessions</h1>
-              <p className="text-gray-500 font-medium mt-2 max-w-md">
-                Manage and revoke your active sessions across different devices and locations.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#22C55E]/5 border border-[#22C55E]/10 rounded-2xl">
-              <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
-              <span className="text-[13px] font-bold text-[#22C55E]">{sessions.length} Devices active</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Card */}
-        <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
-          <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-white">
-            <h2 className="text-[17px] font-bold text-gray-900 flex items-center gap-3">
-              <Globe className="h-5 w-5 text-[#22C55E]" strokeWidth={2.5} />
-              Login Activity
-            </h2>
-          </div>
-
-          <div className="divide-y divide-gray-50">
+    <SettingsPageShell
+      title="Sessions"
+      subtitle="Devices and browsers where you are currently signed in"
+      action={
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-[#22C55E] rounded-lg border border-emerald-100 text-xs font-medium">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          {sessions.length} active {sessions.length === 1 ? "session" : "sessions"}
+        </span>
+      }
+    >
+      <SettingsPageContent>
+        <SettingsCard>
+          <SettingsCardHeader icon={Globe} title="Login activity" description="Review and revoke access from unknown devices" />
+          <SettingsCardBody className="p-0">
             {isLoading ? (
-              <div className="p-8 flex items-center justify-center">
+              <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
               </div>
             ) : sessions.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                No active sessions found
-              </div>
+              <div className="py-16 text-center text-sm text-gray-500">No active sessions found</div>
             ) : (
-              sessions.map((session) => {
-                const Icon = getDeviceIcon(session.device);
-                const lastActive = new Date(session.last_active).toLocaleString();
-                
-                return (
-                  <div 
-                    key={session.id} 
-                    className="p-8 flex items-center justify-between group hover:bg-gray-50/30 transition-all"
-                  >
-                    <div className="flex items-center gap-6">
-                      {/* Device Icon */}
-                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-[#22C55E] group-hover:shadow-sm transition-all">
-                        <Icon className="h-6 w-6 stroke-[1.5px]" />
-                      </div>
+              <div className="divide-y divide-gray-100">
+                {sessions.map((session) => {
+                  const Icon = getDeviceIcon(session.device);
+                  const lastActive = new Date(session.last_active).toLocaleString();
 
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-900">{session.device}</p>
-                          {session.is_current && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#22C55E] bg-[#22C55E]/10 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-                              Active Now
+                  return (
+                    <div key={session.id} className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50/80 transition-colors">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-11 h-11 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-gray-900">{session.device}</p>
+                            {session.is_current && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#22C55E] bg-[#22C55E]/10 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> {session.location}
                             </span>
-                          )}
+                            <span className="inline-flex items-center gap-1">
+                              <Activity className="w-3 h-3" /> {session.ip_address}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">Last active: {lastActive}</p>
                         </div>
-                        
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-gray-500 font-medium">
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 opacity-60" /> {session.location}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Activity className="w-3.5 h-3.5 opacity-60" /> {session.ip_address}
-                          </span>
-                        </div>
-                        
-                        <p className="text-[12px] text-gray-400 font-medium">
-                          Last seen: {lastActive}
-                        </p>
                       </div>
+
+                      {!session.is_current && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRevokeSession(session.id)}
+                          className="text-gray-400 hover:text-red-600 hover:bg-red-50 shrink-0"
+                          aria-label="Revoke session"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-
-                    {!session.is_current && (
-                      <button
-                        onClick={() => handleRevokeSession(session.id)}
-                        className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
-                        aria-label="Revoke session"
-                      >
-                        <Trash2 className="h-5 w-5 stroke-[2px]" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
-          </div>
 
-          <div className="p-8 bg-gray-50/50 border-t border-gray-50">
-            <button
-              onClick={() => toast("Feature coming soon: Terminate all other sessions", {
-                style: { borderRadius: '12px', background: '#111827', color: '#fff' }
-              })}
-              className="px-6 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-[0.98]"
-            >
-              Terminate all other sessions
-            </button>
-          </div>
-        </div>
+            {sessions.length > 1 && (
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                <Button
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleRevokeOthers}
+                >
+                  Sign out all other sessions
+                </Button>
+              </div>
+            )}
+          </SettingsCardBody>
+        </SettingsCard>
 
-        {/* Footer info */}
-        <p className="mt-8 text-center text-xs text-gray-400 font-medium">
-          If you see a device you don't recognize, revoke it immediately and change your password.
-        </p>
-      </div>
-    </main>
+        <SettingsNotice variant="warning">
+          If you see a device you do not recognize, revoke it immediately and change your password in Security settings.
+        </SettingsNotice>
+      </SettingsPageContent>
+    </SettingsPageShell>
   );
 }

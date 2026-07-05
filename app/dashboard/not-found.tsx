@@ -8,7 +8,7 @@ export default function DashboardNotFound() {
       description="This dashboard route does not exist. Use the sidebar to navigate, or return to the main dashboard."
       primaryHref="/dashboard"
       primaryLabel="Dashboard home"
-      secondaryHref="/dashboard/settings"
+      secondaryHref="/dashboard/settings/org"
       secondaryLabel="Settings"
     />
   );

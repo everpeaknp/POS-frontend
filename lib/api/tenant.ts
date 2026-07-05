@@ -13,6 +13,7 @@ export interface TenantData {
   email?: string;
   phone?: string;
   active_modules?: string[];
+  logo?: File | null;
 }
 
 export interface Tenant {
@@ -108,7 +109,27 @@ export const tenantApi = {
 
   // Update current tenant settings
   updateCurrent: async (data: Partial<TenantData>): Promise<Tenant> => {
-    const response = await apiClient.patch('/tenants/update_current/', data);
+    if (data.logo instanceof File) {
+      const formData = new FormData();
+      const { logo, ...rest } = data;
+      formData.append("logo", logo);
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else if (typeof value === "boolean") {
+          formData.append(key, value ? "true" : "false");
+        } else {
+          formData.append(key, String(value));
+        }
+      });
+      const response = await apiClient.patch("/tenants/update_current/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    }
+
+    const response = await apiClient.patch("/tenants/update_current/", data);
     return response.data;
   },
 

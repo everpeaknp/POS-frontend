@@ -15,13 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { SettingsNav } from "@/components/settings/SettingsNav";
+import { CompanyLogoUpload } from "@/components/company-logo-upload";
 import { DateSystemPreferenceCard } from "@/components/settings/DateSystemPreferenceCard";
 import { DateInput } from "@/components/shared/DateInput";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
 import type { DateCalendarSystem } from "@/lib/dates";
+import { getMediaUrl } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const BUSINESS_TYPES = [
@@ -114,6 +115,9 @@ function OrgSettingsContent() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
+  const [logoCleared, setLogoCleared] = useState(false);
   const [tenantMeta, setTenantMeta] = useState<Pick<Tenant, "slug" | "plan_type" | "user_role"> | null>(null);
   const [form, setForm] = useState<OrgFormState>(() =>
     tenantToForm({ address: "" } as Tenant, "AD")
@@ -131,6 +135,9 @@ function OrgSettingsContent() {
         plan_type: data.plan_type,
         user_role: data.user_role,
       });
+      setExistingLogoUrl(getMediaUrl(data.logo));
+      setLogoFile(null);
+      setLogoCleared(false);
       setForm(tenantToForm(data, dateSystem));
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
@@ -177,7 +184,7 @@ function OrgSettingsContent() {
 
     setSubmitting(true);
     try {
-      const updateData = {
+      const updateData: Parameters<typeof tenantApi.updateCurrent>[0] = {
         name: form.name.trim(),
         workspace_name: form.workspace_name.trim() || form.name.trim(),
         business_type: form.business_type || "other",
@@ -190,6 +197,12 @@ function OrgSettingsContent() {
         accounting_start_date: form.accounting_start_date || undefined,
         vat_registered: form.vat_registered,
       };
+
+      if (logoFile) {
+        updateData.logo = logoFile;
+      } else if (logoCleared) {
+        updateData.logo = null;
+      }
 
       await tenantApi.updateCurrent(updateData);
 
@@ -225,9 +238,6 @@ function OrgSettingsContent() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-        <div className="px-6">
-          <SettingsNav />
-        </div>
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
@@ -238,9 +248,6 @@ function OrgSettingsContent() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-      <div className="px-6">
-        <SettingsNav />
-      </div>
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
@@ -262,7 +269,8 @@ function OrgSettingsContent() {
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
               Business Information
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Business Name" required>
                 <Input
                   className="h-9 text-sm border-gray-200"
@@ -341,6 +349,21 @@ function OrgSettingsContent() {
                   placeholder="https://example.com"
                 />
               </Field>
+              </div>
+              <div className="lg:col-span-1">
+                <CompanyLogoUpload
+                  existingUrl={existingLogoUrl}
+                  disabled={!canEdit || submitting}
+                  onChange={(file) => {
+                    setLogoFile(file);
+                    if (file) setLogoCleared(false);
+                  }}
+                  onClearExisting={() => {
+                    setExistingLogoUrl(null);
+                    setLogoCleared(true);
+                  }}
+                />
+              </div>
             </div>
           </div>
 

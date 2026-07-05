@@ -146,7 +146,7 @@ export default function ErpPage() {
                   <p className="text-xs text-gray-400 capitalize mt-1">{user.role}</p>
                 </div>
                 <button
-                  onClick={() => router.push("/settings")}
+                  onClick={() => router.push("/settings/profile")}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                 >
                   <Settings className="h-4 w-4" />

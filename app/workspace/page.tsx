@@ -167,7 +167,7 @@ export default function WorkspacePage() {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2"
-                  onClick={() => router.push("/dashboard/settings")}
+                  onClick={() => router.push("/dashboard/settings/org")}
                 >
                   <Settings className="h-4 w-4" />
                   Settings

@@ -2,17 +2,41 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, User, Mail, Phone, Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { useAuth } from "@/lib/context/AuthContext";
-import { userApi } from "@/lib/api/user";
+import { getMediaUrl } from "@/lib/utils";
 import toast from "react-hot-toast";
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-sm">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
@@ -28,23 +52,13 @@ export default function ProfilePage() {
         email: user.email || "",
         phone: user.phone || "",
       });
+      setExistingAvatarUrl(getMediaUrl(user.avatar));
+      setAvatarFile(null);
     }
   }, [user]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size must be less than 5MB");
-        return;
-      }
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const updateField = (key: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -52,214 +66,145 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-      const updateData: any = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
+      const updateData: Record<string, unknown> = {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        phone: formData.phone.trim(),
       };
-
-      if (avatarFile) {
-        updateData.avatar = avatarFile;
-      }
+      if (avatarFile) updateData.avatar = avatarFile;
 
       await updateUser(updateData);
-      
-      toast.success("Profile updated successfully", {
-        style: {
-          borderRadius: '12px',
-          background: '#111827',
-          color: '#fff',
-        },
-      });
-      setIsEditing(false);
+      toast.success("Profile updated successfully");
       setAvatarFile(null);
-      setAvatarPreview(null);
-    } catch (error: any) {
-      console.error("Profile update error:", error);
-      toast.error(error.response?.data?.detail || "Failed to update profile");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail || "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const inputStyles = "w-full px-4 py-3 bg-gray-50 border border-gray-100 text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] disabled:opacity-60 disabled:cursor-not-allowed";
+  const initials =
+    `${formData.first_name?.[0] || ""}${formData.last_name?.[0] || ""}`.trim() ||
+    user?.username?.[0] ||
+    "U";
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] text-[#111827] selection:bg-[#22C55E]/20">
-      <div className="max-w-[850px] mx-auto px-6 py-16">
-        
-        {/* Breadcrumb & Header */}
-        <div className="mb-12">
-          <Link
-            href="/settings"
-            className="group inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#22C55E] transition-all mb-6"
-          >
-            <div className="p-1.5 rounded-lg bg-gray-50 group-hover:bg-[#22C55E]/10">
-              <ArrowLeft className="h-4 w-4 stroke-[3px]" />
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader
+        title="Profile"
+        subtitle="Manage your personal information and profile photo"
+      />
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
+          {user && (
+            <div className="flex flex-wrap gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
+              <span>
+                Username:{" "}
+                <span className="font-medium text-gray-700">{user.username}</span>
+              </span>
+              <span>
+                Role:{" "}
+                <span className="font-medium text-gray-700 capitalize">{user.role}</span>
+              </span>
+              {user.tenant && (
+                <span>
+                  Organization:{" "}
+                  <span className="font-medium text-gray-700">{user.tenant.name}</span>
+                </span>
+              )}
             </div>
-            Back to Settings
-          </Link>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-gray-900">Profile</h1>
-              <p className="text-gray-500 font-medium mt-2">Personalize your identity across the platform.</p>
-            </div>
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-[#22C55E] rounded-xl hover:bg-[#1da850] shadow-[0_4px_14px_0_rgba(34,197,94,0.39)] transition-all active:scale-95"
-              >
-                Edit Profile
-              </button>
-            )}
-          </div>
-        </div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Personal Information
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="First name" required>
+                    <Input
+                      className="h-9 text-sm border-gray-200"
+                      value={formData.first_name}
+                      onChange={(e) => updateField("first_name", e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </Field>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-8 md:p-10">
-            
-            {/* Avatar Section */}
-            <div className="flex flex-col sm:flex-row items-center gap-8 mb-12 pb-12 border-b border-gray-50">
-              <div className="group relative">
-                <div className="w-24 h-24 rounded-2xl bg-[#22C55E] flex items-center justify-center text-white font-black text-3xl shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)] overflow-hidden">
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
-                  ) : user?.avatar ? (
-                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    user?.first_name?.[0] || "U"
-                  )}
+                  <Field label="Last name" required>
+                    <Input
+                      className="h-9 text-sm border-gray-200"
+                      value={formData.last_name}
+                      onChange={(e) => updateField("last_name", e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </Field>
+
+                  <Field label="Email address">
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        className="h-9 text-sm border-gray-200 bg-gray-50 text-gray-600 pr-10"
+                        value={formData.email}
+                        readOnly
+                        disabled
+                      />
+                      <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#22C55E]" />
+                    </div>
+                  </Field>
+
+                  <Field label="Phone number">
+                    <Input
+                      type="tel"
+                      className="h-9 text-sm border-gray-200"
+                      placeholder="+977 98XXXXXXXX"
+                      value={formData.phone}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </Field>
                 </div>
-                {isEditing && (
-                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px] cursor-pointer">
-                    <Camera className="w-6 h-6 text-white" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-              <div className="text-center sm:text-left space-y-1">
-                <h3 className="text-xl font-bold text-gray-900">Profile Photo</h3>
-                <p className="text-sm text-gray-400 font-medium">PNG, JPG or GIF. Max 5MB.</p>
-                {isEditing && (
-                  <label className="text-[13px] font-bold text-[#22C55E] hover:underline mt-2 cursor-pointer inline-block">
-                    Upload new image
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
 
-            {/* Grid Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest">
-                  <User className="w-3 h-3" /> First Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                  disabled={!isEditing}
-                  className={inputStyles}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest">
-                  <User className="w-3 h-3" /> Last Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                  disabled={!isEditing}
-                  className={inputStyles}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest">
-                  <Mail className="w-3 h-3" /> Email Address
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={formData.email}
-                    disabled={true} // Usually email is changed via a secure process
-                    className={`${inputStyles} pr-10`}
+                <div className="lg:col-span-1">
+                  <ProfilePhotoUpload
+                    existingUrl={existingAvatarUrl}
+                    initials={initials}
+                    disabled={isLoading}
+                    onChange={setAvatarFile}
                   />
-                  <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#22C55E]" />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest">
-                  <Phone className="w-3 h-3" /> Phone Number
-                </label>
-                <input
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={!isEditing}
-                  className={inputStyles}
-                />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            {isEditing && (
-              <div className="mt-10 pt-8 border-t border-gray-50 flex flex-col sm:flex-row gap-3">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 px-8 py-3 text-sm font-bold text-white bg-[#22C55E] rounded-xl hover:bg-[#1da850] shadow-[0_4px_14px_0_rgba(34,197,94,0.39)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isLoading && <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#22C55E' }} />}
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setAvatarFile(null);
-                    setAvatarPreview(null);
-                    setFormData({
-                      first_name: user?.first_name || "",
-                      last_name: user?.last_name || "",
-                      email: user?.email || "",
-                      phone: user?.phone || "",
-                    });
-                  }}
-                  disabled={isLoading}
-                  className="px-8 py-3 text-sm font-bold text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+            <div className="text-xs text-gray-500">
+              Your email is verified. To change it, go to{" "}
+              <Link href="/settings/security" className="font-medium text-[#22C55E] hover:underline">
+                Security settings
+              </Link>
+              .
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
           </form>
         </div>
-
-        {/* Informational Footer */}
-        <div className="mt-8 px-4 flex items-start gap-3">
-          <div className="mt-1 w-2 h-2 rounded-full bg-[#22C55E]" />
-          <p className="text-[13px] text-gray-400 font-medium">
-            Your email is verified and connected to your primary account. To change your email, visit the <Link href="/settings/security" className="text-[#22C55E] hover:underline">Security Settings</Link>.
-          </p>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }

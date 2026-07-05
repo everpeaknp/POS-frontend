@@ -66,6 +66,7 @@ export interface User {
 export interface AuthResponse {
   access: string;
   refresh: string;
+  session_id?: string;
 }
 
 export const authApi = {

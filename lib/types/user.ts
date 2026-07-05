@@ -53,6 +53,15 @@ export interface NotificationPreferences {
   push_desktop: boolean;
   push_mobile: boolean;
   push_sound: boolean;
+  login_alerts: boolean;
+  security_log_exports: boolean;
+}
+
+export interface PrivacyPreferences {
+  profile_visibility: 'everyone' | 'organization' | 'private';
+  activity_status: boolean;
+  search_indexing: boolean;
+  data_retention_years: 1 | 5 | 0;
 }
 
 export interface Session {

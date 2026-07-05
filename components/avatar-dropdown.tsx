@@ -37,7 +37,7 @@ export function AvatarDropdown({ name }: AvatarDropdownProps) {
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/settings")}
+          onClick={() => router.push("/settings/profile")}
         >
           <Settings className="mr-2 h-4 w-4" />
           User Settings

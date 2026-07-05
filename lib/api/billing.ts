@@ -48,14 +48,26 @@ export interface EsewaCheckoutForm {
   plan_name: string;
 }
 
+export interface PlanActivationResult {
+  activated: true;
+  message: string;
+  subscription: BillingSubscription;
+}
+
+export type CheckoutResponse = EsewaCheckoutForm | PlanActivationResult;
+
+export function isPlanActivation(result: CheckoutResponse): result is PlanActivationResult {
+  return 'activated' in result && result.activated === true;
+}
+
 export const billingApi = {
   getOverview: async (): Promise<BillingOverview> => {
     const response = await apiClient.get<BillingOverview>('/billing/overview/');
     return response.data;
   },
 
-  checkout: async (plan_code: string): Promise<EsewaCheckoutForm> => {
-    const response = await apiClient.post<EsewaCheckoutForm>('/billing/checkout/', { plan_code });
+  checkout: async (plan_code: string): Promise<CheckoutResponse> => {
+    const response = await apiClient.post<CheckoutResponse>('/billing/checkout/', { plan_code });
     return response.data;
   },
 

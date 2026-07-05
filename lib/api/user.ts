@@ -3,6 +3,7 @@ import type {
   User, 
   NotificationPreferences,
   AppearancePreferences,
+  PrivacyPreferences,
   Session, 
   PasswordChangeData,
   ProfileUpdateData 
@@ -75,6 +76,38 @@ export const userApi = {
     data: Partial<AppearancePreferences>
   ): Promise<AppearancePreferences> => {
     const response = await apiClient.patch('/auth/appearance/update/', data);
+    return response.data;
+  },
+
+  getPrivacyPreferences: async (): Promise<PrivacyPreferences> => {
+    const response = await apiClient.get('/auth/privacy/');
+    return response.data;
+  },
+
+  updatePrivacyPreferences: async (
+    data: Partial<PrivacyPreferences>
+  ): Promise<PrivacyPreferences> => {
+    const response = await apiClient.patch('/auth/privacy/update/', data);
+    return response.data;
+  },
+
+  revokeOtherSessions: async (): Promise<{ message: string; revoked: number }> => {
+    const response = await apiClient.post('/auth/sessions/revoke-others/');
+    return response.data;
+  },
+
+  ensureSession: async (): Promise<{ session_id: string }> => {
+    const response = await apiClient.post('/auth/sessions/ensure/');
+    return response.data;
+  },
+
+  exportUserData: async (): Promise<Record<string, unknown>> => {
+    const response = await apiClient.get('/auth/export/');
+    return response.data;
+  },
+
+  deleteAccount: async (password: string): Promise<{ message: string }> => {
+    const response = await apiClient.post('/auth/account/delete/', { password });
     return response.data;
   },
 };

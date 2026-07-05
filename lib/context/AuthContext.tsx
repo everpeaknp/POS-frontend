@@ -65,10 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      const { access, refresh } = await authApi.login(credentials);
+      const { access, refresh, session_id } = await authApi.login(credentials);
       
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      if (session_id) {
+        localStorage.setItem('session_id', session_id);
+      }
       
       document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`;
       document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`;
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('session_id');
     
     // Clear cookies
     document.cookie = 'access_token=; path=/; max-age=0';
