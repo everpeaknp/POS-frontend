@@ -759,6 +759,23 @@ export interface TaxReportsData {
 // CUSTOM REPORTS TYPES
 // ============================================================================
 
+export interface CustomReportFilter {
+  field: string;
+  operator: 'equals' | 'contains' | 'gt' | 'lt' | 'gte' | 'lte';
+  value: string;
+}
+
+export interface CustomReportFieldCatalog {
+  label: string;
+  fields: Array<{ key: string; label: string; type: string }>;
+  default_fields: string[];
+  filter_operators: string[];
+}
+
+export interface CustomReportFieldsResponse {
+  [module: string]: CustomReportFieldCatalog;
+}
+
 export interface CustomReport {
   id: string;
   name: string;
@@ -766,7 +783,7 @@ export interface CustomReport {
   report_type: 'table' | 'chart' | 'both';
   module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos';
   fields: string[];
-  filters: any[];
+  filters: CustomReportFilter[];
   grouping: any;
   sorting: any;
   chart_config: any;
@@ -795,10 +812,10 @@ export interface CustomReportRunResult {
   };
   data: {
     columns: string[];
-    rows: any[];
-    summary: any;
+    rows: Record<string, unknown>[];
+    summary: Record<string, unknown>;
   };
-  chart_data: any;
+  chart_data: Array<{ name: string; value: number }> | null;
 }
 
 export interface CustomReportCreateData {
@@ -807,7 +824,7 @@ export interface CustomReportCreateData {
   report_type: 'table' | 'chart' | 'both';
   module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos';
   fields?: string[];
-  filters?: any[];
+  filters?: CustomReportFilter[];
   grouping?: any;
   sorting?: any;
   chart_config?: any;
@@ -820,6 +837,17 @@ export interface CustomReportCreateData {
 // ============================================================================
 
 export const customReportsAPI = {
+  /**
+   * Get field catalog for report builder
+   */
+  getFields: async (module?: string) => {
+    const response = await apiClient.get<CustomReportFieldsResponse>(
+      '/reports/custom-reports/fields/',
+      { params: module ? { module } : undefined }
+    );
+    return response.data;
+  },
+
   /**
    * List all custom reports
    */
@@ -870,7 +898,10 @@ export const customReportsAPI = {
     from_date?: string;
     to_date?: string;
   }) => {
-    const response = await apiClient.post<CustomReportRunResult>(`/reports/custom-reports/${reportId}/run/`, params);
+    const response = await apiClient.post<CustomReportRunResult>(
+      `/reports/custom-reports/${reportId}/run/`,
+      params ?? {}
+    );
     return response.data;
   },
 

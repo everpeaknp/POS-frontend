@@ -1,8 +1,10 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, CreditCard, Loader2, AlertCircle, Filter, Plus, CheckCircle } from "lucide-react";
+import { ArrowLeft, CreditCard, AlertCircle, Filter, Plus, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
@@ -35,8 +37,7 @@ export default function BankAccountDetailPage() {
     reference: "",
     description: "",
     type: "Credit" as BankTransaction["type"],
-    amount: "",
-  });
+    amount: "" });
 
   useEffect(() => {
     if (id) {
@@ -94,8 +95,7 @@ export default function BankAccountDetailPage() {
         description: txForm.description.trim(),
         type: txForm.type,
         debit: isCredit ? 0 : amount,
-        credit: isCredit ? amount : 0,
-      });
+        credit: isCredit ? amount : 0 });
       toast.success("Transaction recorded");
       setShowAddTx(false);
       setTxForm({
@@ -103,8 +103,7 @@ export default function BankAccountDetailPage() {
         reference: "",
         description: "",
         type: "Credit",
-        amount: "",
-      });
+        amount: "" });
       fetchAccountDetails();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
@@ -128,12 +127,7 @@ export default function BankAccountDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Bank Account" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Loading account details...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading account details…" />
       </div>
     );
   }

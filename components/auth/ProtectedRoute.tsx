@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import { PageLoading } from '@/components/shared/PageLoading';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -76,11 +77,7 @@ export function ProtectedRoute({
   
   // Show loading state
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
-    );
+    return <PageLoading fullScreen message="Loading…" />;
   }
   
   // Show nothing if not authenticated (will redirect)

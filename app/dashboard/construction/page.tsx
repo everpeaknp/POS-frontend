@@ -8,7 +8,6 @@ import {
   Users,
   CircleCheck,
   Wallet,
-  Plus,
   ClipboardCheck,
   FileText,
   BarChart3,
@@ -26,9 +25,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { DashHeader } from '@/components/dashboard/dash-header';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionStatCardClass,
+  constructionTableWrapClass,
+} from '@/components/dashboard/ConstructionPageShell';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { SkeletonCard } from '@/components/shared/Skeleton';
 import { useAuth } from '@/lib/context/AuthContext';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
@@ -51,28 +54,28 @@ const quickActions = [
     label: 'New Site',
     sub: 'Create project',
     icon: Building2,
-    color: 'bg-blue-50 text-blue-600',
+    color: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
   },
   {
     href: '/dashboard/construction/workers/new',
     label: 'New Worker',
     sub: 'Add workforce',
     icon: Users,
-    color: 'bg-green-50 text-[#22C55E]',
+    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
   },
   {
     href: '/dashboard/construction/attendance',
     label: 'Mark Attendance',
     sub: 'Daily tracking',
     icon: ClipboardCheck,
-    color: 'bg-purple-50 text-purple-600',
+    color: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400',
   },
   {
     href: '/dashboard/construction/daily-logs/new',
     label: 'New Daily Log',
     sub: 'Log progress',
     icon: FileText,
-    color: 'bg-orange-50 text-orange-600',
+    color: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
   },
 ];
 
@@ -82,28 +85,28 @@ const moduleLinks = [
     label: 'Manage Sites',
     sub: 'View all projects',
     icon: Building2,
-    color: 'bg-blue-50 text-blue-600',
+    color: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
   },
   {
     href: '/dashboard/construction/workers',
     label: 'Manage Workers',
     sub: 'View workforce',
     icon: HardHat,
-    color: 'bg-green-50 text-[#22C55E]',
+    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
   },
   {
     href: '/dashboard/accounting/journal-entries',
     label: 'Journal Entries',
     sub: 'View GL entries',
     icon: FileText,
-    color: 'bg-amber-50 text-amber-600',
+    color: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
   },
   {
     href: '/dashboard/construction/reports',
     label: 'View Reports',
     sub: 'Budget analysis',
     icon: BarChart3,
-    color: 'bg-purple-50 text-purple-600',
+    color: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400',
   },
 ];
 
@@ -198,14 +201,14 @@ export default function ConstructionDashboardPage() {
           value: stats.total_sites.toString(),
           sub: `${stats.active_sites} active`,
           icon: Building2,
-          color: 'bg-blue-50 text-blue-600',
+          color: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
         },
         {
           label: 'Total Workers',
           value: stats.total_workers.toString(),
           sub: `${stats.active_workers} active`,
           icon: Users,
-          color: 'bg-green-50 text-[#22C55E]',
+          color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
         },
         {
           label: 'Budget Health',
@@ -215,64 +218,44 @@ export default function ConstructionDashboardPage() {
               ? `${stats.sites_over_budget} over budget`
               : 'on budget',
           icon: CircleCheck,
-          color: 'bg-emerald-50 text-emerald-600',
+          color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
         },
         {
           label: 'Total Budget',
           value: formatNPR(stats.total_allocated_budget),
           sub: `Spent: ${formatNPR(stats.total_actual_spend)}`,
           icon: Wallet,
-          color: 'bg-purple-50 text-purple-600',
+          color: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400',
         },
       ]
     : [];
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Construction" subtitle={subtitle} />
-        <div className="flex-1 p-6 space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        </div>
-      </div>
+      <ConstructionPageShell title="Construction" subtitle={subtitle} loading />
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Construction" subtitle={subtitle} />
-      <div className="flex-1 p-6 space-y-6">
+    <ConstructionPageShell title="Construction" subtitle={subtitle}>
+      <div className="space-y-6 w-full">
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {statCards.map((s) => (
-              <div
-                key={s.label}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
-              >
+              <div key={s.label} className={constructionStatCardClass}>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-gray-500">{s.label}</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground">{s.label}</p>
                   <div className={`p-2 rounded-lg ${s.color}`}>
                     <s.icon className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-foreground">{s.value}</p>
                 <p
                   className={`text-xs mt-0.5 ${
                     s.label === 'Budget Health' && stats.sites_over_budget > 0
-                      ? 'text-red-500'
-                      : 'text-gray-400'
+                      ? 'text-red-500 dark:text-red-400'
+                      : 'text-gray-400 dark:text-muted-foreground'
                   }`}
                 >
                   {s.sub}
@@ -284,13 +267,13 @@ export default function ConstructionDashboardPage() {
 
         {/* Quick actions */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-foreground mb-3">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className={`${constructionCardClass} p-4 hover:border-[#22C55E]/30 hover:shadow-md transition-all group`}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -299,8 +282,8 @@ export default function ConstructionDashboardPage() {
                     <action.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">{action.label}</p>
-                    <p className="text-xs text-gray-500">{action.sub}</p>
+                    <p className="font-medium text-gray-900 dark:text-foreground text-sm">{action.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-muted-foreground">{action.sub}</p>
                   </div>
                 </div>
               </Link>
@@ -310,8 +293,8 @@ export default function ConstructionDashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Budget chart */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+          <div className={`${constructionCardClass} p-5`}>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-foreground mb-4">
               Budget vs Spend (Active Sites)
             </h3>
             {budgetChartData.length > 0 ? (
@@ -327,32 +310,32 @@ export default function ConstructionDashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-[240px] flex items-center justify-center text-gray-400 dark:text-muted-foreground text-sm">
                 No active sites to chart
               </div>
             )}
           </div>
 
           {/* Module links */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Module Navigation</h3>
+          <div className={`${constructionCardClass} p-5`}>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-foreground mb-4">Module Navigation</h3>
             <div className="space-y-2">
               {moduleLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center justify-between p-3 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-100 transition-colors group"
+                  className="flex items-center justify-between p-3 rounded-lg border border-gray-50 dark:border-border hover:bg-gray-50 dark:hover:bg-muted/40 hover:border-gray-100 dark:hover:border-border transition-colors group"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${link.color}`}>
                       <link.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{link.label}</p>
-                      <p className="text-xs text-gray-500">{link.sub}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-foreground">{link.label}</p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground">{link.sub}</p>
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                  <ChevronRight className="h-4 w-4 text-gray-300 dark:text-muted-foreground group-hover:text-gray-500 dark:group-hover:text-foreground transition-colors" />
                 </Link>
               ))}
             </div>
@@ -360,9 +343,9 @@ export default function ConstructionDashboardPage() {
         </div>
 
         {/* Active sites */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="text-sm font-semibold text-gray-700">Active Construction Sites</h2>
+        <div className={constructionTableWrapClass}>
+          <div className="px-5 py-4 border-b border-gray-100 dark:border-border flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-foreground">Active Construction Sites</h2>
             <Link
               href="/dashboard/construction/sites"
               className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
@@ -381,22 +364,22 @@ export default function ConstructionDashboardPage() {
               actionHref="/dashboard/construction/sites/new"
             />
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-border">
               {activeSites.slice(0, 5).map((site) => {
                 const pct = site.budget_percentage ?? 0;
                 return (
                   <button
                     key={site.id}
                     type="button"
-                    className="w-full text-left p-5 hover:bg-gray-50 transition-colors"
+                    className="w-full text-left p-5 hover:bg-gray-50 dark:hover:bg-muted/30 transition-colors"
                     onClick={() => router.push(`/dashboard/construction/sites/${site.id}`)}
                   >
                     <div className="flex justify-between items-start gap-4 mb-3">
                       <div className="min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground truncate">
                           {site.name}
                         </h3>
-                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-muted-foreground flex items-center gap-1 mt-0.5">
                           <MapPin className="h-3 w-3 shrink-0" />
                           <span className="truncate">{site.location}</span>
                         </p>
@@ -409,11 +392,11 @@ export default function ConstructionDashboardPage() {
                     </div>
 
                     <div className="mb-3">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-muted-foreground mb-1">
                         <span>Budget: {formatNPR(site.allocated_budget)}</span>
                         <span>{pct.toFixed(1)}% used</span>
                       </div>
-                      <div className="overflow-hidden h-1.5 rounded-full bg-gray-100">
+                      <div className="overflow-hidden h-1.5 rounded-full bg-gray-100 dark:bg-muted">
                         <div
                           style={{ width: `${Math.min(pct, 100)}%` }}
                           className={`h-full transition-all duration-500 ${getProgressBarColor(pct)}`}
@@ -423,19 +406,19 @@ export default function ConstructionDashboardPage() {
 
                     <div className="grid grid-cols-3 gap-3 text-xs">
                       <div>
-                        <p className="text-gray-500">Material</p>
-                        <p className="font-semibold text-gray-900">
+                        <p className="text-gray-500 dark:text-muted-foreground">Material</p>
+                        <p className="font-semibold text-gray-900 dark:text-foreground">
                           {formatNPR(site.material_cost ?? 0)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Labor</p>
-                        <p className="font-semibold text-gray-900">
+                        <p className="text-gray-500 dark:text-muted-foreground">Labor</p>
+                        <p className="font-semibold text-gray-900 dark:text-foreground">
                           {formatNPR(site.labor_cost ?? 0)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Remaining</p>
+                        <p className="text-gray-500 dark:text-muted-foreground">Remaining</p>
                         <p
                           className={`font-semibold ${
                             (site.remaining_budget ?? 0) >= 0
@@ -454,6 +437,6 @@ export default function ConstructionDashboardPage() {
           )}
         </div>
       </div>
-    </div>
+    </ConstructionPageShell>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Eye, Edit, CheckCircle, XCircle, FileText } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Edit, CheckCircle, XCircle, FileText, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { purchaseRequestsAPI, type PurchaseRequest } from "@/lib/api/purchase";
 import toast from "react-hot-toast";
@@ -69,6 +72,34 @@ export default function PurchaseRequestsPage() {
     return matchSearch && matchStatus;
   });
 
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Requests" subtitle="Loading..." />
+        <div className="flex-1 p-6">
+          <PageLoading message="Loading…" />
+        </div>
+      </div>
+    );
+  }
+
+  if (requests.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Requests" subtitle="Internal purchase requisitions" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={ClipboardList}
+            title="No purchase requests yet"
+            description="Create your first purchase request to start internal requisitions"
+            actionLabel="New Request"
+            actionHref="/dashboard/purchase/requests/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Purchase Requests" subtitle="Internal purchase requisitions" />
@@ -88,21 +119,21 @@ export default function PurchaseRequestsPage() {
           </Button>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No purchase requests found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>{["PR #", "Date", "Requested By", "Total Amount", "Status", "Actions"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filtered.map((r) => (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>{["PR #", "Date", "Requested By", "Total Amount", "Status", "Actions"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/requests/${r.id}`)}>{r.request_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={r.date} /></td>
@@ -134,14 +165,11 @@ export default function PurchaseRequestsPage() {
                       </td>
                     </tr>
                   ))}
-                  {filtered.length === 0 && (
-                    <tr><td colSpan={10} className="px-4 py-10 text-center text-sm text-gray-400">No purchase requests found</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
         </div>
+        )}
       </div>
     </div>
   );

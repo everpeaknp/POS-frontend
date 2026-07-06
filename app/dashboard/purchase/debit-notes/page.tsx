@@ -3,10 +3,11 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Eye, CheckCircle, Printer, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, CheckCircle, Printer, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { debitNotesAPI, type DebitNote } from "@/lib/api/purchase";
 import toast from "react-hot-toast";
@@ -40,6 +41,34 @@ export default function DebitNotesPage() {
     (dn.invoice_number || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Debit Notes" subtitle="Loading..." />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-gray-500">Loading debit notes...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (debitNotes.length === 0 && !search) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Debit Notes" subtitle="Manage issued debit notes" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={FileText}
+            title="No debit notes yet"
+            description="Create your first debit note for supplier adjustments"
+            actionLabel="New Debit Note"
+            actionHref="/dashboard/purchase/debit-notes/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Debit Notes" subtitle="Manage issued debit notes" />
@@ -55,6 +84,11 @@ export default function DebitNotesPage() {
           </Button>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No debit notes found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -64,12 +98,7 @@ export default function DebitNotesPage() {
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-gray-400" /></td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">No debit notes found</td></tr>
-                ) : (
-                  filtered.map((dn) => (
+                {filtered.map((dn) => (
                     <tr key={dn.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/debit-notes/${dn.id}`)}>{dn.debit_note_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={dn.date} /></td>
@@ -100,12 +129,12 @@ export default function DebitNotesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
+                  ))}
               </tbody>
             </table>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

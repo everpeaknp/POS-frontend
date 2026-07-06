@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -18,8 +20,7 @@ const SUB_TYPES: Record<string, string[]> = {
   Liabilities: ["Payable", "Tax", "Current Liability", "Long-term Liability"],
   Equity: ["Capital", "Retained Earnings", "Drawing"],
   Income: ["Revenue", "Other Income"],
-  Expense: ["COGS", "Operating", "Administrative", "Other Expense"],
-};
+  Expense: ["COGS", "Operating", "Administrative", "Other Expense"] };
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -48,8 +49,7 @@ export default function EditAccountPage() {
     sub_type: "",
     parent: "",
     description: "",
-    status: "active" as Account["status"],
-  });
+    status: "active" as Account["status"] });
 
   useEffect(() => {
     if (!id) return;
@@ -68,8 +68,7 @@ export default function EditAccountPage() {
           sub_type: account.sub_type,
           parent: account.parent ?? "",
           description: account.description ?? "",
-          status: account.status,
-        });
+          status: account.status });
       } catch (error) {
         console.error("Failed to load account:", error);
         toast.error("Failed to load account");
@@ -101,8 +100,7 @@ export default function EditAccountPage() {
         type: formData.type,
         sub_type: formData.sub_type,
         status: formData.status,
-        description: formData.description,
-      };
+        description: formData.description };
       if (formData.parent) {
         payload.parent = formData.parent;
       } else {
@@ -139,12 +137,7 @@ export default function EditAccountPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Edit Account" subtitle="Loading..." />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto" />
-            <p className="mt-4 text-gray-600">Loading account...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading account…" />
       </div>
     );
   }
@@ -184,8 +177,7 @@ export default function EditAccountPage() {
                       ...p,
                       type: (v ?? "Assets") as Account["type"],
                       sub_type: "",
-                      parent: "",
-                    }))
+                      parent: "" }))
                   }
                 >
                   <SelectTrigger className="h-9 text-sm border-gray-200">

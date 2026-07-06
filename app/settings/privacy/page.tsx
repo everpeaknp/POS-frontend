@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Shield, Eye, Download, Trash2, ChevronDown, Loader2 } from "lucide-react";
+import { Shield, Eye, Download, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { userApi } from "@/lib/api/user";
@@ -92,11 +92,12 @@ export default function PrivacyPage() {
 
   if (loading) {
     return (
-      <SettingsPageShell title="Privacy" subtitle="Control visibility, data retention, and account deletion">
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-[#22C55E]" />
-        </div>
-      </SettingsPageShell>
+      <SettingsPageShell
+        title="Privacy"
+        subtitle="Control visibility, data retention, and account deletion"
+        loading
+        loadingMessage="Loading privacy settings…"
+      />
     );
   }
 

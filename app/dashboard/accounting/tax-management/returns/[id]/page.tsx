@@ -1,5 +1,6 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -72,12 +73,7 @@ export default function VatReturnDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="VAT Return" subtitle="Loading..." />
-        <div className="flex-1 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]" />
-            <span className="ml-3 text-gray-600">Loading...</span>
-          </div>
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

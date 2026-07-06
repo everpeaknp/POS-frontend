@@ -32,6 +32,8 @@ interface DateInputProps {
   className?: string;
   id?: string;
   required?: boolean;
+  min?: string;
+  max?: string;
 }
 
 function formatAdDayShort(date: Date): string {
@@ -187,6 +189,8 @@ export function DateInput({
   className,
   id,
   required,
+  min,
+  max,
 }: DateInputProps) {
   const { dateSystem } = useDateSystem();
 
@@ -196,6 +200,8 @@ export function DateInput({
         id={id}
         type="date"
         value={value}
+        min={min}
+        max={max}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         required={required}
@@ -212,6 +218,8 @@ export function DateInput({
       disabled={disabled}
       className={className}
       required={required}
+      min={min}
+      max={max}
     />
   );
 }
@@ -223,6 +231,8 @@ function BsDateInput({
   className,
   id,
   required,
+  min,
+  max,
 }: DateInputProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);

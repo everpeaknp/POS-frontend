@@ -1,11 +1,13 @@
 ﻿"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { JournalStatusBadge, JournalTypeBadge } from "@/components/accounting/JournalStatusBadge";
 import { journalEntriesAPI, JournalEntry } from "@/lib/api/accounting";
 import toast from "react-hot-toast";
@@ -77,11 +79,23 @@ export default function JournalEntriesPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Journal Entries" subtitle="Loading..." />
+        <PageLoading message="Loading journal entries…" />
+      </div>
+    );
+  }
+
+  if (entries.length === 0 && !search && typeFilter === "All" && statusFilter === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Journal Entries" subtitle="Manage accounting journal entries" />
         <div className="flex-1 p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading journal entries...</p>
-          </div>
+          <EmptyState
+            icon={BookOpen}
+            title="No journal entries yet"
+            description="Create your first journal entry to record transactions"
+            actionLabel="New Journal Entry"
+            actionHref="/dashboard/accounting/journal-entries/new"
+          />
         </div>
       </div>
     );
@@ -113,14 +127,7 @@ export default function JournalEntriesPage() {
 
         {filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
-            <p className="text-gray-500">No journal entries found</p>
-            {entries.length === 0 && (
-              <Link href="/dashboard/accounting/journal-entries/new">
-                <Button size="sm" className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                  <Plus className="h-4 w-4" /> Create First Entry
-                </Button>
-              </Link>
-            )}
+            <p className="text-gray-500">No journal entries found matching your filters</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

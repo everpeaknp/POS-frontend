@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Globe, Monitor, Smartphone, Trash2, ShieldCheck, MapPin, Activity, Loader2 } from "lucide-react";
+import { Globe, Monitor, Smartphone, Trash2, ShieldCheck, MapPin, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { userApi } from "@/lib/api/user";
 import type { Session } from "@/lib/types/user";
@@ -67,6 +67,8 @@ export default function SessionsPage() {
     <SettingsPageShell
       title="Sessions"
       subtitle="Devices and browsers where you are currently signed in"
+      loading={isLoading}
+      loadingMessage="Loading active sessions…"
       action={
         <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#22C55E]/10 text-[#22C55E] rounded-lg border border-[#22C55E]/20 text-xs font-medium">
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -78,11 +80,7 @@ export default function SessionsPage() {
         <SettingsCard>
           <SettingsCardHeader icon={Globe} title="Login activity" description="Review and revoke access from unknown devices" />
           <SettingsCardBody className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
-              </div>
-            ) : sessions.length === 0 ? (
+            {sessions.length === 0 ? (
               <div className="py-16 text-center text-sm text-muted-foreground">No active sessions found</div>
             ) : (
               <div className="divide-y divide-border">

@@ -1,4 +1,5 @@
 import NepaliDate from "nepali-date-converter";
+import { NEPALI_MONTHS } from "./constants";
 
 /** Parse YYYY-MM-DD as local calendar date (no UTC shift). */
 export function parseIsoDateLocal(iso: string): Date | null {
@@ -46,6 +47,45 @@ export function getBsDaysInMonth(year: number, monthIndex: number): number {
   return 30;
 }
 
+export function getCurrentBsPeriod(): { year: number; month: string } {
+  const bs = adIsoToBsParts(todayIsoDate());
+  if (!bs) {
+    const today = new Date();
+    const year = today.getFullYear() + (today.getMonth() >= 3 ? 57 : 56);
+    return { year, month: NEPALI_MONTHS[0] };
+  }
+  return {
+    year: bs.year,
+    month: NEPALI_MONTHS[bs.monthIndex] ?? NEPALI_MONTHS[0],
+  };
+}
+
 export function isValidIsoDate(iso: string): boolean {
   return parseIsoDateLocal(iso) !== null;
+}
+
+/** Latest birth date (inclusive) for someone who is at least `minAge` years old today. */
+export function maxBirthDateForMinAge(minAge = 18): string {
+  const today = parseIsoDateLocal(todayIsoDate());
+  if (!today) return "";
+  const maxBirth = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+  return formatIsoDateLocal(maxBirth);
+}
+
+export function getAgeFromIsoDate(iso: string, asOfIso?: string): number | null {
+  const birth = parseIsoDateLocal(iso);
+  const asOf = parseIsoDateLocal(asOfIso ?? todayIsoDate());
+  if (!birth || !asOf) return null;
+
+  let age = asOf.getFullYear() - birth.getFullYear();
+  const hasNotHadBirthday =
+    asOf.getMonth() < birth.getMonth() ||
+    (asOf.getMonth() === birth.getMonth() && asOf.getDate() < birth.getDate());
+  if (hasNotHadBirthday) age -= 1;
+  return age;
+}
+
+export function isAtLeastAge(iso: string, minAge = 18, asOfIso?: string): boolean {
+  const age = getAgeFromIsoDate(iso, asOfIso);
+  return age !== null && age >= minAge;
 }

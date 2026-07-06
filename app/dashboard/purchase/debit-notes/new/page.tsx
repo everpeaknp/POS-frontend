@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -112,9 +114,7 @@ export default function NewDebitNotePage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Debit Note" subtitle="Issue a new debit note" />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

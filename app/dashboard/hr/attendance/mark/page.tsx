@@ -4,10 +4,10 @@ import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass, hrTableWrapClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
 import { getEmployees, bulkMarkAttendance, type Employee, type AttendanceRecord } from "@/lib/api/hr";
 
@@ -128,26 +128,19 @@ export default function MarkAttendancePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Mark Attendance" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading employees...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Mark Attendance" subtitle="Record employee attendance" />
-      <div className="flex-1 p-6 space-y-4">
-        <Link href="/dashboard/hr/attendance" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" /> Back to Attendance
-        </Link>
+    <HRPageShell
+      title="Mark Attendance"
+      subtitle="Record employee attendance"
+      loading={loading}
+    >
+      {!loading && (
+        <>
+          <Link href="/dashboard/hr/attendance" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+            <ChevronLeft className="h-4 w-4" /> Back to Attendance
+          </Link>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className={`${hrCardClass} p-6`}>
           <div className="mb-6">
             <label className="text-sm font-medium text-gray-700">Date</label>
             <DateInput value={date} onChange={(date) => setDate(date)} />
@@ -173,7 +166,7 @@ export default function MarkAttendancePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+            <div className={hrTableWrapClass}>
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-100">
                   <tr>
@@ -255,8 +248,9 @@ export default function MarkAttendancePage() {
               </Button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+          </div>
+        </>
+      )}
+    </HRPageShell>
   );
 }

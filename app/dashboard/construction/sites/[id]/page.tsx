@@ -4,6 +4,12 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionStatCardClass,
+} from '@/components/dashboard/ConstructionPageShell';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -91,92 +97,77 @@ export default function SiteDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-      </div>
+      <ConstructionPageShell title="Site Details" subtitle="Loading site information…" loading />
     );
   }
 
   if (!site) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Site not found</p>
-        <Link
-          href="/dashboard/construction/sites"
-          className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
-        >
-          Back to Sites
-        </Link>
-      </div>
+      <ConstructionPageShell title="Site Not Found" subtitle="This site could not be loaded">
+        <div className={`${constructionCardClass} p-12 text-center`}>
+          <p className="text-gray-500">Site not found</p>
+          <Link
+            href="/dashboard/construction/sites"
+            className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
+          >
+            Back to Sites
+          </Link>
+        </div>
+      </ConstructionPageShell>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Link
-              href="/dashboard/construction/sites"
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">{site.name}</h1>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(site.status)}`}
-            >
-              {site.status.replace('_', ' ').toUpperCase()}
-            </span>
-          </div>
-          <p className="text-gray-600">{site.location}</p>
-          {site.client_name && (
-            <p className="text-sm text-gray-500 mt-1">Client: {site.client_name}</p>
-          )}
-        </div>
+    <ConstructionPageShell
+      title={site.name}
+      subtitle={[site.location, site.client_name ? `Client: ${site.client_name}` : null]
+        .filter(Boolean)
+        .join(' · ')}
+      showBack
+      backHref="/dashboard/construction/sites"
+      backLabel="Back to Sites"
+      action={
         <div className="flex gap-2">
-          <Link
-            href={`/dashboard/construction/sites/${siteId}/edit`}
-            className="px-4 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] transition-colors"
-          >
-            Edit Site
+          <Link href={`/dashboard/construction/sites/${siteId}/edit`}>
+            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white">
+              Edit Site
+            </Button>
           </Link>
-          <button
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-9"
             onClick={() => setDeleteModalOpen(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
             Delete
-          </button>
+          </Button>
         </div>
-      </div>
+      }
+    >
+      <div className="space-y-4 w-full">
+        {siteDashboard && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={constructionStatCardClass}>
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Active Workers</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{siteDashboard.workers?.total_active ?? 0}</p>
+            </div>
+            <div className={constructionStatCardClass}>
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Present (7 days)</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{siteDashboard.attendance?.present ?? 0}</p>
+            </div>
+            <div className={constructionStatCardClass}>
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Material Logs (30d)</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{siteDashboard.material_consumption?.last_30_days ?? 0}</p>
+            </div>
+            <div className={constructionStatCardClass}>
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">Daily Logs</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{siteDashboard.daily_logs?.total ?? 0}</p>
+            </div>
+          </div>
+        )}
 
-      {siteDashboard && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-xs text-gray-500">Active Workers</p>
-            <p className="text-2xl font-bold">{siteDashboard.workers?.total_active ?? 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-xs text-gray-500">Present (7 days)</p>
-            <p className="text-2xl font-bold text-green-600">{siteDashboard.attendance?.present ?? 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-xs text-gray-500">Material Logs (30d)</p>
-            <p className="text-2xl font-bold">{siteDashboard.material_consumption?.last_30_days ?? 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-xs text-gray-500">Daily Logs</p>
-            <p className="text-2xl font-bold">{siteDashboard.daily_logs?.total ?? 0}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Budget Overview */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Budget Overview</h2>
+        <div className={`${constructionCardClass} p-6`}>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-4">Budget Overview</h2>
         
         <div className="flex justify-between items-center mb-4">
           <span className="text-sm font-medium text-gray-700">Budget Status</span>
@@ -249,88 +240,85 @@ export default function SiteDetailPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Cost Breakdown */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Cost Breakdown</h2>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-            <span className="text-gray-700">Material Cost</span>
-            <span className="font-semibold text-gray-900">{formatNPR(site.material_cost ?? 0)}</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-            <span className="text-gray-700">Labor Cost</span>
-            <span className="font-semibold text-gray-900">{formatNPR(site.labor_cost ?? 0)}</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-            <span className="text-gray-700">Other Expenses</span>
-            <span className="font-semibold text-gray-900">{formatNPR(site.other_expenses ?? 0)}</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border-t-2 border-green-200">
-            <span className="text-gray-700 font-medium">Total Actual Spend</span>
-            <span className="font-bold text-gray-900">{formatNPR(site.actual_spend ?? 0)}</span>
-          </div>
         </div>
-      </div>
 
-      {/* Site Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Site Information</h2>
+        <div className={`${constructionCardClass} p-6`}>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Cost Breakdown</h2>
           <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">Manager</p>
-              <p className="font-medium text-gray-900">{site.manager_name}</p>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-700">Material Cost</span>
+              <span className="font-semibold text-gray-900">{formatNPR(site.material_cost ?? 0)}</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Warehouse</p>
-              <p className="font-medium text-gray-900">{site.warehouse_name}</p>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-700">Labor Cost</span>
+              <span className="font-semibold text-gray-900">{formatNPR(site.labor_cost ?? 0)}</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(site.status)}`}>
-                {site.status.replace('_', ' ').toUpperCase()}
-              </span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-700">Other Expenses</span>
+              <span className="font-semibold text-gray-900">{formatNPR(site.other_expenses ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border-t-2 border-green-200">
+              <span className="text-gray-700 font-medium">Total Actual Spend</span>
+              <span className="font-bold text-gray-900">{formatNPR(site.actual_spend ?? 0)}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">Start Date</p>
-              <p className="font-medium text-gray-900"><FormattedDate value={site.start_date} /></p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`${constructionCardClass} p-6`}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Site Information</h2>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-500">Manager</p>
+                <p className="font-medium text-gray-900">{site.manager_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Warehouse</p>
+                <p className="font-medium text-gray-900">{site.warehouse_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Status</p>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(site.status)}`}>
+                  {site.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
             </div>
-            {site.estimated_end_date && (
+          </div>
+
+          <div className={`${constructionCardClass} p-6`}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
+            <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-500">Estimated End Date</p>
-                <p className="font-medium text-gray-900"><FormattedDate value={site.estimated_end_date} /></p>
+                <p className="text-sm text-gray-500">Start Date</p>
+                <p className="font-medium text-gray-900"><FormattedDate value={site.start_date} /></p>
               </div>
-            )}
-            {site.actual_end_date && (
-              <div>
-                <p className="text-sm text-gray-500">Actual End Date</p>
-                <p className="font-medium text-gray-900"><FormattedDate value={site.actual_end_date} /></p>
-              </div>
-            )}
+              {site.estimated_end_date && (
+                <div>
+                  <p className="text-sm text-gray-500">Estimated End Date</p>
+                  <p className="font-medium text-gray-900"><FormattedDate value={site.estimated_end_date} /></p>
+                </div>
+              )}
+              {site.actual_end_date && (
+                <div>
+                  <p className="text-sm text-gray-500">Actual End Date</p>
+                  <p className="font-medium text-gray-900"><FormattedDate value={site.actual_end_date} /></p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {site.description && (
+          <div className={`${constructionCardClass} p-6`}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
+            <p className="text-gray-700 whitespace-pre-wrap">{site.description}</p>
+          </div>
+        )}
       </div>
 
-      {/* Description */}
-      {site.description && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{site.description}</p>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`${constructionCardClass} p-6 max-w-md w-full`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,6 +358,6 @@ export default function SiteDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </ConstructionPageShell>
   );
 }

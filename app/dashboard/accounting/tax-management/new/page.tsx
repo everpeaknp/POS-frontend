@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -48,8 +49,7 @@ export default function NewTaxRulePage() {
     applicable_on: "Both",
     account: "",
     status: "active",
-    description: "",
-  });
+    description: "" });
 
   useEffect(() => {
     fetchAccounts();
@@ -75,8 +75,7 @@ export default function NewTaxRulePage() {
       accounts.map((a) => ({
         value: String(a.id),
         label: `${a.code} — ${a.name}`,
-        subtitle: a.type,
-      })),
+        subtitle: a.type })),
     [accounts]
   );
 
@@ -126,8 +125,7 @@ export default function NewTaxRulePage() {
         applicable_on: formData.applicable_on,
         account: String(formData.account),
         status: formData.status,
-        description: formData.description.trim(),
-      });
+        description: formData.description.trim() });
       toast.success("Tax rule created successfully");
       router.push("/dashboard/accounting/tax-management");
     } catch (error: unknown) {
@@ -142,12 +140,7 @@ export default function NewTaxRulePage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Add Tax Rule" subtitle="Create a new tax rule for your organization" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto" />
-            <p className="mt-4 text-gray-600">Loading accounts...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading accounts…" />
       </div>
     );
   }

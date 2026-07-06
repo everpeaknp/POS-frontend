@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HardwarePageShell,
+  hardwareCardClass,
   hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -52,14 +54,30 @@ export default function HardwareProductsPage() {
       product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (!loading && products.length === 0 && !searchTerm) {
+    return (
+      <HardwarePageShell
+        title="Hardware Products"
+        subtitle="Manage hardware inventory with bulk pricing and stock tracking"
+      >
+        <EmptyState
+            icon={Package}
+            title="No products yet"
+            description="Add your first hardware product to start tracking inventory and pricing"
+            actionLabel="New Product"
+            actionHref="/dashboard/hardware/products/new"
+          />
+      </HardwarePageShell>
+    );
+  }
+
   return (
     <HardwarePageShell
       title="Hardware Products"
       subtitle="Manage hardware inventory with bulk pricing and stock tracking"
       loading={loading}
-    >
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      toolbar={
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -69,14 +87,21 @@ export default function HardwareProductsPage() {
             className={hardwareInputClass}
           />
         </div>
+      }
+      action={
         <Link href="/dashboard/hardware/products/new">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" />
             New Product
           </Button>
         </Link>
-      </div>
-
+      }
+    >
+      {filteredProducts.length === 0 ? (
+        <div className={`${hardwareCardClass} p-12 text-center`}>
+          <p className="text-gray-500 dark:text-muted-foreground">No products found matching your search</p>
+        </div>
+      ) : (
       <div className={hardwareTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -95,14 +120,7 @@ export default function HardwareProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
-                    No hardware products found
-                  </td>
-                </tr>
-              ) : (
-                filteredProducts.map((product) => {
+              {filteredProducts.map((product) => {
                   const badge = stockBadge(product);
                   return (
                     <tr
@@ -144,12 +162,12 @@ export default function HardwareProductsPage() {
                       </td>
                     </tr>
                   );
-                })
-              )}
+                })}
             </tbody>
           </table>
         </div>
       </div>
+      )}
     </HardwarePageShell>
   );
 }

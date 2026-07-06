@@ -37,20 +37,29 @@ function PaymentStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function BillingPanel() {
+export function BillingPanel({
+  onLoadingChange,
+}: {
+  onLoadingChange?: (loading: boolean) => void;
+}) {
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
+  const setPageLoading = (value: boolean) => {
+    setLoading(value);
+    onLoadingChange?.(value);
+  };
+
   const loadOverview = async (showLoading = true) => {
     try {
-      if (showLoading) setLoading(true);
+      if (showLoading) setPageLoading(true);
       const data = await billingApi.getOverview();
       setOverview(data);
     } catch (error: any) {
       toast.error(error.response?.data?.detail || "Failed to load billing");
     } finally {
-      if (showLoading) setLoading(false);
+      if (showLoading) setPageLoading(false);
     }
   };
 
@@ -95,11 +104,7 @@ export function BillingPanel() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-      </div>
-    );
+    return null;
   }
 
   if (!overview) {

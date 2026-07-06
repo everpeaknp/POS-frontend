@@ -21,7 +21,7 @@ export function EmptyState({
   const showButton = actionLabel && (actionHref || onAction);
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center min-h-[50vh]">
       <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
         <Icon className="h-8 w-8 text-gray-400" />
       </div>
@@ -32,7 +32,7 @@ export function EmptyState({
           {actionHref && !onAction ? (
             <Link
               href={actionHref}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
             >
               <Plus className="h-4 w-4" />
               {actionLabel}
@@ -40,7 +40,7 @@ export function EmptyState({
           ) : (
             <button
               onClick={onAction}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
             >
               <Plus className="h-4 w-4" />
               {actionLabel}

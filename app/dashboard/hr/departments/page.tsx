@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Users, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import {
+  HRPageShell,
+  hrCardClass,
+} from "@/components/dashboard/HRPageShell";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/EmptyState";
 import toast from "react-hot-toast";
@@ -38,7 +41,6 @@ export default function DepartmentsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    // Show confirmation toast with action buttons
     const confirmDelete = () => {
       toast.promise(
         deleteDepartment(id),
@@ -53,7 +55,6 @@ export default function DepartmentsPage() {
       );
     };
 
-    // Show custom confirmation toast in center of screen
     toast((t) => (
       <div className="flex flex-col gap-4 min-w-[320px] p-2">
         <div className="flex items-start gap-3">
@@ -100,49 +101,45 @@ export default function DepartmentsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Departments" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading departments...</div>
-        </div>
-      </div>
+      <HRPageShell
+        title="Departments"
+        subtitle="Loading..."
+        loading
+      />
     );
   }
 
   if (departments.length === 0) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Departments" subtitle="Manage your departments" />
-        <div className="flex-1 p-6">
-          <EmptyState
+      <HRPageShell title="Departments" subtitle="Manage your departments">
+        <EmptyState
             icon={Users}
             title="No departments yet"
             description="Create your first department to organize your employees"
             actionLabel="Add Department"
             actionHref="/dashboard/hr/departments/new"
           />
-        </div>
-      </div>
+      </HRPageShell>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Departments" subtitle={`${departments.length} departments`} />
-      <div className="flex-1 p-6 space-y-4">
-        <div className="flex justify-end">
-          <Link href="/dashboard/hr/departments/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-              <Plus className="h-4 w-4" /> Add Department
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <HRPageShell
+      title="Departments"
+      subtitle={`${departments.length} departments`}
+      action={
+        <Link href="/dashboard/hr/departments/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" /> Add Department
+          </Button>
+        </Link>
+      }
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {departments.map((dept, index) => {
             const color = DEPARTMENT_COLORS[index % DEPARTMENT_COLORS.length];
             return (
-              <div key={dept.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group">
+              <div key={dept.id} className={`${hrCardClass} p-6 hover:shadow-md transition-shadow relative group`}>
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 focus:outline-none">
@@ -209,8 +206,7 @@ export default function DepartmentsPage() {
               </div>
             );
           })}
-        </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

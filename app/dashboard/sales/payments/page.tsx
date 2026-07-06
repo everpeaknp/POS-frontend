@@ -3,10 +3,10 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Filter, Download } from "lucide-react";
+import { Plus, Search, Filter, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { StatusBadge } from "@/components/sales/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { paymentReceivedAPI } from "@/lib/api/sales";
@@ -17,12 +17,11 @@ export default function PaymentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
 
-  const { data, loading, refetch } = useApi(
+  const { data, loading } = useApi(
     () => paymentReceivedAPI.list({ payment_method: methodFilter || undefined }),
     { immediate: true, deps: [methodFilter] }
   );
 
-  // Ensure payments is always an array
   const payments = Array.isArray(data) ? data : [];
 
   const filteredPayments = payments.filter((payment: any) =>
@@ -41,12 +40,38 @@ export default function PaymentsPage() {
     other: "bg-gray-100 text-gray-600",
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Payments Received" subtitle="Loading..." />
+        <div className="flex-1 p-6">
+          <SkeletonTable rows={5} />
+        </div>
+      </div>
+    );
+  }
+
+  if (payments.length === 0 && !searchTerm && !methodFilter) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Payments Received" subtitle="Track customer payments" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={CreditCard}
+            title="No payments yet"
+            description="Record your first payment to start tracking customer receipts"
+            actionLabel="Record Payment"
+            actionHref="/dashboard/sales/payments/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Payments Received" subtitle="Track customer payments" />
       <div className="flex-1 p-6 space-y-4">
-        
-        {/* Actions bar */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -83,23 +108,9 @@ export default function PaymentsPage() {
           </Link>
         </div>
 
-        {/* Payments table */}
-        {loading ? (
-          <SkeletonTable rows={5} />
-        ) : filteredPayments.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">No payments found</h3>
-            <p className="text-gray-500 mb-4">Start by recording your first payment</p>
-            <Link href="/dashboard/sales/payments/new">
-              <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                <Plus className="h-4 w-4" /> Record Payment
-              </Button>
-            </Link>
+        {filteredPayments.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No payments found matching your filters</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

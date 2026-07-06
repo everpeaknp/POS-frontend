@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileText, AlertCircle } from "lucide-react";
+import { Plus, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { creditNoteAPI, CreditNote } from "@/lib/api/sales";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
@@ -55,6 +56,23 @@ export default function CreditNotesPage() {
     );
   }
 
+  if (creditNotes.length === 0 && !searchTerm) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Credit Notes" subtitle="Manage credit notes for returns and adjustments" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={FileText}
+            title="No credit notes yet"
+            description="Create your first credit note for returns or adjustments"
+            actionLabel="New Credit Note"
+            actionHref="/dashboard/sales/credit-notes/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Credit Notes" subtitle="Manage credit notes for returns and adjustments" />
@@ -83,24 +101,7 @@ export default function CreditNotesPage() {
         {/* Credit Notes List */}
         {filteredCreditNotes.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? "No credit notes found" : "No credit notes yet"}
-            </h3>
-            <p className="text-gray-500 mb-6">
-              {searchTerm
-                ? "Try adjusting your search"
-                : "Create your first credit note for returns or adjustments"}
-            </p>
-            {!searchTerm && (
-              <Button
-                onClick={() => router.push("/dashboard/sales/credit-notes/new")}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Credit Note
-              </Button>
-            )}
+            <p className="text-gray-500">No credit notes found matching your filters</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">

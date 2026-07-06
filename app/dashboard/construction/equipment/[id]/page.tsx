@@ -4,6 +4,12 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+} from '@/components/dashboard/ConstructionPageShell';
 import { constructionApi, Equipment } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -74,66 +80,59 @@ export default function EquipmentDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-      </div>
+      <ConstructionPageShell title="Equipment Details" subtitle="Loading equipment information…" loading />
     );
   }
 
   if (!equipment) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Equipment not found</p>
-        <Link
-          href="/dashboard/construction/equipment"
-          className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
-        >
-          Back to Equipment
-        </Link>
-      </div>
+      <ConstructionPageShell title="Equipment Not Found" subtitle="This equipment could not be loaded">
+        <div className={`${constructionCardClass} p-12 text-center`}>
+          <p className="text-gray-500">Equipment not found</p>
+          <Link
+            href="/dashboard/construction/equipment"
+            className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
+          >
+            Back to Equipment
+          </Link>
+        </div>
+      </ConstructionPageShell>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Link
-              href="/dashboard/construction/equipment"
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">{equipment.name}</h1>
-            <span className={`px-3 py-1 rounded text-xs font-medium ${getStatusColor(equipment.status)}`}>
-              {getStatusDisplay(equipment.status)}
-            </span>
-          </div>
-          <p className="text-gray-600">{equipment.equipment_type}</p>
-        </div>
+    <ConstructionPageShell
+      title={equipment.name}
+      subtitle={equipment.equipment_type}
+      action={
         <div className="flex gap-2">
-          <Link
-            href={`/dashboard/construction/equipment/${equipmentId}/edit`}
-            className="px-4 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] transition-colors"
-          >
-            Edit Equipment
+          <Link href={`/dashboard/construction/equipment/${equipmentId}/edit`}>
+            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white">
+              Edit Equipment
+            </Button>
           </Link>
-          <button
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-9"
             onClick={() => setDeleteModalOpen(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
             Delete
-          </button>
+          </Button>
         </div>
-      </div>
+      }
+    >
+      <Link
+        href="/dashboard/construction/equipment"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back to Equipment
+      </Link>
 
-      {/* Equipment Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`${constructionCardClass} p-6`}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Equipment Details</h2>
           <div className="space-y-3">
             <div>
@@ -171,10 +170,10 @@ export default function EquipmentDetailPage() {
               </div>
             )}
           </div>
-        </div>
+          </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h2>
+          <div className={`${constructionCardClass} p-6`}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h2>
           <div className="space-y-3">
             {equipment.ownership_type === 'owned' && equipment.purchase_cost && (
               <div>
@@ -201,25 +200,24 @@ export default function EquipmentDetailPage() {
               </div>
             )}
           </div>
+          </div>
+        </div>
+
+        <div className={`${constructionCardClass} p-6`}>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Record Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Created At</p>
+              <p className="font-medium text-gray-900">{new Date(equipment.created_at).toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Last Updated</p>
+              <p className="font-medium text-gray-900">{new Date(equipment.updated_at).toLocaleString()}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Timestamps */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Record Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Created At</p>
-            <p className="font-medium text-gray-900">{new Date(equipment.created_at).toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Last Updated</p>
-            <p className="font-medium text-gray-900">{new Date(equipment.updated_at).toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -262,6 +260,6 @@ export default function EquipmentDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </ConstructionPageShell>
   );
 }

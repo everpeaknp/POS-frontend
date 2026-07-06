@@ -1,6 +1,6 @@
 "use client";
 
-import { Palette, Globe, Monitor, Sun, Moon, Laptop, ChevronDown, Loader2 } from "lucide-react";
+import { Palette, Globe, Monitor, Sun, Moon, Laptop, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAppearance } from "@/lib/context/AppearanceContext";
 import type { AppearancePreferences } from "@/lib/types/user";
@@ -64,19 +64,19 @@ export default function AppearancePage() {
   ];
 
   return (
-    <SettingsPageShell title="Appearance" subtitle="Theme, language, timezone, and display preferences">
+    <SettingsPageShell
+      title="Appearance"
+      subtitle="Theme, language, timezone, and display preferences"
+      loading={loading}
+      loadingMessage="Loading appearance settings…"
+    >
       <SettingsPageContent>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <SettingsCard>
             <SettingsCardHeader icon={Palette} title="Theme" description="Choose how Khata looks on your device" />
             <SettingsCardBody>
-              {loading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4">
-                  {themes.map((theme) => (
+              <div className="grid grid-cols-3 gap-4">
+                {themes.map((theme) => (
                     <button
                       key={theme.value}
                       type="button"
@@ -103,21 +103,15 @@ export default function AppearancePage() {
                       </span>
                     </button>
                   ))}
-                </div>
-              )}
+              </div>
             </SettingsCardBody>
           </SettingsCard>
 
           <SettingsCard>
             <SettingsCardHeader icon={Globe} title="Regional settings" description="Language and timezone" />
             <SettingsCardBody className="space-y-5">
-              {loading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
-                </div>
-              ) : (
-                <>
-                  <SettingsField label="Language">
+              <>
+                <SettingsField label="Language">
                     <div className="relative">
                       <select
                         value={preferences.language}
@@ -160,7 +154,6 @@ export default function AppearancePage() {
                     </div>
                   </SettingsField>
                 </>
-              )}
             </SettingsCardBody>
           </SettingsCard>
         </div>
@@ -168,13 +161,8 @@ export default function AppearancePage() {
         <SettingsCard>
           <SettingsCardHeader icon={Monitor} title="Display" description="Interface density and motion" />
           <SettingsCardBody className="py-2">
-            {loading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
-              </div>
-            ) : (
-              <>
-                <SettingsToggleRow
+            <>
+              <SettingsToggleRow
                   title="Compact mode"
                   description="Show more information in less space"
                   checked={preferences.compact_mode}
@@ -186,8 +174,7 @@ export default function AppearancePage() {
                   checked={preferences.smooth_animations}
                   onChange={() => handleToggle("smooth_animations")}
                 />
-              </>
-            )}
+            </>
           </SettingsCardBody>
         </SettingsCard>
       </SettingsPageContent>

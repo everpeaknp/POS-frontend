@@ -1,16 +1,33 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DashHeader } from "@/components/dashboard/dash-header";
-import { customReportsAPI, CustomReport, CustomReportCreateData } from "@/lib/api/reports";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CustomReportBuilder } from "@/components/reports/CustomReportBuilder";
+import { CustomReportRunModal } from "@/components/reports/CustomReportRunModal";
+import { CustomReportRunParamsDialog } from "@/components/reports/CustomReportRunParamsDialog";
+import {
+  ReportsPageShell,
+  ReportsLoadingState,
+  reportsCardClass,
+  reportsTableWrapClass,
+} from "@/components/reports/ReportsPageShell";
+import {
+  customReportsAPI,
+  CustomReport,
+  CustomReportCreateData,
+  type CustomReportRunResult,
+} from "@/lib/api/reports";
+import { emptyCustomReportForm } from "@/lib/reports/customReportConfig";
 import toast from "react-hot-toast";
 
 export default function CustomReportsPage() {
@@ -20,18 +37,12 @@ export default function CustomReportsPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState<CustomReport[]>([]);
-  const [formData, setFormData] = useState<CustomReportCreateData>({
-    name: "",
-    report_type: "table",
-    description: "",
-    module: "sales",
-    fields: [],
-    filters: [],
-    grouping: {},
-    sorting: {},
-    chart_config: {},
-    schedule: "none",
-  });
+  const [runResult, setRunResult] = useState<CustomReportRunResult | null>(null);
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const [runParamsOpen, setRunParamsOpen] = useState(false);
+  const [pendingRunId, setPendingRunId] = useState<string | null>(null);
+  const [pendingRunName, setPendingRunName] = useState<string>("");
+  const [formData, setFormData] = useState<CustomReportCreateData>(emptyCustomReportForm());
 
   useEffect(() => {
     if (searchParams.get("tab") !== "builder") return;
@@ -51,52 +62,111 @@ export default function CustomReportsPage() {
       setLoading(true);
       const data = await customReportsAPI.list();
       setReports(data.results);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error("Failed to load custom reports:", error);
-      toast.error(error.response?.data?.detail || "Failed to load custom reports");
+      toast.error(err.response?.data?.detail || "Failed to load custom reports");
     } finally {
       setLoading(false);
     }
+  };
+
+  const ensureFields = async (data: CustomReportCreateData): Promise<CustomReportCreateData> => {
+    if ((data.fields ?? []).length > 0) return data;
+    try {
+      const catalog = await customReportsAPI.getFields(data.module);
+      const mod = catalog[data.module];
+      if (mod?.default_fields?.length) {
+        return { ...data, fields: [...mod.default_fields] };
+      }
+    } catch {
+      // Builder validation will catch empty fields
+    }
+    return data;
+  };
+
+  const resetBuilder = () => {
+    setStep(1);
+    setFormData(emptyCustomReportForm());
   };
 
   const handleCreateReport = async () => {
     try {
       setLoading(true);
-      const result = await customReportsAPI.create(formData);
+      const payload = await ensureFields(formData);
+      if ((payload.fields ?? []).length === 0) {
+        toast.error("Select at least one field");
+        return;
+      }
+      const result = await customReportsAPI.create(payload);
       toast.success(result.message);
       setTab("saved");
-      setStep(1);
-      setFormData({
-        name: "",
-        report_type: "table",
-        description: "",
-        module: "sales",
-        fields: [],
-        filters: [],
-        grouping: {},
-        sorting: {},
-        chart_config: {},
-        schedule: "none",
-      });
+      resetBuilder();
       fetchReports();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error("Failed to create report:", error);
-      toast.error(error.response?.data?.detail || "Failed to create report");
+      toast.error(err.response?.data?.detail || "Failed to create report");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRunReport = async (reportId: string) => {
+  const executeRun = async (
+    reportId: string,
+    params?: { from_date?: string; to_date?: string }
+  ) => {
+    if (!reportId || !/^\d+$/.test(String(reportId))) {
+      toast.error("Invalid report selected");
+      return;
+    }
+
     try {
       setLoading(true);
-      const result = await customReportsAPI.run(reportId);
-      toast.success(`Report "${result.report_name}" executed successfully`);
-      // In production, you would display the results in a modal or new page
-      console.log("Report results:", result);
-    } catch (error: any) {
+      const result = await customReportsAPI.run(reportId, params);
+      setRunResult(result);
+      setRunModalOpen(true);
+      toast.success(`Report "${result.report_name}" executed`);
+      fetchReports();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error("Failed to run report:", error);
-      toast.error(error.response?.data?.detail || "Failed to run report");
+      toast.error(err.response?.data?.detail || "Failed to run report");
+    } finally {
+      setLoading(false);
+      setRunParamsOpen(false);
+      setPendingRunId(null);
+      setPendingRunName("");
+    }
+  };
+
+  const openRunDialog = (reportId: string, reportName: string) => {
+    setPendingRunId(reportId);
+    setPendingRunName(reportName);
+    setRunParamsOpen(true);
+  };
+
+  const handleRunReport = (reportId: string, reportName: string) => {
+    openRunDialog(reportId, reportName);
+  };
+
+  const handleCreateAndRun = async () => {
+    try {
+      setLoading(true);
+      const payload = await ensureFields(formData);
+      if ((payload.fields ?? []).length === 0) {
+        toast.error("Select at least one field");
+        return;
+      }
+      const result = await customReportsAPI.create(payload);
+      toast.success(result.message);
+      setTab("saved");
+      resetBuilder();
+      openRunDialog(result.report.id, result.report.name);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      console.error("Failed to create report:", error);
+      toast.error(err.response?.data?.detail || "Failed to create report");
     } finally {
       setLoading(false);
     }
@@ -108,9 +178,10 @@ export default function CustomReportsPage() {
       const result = await customReportsAPI.duplicate(reportId);
       toast.success(result.message);
       fetchReports();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error("Failed to duplicate report:", error);
-      toast.error(error.response?.data?.detail || "Failed to duplicate report");
+      toast.error(err.response?.data?.detail || "Failed to duplicate report");
     } finally {
       setLoading(false);
     }
@@ -126,290 +197,172 @@ export default function CustomReportsPage() {
       const result = await customReportsAPI.delete(reportId);
       toast.success(result.message);
       fetchReports();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error("Failed to delete report:", error);
-      toast.error(error.response?.data?.detail || "Failed to delete report");
+      toast.error(err.response?.data?.detail || "Failed to delete report");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Custom Reports" subtitle="Build and manage custom reports" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+    <>
+      <ReportsPageShell
+        title="Custom Reports"
+        subtitle="Build and manage custom reports"
+      >
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
+          <div className={`${reportsCardClass} p-4`}>
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger value="saved">Saved Reports</TabsTrigger>
               <TabsTrigger value="builder">Build New Report</TabsTrigger>
             </TabsList>
           </div>
 
-          {/* Saved Reports Tab */}
-          <TabsContent value="saved" className="space-y-4 mt-4 w-full">
+          <TabsContent value="saved" className="space-y-4 mt-4">
             <div className="flex justify-end">
-              <Button onClick={() => setTab("builder")} className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button
+                onClick={() => {
+                  resetBuilder();
+                  setTab("builder");
+                }}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              >
                 <Plus className="h-4 w-4" /> New Custom Report
               </Button>
             </div>
 
-            {loading ? (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#22C55E] mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading reports...</p>
+            {loading && reports.length === 0 ? (
+              <div className={`${reportsCardClass} p-12`}>
+                <PageLoading message="Loading reports…" />
               </div>
             ) : reports.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
-                <p className="text-gray-500">No custom reports yet. Create your first report to get started.</p>
-                <Button onClick={() => setTab("builder")} className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <div className={`${reportsCardClass} p-12 text-center`}>
+                <p className="text-gray-500 dark:text-muted-foreground">
+                  No custom reports yet. Create your first report to get started.
+                </p>
+                <Button
+                  onClick={() => {
+                    resetBuilder();
+                    setTab("builder");
+                  }}
+                  className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+                >
                   <Plus className="h-4 w-4" /> Create Report
                 </Button>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+              <div className={reportsTableWrapClass}>
                 <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      {["Report Name", "Created By", "Last Run", "Schedule", "Actions"].map((h) => (
-                        <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {reports.map((report) => (
-                      <tr key={report.id} className="hover:bg-gray-50/50">
-                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{report.name}</td>
-                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{report.created_by_name}</td>
-                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{report.last_run_display || 'Never'}</td>
-                        <td className="px-6 py-3 text-gray-600 capitalize whitespace-nowrap">{report.schedule}</td>
-                        <td className="px-6 py-3 whitespace-nowrap">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 focus:outline-none">
-                              <MoreVertical className="h-4 w-4 text-gray-400" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem onClick={() => handleRunReport(report.id)}>Run</DropdownMenuItem>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDuplicateReport(report.id)}>Duplicate</DropdownMenuItem>
-                              <DropdownMenuItem>Share</DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-red-600 focus:text-red-600"
-                                onClick={() => handleDeleteReport(report.id, report.name)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-muted border-b border-gray-100 dark:border-border">
+                      <tr>
+                        {["Report Name", "Module", "Created By", "Last Run", "Schedule", "Actions"].map(
+                          (h) => (
+                            <th
+                              key={h}
+                              className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              {h}
+                            </th>
+                          )
+                        )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-border">
+                      {reports.map((report) => (
+                        <tr key={report.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                          <td className="px-6 py-3 font-medium text-gray-900 dark:text-foreground">
+                            {report.name}
+                          </td>
+                          <td className="px-6 py-3 text-gray-600 dark:text-muted-foreground capitalize">
+                            {report.module}
+                          </td>
+                          <td className="px-6 py-3 text-gray-600 dark:text-muted-foreground">
+                            {report.created_by_name}
+                          </td>
+                          <td className="px-6 py-3 text-gray-600 dark:text-muted-foreground">
+                            {report.last_run_display || "Never"}
+                          </td>
+                          <td className="px-6 py-3 text-gray-600 dark:text-muted-foreground capitalize">
+                            {report.schedule}
+                          </td>
+                          <td className="px-6 py-3">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 dark:hover:bg-muted focus:outline-none">
+                                <MoreVertical className="h-4 w-4 text-gray-400" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={() => handleRunReport(report.id, report.name)}
+                                >
+                                  Run
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDuplicateReport(report.id)}
+                                >
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600"
+                                  onClick={() => handleDeleteReport(report.id, report.name)}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
           </TabsContent>
 
-          {/* Build Report Tab */}
-          <TabsContent value="builder" className="space-y-4 mt-4 w-full">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
-              {/* Step Indicator */}
-              <div className="flex gap-2 mb-6">
-                {[1, 2, 3, 4, 5, 6].map((s) => (
-                  <div key={s} className={`flex-1 h-2 rounded-full ${s <= step ? "bg-[#22C55E]" : "bg-gray-200"}`} />
-                ))}
-              </div>
-
-              {step === 1 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 1: Report Setup</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">Report Name*</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Enter report name" 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      className="mt-1 h-9 border-gray-200" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="type" className="text-sm font-medium text-gray-700">Report Type*</Label>
-                    <Select value={formData.report_type} onValueChange={(v) => setFormData({ ...formData, report_type: v as any })}>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {["Table", "Chart", "Both"].map((t) => <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
-                    <textarea 
-                      placeholder="Enter report description" 
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" 
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 2: Select Data Source</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
-                    {(["sales", "purchase", "inventory", "accounting", "hr", "pos"] as const).map((module) => (
-                      <button 
-                        key={module} 
-                        onClick={() => setFormData({ ...formData, module })} 
-                        className={`p-4 rounded-lg border-2 transition-all ${formData.module === module ? "border-[#22C55E] bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
-                      >
-                        <p className="font-medium text-gray-900 capitalize">{module}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 3: Select Fields</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Available Fields</p>
-                      <div className="border border-gray-200 rounded-lg p-3 space-y-2 h-64 overflow-y-auto">
-                        {["Date", "Amount", "Customer", "Product", "Quantity", "Status"].map((field) => (
-                          <div key={field} className="p-2 bg-gray-50 rounded cursor-move text-sm text-gray-700">
-                            {field}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Selected Fields</p>
-                      <div className="border border-gray-200 rounded-lg p-3 space-y-2 h-64 overflow-y-auto bg-green-50">
-                        <div className="p-2 bg-white rounded text-sm text-gray-700">Date</div>
-                        <div className="p-2 bg-white rounded text-sm text-gray-700">Amount</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 4 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 4: Add Filters</h3>
-                  <div className="space-y-3 w-full">
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Select>
-                        <SelectTrigger className="h-9 flex-1 border-gray-200"><SelectValue placeholder="Select field" /></SelectTrigger>
-                        <SelectContent>
-                          {["Date", "Amount", "Customer", "Status"].map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select>
-                        <SelectTrigger className="h-9 w-32 border-gray-200"><SelectValue placeholder="Operator" /></SelectTrigger>
-                        <SelectContent>
-                          {["Equals", "Greater", "Less", "Contains"].map((op) => <SelectItem key={op} value={op}>{op}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Input placeholder="Value" className="h-9 flex-1 border-gray-200" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 5: Grouping & Sorting</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Group By</Label>
-                    <Select>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select field" /></SelectTrigger>
-                      <SelectContent>
-                        {["Date", "Customer", "Product", "Category"].map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Sort By</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Select>
-                        <SelectTrigger className="h-9 flex-1 border-gray-200"><SelectValue placeholder="Select field" /></SelectTrigger>
-                        <SelectContent>
-                          {["Date", "Amount", "Customer"].map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select>
-                        <SelectTrigger className="h-9 w-32 border-gray-200"><SelectValue placeholder="Order" /></SelectTrigger>
-                        <SelectContent>
-                          {["Ascending", "Descending"].map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 6 && (
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">Step 6: Chart Settings</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Chart Type</Label>
-                    <Select>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select chart type" /></SelectTrigger>
-                      <SelectContent>
-                        {["Bar", "Line", "Pie", "Donut", "Area"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">X Axis</Label>
-                    <Select>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select field" /></SelectTrigger>
-                      <SelectContent>
-                        {["Date", "Category", "Customer"].map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex flex-wrap justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-                <Button variant="outline" onClick={() => setStep(Math.max(1, step - 1))} disabled={step === 1 || loading}>
-                  Previous
-                </Button>
-                {step < 6 ? (
-                  <Button onClick={() => setStep(step + 1)} className="bg-[#22C55E] hover:bg-[#16A34A] text-white" disabled={loading}>
-                    Next
-                  </Button>
-                ) : (
-                  <>
-                    <Button 
-                      onClick={handleCreateReport} 
-                      className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
-                      disabled={loading || !formData.name || !formData.module}
-                    >
-                      {loading ? 'Saving...' : 'Save Report'}
-                    </Button>
-                    <Button variant="outline" disabled={loading}>Run Now</Button>
-                  </>
-                )}
-              </div>
-            </div>
+          <TabsContent value="builder" className="space-y-4 mt-4">
+            <CustomReportBuilder
+              formData={formData}
+              setFormData={setFormData}
+              step={step}
+              setStep={setStep}
+              loading={loading}
+              onSave={handleCreateReport}
+              onSaveAndRun={handleCreateAndRun}
+              onCancel={() => {
+                resetBuilder();
+                setTab("saved");
+              }}
+            />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+      </ReportsPageShell>
+
+      <CustomReportRunParamsDialog
+        open={runParamsOpen}
+        onOpenChange={(open) => {
+          setRunParamsOpen(open);
+          if (!open) {
+            setPendingRunId(null);
+            setPendingRunName("");
+          }
+        }}
+        reportName={pendingRunName}
+        loading={loading}
+        onConfirm={(params) => {
+          if (pendingRunId) {
+            executeRun(pendingRunId, params);
+          }
+        }}
+      />
+
+      <CustomReportRunModal
+        open={runModalOpen}
+        onOpenChange={setRunModalOpen}
+        result={runResult}
+      />
+    </>
   );
 }

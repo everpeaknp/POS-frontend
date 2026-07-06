@@ -1,5 +1,8 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -12,7 +15,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { LineItemsTable, type PurchaseLineItem } from "@/components/purchase/LineItemsTable";
 import { purchaseRequestsAPI, type PurchaseRequestLine } from "@/lib/api/purchase";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
-import { getManagers } from "@/lib/api/hr";
+import { getManagers, getDepartments, type Department } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -37,13 +40,14 @@ export default function NewPurchaseRequestPage() {
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [products, setProducts] = useState<Product[]>([]);
   const [managers, setManagers] = useState<Array<{ id: string; name: string; designation: string; department: string | null }>>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     required_by: "",
-    department: "Operations",
+    department: "",
     priority: "Medium",
     notes: "",
     approver_notes: "",
@@ -53,12 +57,14 @@ export default function NewPurchaseRequestPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, managersRes] = await Promise.all([
+        const [productsRes, managersRes, departmentsRes] = await Promise.all([
           inventoryApi.products.list({ status: 'active' }),
-          getManagers()
+          getManagers(),
+          getDepartments(),
         ]);
         setProducts(productsRes.data?.results || []);
         setManagers(managersRes || []);
+        setDepartments(departmentsRes || []);
       } catch (error: any) {
         console.error("Failed to load data:", error);
         toast.error("Failed to load form data");
@@ -72,6 +78,11 @@ export default function NewPurchaseRequestPage() {
   const total = items.reduce((s, i) => s + i.amount, 0);
 
   const handleSubmit = async (status: 'Draft' | 'Pending Approval') => {
+    if (!form.department) {
+      toast.error("Please select a department");
+      return;
+    }
+
     if (!form.required_by) {
       toast.error("Please set required by date");
       return;
@@ -126,9 +137,7 @@ export default function NewPurchaseRequestPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Purchase Request" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }
@@ -166,10 +175,32 @@ export default function NewPurchaseRequestPage() {
             <Field label="Department" required>
               <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select department" />
                 </SelectTrigger>
-                <SelectContent>{["Operations", "IT", "Admin", "Finance", "HR", "Sales"].map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {departments.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      No departments found
+                    </SelectItem>
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.name}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Departments from{" "}
+                <Link href="/dashboard/hr/departments" className="text-[#22C55E] hover:underline">
+                  HR
+                </Link>
+                .{" "}
+                <Link href="/dashboard/hr/departments/new" className="text-[#22C55E] hover:underline">
+                  Add department
+                </Link>
+              </p>
             </Field>
           </div>
 

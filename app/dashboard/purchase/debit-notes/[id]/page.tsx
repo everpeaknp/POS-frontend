@@ -1,11 +1,13 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
-import { Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { Printer, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
@@ -26,8 +28,7 @@ export default function DebitNoteDetailPage() {
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `${dn?.debit_note_number || dn?.note_number || "DebitNote"}_${new Date().toISOString().split("T")[0]}`,
-  });
+    documentTitle: `${dn?.debit_note_number || dn?.note_number || "DebitNote"}_${new Date().toISOString().split("T")[0]}` });
 
   useEffect(() => {
     const fetchDebitNote = async () => {
@@ -49,9 +50,7 @@ export default function DebitNoteDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Loading..." subtitle="Debit Note" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

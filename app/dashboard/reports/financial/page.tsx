@@ -1,118 +1,297 @@
 "use client";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { ReportFilter } from "@/components/reports/ReportFilter";
 import { ExportButtons } from "@/components/reports/ExportButtons";
-import { reportsAPI, FinancialReportsData } from "@/lib/api/reports";
+import {
+  ReportsPageShell,
+  reportsCardClass,
+} from "@/components/reports/ReportsPageShell";
+import { reportsAPI, type FinancialReportsData } from "@/lib/api/reports";
+import { tenantApi, type Tenant } from "@/lib/api/tenant";
+import { useAuth } from "@/lib/context/AuthContext";
+import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
+import type { ExportTableData, ExportRow } from "@/lib/utils/export";
+import { tenantToExportOrg } from "@/lib/utils/export";
 
 export default function FinancialReportPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<FinancialReportsData | null>(null);
+  const [orgProfile, setOrgProfile] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState(
+    format(startOfMonth(new Date()), "yyyy-MM-dd")
+  );
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
+  const [asOfDate, setAsOfDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [activeTab, setActiveTab] = useState("pnl");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await reportsAPI.financialReports({
+        from_date: fromDate,
+        to_date: toDate,
+        as_of_date: asOfDate,
+      });
+      setData(result);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { detail?: string } } };
+      console.error("Failed to load financial reports:", err);
+      setError(apiErr.response?.data?.detail || "Failed to load financial reports");
+      toast.error("Failed to load financial reports");
+    } finally {
+      setLoading(false);
+    }
+  }, [fromDate, toDate, asOfDate]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const result = await reportsAPI.financialReports();
-        setData(result);
-      } catch (error: any) {
-        console.error("Failed to load financial reports:", error);
-        toast.error(error.response?.data?.detail || "Failed to load financial reports");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Financial Report" subtitle="P&L, Balance Sheet, Trial Balance" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading financial reports...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const slug = user?.tenant?.slug;
+    if (!slug) return;
+    tenantApi
+      .getBySlug(slug)
+      .then(setOrgProfile)
+      .catch(() => {
+        /* use minimal tenant from auth if profile fetch fails */
+      });
+  }, [user?.tenant?.slug]);
 
-  if (!data) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Financial Report" subtitle="P&L, Balance Sheet, Trial Balance" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-600">No financial data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const formatCurrency = (amount: number) => formatNPR(amount);
 
-  const formatCurrency = (amount: number) => {
-    return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!data) return null;
+
+    const org = orgProfile
+      ? tenantToExportOrg(orgProfile)
+      : user?.tenant
+        ? tenantToExportOrg({
+            name: user.tenant.name,
+            workspace_name: user.tenant.workspace_name,
+            email: user.tenant.email,
+          })
+        : undefined;
+
+    const baseExport = (
+      partial: Omit<ExportTableData, "org" | "template" | "reportType">
+    ): ExportTableData => ({
+      ...partial,
+      reportType: "Financial Report",
+      template: "financial",
+      org,
+    });
+
+    if (activeTab === "balance") {
+      const rows: ExportRow[] = [
+        { cells: ["ASSETS", "", ""], style: "section" },
+        ...data.balance_sheet.assets.map((item) => ({
+          cells: ["", item.account, formatCurrency(item.amount)],
+        })),
+        {
+          cells: ["", "Total Assets", formatCurrency(data.balance_sheet.total_assets)],
+          style: "total",
+        },
+        { cells: ["LIABILITIES & EQUITY", "", ""], style: "section" },
+        ...data.balance_sheet.liabilities.map((item) => ({
+          cells: ["", item.account, formatCurrency(item.amount)],
+        })),
+        ...data.balance_sheet.equity.map((item) => ({
+          cells: ["", item.account, formatCurrency(item.amount)],
+        })),
+        {
+          cells: [
+            "",
+            "Total Liabilities & Equity",
+            formatCurrency(data.balance_sheet.total_liabilities + data.balance_sheet.total_equity),
+          ],
+          style: "total",
+        },
+      ];
+      return baseExport({
+        filename: `balance-sheet-${data.balance_sheet.as_of_date}`,
+        title: "Balance Sheet",
+        subtitle: `As of ${data.balance_sheet.as_of_date}`,
+        headers: ["Section", "Account", "Amount (NPR)"],
+        rows,
+        rightAlignColumns: [2],
+      });
+    }
+
+    if (activeTab === "trial") {
+      if (!data.trial_balance.accounts.length) return null;
+      return baseExport({
+        filename: `trial-balance-${data.trial_balance.as_of_date}`,
+        title: "Trial Balance",
+        subtitle: `As of ${data.trial_balance.as_of_date}`,
+        headers: ["Account", "Debit (NPR)", "Credit (NPR)"],
+        rows: [
+          ...data.trial_balance.accounts.map((item) => ({
+            cells: [
+              item.account,
+              item.debit > 0 ? formatCurrency(item.debit) : "—",
+              item.credit > 0 ? formatCurrency(item.credit) : "—",
+            ],
+          })),
+          {
+            cells: [
+              "TOTAL",
+              formatCurrency(data.trial_balance.total_debit),
+              formatCurrency(data.trial_balance.total_credit),
+            ],
+            style: "total",
+          },
+        ],
+        rightAlignColumns: [1, 2],
+      });
+    }
+
+    if (activeTab === "cashflow") {
+      const cf = data.cash_flow;
+      return baseExport({
+        filename: `cash-flow-${cf.period.from_date}`,
+        title: "Cash Flow Statement",
+        subtitle: `${cf.period.from_date} to ${cf.period.to_date}`,
+        headers: ["Description", "Amount (NPR)"],
+        rows: [
+          { cells: ["Operating Activities", formatCurrency(cf.operating_activities)] },
+          { cells: ["Investing Activities", formatCurrency(cf.investing_activities)] },
+          { cells: ["Financing Activities", formatCurrency(cf.financing_activities)] },
+          { cells: ["Net Change in Cash", formatCurrency(cf.net_cash_change)], style: "subtotal" },
+          { cells: ["Opening Cash Balance", formatCurrency(cf.opening_cash)] },
+          { cells: ["Closing Cash Balance", formatCurrency(cf.closing_cash)], style: "total" },
+        ],
+        rightAlignColumns: [1],
+      });
+    }
+
+    const pnl = data.profit_and_loss;
+    return baseExport({
+      filename: `profit-loss-${pnl.period.from_date}`,
+      title: "Profit & Loss Statement",
+      subtitle: `${pnl.period.from_date} to ${pnl.period.to_date}`,
+      headers: ["Category", "Account", "Amount (NPR)"],
+      rows: [
+        { cells: ["REVENUE", "", formatCurrency(pnl.total_income)], style: "section" },
+        ...pnl.income.map((item) => ({
+          cells: ["", item.account, formatCurrency(item.amount)],
+        })),
+        { cells: ["EXPENSES", "", formatCurrency(pnl.total_expenses)], style: "section" },
+        ...pnl.expenses.map((item) => ({
+          cells: ["", item.account, formatCurrency(item.amount)],
+        })),
+        {
+          cells: [
+            pnl.net_profit >= 0 ? "NET PROFIT" : "NET LOSS",
+            "",
+            formatCurrency(Math.abs(pnl.net_profit)),
+          ],
+          style: "total",
+        },
+      ],
+      rightAlignColumns: [2],
+    });
+  }, [data, activeTab, orgProfile, user?.tenant]);
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Financial Report" subtitle="P&L, Balance Sheet, Trial Balance" />
-      <div className="flex-1 p-6 space-y-6">
-        {/* Export Buttons */}
-        <div className="flex justify-end">
-          <ExportButtons />
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <Tabs defaultValue="pnl" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+    <ReportsPageShell
+      title="Financial Report"
+      subtitle="P&L, Balance Sheet, Trial Balance, and Cash Flow"
+      loading={loading && !data}
+      error={error}
+      onRetry={fetchData}
+      toolbar={
+        <>
+          <ReportFilter
+            embedded
+            period="month"
+            periods={["month"]}
+            fromDate={fromDate}
+            toDate={toDate}
+            onFromDateChange={setFromDate}
+            onToDateChange={setToDate}
+            onPeriodChange={() => {}}
+            onGenerate={fetchData}
+            loading={loading}
+          />
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground">
+            <span className="whitespace-nowrap">As of:</span>
+            <input
+              type="date"
+              value={asOfDate}
+              onChange={(e) => setAsOfDate(e.target.value)}
+              className="h-9 px-3 border border-gray-200 dark:border-border rounded-lg text-sm bg-white dark:bg-card"
+            />
+          </div>
+        </>
+      }
+      action={<ExportButtons getExportData={getExportData} disabled={loading} />}
+    >
+      {data && (
+        <div className={`${reportsCardClass} p-6`}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
               <TabsTrigger value="pnl">P&L</TabsTrigger>
               <TabsTrigger value="balance">Balance Sheet</TabsTrigger>
               <TabsTrigger value="trial">Trial Balance</TabsTrigger>
               <TabsTrigger value="cashflow">Cash Flow</TabsTrigger>
             </TabsList>
 
-            {/* P&L Tab */}
-            <TabsContent value="pnl" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-900">Profit & Loss Statement</h3>
-                <p className="text-xs text-gray-600">
-                  For the period <FormattedDate value={data.profit_and_loss.period.from_date} /> to <FormattedDate value={data.profit_and_loss.period.to_date} />
+            <TabsContent value="pnl" className="space-y-4 mt-6">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Profit & Loss</h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  <FormattedDate value={data.profit_and_loss.period.from_date} /> –{" "}
+                  <FormattedDate value={data.profit_and_loss.period.to_date} />
                 </p>
               </div>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-200">
                   <tr className="font-semibold">
                     <td className="py-2 text-gray-900">REVENUE</td>
-                    <td className="py-2 text-right text-gray-900">{formatCurrency(data.profit_and_loss.total_income)}</td>
+                    <td className="py-2 text-right">
+                      {formatCurrency(data.profit_and_loss.total_income)}
+                    </td>
                   </tr>
                   {data.profit_and_loss.income.map((item, idx) => (
                     <tr key={idx}>
                       <td className="py-2 pl-4 text-gray-600">{item.account}</td>
-                      <td className="py-2 text-right text-gray-600">{formatCurrency(item.amount)}</td>
+                      <td className="py-2 text-right text-gray-600">
+                        {formatCurrency(item.amount)}
+                      </td>
                     </tr>
                   ))}
                   <tr className="font-semibold bg-gray-50">
                     <td className="py-2 text-gray-900">EXPENSES</td>
-                    <td className="py-2 text-right text-gray-900">{formatCurrency(data.profit_and_loss.total_expenses)}</td>
+                    <td className="py-2 text-right">
+                      {formatCurrency(data.profit_and_loss.total_expenses)}
+                    </td>
                   </tr>
                   {data.profit_and_loss.expenses.map((item, idx) => (
                     <tr key={idx}>
                       <td className="py-2 pl-4 text-gray-600">{item.account}</td>
-                      <td className="py-2 text-right text-gray-600">{formatCurrency(item.amount)}</td>
+                      <td className="py-2 text-right text-gray-600">
+                        {formatCurrency(item.amount)}
+                      </td>
                     </tr>
                   ))}
-                  <tr className={`font-bold ${data.profit_and_loss.net_profit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <td className={`py-2 ${data.profit_and_loss.net_profit >= 0 ? 'text-green-900' : 'text-red-900'}`}>
-                      {data.profit_and_loss.net_profit >= 0 ? 'NET PROFIT' : 'NET LOSS'}
+                  <tr
+                    className={`font-bold ${
+                      data.profit_and_loss.net_profit >= 0 ? "bg-green-50" : "bg-red-50"
+                    }`}
+                  >
+                    <td className="py-2">
+                      {data.profit_and_loss.net_profit >= 0 ? "NET PROFIT" : "NET LOSS"}
                     </td>
-                    <td className={`py-2 text-right ${data.profit_and_loss.net_profit >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                    <td className="py-2 text-right">
                       {formatCurrency(Math.abs(data.profit_and_loss.net_profit))}
                     </td>
                   </tr>
@@ -120,69 +299,58 @@ export default function FinancialReportPage() {
               </table>
             </TabsContent>
 
-            {/* Balance Sheet Tab */}
-            <TabsContent value="balance" className="space-y-4 mt-4">
-              <div className="space-y-2">
+            <TabsContent value="balance" className="space-y-4 mt-6">
+              <div>
                 <h3 className="text-sm font-semibold text-gray-900">Balance Sheet</h3>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 mt-1">
                   As of <FormattedDate value={data.balance_sheet.as_of_date} />
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">ASSETS</h3>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">ASSETS</h4>
                   <table className="w-full text-sm">
                     <tbody className="divide-y divide-gray-200">
                       {data.balance_sheet.assets.map((item, idx) => (
                         <tr key={idx}>
                           <td className="py-2 text-gray-600">{item.account}</td>
-                          <td className="py-2 text-right text-gray-600">{formatCurrency(item.amount)}</td>
+                          <td className="py-2 text-right">{formatCurrency(item.amount)}</td>
                         </tr>
                       ))}
                       <tr className="font-bold bg-blue-50">
-                        <td className="py-2 text-blue-900">TOTAL ASSETS</td>
-                        <td className="py-2 text-right text-blue-900">{formatCurrency(data.balance_sheet.total_assets)}</td>
+                        <td className="py-2">TOTAL ASSETS</td>
+                        <td className="py-2 text-right">
+                          {formatCurrency(data.balance_sheet.total_assets)}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">LIABILITIES & EQUITY</h3>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                    LIABILITIES & EQUITY
+                  </h4>
                   <table className="w-full text-sm">
                     <tbody className="divide-y divide-gray-200">
-                      {data.balance_sheet.liabilities.length > 0 && (
-                        <>
-                          <tr className="font-semibold">
-                            <td className="py-2 text-gray-900">Liabilities</td>
-                            <td className="py-2 text-right text-gray-900">{formatCurrency(data.balance_sheet.total_liabilities)}</td>
-                          </tr>
-                          {data.balance_sheet.liabilities.map((item, idx) => (
-                            <tr key={idx}>
-                              <td className="py-2 pl-4 text-gray-600">{item.account}</td>
-                              <td className="py-2 text-right text-gray-600">{formatCurrency(item.amount)}</td>
-                            </tr>
-                          ))}
-                        </>
-                      )}
-                      {data.balance_sheet.equity.length > 0 && (
-                        <>
-                          <tr className="font-semibold">
-                            <td className="py-2 text-gray-900">Equity</td>
-                            <td className="py-2 text-right text-gray-900">{formatCurrency(data.balance_sheet.total_equity)}</td>
-                          </tr>
-                          {data.balance_sheet.equity.map((item, idx) => (
-                            <tr key={idx}>
-                              <td className="py-2 pl-4 text-gray-600">{item.account}</td>
-                              <td className="py-2 text-right text-gray-600">{formatCurrency(item.amount)}</td>
-                            </tr>
-                          ))}
-                        </>
-                      )}
+                      {data.balance_sheet.liabilities.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="py-2 pl-4 text-gray-600">{item.account}</td>
+                          <td className="py-2 text-right">{formatCurrency(item.amount)}</td>
+                        </tr>
+                      ))}
+                      {data.balance_sheet.equity.map((item, idx) => (
+                        <tr key={`eq-${idx}`}>
+                          <td className="py-2 pl-4 text-gray-600">{item.account}</td>
+                          <td className="py-2 text-right">{formatCurrency(item.amount)}</td>
+                        </tr>
+                      ))}
                       <tr className="font-bold bg-blue-50">
-                        <td className="py-2 text-blue-900">TOTAL LIAB. & EQUITY</td>
-                        <td className="py-2 text-right text-blue-900">
-                          {formatCurrency(data.balance_sheet.total_liabilities + data.balance_sheet.total_equity)}
+                        <td className="py-2">TOTAL LIAB. & EQUITY</td>
+                        <td className="py-2 text-right">
+                          {formatCurrency(
+                            data.balance_sheet.total_liabilities +
+                              data.balance_sheet.total_equity
+                          )}
                         </td>
                       </tr>
                     </tbody>
@@ -191,95 +359,94 @@ export default function FinancialReportPage() {
               </div>
             </TabsContent>
 
-            {/* Trial Balance Tab */}
-            <TabsContent value="trial" className="space-y-4 mt-4">
-              <div className="space-y-2">
+            <TabsContent value="trial" className="space-y-4 mt-6">
+              <div>
                 <h3 className="text-sm font-semibold text-gray-900">Trial Balance</h3>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 mt-1">
                   As of <FormattedDate value={data.trial_balance.as_of_date} />
                 </p>
               </div>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    {["Account", "Debit", "Credit"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      {["Account", "Debit", "Credit"].map((h) => (
+                        <th
+                          key={h}
+                          className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase"
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {data.trial_balance.accounts.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3 font-medium">{item.account}</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.debit > 0 ? formatCurrency(item.debit) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {item.credit > 0 ? formatCurrency(item.credit) : "—"}
+                        </td>
+                      </tr>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {data.trial_balance.accounts.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{item.account}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">
-                        {item.debit > 0 ? formatCurrency(item.debit) : "-"}
+                    <tr className="font-bold bg-gray-100">
+                      <td className="px-4 py-3">TOTAL</td>
+                      <td className="px-4 py-3 text-right">
+                        {formatCurrency(data.trial_balance.total_debit)}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">
-                        {item.credit > 0 ? formatCurrency(item.credit) : "-"}
+                      <td className="px-4 py-3 text-right">
+                        {formatCurrency(data.trial_balance.total_credit)}
                       </td>
                     </tr>
-                  ))}
-                  <tr className="font-bold bg-gray-100">
-                    <td className="px-4 py-3 text-gray-900">TOTAL</td>
-                    <td className="px-4 py-3 text-right text-gray-900">{formatCurrency(data.trial_balance.total_debit)}</td>
-                    <td className="px-4 py-3 text-right text-gray-900">{formatCurrency(data.trial_balance.total_credit)}</td>
-                  </tr>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </TabsContent>
 
-            {/* Cash Flow Tab */}
-            <TabsContent value="cashflow" className="space-y-4 mt-4">
-              <div className="space-y-2">
+            <TabsContent value="cashflow" className="space-y-4 mt-6">
+              <div>
                 <h3 className="text-sm font-semibold text-gray-900">Cash Flow Statement</h3>
-                <p className="text-xs text-gray-600">
-                  For the period <FormattedDate value={data.cash_flow.period.from_date} /> to <FormattedDate value={data.cash_flow.period.to_date} />
+                <p className="text-xs text-gray-600 mt-1">
+                  <FormattedDate value={data.cash_flow.period.from_date} /> –{" "}
+                  <FormattedDate value={data.cash_flow.period.to_date} />
                 </p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Operating Activities</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between font-semibold bg-gray-50 px-2 py-1">
-                      <span>Net Cash from Operations</span>
-                      <span>{formatCurrency(data.cash_flow.operating_activities)}</span>
-                    </div>
+              <div className="space-y-3 text-sm">
+                {[
+                  ["Operating Activities", data.cash_flow.operating_activities],
+                  ["Investing Activities", data.cash_flow.investing_activities],
+                  ["Financing Activities", data.cash_flow.financing_activities],
+                ].map(([label, amount]) => (
+                  <div
+                    key={label as string}
+                    className="flex justify-between font-medium bg-gray-50 px-3 py-2 rounded-lg"
+                  >
+                    <span>{label}</span>
+                    <span>{formatCurrency(amount as number)}</span>
                   </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Investing Activities</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between font-semibold bg-gray-50 px-2 py-1">
-                      <span>Net Cash from Investing</span>
-                      <span>{formatCurrency(data.cash_flow.investing_activities)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Financing Activities</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between font-semibold bg-gray-50 px-2 py-1">
-                      <span>Net Cash from Financing</span>
-                      <span>{formatCurrency(data.cash_flow.financing_activities)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4">
+                ))}
+                <div className="border-t border-gray-200 pt-4 space-y-2">
                   <div className="flex justify-between font-bold text-lg">
                     <span>Net Change in Cash</span>
-                    <span className={data.cash_flow.net_cash_change >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={
+                        data.cash_flow.net_cash_change >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
                       {formatCurrency(data.cash_flow.net_cash_change)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
-                    <span>Opening Cash Balance</span>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Opening Cash</span>
                     <span>{formatCurrency(data.cash_flow.opening_cash)}</span>
                   </div>
-                  <div className={`flex justify-between font-bold text-lg ${data.cash_flow.closing_cash >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    <span>Closing Cash Balance</span>
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Closing Cash</span>
                     <span>{formatCurrency(data.cash_flow.closing_cash)}</span>
                   </div>
                 </div>
@@ -287,7 +454,7 @@ export default function FinancialReportPage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </div>
+      )}
+    </ReportsPageShell>
   );
 }

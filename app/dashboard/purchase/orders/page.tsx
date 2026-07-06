@@ -1,16 +1,20 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { FormattedDate } from "@/components/shared/FormattedDate";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Eye, Edit, PackageCheck, X } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Edit, PackageCheck, X, ShoppingCart, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { purchaseOrdersAPI, PurchaseOrder } from "@/lib/api/purchase";
+import { downloadCsv } from "@/lib/utils/csv";
 
 const STATUSES = ["All", "Draft", "Sent", "Received", "Partially Received", "Cancelled"];
 
@@ -64,6 +68,55 @@ export default function PurchaseOrdersPage() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
 
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("No purchase orders to export");
+      return;
+    }
+    downloadCsv(
+      `purchase-orders-${new Date().toISOString().split("T")[0]}.csv`,
+      ["PO #", "Date", "Supplier", "Expected Date", "Items", "Total Amount", "Status"],
+      filtered.map((o) => [
+        o.po_number,
+        o.date,
+        o.supplier_name || "N/A",
+        o.expected_delivery_date || "",
+        String(o.items_count || 0),
+        String(o.total),
+        o.status,
+      ]),
+    );
+    toast.success("CSV exported");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Orders" subtitle="Loading..." />
+        <div className="flex-1 p-6">
+          <PageLoading message="Loading…" />
+        </div>
+      </div>
+    );
+  }
+
+  if (orders.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Orders" subtitle="Manage all purchase orders" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={ShoppingCart}
+            title="No purchase orders yet"
+            description="Create your first purchase order to start managing procurement"
+            actionLabel="New Purchase Order"
+            actionHref="/dashboard/purchase/orders/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Purchase Orders" subtitle="Manage all purchase orders" />
@@ -78,28 +131,29 @@ export default function PurchaseOrdersPage() {
             <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200">Export CSV</Button>
+          <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200 gap-1.5" onClick={handleExportCsv}>
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/orders/new")}>
             <Plus className="h-4 w-4" /> New Purchase Order
           </Button>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No purchase orders found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>{["PO #", "Date", "Supplier", "Expected Date", "Items", "Total Amount", "Status", "Actions"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                    ))}</tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {paginated.map((o) => (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>{["PO #", "Date", "Supplier", "Expected Date", "Items", "Total Amount", "Status", "Actions"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {paginated.map((o) => (
                       <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}>{o.po_number}</td>
                         <td className="px-4 py-3 text-gray-600"><FormattedDate value={o.date} /></td>
@@ -131,26 +185,22 @@ export default function PurchaseOrdersPage() {
                             )}
                           </div>
                         </td>
-                      </tr>
-                    ))}
-                    {paginated.length === 0 && (
-                      <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">No purchase orders found</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
+              <p className="text-xs text-gray-500">Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}</p>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+                <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
               </div>
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
-                  <p className="text-xs text-gray-500">Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}</p>
-                  <div className="flex gap-1">
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -11,8 +12,7 @@ import {
   bankAccountsAPI,
   bankTransactionsAPI,
   type BankAccount,
-  type BankTransaction,
-} from "@/lib/api/accounting";
+  type BankTransaction } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
@@ -80,8 +80,7 @@ export default function BankReconciliationPage() {
     try {
       await Promise.all(pendingReconcile.map((t) => bankTransactionsAPI.reconcile(t.id)));
       await bankAccountsAPI.patch(bank.id, {
-        last_reconciled: new Date().toISOString().split("T")[0],
-      });
+        last_reconciled: new Date().toISOString().split("T")[0] });
       toast.success("Reconciliation completed");
       const txData = await bankTransactionsAPI.list({ bank_account: id });
       const txs = Array.isArray(txData) ? txData : [];
@@ -101,9 +100,7 @@ export default function BankReconciliationPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Bank Reconciliation" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

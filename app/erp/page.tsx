@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Organization } from "@/lib/types";
 import { tenantApi, Tenant, invitationApi, Invitation } from "@/lib/api/tenant";
 import { getMediaUrl } from "@/lib/utils";
+import { PageLoading } from "@/components/shared/PageLoading";
 import toast from "react-hot-toast";
 
 export default function ErpPage() {
@@ -88,11 +89,7 @@ export default function ErpPage() {
   };
 
   if (!user || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F3F4F6] dark:bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#22C55E] border-t-transparent" />
-      </div>
-    );
+    return <PageLoading fullScreen message="Loading organizations…" />;
   }
 
   const organizations: Organization[] = tenants.map((tenant) => ({

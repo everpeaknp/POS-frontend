@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Check, Loader2 } from "lucide-react";
 import { notificationsAPI, type AppNotification } from "@/lib/api/notifications";
+import { useNotificationPreferences } from "@/lib/context/NotificationPreferencesContext";
+import { showBrowserNotification } from "@/lib/notifications/browser";
 import toast from "react-hot-toast";
 
 const levelColors: Record<string, string> = {
@@ -16,24 +18,57 @@ const levelColors: Record<string, string> = {
 
 export function NotificationBell() {
   const router = useRouter();
+  const { preferences } = useNotificationPreferences();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const knownIdsRef = useRef<Set<number>>(new Set());
+  const initializedRef = useRef(false);
 
   const unreadCount = items.filter((n) => !n.is_read).length;
+
+  const maybePushDesktop = useCallback(
+    (notifications: AppNotification[]) => {
+      if (!preferences.push_desktop || typeof window === "undefined") return;
+
+      const fresh = notifications.filter((n) => !knownIdsRef.current.has(n.id));
+      fresh.forEach((notification) => {
+        if (!notification.is_read) {
+          showBrowserNotification(notification.title, {
+            body: notification.message,
+            tag: `khata-notification-${notification.id}`,
+            playSound: preferences.push_sound,
+            data: { url: notification.action_url || "" },
+          });
+        }
+      });
+
+      notifications.forEach((n) => knownIdsRef.current.add(n.id));
+    },
+    [preferences.push_desktop, preferences.push_sound]
+  );
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       const data = await notificationsAPI.list();
-      setItems(data.slice(0, 15));
+      const latest = data.slice(0, 15);
+      setItems(latest);
+
+      if (!initializedRef.current) {
+        latest.forEach((n) => knownIdsRef.current.add(n.id));
+        initializedRef.current = true;
+        return;
+      }
+
+      maybePushDesktop(latest);
     } catch {
       // silent — notifications are non-critical
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [maybePushDesktop]);
 
   useEffect(() => {
     load();
@@ -143,11 +178,11 @@ export function NotificationBell() {
 
           <div className="px-4 py-2 border-t border-border text-center">
             <Link
-              href="/dashboard/construction"
+              href="/settings/notifications"
               className="text-xs text-muted-foreground hover:text-[#22C55E]"
               onClick={() => setOpen(false)}
             >
-              Budget alerts appear here from construction sites
+              Notification settings
             </Link>
           </div>
         </div>

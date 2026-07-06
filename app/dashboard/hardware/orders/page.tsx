@@ -4,13 +4,15 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HardwarePageShell,
+  hardwareCardClass,
   hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { salesOrderAPI, type SalesOrder } from "@/lib/api/sales";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -59,47 +61,72 @@ export default function HardwareOrdersPage() {
       order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (!loading && orders.length === 0 && !searchTerm && statusFilter === "all") {
+    return (
+      <HardwarePageShell
+        title="Hardware Orders"
+        subtitle="Sales orders with credit support and bulk pricing"
+      >
+        <EmptyState
+            icon={ShoppingCart}
+            title="No orders yet"
+            description="Create your first hardware order to start selling with credit and bulk pricing"
+            actionLabel="New Order"
+            actionHref="/dashboard/hardware/orders/new"
+          />
+      </HardwarePageShell>
+    );
+  }
+
   return (
     <HardwarePageShell
       title="Hardware Orders"
       subtitle="Sales orders with credit support and bulk pricing"
       loading={loading}
+      toolbar={
+        <>
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by order number or customer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={hardwareInputClass}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {STATUS_FILTERS.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  statusFilter === status
+                    ? "bg-[#22C55E] text-white"
+                    : "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80"
+                }`}
+              >
+                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </>
+      }
+      action={
+        <Link href="/dashboard/hardware/orders/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Order
+          </Button>
+        </Link>
+      }
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by order number or customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={hardwareInputClass}
-          />
+      {filteredOrders.length === 0 ? (
+        <div className={`${hardwareCardClass} p-12 text-center`}>
+          <p className="text-gray-500 dark:text-muted-foreground">No orders found matching your filters</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_FILTERS.map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === status
-                  ? "bg-[#22C55E] text-white"
-                  : "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80"
-              }`}
-            >
-              {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
-          <Link href="/dashboard/hardware/orders/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 ml-1">
-              <Plus className="h-4 w-4" />
-              New Order
-            </Button>
-          </Link>
-        </div>
-      </div>
-
+      ) : (
       <div className={hardwareTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -118,14 +145,7 @@ export default function HardwareOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
-                    No hardware orders found
-                  </td>
-                </tr>
-              ) : (
-                filteredOrders.map((order) => (
+              {filteredOrders.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
@@ -165,12 +185,12 @@ export default function HardwareOrdersPage() {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         </div>
       </div>
+      )}
     </HardwarePageShell>
   );
 }

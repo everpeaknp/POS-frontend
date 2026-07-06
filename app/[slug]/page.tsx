@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useEffect, useState } from 'react';
 import { useTenant } from '@/lib/context/TenantContext';
 import { reportsAPI, type DashboardSummary } from '@/lib/api/reports';
@@ -48,12 +49,7 @@ export default function TenantDashboardPage() {
 
   if (tenantLoading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading workspace...</span>
-        </div>
-      </div>
+      <PageLoading message="Loading workspace…" />
     );
   }
 

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +19,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionTableWrapClass,
+} from "@/components/dashboard/ConstructionPageShell";
 import {
   constructionApi,
   type EquipmentUsageLog,
@@ -100,107 +104,180 @@ export default function EquipmentUsagePage() {
     }
   };
 
-  return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Equipment Usage" subtitle="Track equipment hours and costs by site" />
-      <div className="flex-1 p-6 space-y-4">
-        <div className="flex justify-end">
-          <Button
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Log Usage
-          </Button>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-            </div>
-          ) : logs.length === 0 ? (
-            <p className="text-center text-gray-500 py-12">No usage logs yet</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  {["Date", "Equipment", "Site", "Hours", "Cost", "Notes"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3">{log.date}</td>
-                    <td className="px-4 py-3 font-medium">{log.equipment_name || log.equipment}</td>
-                    <td className="px-4 py-3">{log.site_name || log.site}</td>
-                    <td className="px-4 py-3">{log.hours_used}h</td>
-                    <td className="px-4 py-3">{formatNPR(Number(log.cost))}</td>
-                    <td className="px-4 py-3 text-gray-500 truncate max-w-[200px]">{log.notes || "—"}</td>
-                  </tr>
+  const dialog = (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Log Equipment Usage</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+          <div>
+            <Label>Equipment *</Label>
+            <Select
+              value={form.equipment}
+              onValueChange={(v) => setForm({ ...form, equipment: v ?? "" })}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select equipment" />
+              </SelectTrigger>
+              <SelectContent>
+                {equipment.map((e) => (
+                  <SelectItem key={e.id} value={String(e.id)}>
+                    {e.name}
+                  </SelectItem>
                 ))}
-              </tbody>
-            </table>
-          )}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Site *</Label>
+            <Select
+              value={form.site}
+              onValueChange={(v) => setForm({ ...form, site: v ?? "" })}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select site" />
+              </SelectTrigger>
+              <SelectContent>
+                {sites.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Date *</Label>
+            <Input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="mt-1"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Hours Used *</Label>
+              <Input
+                type="number"
+                step="0.5"
+                min="0"
+                value={form.hours_used}
+                onChange={(e) => setForm({ ...form, hours_used: e.target.value })}
+                className="mt-1"
+                required
+              />
+            </div>
+            <div>
+              <Label>Cost (Rs.)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.cost}
+                onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Notes</Label>
+            <Input
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+            >
+              {submitting ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (!loading && logs.length === 0) {
+    return (
+      <>
+        <ConstructionPageShell
+          title="Equipment Usage"
+          subtitle="Track equipment hours and costs by site"
+          loading={loading}
+        >
+          <EmptyState
+              icon={Clock}
+              title="No usage logs yet"
+              description="Log equipment hours and costs to track usage across your sites"
+              actionLabel="Log Usage"
+              onAction={() => setDialogOpen(true)}
+            />
+        </ConstructionPageShell>
+        {dialog}
+      </>
+    );
+  }
+
+  return (
+    <ConstructionPageShell
+      title="Equipment Usage"
+      subtitle="Track equipment hours and costs by site"
+      loading={loading}
+      action={
+        <Button
+          className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" /> Log Usage
+        </Button>
+      }
+    >
+      <div className={constructionTableWrapClass}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
+              <tr>
+                {["Date", "Equipment", "Site", "Hours", "Cost", "Notes"].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-border">
+              {logs.map((log) => (
+                <tr key={log.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                  <td className="px-4 py-3">{log.date}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {log.equipment_name || log.equipment}
+                  </td>
+                  <td className="px-4 py-3">{log.site_name || log.site}</td>
+                  <td className="px-4 py-3">{log.hours_used}h</td>
+                  <td className="px-4 py-3">{formatNPR(Number(log.cost))}</td>
+                  <td className="px-4 py-3 text-gray-500 truncate max-w-[200px]">
+                    {log.notes || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Log Equipment Usage</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-            <div>
-              <Label>Equipment *</Label>
-              <Select value={form.equipment} onValueChange={(v) => setForm({ ...form, equipment: v ?? "" })}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select equipment" /></SelectTrigger>
-                <SelectContent>
-                  {equipment.map((e) => (
-                    <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Site *</Label>
-              <Select value={form.site} onValueChange={(v) => setForm({ ...form, site: v ?? "" })}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select site" /></SelectTrigger>
-                <SelectContent>
-                  {sites.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Date *</Label>
-              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="mt-1" required />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Hours Used *</Label>
-                <Input type="number" step="0.5" min="0" value={form.hours_used} onChange={(e) => setForm({ ...form, hours_used: e.target.value })} className="mt-1" required />
-              </div>
-              <div>
-                <Label>Cost (Rs.)</Label>
-                <Input type="number" step="0.01" min="0" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} className="mt-1" />
-              </div>
-            </div>
-            <div>
-              <Label>Notes</Label>
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-1" />
-            </div>
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={submitting} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
-                {submitting ? "Saving..." : "Save"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+      {dialog}
+    </ConstructionPageShell>
   );
 }

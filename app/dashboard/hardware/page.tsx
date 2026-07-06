@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Wrench,
   Layers,
+  BookOpen,
 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
@@ -92,6 +93,13 @@ const moduleLinks = [
     sub: "Analytics & exports",
     icon: BarChart3,
     color: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+  },
+  {
+    href: "/dashboard/accounting/journal-entries",
+    label: "Accounting",
+    sub: "Journal entries & GL",
+    icon: BookOpen,
+    color: "bg-slate-50 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400",
   },
 ];
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -151,9 +153,7 @@ export default function PurchaseOrderDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Loading..." subtitle="Purchase Order" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

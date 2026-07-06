@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreVertical, Loader2 } from "lucide-react";
+import { Plus, Search, MoreVertical, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PageLoading } from "@/components/shared/PageLoading";
 import { PosStatusBadge } from "@/components/pos/PosStatusBadge";
 import { NewPosSessionDialog } from "@/components/pos/NewPosSessionDialog";
 import posApi, { type POSSession } from "@/lib/api/pos";
@@ -81,9 +83,29 @@ export function PosSessionsPageContent({
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="POS Sessions" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+        <PageLoading message="Loading sessions…" />
+      </div>
+    );
+  }
+
+  if (sessions.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="POS Sessions" subtitle="Manage cashier sessions" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={Monitor}
+            title="No POS sessions yet"
+            description="Open your first session to start processing sales at the register"
+            actionLabel="New Session"
+            onAction={() => setNewDialogOpen(true)}
+          />
         </div>
+        <NewPosSessionDialog
+          open={newDialogOpen}
+          onOpenChange={handleDialogOpenChange}
+          onCreated={fetchSessions}
+        />
       </div>
     );
   }
@@ -151,7 +173,14 @@ export function PosSessionsPageContent({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((session) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                    No sessions found matching your filters
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((session) => (
                 <tr key={session.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
                     <Link
@@ -211,7 +240,8 @@ export function PosSessionsPageContent({
                     </DropdownMenu>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

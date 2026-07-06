@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { ChevronLeft } from "lucide-react";
+import { HRPageShell, hrCardClass, hrStatCardClass, hrTableWrapClass } from "@/components/dashboard/HRPageShell";
 import { PayrollStatusBadge } from "@/components/hr/PayrollStatusBadge";
 import { getPayrolls, type Payroll } from "@/lib/api/hr";
 import toast from "react-hot-toast";
@@ -43,47 +43,41 @@ export default function PayrollDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Payroll" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      </div>
+      <HRPageShell title="Payroll" subtitle="Loading payroll batch…" loading />
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title={`${month} ${year}`} subtitle="Payroll batch details" />
-      <div className="flex-1 p-6 space-y-6">
-        <Link href="/dashboard/hr/payroll" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" /> Back to Payroll
-        </Link>
+    <HRPageShell title={`${month} ${year}`} subtitle="Payroll batch details">
+      <Link href="/dashboard/hr/payroll" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Payroll
+      </Link>
 
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className={hrStatCardClass}>
             <p className="text-xs text-gray-500 font-medium">Total Employees</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{records.length}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className={hrStatCardClass}>
             <p className="text-xs text-gray-500 font-medium">Gross Salary</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">Rs. {gross.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className={hrStatCardClass}>
             <p className="text-xs text-gray-500 font-medium">Total Deductions</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">Rs. {deductions.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className={hrStatCardClass}>
             <p className="text-xs text-gray-500 font-medium">Net Payroll</p>
             <p className="text-2xl font-bold text-green-600 mt-1">Rs. {net.toLocaleString()}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+        <div className={`${hrCardClass} p-6 flex items-center justify-between`}>
           <PayrollStatusBadge status={status} />
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className={hrTableWrapClass}>
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -115,6 +109,6 @@ export default function PayrollDetailPage() {
           </table>
         </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

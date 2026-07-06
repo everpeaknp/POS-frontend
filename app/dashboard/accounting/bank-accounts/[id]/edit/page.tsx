@@ -1,9 +1,11 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +55,7 @@ export default function EditBankAccountPage() {
     branch: "",
     swift_code: "",
     gl_account: "",
-    status: "active",
-  });
+    status: "active" });
 
   useEffect(() => {
     if (id) {
@@ -79,8 +80,7 @@ export default function EditBankAccountPage() {
         branch: accountData.branch || "",
         swift_code: accountData.swift_code || "",
         gl_account: String(accountData.gl_account),
-        status: accountData.status as Status,
-      });
+        status: accountData.status as Status });
     } catch (error: any) {
       console.error('Failed to load data:', error);
       if (error.response?.status === 404) {
@@ -125,8 +125,7 @@ export default function EditBankAccountPage() {
         branch: formData.branch.trim(),
         swift_code: formData.swift_code.trim(),
         gl_account: String(formData.gl_account),
-        status: formData.status,
-      });
+        status: formData.status });
       toast.success('Bank account updated successfully');
       router.push(`/dashboard/accounting/bank-accounts/${id}`);
     } catch (error: any) {
@@ -143,8 +142,7 @@ export default function EditBankAccountPage() {
       glAccounts.map((acc) => ({
         value: String(acc.id),
         label: `${acc.code} — ${acc.name}`,
-        subtitle: `${acc.type} · ${acc.sub_type}`,
-      })),
+        subtitle: `${acc.type} · ${acc.sub_type}` })),
     [glAccounts]
   );
 
@@ -152,12 +150,7 @@ export default function EditBankAccountPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Edit Bank Account" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Loading account details...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading account details…" />
       </div>
     );
   }

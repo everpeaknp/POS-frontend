@@ -3,15 +3,16 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, MoreVertical } from "lucide-react";
+import { Plus, Search, MoreVertical, CalendarDays, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass, hrTableWrapClass, hrStatCardClass, hrInputClass } from "@/components/dashboard/HRPageShell";
 import { LeaveStatusBadge } from "@/components/hr/LeaveStatusBadge";
 import { LeaveBalanceCard } from "@/components/hr/LeaveBalanceCard";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { getLeaveRequests, getLeaveTypes, approveLeaveRequest, rejectLeaveRequest, deleteLeaveRequest, type LeaveRequest, type LeaveType } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -236,90 +237,189 @@ export default function LeavePage() {
     return ms && (status === "All" || leave.status === status);
   });
 
-  if (loading) {
+  const stats = {
+    pending: leaveRequests.filter((r) => r.status === "pending").length,
+    approved: leaveRequests.filter((r) => r.status === "approved").length,
+    rejected: leaveRequests.filter((r) => r.status === "rejected").length,
+    total: leaveRequests.length,
+  };
+
+  const usedByLeaveType = leaveRequests
+    .filter((r) => r.status === "approved")
+    .reduce<Record<string, number>>((acc, request) => {
+      acc[request.leave_type] = (acc[request.leave_type] || 0) + request.days_requested;
+      return acc;
+    }, {});
+
+  if (!loading && leaveRequests.length === 0) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Leave Management" subtitle="Employee leave requests and balances" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
-        </div>
-      </div>
+      <HRPageShell title="Leave Management" subtitle="Manage employee leave requests">
+        <EmptyState
+            icon={CalendarDays}
+            title="No leave requests yet"
+            description="Employees can apply for leave and managers can approve requests here"
+            actionLabel="Apply Leave"
+            actionHref="/dashboard/hr/leave/requests/new"
+          />
+      </HRPageShell>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Leave Management" subtitle="Employee leave requests and balances" />
-      <div className="flex-1 p-6 space-y-4">
+    <HRPageShell
+      title="Leave Management"
+      subtitle={
+        loading
+          ? "Loading leave data..."
+          : `${stats.total} requests · ${leaveTypes.length} leave types`
+      }
+      loading={loading}
+      toolbar={
+        <>
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by employee..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={hrInputClass}
+            />
+          </div>
+          <Select value={status} onValueChange={(v) => v && setStatus(v)}>
+            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 dark:border-border bg-white dark:bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["All", "pending", "approved", "rejected", "cancelled"].map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s === "All" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      }
+      action={
+        <Link href="/dashboard/hr/leave/requests/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" /> Apply Leave
+          </Button>
+        </Link>
+      }
+    >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={hrStatCardClass}>
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1">
+            <Clock className="h-4 w-4" />
+            <p className="text-xs font-medium">Pending</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.pending}</p>
+        </div>
+        <div className={hrStatCardClass}>
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
+            <CheckCircle2 className="h-4 w-4" />
+            <p className="text-xs font-medium">Approved</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.approved}</p>
+        </div>
+        <div className={hrStatCardClass}>
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mb-1">
+            <XCircle className="h-4 w-4" />
+            <p className="text-xs font-medium">Rejected</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.rejected}</p>
+        </div>
+        <div className={hrStatCardClass}>
+          <div className="flex items-center gap-2 text-[#22C55E] mb-1">
+            <CalendarDays className="h-4 w-4" />
+            <p className="text-xs font-medium">Leave Types</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{leaveTypes.length}</p>
+        </div>
+      </div>
+
+      <div className={`${hrCardClass} p-4 lg:p-5`}>
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="requests">Leave Requests</TabsTrigger>
             <TabsTrigger value="balances">Leave Balances</TabsTrigger>
           </TabsList>
 
-          {/* Leave Requests Tab */}
-          <TabsContent value="requests" className="space-y-4 mt-4">
-            <div className="flex flex-wrap items-center gap-3 justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Search requests..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white" />
-                </div>
-                <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-                  <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["All", "pending", "approved", "rejected", "cancelled"].map((s) => <SelectItem key={s} value={s}>{s === "All" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Link href="/dashboard/hr/leave/requests/new">
-                <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                  <Plus className="h-4 w-4" /> Apply Leave
-                </Button>
-              </Link>
-            </div>
-
+          <TabsContent value="requests" className="space-y-4 mt-6">
             {filtered.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
-                <p className="text-gray-500">No leave requests found</p>
+              <div className={`${hrCardClass} p-12 text-center`}>
+                <p className="text-gray-500">No leave requests found matching your filters</p>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
+              <div className={`${hrTableWrapClass} overflow-x-auto`}>
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
                     <tr>
                       {["Employee", "Type", "From", "To", "Days", "Reason", "Applied On", "Status", "Actions"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                        <th
+                          key={h}
+                          className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                        >
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-50 dark:divide-border">
                     {filtered.map((leave) => (
-                      <tr key={leave.id} className="hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-medium text-gray-900">
-                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[#22C55E]">{leave.employee_name}</Link>
+                      <tr key={leave.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground whitespace-nowrap">
+                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[#22C55E]">
+                            {leave.employee_name}
+                          </Link>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{leave.leave_type_name}</td>
-                        <td className="px-4 py-3 text-gray-600">{leave.start_date}</td>
-                        <td className="px-4 py-3 text-gray-600">{leave.end_date}</td>
-                        <td className="px-4 py-3 text-gray-600">{leave.days_requested} days</td>
-                        <td className="px-4 py-3 text-gray-600 truncate max-w-xs">{leave.reason}</td>
-                        <td className="px-4 py-3 text-gray-600"><FormattedDate value={leave.created_at} /></td>
-                        <td className="px-4 py-3"><LeaveStatusBadge status={leave.status} /></td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                          {leave.leave_type_name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                          <FormattedDate value={leave.start_date} />
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                          <FormattedDate value={leave.end_date} />
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                          {leave.days_requested} days
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground max-w-xs truncate">
+                          {leave.reason}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                          <FormattedDate value={leave.created_at} />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <LeaveStatusBadge status={leave.status} />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <DropdownMenu>
-                            <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 focus:outline-none">
+                            <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 dark:hover:bg-muted focus:outline-none">
                               <MoreVertical className="h-4 w-4 text-gray-400" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/hr/leave/requests/${leave.id}`)}>View</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/dashboard/hr/leave/requests/${leave.id}`)}>
+                                View
+                              </DropdownMenuItem>
                               {leave.status === "pending" && (
                                 <>
                                   <DropdownMenuItem onClick={() => handleApprove(leave.id)}>Approve</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => handleReject(leave.id)}>Reject</DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600"
+                                    onClick={() => handleReject(leave.id)}
+                                  >
+                                    Reject
+                                  </DropdownMenuItem>
                                 </>
                               )}
-                              <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => handleDelete(leave.id)}>Cancel</DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => handleDelete(leave.id)}
+                              >
+                                Cancel
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -331,21 +431,28 @@ export default function LeavePage() {
             )}
           </TabsContent>
 
-          {/* Leave Balances Tab */}
-          <TabsContent value="balances" className="space-y-4 mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {leaveTypes.map((type) => (
-                <LeaveBalanceCard 
-                  key={type.id}
-                  type={type.name} 
-                  used={0} 
-                  total={type.days_allowed} 
-                />
-              ))}
-            </div>
+          <TabsContent value="balances" className="space-y-4 mt-6">
+            {leaveTypes.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                title="No leave types configured"
+                description="Set up leave types in HR settings to track employee balances."
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {leaveTypes.map((type) => (
+                  <LeaveBalanceCard
+                    key={type.id}
+                    type={type.name}
+                    used={usedByLeaveType[type.id] || 0}
+                    total={type.days_allowed}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

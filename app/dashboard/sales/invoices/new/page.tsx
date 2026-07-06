@@ -1,8 +1,10 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
@@ -45,8 +47,7 @@ export default function NewInvoicePage() {
     phone: "",
     email: "",
     address: "",
-    type: "Individual" as "Individual" | "Business",
-  });
+    type: "Individual" as "Individual" | "Business" });
   
   const [form, setForm] = useState({
     customer: "",
@@ -56,8 +57,7 @@ export default function NewInvoicePage() {
     reference: "",
     date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    notes: "",
-  });
+    notes: "" });
 
   useEffect(() => {
     loadCustomers();
@@ -97,8 +97,7 @@ export default function NewInvoicePage() {
           unitPrice: line.unit_price,
           discount: line.discount_percent,
           tax: line.tax_percent,
-          amount: line.amount,
-        }));
+          amount: line.amount }));
         setItems(lineItems);
       }
       
@@ -142,8 +141,7 @@ export default function NewInvoicePage() {
         type: newCustomer.type,
         credit_limit: 0,
         payment_terms: "Net 30",
-        status: "active",
-      });
+        status: "active" });
 
       toast.success("Customer created successfully!");
       
@@ -157,8 +155,7 @@ export default function NewInvoicePage() {
         phone: "",
         email: "",
         address: "",
-        type: "Individual",
-      });
+        type: "Individual" });
       setCustomerDialogOpen(false);
     } catch (error: any) {
       console.error("Error creating customer:", error);
@@ -240,8 +237,7 @@ export default function NewInvoicePage() {
         amount: grandTotal,
         payment_type: form.payment_type,
         status: status,
-        notes: form.notes || undefined,
-      };
+        notes: form.notes || undefined };
 
       // If recording payment immediately, set paid_amount and status to Paid
       if (recordPayment) {
@@ -273,9 +269,7 @@ export default function NewInvoicePage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Invoice" subtitle="New tax invoice" />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }
@@ -287,7 +281,9 @@ export default function NewInvoicePage() {
         <DashHeader title="Create Invoice" subtitle="New tax invoice" />
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center max-w-md">
-            <div className="text-6xl mb-4">📋</div>
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 mx-auto">
+              <FileText className="h-8 w-8 text-gray-400" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Customers Found</h3>
             <p className="text-gray-600 mb-6">
               You need to create at least one customer before you can create an invoice.

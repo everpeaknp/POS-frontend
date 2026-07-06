@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Download } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useApi } from "@/lib/hooks/useApi";
 import { inventoryApi } from "@/lib/api/inventory";
+import { formatNPR } from "@/lib/utils";
 import { SkeletonCard, SkeletonTable } from "@/components/shared/Skeleton";
+import { exportTableAsCsv, exportTableAsPdf, type ExportTableData } from "@/lib/utils/export";
+import toast from "react-hot-toast";
 
 const TABS = ["Stock Summary", "Low Stock", "Valuation", "Movement"];
 
@@ -43,6 +46,83 @@ export default function InventoryReportsPage() {
   const valuationChartData = valuationData?.data?.valuation_data || [];
   const movementItems = movementData?.data?.items || [];
 
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (tab === "Low Stock") {
+      if (!lowStockItems.length) return null;
+      return {
+        filename: "inventory-low-stock",
+        title: "Low Stock Report",
+        headers: ["Product", "SKU", "Current", "Reorder", "Shortage", "Status"],
+        rows: lowStockItems.map((item: any) => [
+          item.name,
+          item.sku,
+          `${item.current_stock} ${item.unit}`,
+          String(item.reorder_level),
+          String(item.shortage),
+          item.status,
+        ]),
+      };
+    }
+    if (tab === "Valuation") {
+      if (!valuationItems.length) return null;
+      return {
+        filename: "inventory-valuation",
+        title: "Inventory Valuation Report",
+        headers: ["Product", "SKU", "Stock", "Cost", "Sale Price", "Cost Value"],
+        rows: valuationItems.map((item: any) => [
+          item.name,
+          item.sku,
+          `${item.stock} ${item.unit}`,
+          formatNPR(item.cost_price),
+          formatNPR(item.selling_price),
+          formatNPR(item.total_cost_value),
+        ]),
+      };
+    }
+    if (tab === "Movement") {
+      if (!movementItems.length) return null;
+      return {
+        filename: "inventory-movement",
+        title: "Stock Movement Report",
+        headers: ["Product", "Category", "Opening", "In", "Out", "Closing"],
+        rows: movementItems.map((item: any) => [
+          item.name,
+          item.category || "-",
+          String(Math.round(item.opening)),
+          String(Math.round(item.in)),
+          String(Math.round(item.out)),
+          String(Math.round(item.closing)),
+        ]),
+      };
+    }
+    if (!stockData.length) return null;
+    return {
+      filename: "inventory-stock-summary",
+      title: "Stock Summary Report",
+      headers: ["Product", "Stock"],
+      rows: stockData.map((item: any) => [item.name, String(Math.round(item.stock))]),
+    };
+  }, [tab, stockData, lowStockItems, valuationItems, movementItems]);
+
+  const runExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data || data.rows.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to export");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Inventory Reports" subtitle="Stock analytics and valuation" />
@@ -57,8 +137,11 @@ export default function InventoryReportsPage() {
             ))}
           </div>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-gray-600 border-gray-200">
-            <Download className="h-3.5 w-3.5" /> Export
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-gray-600 border-gray-200" onClick={() => runExport("pdf")}>
+            <FileText className="h-3.5 w-3.5" /> Export PDF
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-gray-600 border-gray-200" onClick={() => runExport("csv")}>
+            <Download className="h-3.5 w-3.5" /> Export CSV
           </Button>
         </div>
 

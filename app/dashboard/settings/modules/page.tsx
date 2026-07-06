@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Shield, ChevronRight } from "lucide-react";
+import { Shield, ChevronRight } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { OrganizationModulePicker } from "@/components/settings/OrganizationModulePicker";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
@@ -11,8 +11,7 @@ import {
   ORG_MODULE_CATALOG,
   isModuleActive,
   isModuleInActiveList,
-  isRequiredModule,
-} from "@/lib/modules/catalog";
+  isRequiredModule } from "@/lib/modules/catalog";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
 
@@ -47,8 +46,7 @@ export default function OrganizationModulesPage() {
       setTenantMeta({
         slug: data.slug,
         plan_type: data.plan_type,
-        user_role: data.user_role,
-      });
+        user_role: data.user_role });
       setActiveModules(data.active_modules || []);
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;

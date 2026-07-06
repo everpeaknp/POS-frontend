@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -11,9 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
-import { getEmployee, updateEmployee, getDepartments, type Employee, type Department, type EmployeeFormData } from "@/lib/api/hr";
+import { getEmployee, updateEmployee, getDepartments, type Department, type EmployeeFormData } from "@/lib/api/hr";
+import { isAtLeastAge, maxBirthDateForMinAge } from "@/lib/dates";
+
+const MIN_EMPLOYEE_AGE = 18;
+const MAX_EMPLOYEE_DOB = maxBirthDateForMinAge(MIN_EMPLOYEE_AGE);
 
 const DESIGNATIONS = [
   { value: "Manager", label: "Manager" },
@@ -115,6 +119,10 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!isAtLeastAge(formData.dob, MIN_EMPLOYEE_AGE)) {
+      toast.error(`Employee must be at least ${MIN_EMPLOYEE_AGE} years old`);
+      return;
+    }
     
     setLoading(true);
 
@@ -151,26 +159,19 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     }
   };
 
-  if (loadingData) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading employee data...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Edit Employee" subtitle="Update employee information" />
-      <div className="flex-1 p-6">
-        <Link href={`/dashboard/hr/employees/${id}`} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Employee Profile
-        </Link>
+    <HRPageShell
+      title="Edit Employee"
+      subtitle="Update employee information"
+      variant="form"
+      loading={loadingData}
+    >
+      <Link href={`/dashboard/hr/employees/${id}`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Employee Profile
+      </Link>
 
-        <div className="max-w-4xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      {!loadingData && (
+        <div className={`${hrCardClass} p-6`}>
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="personal">Personal</TabsTrigger>
@@ -199,12 +200,13 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                     <Label htmlFor="dob" className="text-sm font-medium text-gray-700">Date of Birth*</Label>
                     <DateInput 
                       id="dob" 
-                       
                       value={formData.dob} 
                       onChange={(date) => setFormData({ ...formData, dob: date})} 
+                      max={MAX_EMPLOYEE_DOB}
                       className="mt-1 h-9 border-gray-200" 
                       required 
                     />
+                    <p className="text-xs text-gray-500 mt-1">Employee must be at least {MIN_EMPLOYEE_AGE} years old</p>
                   </div>
                 </div>
 
@@ -349,7 +351,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
             </form>
           </Tabs>
         </div>
-      </div>
-    </div>
+      )}
+    </HRPageShell>
   );
 }

@@ -4,9 +4,9 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Edit, Trash2, Users, User } from "lucide-react";
+import { ChevronLeft, Edit, Trash2, Users, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
 import { getDepartment, getEmployees, deleteDepartment, type Department, type Employee } from "@/lib/api/hr";
 
@@ -111,69 +111,60 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Department Details" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading department...</div>
-        </div>
-      </div>
+      <HRPageShell title="Department Details" subtitle="Loading department…" loading />
     );
   }
 
   if (!department) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Department Not Found" subtitle="The department you're looking for doesn't exist" />
-        <div className="flex-1 p-6">
-          <Link href="/dashboard/hr/departments">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Departments
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <HRPageShell title="Department Not Found" subtitle="The department you're looking for doesn't exist">
+        <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <ChevronLeft className="h-4 w-4" /> Back to Departments
+        </Link>
+      </HRPageShell>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title={department.name} subtitle="Department Details" />
-      <div className="flex-1 p-6 space-y-6">
-        <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" /> Back to Departments
-        </Link>
+    <HRPageShell
+      title={department.name}
+      subtitle={department.head_name ? `Head: ${department.head_name}` : "No department head assigned"}
+      action={
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2"
+            onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
+          >
+            <Edit className="h-4 w-4" /> Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </Button>
+        </div>
+      }
+    >
+      <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Departments
+      </Link>
 
-        {/* Department Info Card */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-green-100 flex items-center justify-center">
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{department.name}</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  {department.head_name ? `Head: ${department.head_name}` : "No department head assigned"}
-                </p>
-              </div>
+      <div className="space-y-6">
+        <div className={`${hrCardClass} p-6`}>
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-16 h-16 rounded-lg bg-green-100 flex items-center justify-center">
+              <Users className="w-8 h-8 text-green-600" />
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
-              >
-                <Edit className="h-4 w-4" /> Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </Button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{department.name}</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {department.head_name ? `Head: ${department.head_name}` : "No department head assigned"}
+              </p>
             </div>
           </div>
 
@@ -200,8 +191,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
 
-        {/* Employees List */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className={`${hrCardClass} p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Department Employees</h3>
             <span className="text-sm text-gray-500">{employees.length} employees</span>
@@ -239,6 +229,6 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

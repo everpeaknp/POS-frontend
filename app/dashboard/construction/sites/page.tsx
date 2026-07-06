@@ -4,8 +4,15 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { DashHeader } from '@/components/dashboard/dash-header';
+import { Plus, Building2, Pencil, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionFilterPillActive,
+  constructionFilterPillInactive,
+} from '@/components/dashboard/ConstructionPageShell';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -94,133 +101,113 @@ export default function SitesPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader
+  if (loading) {
+    return (
+      <ConstructionPageShell
         title="Construction Sites"
         subtitle="Manage construction projects with budget tracking and cost monitoring"
+        loading
+        loadingMessage="Loading sites…"
       />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
-        <div className="flex justify-end">
-          <Link
-            href="/dashboard/construction/sites/new"
-            className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            New Site
-          </Link>
-        </div>
+    );
+  }
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full">
-        <div className="flex gap-2">
+  if (sites.length === 0 && filter === 'all') {
+    return (
+      <ConstructionPageShell
+        title="Construction Sites"
+        subtitle="Manage construction projects with budget tracking and cost monitoring"
+      >
+        <EmptyState
+            icon={Building2}
+            title="No construction sites yet"
+            description="Create your first site to track budget, labor, and progress."
+            actionLabel="New Site"
+            actionHref="/dashboard/construction/sites/new"
+          />
+      </ConstructionPageShell>
+    );
+  }
+
+  return (
+    <ConstructionPageShell
+      title="Construction Sites"
+      subtitle="Manage construction projects with budget tracking and cost monitoring"
+      toolbar={
+        <div className="flex flex-wrap gap-2">
           {['all', 'active', 'planned', 'on_hold', 'completed'].map((status) => (
             <button
               key={status}
+              type="button"
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
                 filter === status
-                  ? 'bg-[#22C55E] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? constructionFilterPillActive
+                  : constructionFilterPillInactive
               }`}
             >
-              {status === 'all' ? 'All Sites' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {status === 'all' ? 'All Sites' : status.replace('_', ' ')}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Sites Grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-              <div className="space-y-3">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : sites.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No construction sites</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by creating a new site.</p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard/construction/sites/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#22C55E] hover:bg-[#16A34A]"
-            >
-              + New Site
-            </Link>
-          </div>
+      }
+      action={
+        <Link href="/dashboard/construction/sites/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Site
+          </Button>
+        </Link>
+      }
+    >
+      {sites.length === 0 ? (
+        <div className={`${constructionCardClass} p-12 text-center`}>
+          <p className="text-gray-500">No sites found matching your filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
           {sites.map((site) => (
             <div
               key={site.id}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full"
+              className={`${constructionCardClass} hover:shadow-md hover:border-[#22C55E]/20 transition-all cursor-pointer w-full overflow-hidden`}
               onClick={() => router.push(`/dashboard/construction/sites/${site.id}`)}
             >
-              {/* Site Header */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900">{site.name}</h3>
+              <div className="p-5 border-b border-gray-100 dark:border-border">
+                <div className="flex justify-between items-start gap-3 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground truncate">{site.name}</h3>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        site.status
-                      )}`}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(site.status)}`}
                     >
                       {site.status.replace('_', ' ').toUpperCase()}
                     </span>
                     <button
+                      type="button"
                       onClick={(e) => handleEditClick(e, site.id)}
-                      className="p-2 text-[#22C55E] hover:bg-green-50 rounded-md transition-colors"
+                      className="p-2 text-[#22C55E] hover:bg-green-50 dark:hover:bg-green-500/10 rounded-md transition-colors"
                       title="Edit site"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <Pencil className="w-4 h-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={(e) => handleDeleteClick(e, site)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
                       title="Delete site"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{site.location}</p>
+                <p className="text-sm text-gray-600 dark:text-muted-foreground">{site.location}</p>
                 {site.client_name && (
-                  <p className="text-sm text-gray-500 mt-1">Client: {site.client_name}</p>
+                  <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">Client: {site.client_name}</p>
                 )}
               </div>
 
-              {/* Budget Speedometer */}
-              <div className="p-6 bg-gray-50">
+              <div className="p-5 bg-gray-50/80 dark:bg-muted/30">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-gray-700">Budget Status</span>
                   <span
@@ -298,8 +285,7 @@ export default function SitesPage() {
                 )}
               </div>
 
-              {/* Cost Breakdown */}
-              <div className="p-6 border-t border-gray-200">
+              <div className="p-5 border-t border-gray-100 dark:border-border">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Cost Breakdown</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -333,8 +319,7 @@ export default function SitesPage() {
                 </div>
               </div>
 
-              {/* Site Info */}
-              <div className="p-6 bg-gray-50 border-t border-gray-200">
+              <div className="p-5 bg-gray-50/80 dark:bg-muted/30 border-t border-gray-100 dark:border-border">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Manager</p>
@@ -364,12 +349,10 @@ export default function SitesPage() {
           ))}
         </div>
       )}
-      </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`${constructionCardClass} p-6 max-w-md w-full`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,12 +364,12 @@ export default function SitesPage() {
                 <p className="text-sm text-gray-500">This action cannot be undone</p>
               </div>
             </div>
-            
+
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete <span className="font-semibold">{siteToDelete?.name}</span>? 
-              This will permanently remove the site and all associated data including attendance records, daily logs, and material consumption.
+              Are you sure you want to delete <span className="font-semibold">{siteToDelete?.name}</span>?
+              This will permanently remove the site and all associated data.
             </p>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -412,6 +395,6 @@ export default function SitesPage() {
           </div>
         </div>
       )}
-    </div>
+    </ConstructionPageShell>
   );
 }

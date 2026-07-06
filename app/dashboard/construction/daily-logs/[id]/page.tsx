@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit, Trash2, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Edit, Trash2, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionTableWrapClass,
+} from '@/components/dashboard/ConstructionPageShell';
 import { constructionApi, DailyLog } from '@/lib/api/construction';
 import toast from 'react-hot-toast';
 
@@ -74,79 +80,71 @@ export default function DailyLogDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-      </div>
+      <ConstructionPageShell title="Daily Log" subtitle="Loading log details…" loading />
     );
   }
 
   if (!log) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Daily log not found</p>
-      </div>
+      <ConstructionPageShell title="Log Not Found" subtitle="This daily log could not be loaded">
+        <div className={`${constructionCardClass} p-12 text-center`}>
+          <p className="text-gray-500">Daily log not found</p>
+          <Link
+            href="/dashboard/construction/daily-logs"
+            className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
+          >
+            Back to Daily Logs
+          </Link>
+        </div>
+      </ConstructionPageShell>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard/construction/daily-logs"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Daily Log Details</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              {log.site_name} - {formatDate(log.date)}
-            </p>
-            {!log.is_editable && (
-              <p className="mt-1 text-xs text-red-600 font-medium">
-                🔒 Immutable - Created more than 24 hours ago
-              </p>
-            )}
-            {log.is_editable && log.hours_until_immutable !== undefined && log.hours_until_immutable < 24 && (
-              <p className="mt-1 text-xs text-orange-600 font-medium">
-                ⏰ Editable for {log.hours_until_immutable.toFixed(1)} more hours
-              </p>
-            )}
-          </div>
-        </div>
+  const editabilityNote = !log.is_editable
+    ? 'Immutable — created more than 24 hours ago'
+    : log.hours_until_immutable !== undefined && log.hours_until_immutable < 24
+      ? `Editable for ${log.hours_until_immutable.toFixed(1)} more hours`
+      : undefined;
 
-        <div className="flex gap-3">
-          <Link
-            href={`/dashboard/construction/daily-logs/${id}/edit`}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              log.is_editable
-                ? 'bg-[#22C55E] text-white hover:bg-[#16A34A]'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
-            }`}
-          >
-            <Edit className="w-4 h-4" />
-            Edit
+  return (
+    <ConstructionPageShell
+      title="Daily Log Details"
+      subtitle={[log.site_name, formatDate(log.date), editabilityNote].filter(Boolean).join(' · ')}
+      action={
+        <div className="flex gap-2">
+          <Link href={`/dashboard/construction/daily-logs/${id}/edit`}>
+            <Button
+              size="sm"
+              className="h-9 gap-1.5"
+              disabled={!log.is_editable}
+              variant={log.is_editable ? 'default' : 'secondary'}
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
           </Link>
-          <button
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-9 gap-1.5"
             onClick={handleDelete}
             disabled={deleting || !log.is_editable}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              log.is_editable && !deleting
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
             {deleting ? 'Deleting...' : 'Delete'}
-          </button>
+          </Button>
         </div>
-      </div>
+      }
+    >
+      <Link
+        href="/dashboard/construction/daily-logs"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back to Daily Logs
+      </Link>
 
-      {/* Main Content */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 space-y-6">
+      <div className={`${constructionCardClass} p-6 space-y-6`}>
           {/* Status Badge */}
           {log.reviewed_by_name && (
             <div className="flex items-center gap-2 text-[#22C55E]">
@@ -242,7 +240,7 @@ export default function DailyLogDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Material Consumptions
               </label>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className={constructionTableWrapClass}>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -309,8 +307,7 @@ export default function DailyLogDetailPage() {
               )}
             </div>
           </div>
-        </div>
       </div>
-    </div>
+    </ConstructionPageShell>
   );
 }

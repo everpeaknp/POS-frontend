@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
@@ -226,9 +228,7 @@ export default function NewPurchaseOrderPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Create Purchase Order" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

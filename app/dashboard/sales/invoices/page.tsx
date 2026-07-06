@@ -4,7 +4,7 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreVertical, Printer } from "lucide-react";
+import { Plus, Search, MoreVertical, Printer, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { RecordPaymentModal } from "@/components/sales/RecordPaymentModal";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { invoiceAPI } from "@/lib/api/sales";
@@ -118,6 +119,24 @@ export default function InvoicesPage() {
   }
 
   const invoices = invoicesData?.data?.results || [];
+
+  if (invoices.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Sales Invoices" subtitle="Manage your invoices" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={Receipt}
+            title="No invoices yet"
+            description="Create your first invoice to start billing customers"
+            actionLabel="New Invoice"
+            actionHref="/dashboard/sales/invoices/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   const filtered = invoices.filter((inv: any) => {
     const matchesSearch = search === "" || 
       inv.invoice_number.toLowerCase().includes(search.toLowerCase()) || 
@@ -158,6 +177,11 @@ export default function InvoicesPage() {
           </Link>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No invoices found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -238,6 +262,7 @@ export default function InvoicesPage() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       <RecordPaymentModal 

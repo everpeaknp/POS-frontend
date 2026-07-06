@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass, hrTableWrapClass } from "@/components/dashboard/HRPageShell";
 import { calculatePayroll, processPayroll, PayrollCalculation } from "@/lib/api/hr";
+import { BS_YEAR_MAX, BS_YEAR_MIN, getCurrentBsPeriod, NEPALI_MONTHS } from "@/lib/dates";
 import toast from "react-hot-toast";
 
 export default function RunPayrollPage() {
   const router = useRouter();
-  const [month, setMonth] = useState<string>("");
-  const [year] = useState<number>(2081);
-  const [calculated, setCalculated] = useState(false);
+  const defaultPeriod = useMemo(() => getCurrentBsPeriod(), []);
+  const [month, setMonth] = useState<string>(defaultPeriod.month);
+  const [year, setYear] = useState<number>(defaultPeriod.year);  const [calculated, setCalculated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [payrollData, setPayrollData] = useState<PayrollCalculation | null>(null);
 
@@ -52,17 +53,17 @@ export default function RunPayrollPage() {
     }
   };
 
-  const nepaliMonths = [
-    "Shrawan", "Bhadra", "Ashwin", "Kartik", "Mangsir", "Poush",
-    "Magh", "Falgun", "Chaitra", "Baishakh", "Jyeshtha", "Ashadh"
-  ];
+  const yearOptions = useMemo(() => {
+    const years: number[] = [];
+    for (let y = BS_YEAR_MAX; y >= BS_YEAR_MIN; y -= 1) {
+      years.push(y);
+    }
+    return years;
+  }, []);
 
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Run Payroll" subtitle="Calculate and process employee salaries" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
-        {!calculated ? (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full">
+  return (    <HRPageShell title="Run Payroll" subtitle="Calculate and process employee salaries">
+      {!calculated ? (
+        <div className={`${hrCardClass} p-6 lg:p-8 w-full`}>
             <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Select Period</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
               <div>
@@ -70,17 +71,33 @@ export default function RunPayrollPage() {
                 <Select value={month} onValueChange={(v) => setMonth(v ?? "")}>
                   <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select month" /></SelectTrigger>
                   <SelectContent>
-                    {nepaliMonths.map((m, i) => <SelectItem key={i} value={m}>{m}</SelectItem>)}
+                    {NEPALI_MONTHS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700">Year</Label>
-                <div className="mt-1 h-9 px-3 flex items-center border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-700">
-                  {year}
-                </div>
-              </div>
-              <div className="sm:col-span-2 lg:col-span-1">
+                <Label className="text-sm font-medium text-gray-700 dark:text-foreground">Year (BS)</Label>
+                <Select
+                  value={String(year)}
+                  onValueChange={(v) => setYear(Number(v))}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="mt-1 h-9 border-gray-200 dark:border-border">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>              <div className="sm:col-span-2 lg:col-span-1">
                 <Button
                   onClick={handleCalculate}
                   disabled={!month || loading}
@@ -98,7 +115,7 @@ export default function RunPayrollPage() {
           </div>
         ) : (
           <div className="space-y-4 w-full">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+            <div className={`${hrCardClass} p-6 lg:p-8 w-full`}>
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
                 Payroll Summary — {payrollData?.month} {payrollData?.year}
               </h3>
@@ -122,7 +139,7 @@ export default function RunPayrollPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+            <div className={hrTableWrapClass}>
               <div className="px-6 py-4 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900">Employee Payroll Details</h3>
               </div>
@@ -165,7 +182,6 @@ export default function RunPayrollPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </HRPageShell>
   );
 }

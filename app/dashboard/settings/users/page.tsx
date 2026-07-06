@@ -3,10 +3,18 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MoreHorizontal, Trash2, X, Search, Mail, Shield } from "lucide-react";
+import { MoreVertical, Trash2, X, Search, Mail, Shield, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonTable } from "@/components/shared/Skeleton";
 import apiClient from "@/lib/api/client";
 import { useAuth } from "@/lib/context/AuthContext";
 import { invitationApi, Invitation } from "@/lib/api/tenant";
@@ -58,6 +66,12 @@ const modules = [
   { name: "Reports", actions: ["View", "Export"] },
   { name: "Settings", actions: ["View", "Edit"] },
 ];
+
+const cardClass =
+  "bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm";
+const tableWrapClass = `${cardClass} overflow-hidden`;
+const inputClass =
+  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -459,296 +473,272 @@ export default function UsersPage() {
     }
   };
 
+  const pendingInvites = invitations.filter((i) => i.status === "pending").length;
+
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Users & Roles" subtitle="Manage team access" />
-      <div className="flex-1 p-6 space-y-4">
-        {/* Tabs */}
-        <div className="flex gap-2 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'users'
-                ? 'border-[#22C55E] text-[#22C55E]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Team Members ({users.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('invitations')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'invitations'
-                ? 'border-[#22C55E] text-[#22C55E]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Pending Invitations ({invitations.filter(i => i.status === 'pending').length})
-          </button>
+    <div className="flex flex-col h-full min-h-0 w-full">
+      <DashHeader
+        title="Users & Roles"
+        subtitle={
+          loading
+            ? "Loading team..."
+            : `${users.length} team member${users.length !== 1 ? "s" : ""}${pendingInvites > 0 ? ` · ${pendingInvites} pending invite${pendingInvites !== 1 ? "s" : ""}` : ""}`
+        }
+      />
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 bg-gray-100 dark:bg-muted p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab("users")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === "users"
+                  ? "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm"
+                  : "text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:hover:text-foreground"
+              }`}
+            >
+              Team Members ({users.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("invitations")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === "invitations"
+                  ? "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm"
+                  : "text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:hover:text-foreground"
+              }`}
+            >
+              Pending Invitations ({pendingInvites})
+            </button>
+          </div>
         </div>
 
-        {activeTab === 'users' && (
-          <>
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className={`${cardClass} p-4 lg:p-5`}>
+          <div className="flex flex-wrap items-center gap-3 w-full">
+            {activeTab === "users" && (
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder="Search by name, email, or username..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className={inputClass}
                 />
               </div>
-              <Button
-                size="sm"
-                onClick={handleInvite}
-                className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
-              >
-                <Mail className="h-4 w-4" /> Invite User
-              </Button>
-            </div>
-
-        {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading users...</div>
-        ) : users.length === 0 && !searchTerm ? (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">No users yet</h3>
-            <p className="text-gray-500 mb-6">Get started by inviting your first team member</p>
+            )}
+            <div className="flex-1" />
             <Button
               size="sm"
               onClick={handleInvite}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
             >
               <Mail className="h-4 w-4" /> Invite User
             </Button>
           </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-visible">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {["User", "Email", "Role", "Last Login", "Status", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      No users found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E]">
-                            {u.first_name?.[0] || u.username[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-800">
-                              {u.first_name} {u.last_name}
-                            </div>
-                            <div className="text-xs text-gray-500">@{u.username}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            roleColors[u.role] ?? "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {formatDate(u.last_login)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            u.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {u.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {u.id !== currentUser?.id && canManageUsers() ? (
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Menu clicked for user:', u.id, 'Current menu:', menu);
-                                setMenu(menu === u.id ? null : u.id);
-                              }}
-                              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                            {menu === u.id && (
-                              <>
-                                <div 
-                                  className="fixed inset-0 z-10" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setMenu(null);
-                                  }}
-                                />
-                                <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[150px]">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleViewPermissions(u);
-                                    }}
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    <Shield className="h-3.5 w-3.5" />
-                                    Permissions
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePromoteRoleClick(u.id, u.role);
-                                    }}
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                                    </svg>
-                                    Change Role
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteClick(u.id);
-                                    }}
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" /> Remove
-                                  </button>
+        </div>
+
+        {activeTab === "users" && (
+          <>
+            {loading ? (
+              <SkeletonTable rows={8} />
+            ) : users.length === 0 && !searchTerm ? (
+              <EmptyState
+                icon={Users}
+                title="No team members yet"
+                description="Invite colleagues to collaborate in your organization"
+                actionLabel="Invite User"
+                onAction={handleInvite}
+              />
+            ) : (
+              <div className={tableWrapClass}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
+                      <tr>
+                        {["User", "Email", "Role", "Last Login", "Status", ""].map((h) => (
+                          <th
+                            key={h || "actions"}
+                            className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-border">
+                      {filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                            No users found matching your search
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsers.map((u) => (
+                          <tr key={u.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E] shrink-0">
+                                  {u.first_name?.[0] || u.username[0].toUpperCase()}
                                 </div>
-                              </>
-                            )}
-                          </div>
-                        ) : u.id === currentUser?.id ? (
-                          <span className="text-xs text-gray-400">You</span>
-                        ) : (
-                          <span className="text-xs text-gray-400">No access</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                                <div className="min-w-0">
+                                  <div className="font-medium text-gray-900 dark:text-foreground truncate">
+                                    {u.first_name} {u.last_name}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-muted-foreground truncate">
+                                    @{u.username}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground whitespace-nowrap">
+                              {u.email}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                  roleColors[u.role] ?? "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground text-xs whitespace-nowrap">
+                              {formatDate(u.last_login)}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  u.is_active
+                                    ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                                    : "bg-gray-100 text-gray-500 dark:bg-muted dark:text-muted-foreground"
+                                }`}
+                              >
+                                {u.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              {u.id === currentUser?.id ? (
+                                <span className="text-xs text-gray-400">You</span>
+                              ) : canManageUsers() ? (
+                                <DropdownMenu
+                                  open={menu === u.id}
+                                  onOpenChange={(open) => setMenu(open ? u.id : null)}
+                                >
+                                  <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-muted text-gray-400">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-40">
+                                    <DropdownMenuItem onClick={() => handleViewPermissions(u)}>
+                                      <Shield className="h-3.5 w-3.5 mr-2" />
+                                      Permissions
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handlePromoteRoleClick(u.id, u.role)}
+                                    >
+                                      <UserPlus className="h-3.5 w-3.5 mr-2" />
+                                      Change Role
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-600"
+                                      onClick={() => handleDeleteClick(u.id)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                      Remove
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <span className="text-xs text-gray-400">No access</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {/* Invitations Tab */}
-        {activeTab === 'invitations' && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          {invitations.length === 0 ? (
-            <div className="p-12 text-center">
-              <Mail className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">No pending invitations</h3>
-              <p className="text-gray-500 mb-6">Invite users to join your organization</p>
-              <Button
-                size="sm"
-                onClick={handleInvite}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
-              >
-                <Mail className="h-4 w-4" /> Send Invitation
-              </Button>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {["Email", "Role", "Status", "Sent", "Expires", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {invitations.filter(inv => inv.status === 'pending').map((inv) => (
-                  <tr key={inv.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="font-medium text-gray-800">{inv.invited_user_name}</div>
-                        <div className="text-xs text-gray-500">Invited by {inv.invited_by_name}</div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          roleColors[inv.role] ?? "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {inv.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          inv.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : inv.status === 'accepted'
-                            ? 'bg-green-100 text-green-700'
-                            : inv.status === 'declined'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-500'
-                        }`}
-                      >
-                        {inv.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      <FormattedDate value={inv.created_at} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      <FormattedDate value={inv.expires_at} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {inv.status === 'pending' && (
-                        <button
-                          onClick={() => handleCancelInvitation(inv.id)}
-                          className="text-xs text-red-600 hover:text-red-700 font-medium"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {activeTab === "invitations" && (
+          <>
+            {invitations.filter((inv) => inv.status === "pending").length === 0 ? (
+              <EmptyState
+                icon={Mail}
+                title="No pending invitations"
+                description="Send an invitation to add someone to your organization"
+                actionLabel="Send Invitation"
+                onAction={handleInvite}
+              />
+            ) : (
+              <div className={tableWrapClass}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
+                      <tr>
+                        {["User", "Role", "Status", "Sent", "Expires", ""].map((h) => (
+                          <th
+                            key={h || "actions"}
+                            className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-border">
+                      {invitations
+                        .filter((inv) => inv.status === "pending")
+                        .map((inv) => (
+                          <tr key={inv.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="font-medium text-gray-900 dark:text-foreground">
+                                {inv.invited_user_name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-muted-foreground">
+                                Invited by {inv.invited_by_name}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                  roleColors[inv.role] ?? "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {inv.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400 capitalize">
+                                {inv.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground text-xs whitespace-nowrap">
+                              <FormattedDate value={inv.created_at} />
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground text-xs whitespace-nowrap">
+                              <FormattedDate value={inv.expires_at} />
+                            </td>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => handleCancelInvitation(inv.id)}
+                                className="text-xs text-red-600 hover:text-red-700 font-medium"
+                              >
+                                Cancel
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

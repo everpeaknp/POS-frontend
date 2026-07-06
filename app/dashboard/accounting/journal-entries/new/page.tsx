@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -174,12 +175,7 @@ export default function NewJournalEntryPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="New Journal Entry" subtitle="Loading..." />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading form...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading form…" />
       </div>
     );
   }

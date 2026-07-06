@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import { getLeaveTypes, createLeaveRequest, type LeaveType } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
@@ -81,25 +81,15 @@ export default function NewLeaveRequestPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-0">
-        <DashHeader title="Apply for Leave" subtitle="Submit a new leave request" />
-        <div className="p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading form...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-0">
-      <DashHeader title="Apply for Leave" subtitle="Submit a new leave request" />
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+    <HRPageShell
+      title="Apply for Leave"
+      subtitle="Submit a new leave request"
+      variant="fullscreen"
+      loading={loading}
+    >
+      {!loading && (
+        <div className={`${hrCardClass} p-6 lg:p-8 w-full min-h-full`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Leave Details</h3>
@@ -185,7 +175,7 @@ export default function NewLeaveRequestPage() {
             </div>
           </form>
         </div>
-      </div>
-    </div>
+      )}
+    </HRPageShell>
   );
 }

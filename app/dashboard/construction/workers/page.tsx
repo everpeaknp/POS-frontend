@@ -3,8 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { DashHeader } from '@/components/dashboard/dash-header';
+import { Plus, HardHat } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+  constructionTableWrapClass,
+  constructionFilterPillActive,
+  constructionFilterPillInactive,
+} from '@/components/dashboard/ConstructionPageShell';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { constructionApi, Worker } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -105,80 +113,71 @@ export default function WorkersPage() {
       : 'bg-red-100 text-red-800';
   };
 
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Construction Workers" subtitle="Manage your construction workforce" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
-        <div className="flex justify-end">
-          <Link
-            href="/dashboard/construction/workers/new"
-            className="inline-flex items-center px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors font-medium gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            New Worker
-          </Link>
-        </div>
+  if (loading) {
+    return (
+      <ConstructionPageShell
+        title="Construction Workers"
+        subtitle="Manage your construction workforce"
+        loading
+        loadingMessage="Loading workers…"
+      />
+    );
+  }
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full">
-        <div className="flex gap-2">
+  if (workers.length === 0 && filter === 'all') {
+    return (
+      <ConstructionPageShell
+        title="Construction Workers"
+        subtitle="Manage your construction workforce"
+      >
+        <EmptyState
+            icon={HardHat}
+            title="No workers yet"
+            description="Add your first worker to start managing your construction workforce."
+            actionLabel="New Worker"
+            actionHref="/dashboard/construction/workers/new"
+          />
+      </ConstructionPageShell>
+    );
+  }
+
+  return (
+    <ConstructionPageShell
+      title="Construction Workers"
+      subtitle="Manage your construction workforce"
+      toolbar={
+        <div className="flex flex-wrap gap-2">
           {['all', 'active', 'inactive'].map((status) => (
             <button
               key={status}
+              type="button"
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
                 filter === status
-                  ? 'bg-[#22C55E] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? constructionFilterPillActive
+                  : constructionFilterPillInactive
               }`}
             >
-              {status === 'all' ? 'All Workers' : status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'all' ? 'All Workers' : status}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Workers List */}
-      {loading ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
-          <div className="animate-pulse">
-            <div className="h-12 bg-gray-200"></div>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="border-t border-gray-200 p-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : workers.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No workers</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by adding a new worker.</p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard/construction/workers/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#22C55E] hover:bg-[#16A34A]"
-            >
-              + New Worker
-            </Link>
-          </div>
+      }
+      action={
+        <Link href="/dashboard/construction/workers/new">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Worker
+          </Button>
+        </Link>
+      }
+    >
+      {workers.length === 0 ? (
+        <div className={`${constructionCardClass} p-12 text-center`}>
+          <p className="text-gray-500">No workers found matching your filters</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
+        <div className={constructionTableWrapClass}>
           <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -278,7 +277,6 @@ export default function WorkersPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -324,7 +322,6 @@ export default function WorkersPage() {
           </div>
         </div>
       )}
-      </div>
-    </div>
+    </ConstructionPageShell>
   );
 }

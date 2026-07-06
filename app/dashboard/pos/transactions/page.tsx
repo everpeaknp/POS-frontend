@@ -1,9 +1,11 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, X, Loader2, Calendar, DollarSign, User } from "lucide-react";
+import { Eye, X, Calendar, DollarSign, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,9 +106,7 @@ export default function POSTransactionsPage() {
         background: 'white',
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         borderRadius: '12px',
-        padding: '16px',
-      },
-    });
+        padding: '16px' } });
   };
 
   const getStatusBadge = (status: string) => {
@@ -132,9 +132,7 @@ export default function POSTransactionsPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="POS Transactions" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

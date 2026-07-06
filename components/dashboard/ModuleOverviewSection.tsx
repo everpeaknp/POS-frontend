@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import type { DashboardModuleSection } from "@/lib/dashboard/types";
+import { dashboardCardClass } from "@/components/dashboard/DashboardPageShell";
 import type { OrgModuleDefinition } from "@/lib/modules/catalog";
 
 const statusStyle: Record<string, string> = {
@@ -51,7 +52,7 @@ export function ModuleOverviewSection({
   const Icon = catalog?.icon;
 
   return (
-    <section className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm overflow-hidden">
+    <section className={`${dashboardCardClass} overflow-hidden`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-border">
         <div className="flex items-center gap-3 min-w-0">
           {Icon ? (

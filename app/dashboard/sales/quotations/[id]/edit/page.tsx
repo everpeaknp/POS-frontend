@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -159,9 +161,7 @@ export default function EditQuotationPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Edit Quotation" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

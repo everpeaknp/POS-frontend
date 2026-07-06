@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Search, Download } from "lucide-react";
@@ -96,9 +97,7 @@ export default function AccountDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Account Ledger" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

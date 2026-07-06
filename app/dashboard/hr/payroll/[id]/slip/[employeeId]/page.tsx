@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { ChevronLeft } from "lucide-react";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import { getPayroll, type Payroll } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
@@ -31,35 +31,26 @@ export default function PayslipPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Payslip" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      </div>
+      <HRPageShell title="Payslip" subtitle="Loading payslip…" loading />
     );
   }
 
   if (!record) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Payslip Not Found" />
-      </div>
+      <HRPageShell title="Payslip Not Found" subtitle="This payslip could not be loaded" />
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title={`Payslip - ${record.employee_name}`} subtitle={`${record.month} ${record.year}`} />
-      <div className="flex-1 p-6 space-y-6">
-        <Link
-          href={`/dashboard/hr/payroll/${encodeURIComponent(monthKey)}`}
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Payroll
-        </Link>
+    <HRPageShell title={`Payslip - ${record.employee_name}`} subtitle={`${record.month} ${record.year}`}>
+      <Link
+        href={`/dashboard/hr/payroll/${encodeURIComponent(monthKey)}`}
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to Payroll
+      </Link>
 
-        <div className="max-w-3xl bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+      <div className={`max-w-3xl ${hrCardClass} p-8`}>
           <div className="text-center mb-8 pb-8 border-b border-gray-200">
             <h1 className="text-2xl font-bold text-gray-900">SALARY SLIP</h1>
             <p className="text-sm text-gray-600 mt-2">{record.month} {record.year}</p>
@@ -102,7 +93,6 @@ export default function PayslipPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </HRPageShell>
   );
 }

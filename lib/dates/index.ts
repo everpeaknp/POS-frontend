@@ -13,6 +13,10 @@ export {
   bsPartsToAdIso,
   getBsDaysInMonth,
   isValidIsoDate,
+  getCurrentBsPeriod,
+  maxBirthDateForMinAge,
+  getAgeFromIsoDate,
+  isAtLeastAge,
 } from "./convert";
 export type { BsDateParts } from "./convert";
 export { formatDisplayDate, formatDisplayDateTime } from "./format";

@@ -1,5 +1,6 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -238,9 +239,7 @@ function OrgSettingsContent() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }
@@ -501,9 +500,7 @@ export default function OrgSettingsPage() {
       fallback={
         <div className="flex flex-col h-full min-h-0">
           <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          </div>
+          <PageLoading message="Loading…" />
         </div>
       }
     >

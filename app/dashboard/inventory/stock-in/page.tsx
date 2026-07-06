@@ -84,12 +84,12 @@ export default function StockInPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
+      <div className="flex flex-col h-full min-h-0">
         <DashHeader
           title="Stock In"
           subtitle="Receive stock into warehouse"
         />
-        <div className="flex-1 p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <SkeletonCard />
         </div>
       </div>
@@ -97,15 +97,14 @@ export default function StockInPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full min-h-0">
       <DashHeader
         title="Stock In"
         subtitle="Receive stock into warehouse"
       />
 
-      <div className="flex-1 p-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-6 lg:p-8 w-full min-h-full">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-green-50 rounded-lg">
                 <Package className="h-5 w-5 text-green-600" />
@@ -117,6 +116,7 @@ export default function StockInPage() {
             </div>
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {/* Product Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -205,6 +205,7 @@ export default function StockInPage() {
                   placeholder="Enter reference number (optional)"
                 />
               </div>
+              </div>
 
               {/* Notes */}
               <div>
@@ -248,7 +249,6 @@ export default function StockInPage() {
                 </button>
               </div>
             </form>
-          </div>
         </div>
       </div>
     </div>

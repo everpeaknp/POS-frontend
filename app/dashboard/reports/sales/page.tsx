@@ -1,53 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { useState, useEffect, useCallback } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { ReportFilter } from "@/components/reports/ReportFilter";
 import { ExportButtons } from "@/components/reports/ExportButtons";
 import { SummaryCards } from "@/components/reports/SummaryCards";
-import apiClient from "@/lib/api/client";
+import {
+  ReportsPageShell,
+  reportsCardClass,
+  reportsTableWrapClass,
+} from "@/components/reports/ReportsPageShell";
+import { reportsAPI } from "@/lib/api/reports";
+import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import type { ExportTableData } from "@/lib/utils/export";
 
-interface SalesPerformanceData {
-  total_sales: number;
-  total_orders: number;
-  average_order_value: number;
-  top_customers: Array<{
-    customer_id: string;
-    customer_name: string;
-    total_orders: number;
-    total_amount: number;
-  }>;
-}
-
-interface TrendData {
-  monthly_data: Array<{
-    month: string;
-    month_date: string;
-    revenue: number;
-    expenses: number;
-    profit: number;
-  }>;
-}
+const SALES_PERIODS = ["today", "week", "month", "year"] as const;
 
 export default function SalesReportPage() {
-  const [period, setPeriod] = useState("month");
-  const [loading, setLoading] = useState(false);
-  const [salesData, setSalesData] = useState<SalesPerformanceData | null>(null);
-  const [trendData, setTrendData] = useState<TrendData | null>(null);
-  const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
+  const [period, setPeriod] = useState<string>("month");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [salesData, setSalesData] = useState<Awaited<
+    ReturnType<typeof reportsAPI.salesPerformance>
+  > | null>(null);
+  const [trendData, setTrendData] = useState<Awaited<
+    ReturnType<typeof reportsAPI.revenueExpenseTrend>
+  > | null>(null);
+  const [startDate, setStartDate] = useState(
+    format(startOfMonth(new Date()), "yyyy-MM-dd")
+  );
+  const [endDate, setEndDate] = useState(
+    format(endOfMonth(new Date()), "yyyy-MM-dd")
+  );
 
-  useEffect(() => {
-    loadReportData();
-  }, [startDate, endDate]);
-
-  const handlePeriodChange = (newPeriod: string) => {
+  const applyPeriod = useCallback((newPeriod: string) => {
     setPeriod(newPeriod);
     const today = new Date();
-    
     switch (newPeriod) {
       case "today":
         setStartDate(format(today, "yyyy-MM-dd"));
@@ -66,131 +64,171 @@ export default function SalesReportPage() {
         setEndDate(format(today, "yyyy-MM-dd"));
         break;
     }
-  };
+  }, []);
 
-  const loadReportData = async () => {
+  const loadReportData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const salesResponse = await apiClient.get("/reports/sales-performance/", {
-        params: { start_date: startDate, end_date: endDate }
-      });
-      setSalesData(salesResponse.data);
-
-      const trendResponse = await apiClient.get("/reports/revenue-expense-trend/", {
-        params: { months: 6 }
-      });
-      setTrendData(trendResponse.data);
-    } catch (error) {
-      console.error("Error loading report data:", error);
-      toast.error("Failed to load report data");
+      const [sales, trend] = await Promise.all([
+        reportsAPI.salesPerformance({ start_date: startDate, end_date: endDate }),
+        reportsAPI.revenueExpenseTrend({ months: 6 }),
+      ]);
+      setSalesData(sales);
+      setTrendData(trend);
+    } catch (err) {
+      console.error("Error loading sales report:", err);
+      setError("Failed to load sales report. Please try again.");
+      toast.error("Failed to load sales report");
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
-  const stats = salesData ? [
-    { label: "Total Sales", value: `Rs. ${salesData.total_sales.toLocaleString()}` },
-    { label: "Total Orders", value: salesData.total_orders.toString() },
-    { label: "Avg Order Value", value: `Rs. ${salesData.average_order_value.toLocaleString()}` },
-    { label: "Top Customer", value: salesData.top_customers[0]?.customer_name || "N/A" },
-  ] : [
-    { label: "Total Sales", value: "Rs. 0" },
-    { label: "Total Orders", value: "0" },
-    { label: "Avg Order Value", value: "Rs. 0" },
-    { label: "Top Customer", value: "N/A" },
+  useEffect(() => {
+    loadReportData();
+  }, [loadReportData]);
+
+  const stats = [
+    {
+      label: "Total Sales",
+      value: formatNPR(salesData?.total_sales ?? 0),
+    },
+    {
+      label: "Total Orders",
+      value: String(salesData?.total_orders ?? 0),
+    },
+    {
+      label: "Avg Order Value",
+      value: formatNPR(salesData?.average_order_value ?? 0),
+    },
+    {
+      label: "Top Customer",
+      value: salesData?.top_customers?.[0]?.customer_name ?? "N/A",
+    },
   ];
 
-  const trendChartData = trendData?.monthly_data.map(item => ({
-    date: item.month,
-    sales: item.revenue,
-  })) || [];
+  const trendChartData =
+    trendData?.monthly_data.map((item) => ({
+      date: item.month,
+      sales: item.revenue,
+    })) ?? [];
 
   const totalSales = salesData?.total_sales || 1;
 
-  if (loading && !salesData) {
-    return (
-      <div className="flex flex-col h-full min-h-0">
-        <DashHeader title="Sales Report" subtitle="Sales performance and trends" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading sales report...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!salesData?.top_customers?.length) return null;
+    return {
+      filename: `sales-report-${startDate}`,
+      title: "Sales Report",
+      subtitle: `${startDate} to ${endDate}`,
+      headers: ["Rank", "Customer", "Orders", "Total Amount", "% of Total"],
+      rows: salesData.top_customers.map((customer, index) => [
+        String(index + 1),
+        customer.customer_name,
+        String(customer.total_orders),
+        formatNPR(customer.total_amount),
+        `${((customer.total_amount / totalSales) * 100).toFixed(1)}%`,
+      ]),
+    };
+  }, [salesData, startDate, endDate, totalSales]);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Sales Report" subtitle="Sales performance and trends" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <ReportFilter 
-              embedded
-              period={period} 
-              onPeriodChange={handlePeriodChange} 
-              onGenerate={loadReportData}
-            />
-            <ExportButtons />
-          </div>
-        </div>
+    <ReportsPageShell
+      title="Sales Report"
+      subtitle="Sales performance and trends"
+      loading={loading && !salesData}
+      error={error}
+      onRetry={loadReportData}
+      toolbar={
+        <ReportFilter
+          embedded
+          period={period}
+          periods={SALES_PERIODS}
+          onPeriodChange={applyPeriod}
+          fromDate={startDate}
+          toDate={endDate}
+          onFromDateChange={setStartDate}
+          onToDateChange={setEndDate}
+          onGenerate={loadReportData}
+          loading={loading}
+        />
+      }
+      action={<ExportButtons getExportData={getExportData} disabled={loading} />}
+    >
+      <SummaryCards cards={stats} />
 
-        <div className="w-full">
-          <SummaryCards cards={stats} />
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
-          <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Sales Trend (Last 6 Months)</h3>
+      <div className={`${reportsCardClass} p-6`}>
+        <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+          Sales Trend (Last 6 Months)
+        </h3>
+        {trendChartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={trendChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value: any) => `Rs. ${Number(value).toLocaleString()}`} />
-              <Line type="monotone" dataKey="sales" stroke="#22C55E" strokeWidth={2} dot={{ fill: "#22C55E" }} />
+              <Tooltip formatter={(value) => formatNPR(Number(value ?? 0))} />
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#22C55E"
+                strokeWidth={2}
+                dot={{ fill: "#22C55E" }}
+              />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden w-full">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900">Top Customers</h3>
+        ) : (
+          <div className="h-[320px] flex items-center justify-center text-sm text-gray-400">
+            No trend data for this period
           </div>
-          {loading ? (
-            <div className="p-12 text-center text-gray-500">Loading...</div>
-          ) : salesData && salesData.top_customers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    {["Rank", "Customer Name", "Orders", "Total Amount", "% of Total"].map((h) => (
-                      <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {salesData.top_customers.map((customer, index) => {
-                    const percentage = ((customer.total_amount / totalSales) * 100).toFixed(1);
-                    return (
-                      <tr key={customer.customer_id} className="hover:bg-gray-50/50">
-                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{index + 1}</td>
-                        <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{customer.customer_name}</td>
-                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{customer.total_orders}</td>
-                        <td className="px-6 py-3 text-gray-800 font-medium whitespace-nowrap">Rs. {customer.total_amount.toLocaleString()}</td>
-                        <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{percentage}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-12 text-center text-gray-500">No customer data available</div>
-          )}
-        </div>
+        )}
       </div>
-    </div>
+
+      <div className={reportsTableWrapClass}>
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900">Top Customers</h3>
+        </div>
+        {salesData && salesData.top_customers.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {["Rank", "Customer", "Orders", "Total Amount", "% of Total"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {salesData.top_customers.map((customer, index) => (
+                  <tr key={customer.customer_id} className="hover:bg-gray-50/50">
+                    <td className="px-6 py-3 font-medium text-gray-900">{index + 1}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">
+                      {customer.customer_name}
+                    </td>
+                    <td className="px-6 py-3 text-gray-600">{customer.total_orders}</td>
+                    <td className="px-6 py-3 font-medium text-gray-800">
+                      {formatNPR(customer.total_amount)}
+                    </td>
+                    <td className="px-6 py-3 text-gray-600">
+                      {((customer.total_amount / totalSales) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-12 text-center text-gray-500">No customer data for this period</div>
+        )}
+      </div>
+    </ReportsPageShell>
   );
 }

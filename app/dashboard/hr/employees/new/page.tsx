@@ -9,9 +9,13 @@ import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
 import { createEmployee, getDepartments, type Department, type EmployeeFormData } from "@/lib/api/hr";
+import { isAtLeastAge, maxBirthDateForMinAge } from "@/lib/dates";
+
+const MIN_EMPLOYEE_AGE = 18;
+const MAX_EMPLOYEE_DOB = maxBirthDateForMinAge(MIN_EMPLOYEE_AGE);
 
 const STEPS = [
   { id: 1, name: "Personal", key: "personal" },
@@ -95,6 +99,10 @@ export default function NewEmployeePage() {
           toast.error("Please fill in all personal information fields");
           return false;
         }
+        if (!isAtLeastAge(formData.dob, MIN_EMPLOYEE_AGE)) {
+          toast.error(`Employee must be at least ${MIN_EMPLOYEE_AGE} years old`);
+          return false;
+        }
         return true;
       case 2:
         if (!formData.department || !formData.designation || !formData.employment_type || !formData.join_date) {
@@ -167,10 +175,8 @@ export default function NewEmployeePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-0">
-      <DashHeader title="Add New Employee" subtitle="Create a new employee record" />
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+    <HRPageShell title="Add New Employee" subtitle="Create a new employee record">
+      <div className={`${hrCardClass} p-6 lg:p-8 w-full`}>
           <div className="mb-8">
             <div className="flex items-center justify-between">
               {STEPS.map((step, index) => (
@@ -217,12 +223,12 @@ export default function NewEmployeePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="dob" className="text-sm font-medium text-gray-700">Date of Birth*</Label>
+                    <Label htmlFor="dob" className="text-sm font-medium text-gray-700">Date of Birth (18+)*</Label>
                     <DateInput 
                       id="dob" 
-                       
                       value={formData.dob} 
                       onChange={(date) => setFormData({ ...formData, dob: date})} 
+                      max={MAX_EMPLOYEE_DOB}
                       className="mt-1 h-9 border-gray-200" 
                     />
                   </div>
@@ -392,8 +398,7 @@ export default function NewEmployeePage() {
               </div>
             </div>
           </form>
-        </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

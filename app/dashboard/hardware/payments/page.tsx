@@ -3,13 +3,15 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HardwarePageShell,
+  hardwareCardClass,
   hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { RecordPaymentModal } from "@/components/hardware/RecordPaymentModal";
 import { paymentReceivedAPI, type PaymentReceived } from "@/lib/api/sales";
 import { formatNPR } from "@/lib/utils";
@@ -72,14 +74,30 @@ export default function HardwarePaymentsPage() {
       payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (!loading && payments.length === 0 && !searchTerm) {
+    return (
+      <HardwarePageShell
+        title="Hardware Payments"
+        subtitle="Track customer payments and credit settlements"
+      >
+        <EmptyState
+            icon={CreditCard}
+            title="No payments yet"
+            description="Record your first payment to track customer credit settlements"
+            actionLabel="Record Payment"
+            actionHref="/dashboard/hardware/payments/new"
+          />
+      </HardwarePageShell>
+    );
+  }
+
   return (
     <HardwarePageShell
       title="Hardware Payments"
       subtitle="Track customer payments and credit settlements"
       loading={loading}
-    >
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      toolbar={
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -89,6 +107,8 @@ export default function HardwarePaymentsPage() {
             className={hardwareInputClass}
           />
         </div>
+      }
+      action={
         <Button
           type="button"
           size="sm"
@@ -98,8 +118,13 @@ export default function HardwarePaymentsPage() {
           <Plus className="h-4 w-4" />
           Record Payment
         </Button>
-      </div>
-
+      }
+    >
+      {filteredPayments.length === 0 ? (
+        <div className={`${hardwareCardClass} p-12 text-center`}>
+          <p className="text-gray-500 dark:text-muted-foreground">No payments found matching your search</p>
+        </div>
+      ) : (
       <div className={hardwareTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -116,14 +141,7 @@ export default function HardwarePaymentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
-                    No payments found
-                  </td>
-                </tr>
-              ) : (
-                filteredPayments.map((payment) => (
+              {filteredPayments.map((payment) => (
                   <tr
                     key={payment.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 transition-colors"
@@ -151,12 +169,12 @@ export default function HardwarePaymentsPage() {
                       </span>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         </div>
       </div>
+      )}
 
       <RecordPaymentModal
         open={showModal}

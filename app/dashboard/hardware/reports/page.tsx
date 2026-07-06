@@ -1,8 +1,10 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Loader2, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { DateInput } from "@/components/shared/DateInput";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -27,38 +29,30 @@ const reportMeta: Record<
   sales: {
     title: "Sales Performance",
     description: "Hardware sales trends and performance metrics",
-    href: "/dashboard/sales/reports",
-  },
+    href: "/dashboard/sales/reports" },
   inventory: {
     title: "Inventory Valuation",
     description: "Current stock value and inventory metrics",
-    href: "/dashboard/inventory/reports",
-  },
+    href: "/dashboard/inventory/reports" },
   credit: {
     title: "Credit Summary",
     description: "Outstanding balances and credit utilization",
-    href: "/dashboard/reports/financial",
-  },
+    href: "/dashboard/reports/financial" },
   products: {
     title: "Top Products",
-    description: "Best-selling products by revenue",
-  },
+    description: "Best-selling products by revenue" },
   payments: {
     title: "Payment Collection",
-    description: "Sales summary with payment breakdown",
-  },
+    description: "Sales summary with payment breakdown" },
   bulk: {
     title: "Bulk Pricing Rules",
     description: "Active volume discount rules",
-    href: "/dashboard/hardware/bulk-pricing",
-  },
-};
+    href: "/dashboard/hardware/bulk-pricing" } };
 
 export default function HardwareReportsPage() {
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(1)).toISOString().split("T")[0],
-    end: new Date().toISOString().split("T")[0],
-  });
+    end: new Date().toISOString().split("T")[0] });
   const [activeReport, setActiveReport] = useState<ReportKey>("sales");
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<unknown>(null);
@@ -107,9 +101,7 @@ export default function HardwareReportsPage() {
   const renderReportBody = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       );
     }
 

@@ -3,10 +3,10 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import { EmployeeStatusBadge } from "@/components/hr/EmployeeStatusBadge";
 import { EmploymentTypeBadge } from "@/components/hr/EmploymentTypeBadge";
 import toast from "react-hot-toast";
@@ -36,42 +36,40 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading employee details...</div>
-        </div>
-      </div>
+      <HRPageShell title="Loading..." subtitle="Loading employee details…" loading />
     );
   }
 
   if (!employee) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Employee Not Found" />
-        <div className="flex-1 p-6">
-          <Link href="/dashboard/hr/employees" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="h-4 w-4" /> Back to Employees
-          </Link>
-          <div className="mt-8 text-center text-gray-500">
-            Employee not found
-          </div>
+      <HRPageShell title="Employee Not Found" subtitle="This employee could not be loaded">
+        <Link href="/dashboard/hr/employees" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <ChevronLeft className="h-4 w-4" /> Back to Employees
+        </Link>
+        <div className="mt-8 text-center text-gray-500">
+          Employee not found
         </div>
-      </div>
+      </HRPageShell>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title={employee.name} subtitle={employee.designation} />
-      <div className="flex-1 p-6 space-y-6">
-        <Link href="/dashboard/hr/employees" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" /> Back to Employees
+    <HRPageShell
+      title={employee.name}
+      subtitle={employee.designation}
+      action={
+        <Link href={`/dashboard/hr/employees/${id}/edit`}>
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white">Edit</Button>
         </Link>
+      }
+    >
+      <Link href="/dashboard/hr/employees" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Employees
+      </Link>
 
-        {/* Header Card */}
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className={`${hrCardClass} p-6`}>
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-full bg-[#22C55E] flex items-center justify-center text-white font-bold text-xl">
                 {employee.name.split(" ").map((n) => n[0]).join("")}
@@ -85,7 +83,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className={`${hrCardClass} p-6`}>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Employee ID</span>
@@ -111,18 +109,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
-          <Link href={`/dashboard/hr/employees/${id}/edit`}>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">Edit</Button>
-          </Link>
           <Button variant="outline">Mark Attendance</Button>
           <Button variant="outline">Apply Leave</Button>
           <Button variant="outline">View Payslips</Button>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className={`${hrCardClass} p-6`}>
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -179,6 +172,6 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           </Tabs>
         </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, FileText, Calendar, User, Loader2, Trash2, AlertCircle } from "lucide-react";
@@ -65,9 +67,7 @@ export default function CreditNoteDetailPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Credit Note Details" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

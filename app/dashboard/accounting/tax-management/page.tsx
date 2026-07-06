@@ -1,12 +1,19 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Receipt, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import {
+  AccountingPageShell,
+  accountingCardClass,
+  accountingStatCardClass,
+  accountingTableWrapClass,
+} from "@/components/dashboard/AccountingPageShell";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { taxRulesAPI, vatReturnsAPI } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 
@@ -17,8 +24,7 @@ const TABS = ["Tax Rules", "VAT Returns"] as const;
 const VAT_STATUS: Record<string, string> = {
   draft: "bg-gray-100 text-gray-600",
   filed: "bg-blue-100 text-blue-700",
-  paid: "bg-green-100 text-green-700",
-};
+  paid: "bg-green-100 text-green-700" };
 
 interface TaxRuleRow {
   id: string;
@@ -63,8 +69,7 @@ function TaxManagementContent() {
         (Array.isArray(data) ? data : []).map((tax) => ({
           ...tax,
           id: String(tax.id),
-          rate: Number(tax.rate) || 0,
-        }))
+          rate: Number(tax.rate) || 0 }))
       );
     } catch (error: unknown) {
       console.error("Failed to load tax rules:", error);
@@ -84,8 +89,7 @@ function TaxManagementContent() {
           id: String(vat.id),
           output_tax: Number(vat.output_tax) || 0,
           input_tax: Number(vat.input_tax) || 0,
-          net_payable: Number(vat.net_payable) || 0,
-        }))
+          net_payable: Number(vat.net_payable) || 0 }))
       );
     } catch (error: unknown) {
       console.error("Failed to load VAT returns:", error);
@@ -150,8 +154,7 @@ function TaxManagementContent() {
       </div>
     ), {
       duration: Infinity,
-      position: "top-center",
-    });
+      position: "top-center" });
   };
 
   const handleFileVATReturn = async (id: string) => {
@@ -200,8 +203,7 @@ function TaxManagementContent() {
       </div>
     ), {
       duration: Infinity,
-      position: "top-center",
-    });
+      position: "top-center" });
   };
 
   const handleMarkPaid = async (id: string) => {
@@ -250,23 +252,39 @@ function TaxManagementContent() {
       </div>
     ), {
       duration: Infinity,
-      position: "top-center",
-    });
+      position: "top-center" });
   };
 
-  const loading = tab === "Tax Rules" ? loadingRules : loadingReturns;
+
+  const shellAction =
+    tab === "Tax Rules" && !loadingRules && taxRules.length > 0 ? (
+      <Link href="/dashboard/accounting/tax-management/new">
+        <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Plus className="h-4 w-4" /> Add Tax Rule
+        </Button>
+      </Link>
+    ) : tab === "VAT Returns" && !loadingReturns && vatReturns.length > 0 ? (
+      <Link href="/dashboard/accounting/tax-management/returns/new">
+        <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Plus className="h-4 w-4" /> New VAT Return
+        </Button>
+      </Link>
+    ) : undefined;
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Tax Management" subtitle="Tax rules and VAT returns" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+    <AccountingPageShell
+      title="Tax Management"
+      subtitle="Tax rules and VAT returns"
+      showBack
+      action={shellAction}
+    >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className={accountingStatCardClass}>
             <p className="text-xs text-gray-500 uppercase tracking-wide">Tax Rules</p>
             <p className="text-2xl font-bold text-gray-800 mt-1">{loadingRules ? "—" : taxRules.length}</p>
             <p className="text-xs text-gray-400 mt-1">{taxRules.filter((t) => t.status === "active").length} active</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className={accountingStatCardClass}>
             <p className="text-xs text-gray-500 uppercase tracking-wide">VAT Returns</p>
             <p className="text-2xl font-bold text-gray-800 mt-1">{loadingReturns ? "—" : vatReturns.length}</p>
             <p className="text-xs text-gray-400 mt-1">{vatReturns.filter((v) => v.status === "draft").length} drafts</p>
@@ -289,190 +307,175 @@ function TaxManagementContent() {
 
         {tab === "Tax Rules" && (
           <div className="space-y-3">
-            <div className="flex justify-end">
-              <Link href="/dashboard/accounting/tax-management/new">
-                <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                  <Plus className="h-4 w-4" /> Add Tax Rule
-                </Button>
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#22C55E]" />
-                </div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      {["Tax Name", "Type", "Rate", "Applicable On", "Account", "Status", "Actions"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {taxRules.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                          No tax rules found. Click &quot;Add Tax Rule&quot; to create one.
-                        </td>
-                      </tr>
-                    ) : (
-                      taxRules.map((tax) => (
-                        <tr key={tax.id} className="hover:bg-gray-50/50">
-                          <td className="px-4 py-3 font-medium text-gray-800">{tax.name}</td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                tax.type === "VAT" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
-                              }`}
-                            >
-                              {tax.type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-gray-800">{tax.rate}%</td>
-                          <td className="px-4 py-3 text-gray-600">{tax.applicable_on}</td>
-                          <td className="px-4 py-3 text-gray-600">
-                            {tax.account_code ? `${tax.account_code} — ${tax.account_name}` : tax.account_name || "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                tax.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                              }`}
-                            >
-                              {tax.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2 text-xs">
-                              <Link
-                                href={`/dashboard/accounting/tax-management/${tax.id}/edit`}
-                                className="text-[#22C55E] hover:underline"
-                              >
-                                Edit
-                              </Link>
-                              {tax.status === "active" && (
-                                <>
-                                  <span className="text-gray-300">|</span>
-                                  <button
-                                    onClick={() => handleDeactivateTaxRule(tax.id)}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    Deactivate
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
+            {!loadingRules && taxRules.length === 0 ? (
+              <EmptyState
+                  icon={Receipt}
+                  title="No tax rules yet"
+                  description="Create your first tax rule to apply VAT and other taxes to transactions"
+                  actionLabel="Add Tax Rule"
+                  actionHref="/dashboard/accounting/tax-management/new"
+                />
+            ) : (
+              <div className={accountingTableWrapClass}>
+                  {loadingRules ? (
+                    <PageLoading message="Loading…" />
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          {["Tax Name", "Type", "Rate", "Applicable On", "Account", "Status", "Actions"].map((h) => (
+                            <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                              {h}
+                            </th>
+                          ))}
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {taxRules.map((tax) => (
+                          <tr key={tax.id} className="hover:bg-gray-50/50">
+                            <td className="px-4 py-3 font-medium text-gray-800">{tax.name}</td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  tax.type === "VAT" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
+                                }`}
+                              >
+                                {tax.type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-mono text-gray-800">{tax.rate}%</td>
+                            <td className="px-4 py-3 text-gray-600">{tax.applicable_on}</td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {tax.account_code ? `${tax.account_code} — ${tax.account_name}` : tax.account_name || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  tax.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {tax.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 text-xs">
+                                <Link
+                                  href={`/dashboard/accounting/tax-management/${tax.id}/edit`}
+                                  className="text-[#22C55E] hover:underline"
+                                >
+                                  Edit
+                                </Link>
+                                {tax.status === "active" && (
+                                  <>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                      onClick={() => handleDeactivateTaxRule(tax.id)}
+                                      className="text-gray-500 hover:text-gray-700"
+                                    >
+                                      Deactivate
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+              </div>
+            )}
           </div>
         )}
 
         {tab === "VAT Returns" && (
           <div className="space-y-3">
-            <div className="flex justify-end">
-              <Link href="/dashboard/accounting/tax-management/returns/new">
-                <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                  <Plus className="h-4 w-4" /> New VAT Return
-                </Button>
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#22C55E]" />
-                </div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      {["Return #", "Period", "From", "To", "Output Tax", "Input Tax", "Net Payable", "Status", "Actions"].map(
-                        (h) => (
-                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            {h}
-                          </th>
-                        )
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {vatReturns.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
-                          No VAT returns found. Click &quot;New VAT Return&quot; to create one.
-                        </td>
-                      </tr>
-                    ) : (
-                      vatReturns.map((vat) => (
-                        <tr key={vat.id} className="hover:bg-gray-50/50">
-                          <td className="px-4 py-3 font-mono text-xs text-gray-500">{vat.return_number}</td>
-                          <td className="px-4 py-3 font-medium text-gray-800">{vat.period}</td>
-                          <td className="px-4 py-3 text-gray-600"><FormattedDate value={vat.from_date} /></td>
-                          <td className="px-4 py-3 text-gray-600"><FormattedDate value={vat.to_date} /></td>
-                          <td className="px-4 py-3 text-gray-800">{fmt(vat.output_tax)}</td>
-                          <td className="px-4 py-3 text-gray-600">{fmt(vat.input_tax)}</td>
-                          <td className="px-4 py-3 font-semibold text-gray-800">{fmt(vat.net_payable)}</td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                VAT_STATUS[vat.status] ?? "bg-gray-100 text-gray-600"
-                              }`}
-                            >
-                              {vat.status.charAt(0).toUpperCase() + vat.status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2 text-xs">
-                              <Link
-                                href={`/dashboard/accounting/tax-management/returns/${vat.id}`}
-                                className="text-[#22C55E] hover:underline"
-                              >
-                                View
-                              </Link>
-                              {vat.status === "draft" && (
-                                <>
-                                  <span className="text-gray-300">|</span>
-                                  <button
-                                    onClick={() => handleFileVATReturn(vat.id)}
-                                    className="text-blue-500 hover:text-blue-700"
-                                  >
-                                    File
-                                  </button>
-                                </>
-                              )}
-                              {vat.status === "filed" && (
-                                <>
-                                  <span className="text-gray-300">|</span>
-                                  <button
-                                    onClick={() => handleMarkPaid(vat.id)}
-                                    className="text-[#22C55E] hover:text-[#16A34A]"
-                                  >
-                                    Mark Paid
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
+            {!loadingReturns && vatReturns.length === 0 ? (
+              <EmptyState
+                  icon={FileText}
+                  title="No VAT returns yet"
+                  description="Create your first VAT return to file with the IRD"
+                  actionLabel="New VAT Return"
+                  actionHref="/dashboard/accounting/tax-management/returns/new"
+                />
+            ) : (
+              <div className={accountingTableWrapClass}>
+                  {loadingReturns ? (
+                    <PageLoading message="Loading…" />
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          {["Return #", "Period", "From", "To", "Output Tax", "Input Tax", "Net Payable", "Status", "Actions"].map(
+                            (h) => (
+                              <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                {h}
+                              </th>
+                            )
+                          )}
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {vatReturns.map((vat) => (
+                          <tr key={vat.id} className="hover:bg-gray-50/50">
+                            <td className="px-4 py-3 font-mono text-xs text-gray-500">{vat.return_number}</td>
+                            <td className="px-4 py-3 font-medium text-gray-800">{vat.period}</td>
+                            <td className="px-4 py-3 text-gray-600"><FormattedDate value={vat.from_date} /></td>
+                            <td className="px-4 py-3 text-gray-600"><FormattedDate value={vat.to_date} /></td>
+                            <td className="px-4 py-3 text-gray-800">{fmt(vat.output_tax)}</td>
+                            <td className="px-4 py-3 text-gray-600">{fmt(vat.input_tax)}</td>
+                            <td className="px-4 py-3 font-semibold text-gray-800">{fmt(vat.net_payable)}</td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  VAT_STATUS[vat.status] ?? "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {vat.status.charAt(0).toUpperCase() + vat.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 text-xs">
+                                <Link
+                                  href={`/dashboard/accounting/tax-management/returns/${vat.id}`}
+                                  className="text-[#22C55E] hover:underline"
+                                >
+                                  View
+                                </Link>
+                                {vat.status === "draft" && (
+                                  <>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                      onClick={() => handleFileVATReturn(vat.id)}
+                                      className="text-blue-500 hover:text-blue-700"
+                                    >
+                                      File
+                                    </button>
+                                  </>
+                                )}
+                                {vat.status === "filed" && (
+                                  <>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                      onClick={() => handleMarkPaid(vat.id)}
+                                      className="text-[#22C55E] hover:text-[#16A34A]"
+                                    >
+                                      Mark Paid
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+              </div>
+            )}
           </div>
         )}
-      </div>
-    </div>
+    </AccountingPageShell>
   );
 }
 
@@ -480,12 +483,13 @@ export default function TaxManagementPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col h-full min-h-0">
-          <DashHeader title="Tax Management" subtitle="Tax rules and VAT returns" />
-          <div className="flex-1 p-6 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]" />
-          </div>
-        </div>
+        <AccountingPageShell
+          title="Tax Management"
+          subtitle="Tax rules and VAT returns"
+          showBack
+          loading
+          loadingMessage="Loading…"
+        />
       }
     >
       <TaxManagementContent />

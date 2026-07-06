@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
 import { getDepartment, updateDepartment, getEmployees, type Department, type Employee } from "@/lib/api/hr";
 
@@ -107,26 +107,19 @@ export default function EditDepartmentPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  if (loadingData) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Edit Department" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading department...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Edit Department" subtitle="Update department information" />
-      <div className="flex-1 p-6">
-        <Link href={`/dashboard/hr/departments/${unwrappedParams.id}`} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Department
-        </Link>
+    <HRPageShell
+      title="Edit Department"
+      subtitle="Update department information"
+      variant="form"
+      loading={loadingData}
+    >
+      <Link href={`/dashboard/hr/departments/${unwrappedParams.id}`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Department
+      </Link>
 
-        <div className="max-w-2xl bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      {!loadingData && (
+        <div className={`${hrCardClass} p-6`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">Department Name*</Label>
@@ -194,7 +187,7 @@ export default function EditDepartmentPage({ params }: { params: Promise<{ id: s
             </div>
           </form>
         </div>
-      </div>
-    </div>
+      )}
+    </HRPageShell>
   );
 }

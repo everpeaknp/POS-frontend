@@ -96,7 +96,7 @@ const navItems: NavItem[] = [
     icon: Wrench,
     requiredModule: "hardware",
     children: [
-      { label: "Dashboard", href: "/dashboard/hardware" },
+      { label: "Overview", href: "/dashboard/hardware", exact: true },
       { label: "Products", href: "/dashboard/hardware/products", createHref: "/dashboard/hardware/products/new" },
       { label: "Customers", href: "/dashboard/hardware/customers", createHref: "/dashboard/hardware/customers/new" },
       { label: "Orders", href: "/dashboard/hardware/orders", createHref: "/dashboard/hardware/orders/new" },

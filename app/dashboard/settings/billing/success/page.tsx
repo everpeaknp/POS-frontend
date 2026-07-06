@@ -1,8 +1,9 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 function BillingSuccessRedirect() {
   const router = useRouter();
@@ -14,9 +15,7 @@ function BillingSuccessRedirect() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-    </div>
+    <PageLoading fullScreen message="Loading…" />
   );
 }
 
@@ -24,9 +23,7 @@ export default function DashboardBillingSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading fullScreen message="Loading…" />
       }
     >
       <BillingSuccessRedirect />

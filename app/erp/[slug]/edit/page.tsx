@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -74,9 +76,7 @@ export default function EditOrganizationPage() {
 
   if (!user || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
+      <PageLoading fullScreen message="Loading workspace…" />
     );
   }
 
@@ -118,8 +118,7 @@ export default function EditOrganizationPage() {
               owner_name: tenant.owner_name,
               email: tenant.email,
               phone: tenant.phone,
-              address: tenant.address,
-            }}
+              address: tenant.address }}
             onSubmit={handleSubmit}
             submitLabel={submitting ? "Updating..." : "Update Organization"}
             isSubmitting={submitting}

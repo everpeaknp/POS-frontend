@@ -1,8 +1,10 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import RequestForm from "@/components/purchase/RequestForm";
@@ -39,10 +41,8 @@ export default function EditPurchaseRequestPage() {
                 product: line.product,
                 description: line.description || "",
                 quantity: String(line.quantity),
-                estimated_unit_price: String(line.estimated_unit_price),
-              }))
-            : [{ product: "", description: "", quantity: "", estimated_unit_price: "" }],
-        });
+                estimated_unit_price: String(line.estimated_unit_price) }))
+            : [{ product: "", description: "", quantity: "", estimated_unit_price: "" }] });
       } catch (error: any) {
         console.error("Error fetching request:", error);
         toast.error("Failed to load purchase request");
@@ -58,9 +58,7 @@ export default function EditPurchaseRequestPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Loading..." subtitle="Update purchase request" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

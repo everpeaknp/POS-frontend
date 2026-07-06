@@ -26,8 +26,12 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
+import {
+  ReportsPageShell,
+  reportsCardClass,
+  reportsTableWrapClass,
+} from "@/components/reports/ReportsPageShell";
 import { useAuth } from "@/lib/context/AuthContext";
 import { reportsAPI, type DashboardSummary } from "@/lib/api/reports";
 import { formatNPR } from "@/lib/utils";
@@ -166,31 +170,22 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Reports" subtitle={subtitle} />
-        <div className="flex-1 p-6 space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
+      <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
-      </div>
+      </ReportsPageShell>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Reports" subtitle={subtitle} />
-      <div className="flex-1 p-6 space-y-6">
-        {/* Stats */}
+    <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((s) => (
-            <div
-              key={s.label}
-              className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
-            >
+            <div key={s.label} className={`${reportsCardClass} p-4`}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-gray-500">{s.label}</p>
                 <div className={`p-2 rounded-lg ${s.color}`}>
@@ -233,7 +228,7 @@ export default function ReportsPage() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+          <div className={`${reportsCardClass} p-5`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-4">
               Revenue vs Expenses
             </h3>
@@ -257,7 +252,7 @@ export default function ReportsPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+          <div className={`${reportsCardClass} p-5`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-4">
               Revenue & Expense Breakdown
             </h3>
@@ -291,7 +286,7 @@ export default function ReportsPage() {
 
         {/* Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className={reportsTableWrapClass}>
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -349,7 +344,7 @@ export default function ReportsPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className={reportsTableWrapClass}>
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <HardHat className="h-4 w-4 text-orange-500" />
@@ -411,7 +406,6 @@ export default function ReportsPage() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </ReportsPageShell>
   );
 }

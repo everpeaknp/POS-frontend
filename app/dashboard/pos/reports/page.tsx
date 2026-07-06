@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { Calendar, DollarSign, ShoppingCart, TrendingUp, Loader2, Download } from "lucide-react";
@@ -78,9 +80,7 @@ export default function POSReportsPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="POS Reports" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

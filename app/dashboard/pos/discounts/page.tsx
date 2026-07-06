@@ -1,14 +1,17 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import posApi, { type POSDiscount } from "@/lib/api/pos";
 import toast from "react-hot-toast";
 
@@ -208,8 +211,23 @@ export default function POSDiscountsPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="POS Discounts" subtitle="Loading..." />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+        <PageLoading message="Loading…" />
+      </div>
+    );
+  }
+
+  if (discounts.length === 0 && !showForm) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="POS Discounts" subtitle="Manage discount configurations" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={Tags}
+            title="No discounts yet"
+            description="Create your first discount to offer promotions at the point of sale"
+            actionLabel="Add Discount"
+            onAction={() => setShowForm(true)}
+          />
         </div>
       </div>
     );

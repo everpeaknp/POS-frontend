@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Users, Package, ArrowRight, Settings, LogOut } from "lucide-react";
@@ -20,8 +22,7 @@ const moduleIcons: Record<string, any> = {
   accounting: Building2,
   construction: Building2,
   hardware: Package,
-  reports: Building2,
-};
+  reports: Building2 };
 
 // Module display names
 const moduleNames: Record<string, string> = {
@@ -31,8 +32,7 @@ const moduleNames: Record<string, string> = {
   accounting: "Accounting & Finance",
   construction: "Construction Projects",
   hardware: "Hardware Business",
-  reports: "Reports & Analytics",
-};
+  reports: "Reports & Analytics" };
 
 // Module descriptions
 const moduleDescriptions: Record<string, string> = {
@@ -42,8 +42,7 @@ const moduleDescriptions: Record<string, string> = {
   accounting: "Track finances, ledgers, and reports",
   construction: "Manage sites, labor, and equipment",
   hardware: "Stock management and credit sales",
-  reports: "Business insights and analytics",
-};
+  reports: "Business insights and analytics" };
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -88,9 +87,7 @@ export default function WorkspacePage() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
+      <PageLoading fullScreen message="Loading workspace…" />
     );
   }
 

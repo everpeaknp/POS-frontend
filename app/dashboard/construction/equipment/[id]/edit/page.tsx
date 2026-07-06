@@ -10,6 +10,10 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { constructionApi, Equipment, Site } from '@/lib/api/construction';
 import FormField from '@/components/shared/FormField';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+} from '@/components/dashboard/ConstructionPageShell';
 
 const equipmentSchema = z.object({
   name: z.string().min(1, 'Equipment name is required'),
@@ -126,32 +130,22 @@ export default function EditEquipmentPage() {
 
   if (loadingData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-      </div>
+      <ConstructionPageShell
+        title="Edit Equipment"
+        subtitle="Loading equipment..."
+        variant="form"
+        loading
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href={`/dashboard/construction/equipment/${equipmentId}`}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Edit Equipment</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Update equipment information
-          </p>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-lg shadow p-6">
+    <ConstructionPageShell
+      title="Edit Equipment"
+      subtitle="Update equipment information"
+      variant="form"
+    >
+      <div className={`${constructionCardClass} p-6 lg:p-8`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
@@ -297,6 +291,6 @@ export default function EditEquipmentPage() {
           </div>
         </form>
       </div>
-    </div>
+    </ConstructionPageShell>
   );
 }

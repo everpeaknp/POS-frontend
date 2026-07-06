@@ -89,6 +89,8 @@ export default function SecurityPage() {
     <SettingsPageShell
       title="Security"
       subtitle="Password, two-factor authentication, and session management"
+      loading={prefsLoading}
+      loadingMessage="Loading security settings…"
       action={
         <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-[#22C55E] rounded-lg border border-emerald-100 text-xs font-medium">
           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -190,26 +192,20 @@ export default function SecurityPage() {
         <SettingsCard>
           <SettingsCardHeader icon={Shield} title="Security notifications" description="Alerts about sign-ins and account activity" />
           <SettingsCardBody className="py-2">
-            {prefsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-[#22C55E]" />
-              </div>
-            ) : (
-              <>
-                <SettingsToggleRow
-                  title="Login alerts"
-                  description="Email me when a new device signs in"
-                  checked={securityPrefs.login_alerts}
-                  onChange={() => handleSecurityToggle("login_alerts")}
-                />
-                <SettingsToggleRow
-                  title="Security log exports"
-                  description="Weekly summary of security-related actions"
-                  checked={securityPrefs.security_log_exports}
-                  onChange={() => handleSecurityToggle("security_log_exports")}
-                />
-              </>
-            )}
+            <>
+              <SettingsToggleRow
+                title="Login alerts"
+                description="Email me when a new device signs in"
+                checked={securityPrefs.login_alerts}
+                onChange={() => handleSecurityToggle("login_alerts")}
+              />
+              <SettingsToggleRow
+                title="Security log exports"
+                description="Weekly summary of security-related actions"
+                checked={securityPrefs.security_log_exports}
+                onChange={() => handleSecurityToggle("security_log_exports")}
+              />
+            </>
           </SettingsCardBody>
         </SettingsCard>
       </SettingsPageContent>

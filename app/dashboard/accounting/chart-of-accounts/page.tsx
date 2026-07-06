@@ -1,7 +1,9 @@
-﻿"use client";
+"use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Plus,
   Search,
@@ -10,10 +12,8 @@ import {
   Pencil,
   BookOpen,
   Layers,
-  Loader2,
   AlertCircle,
-  FolderTree,
-} from "lucide-react";
+  FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -31,8 +31,7 @@ const TYPE_ACCENT: Record<string, string> = {
   Liabilities: "border-l-red-500",
   Equity: "border-l-purple-500",
   Income: "border-l-green-500",
-  Expense: "border-l-orange-500",
-};
+  Expense: "border-l-orange-500" };
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
@@ -41,6 +40,8 @@ function sortByCode(a: Account, b: Account) {
 }
 
 export default function ChartOfAccountsPage() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<(typeof TYPES)[number]>("All");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -49,11 +50,7 @@ export default function ChartOfAccountsPage() {
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +69,11 @@ export default function ChartOfAccountsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts, pathname, searchParams.toString()]);
 
   const handleDelete = async () => {
     if (!accountToDelete) return;
@@ -109,8 +110,7 @@ export default function ChartOfAccountsPage() {
     }
     return TYPE_ORDER.map((type) => ({
       type,
-      accounts: filtered.filter((a) => a.type === type),
-    })).filter((g) => g.accounts.length > 0);
+      accounts: filtered.filter((a) => a.type === type) })).filter((g) => g.accounts.length > 0);
   }, [filtered, typeFilter]);
 
   const stats = useMemo(() => {
@@ -118,8 +118,7 @@ export default function ChartOfAccountsPage() {
     const byType = TYPE_ORDER.map((type) => ({
       type,
       count: accounts.filter((a) => a.type === type).length,
-      balance: accounts.filter((a) => a.type === type).reduce((s, a) => s + (a.balance || 0), 0),
-    }));
+      balance: accounts.filter((a) => a.type === type).reduce((s, a) => s + (a.balance || 0), 0) }));
     return { total: accounts.length, active, byType };
   }, [accounts]);
 
@@ -127,12 +126,7 @@ export default function ChartOfAccountsPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Chart of Accounts" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading accounts...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading accounts…" />
       </div>
     );
   }

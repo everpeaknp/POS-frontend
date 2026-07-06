@@ -10,6 +10,7 @@ import FormField from '@/components/shared/FormField';
 import { DateInput } from '@/components/shared/DateInput';
 import { purchaseRequestsAPI } from '@/lib/api/purchase';
 import apiClient from '@/lib/api/client';
+import { getDepartments, type Department } from '@/lib/api/hr';
 import { Trash2, Plus } from 'lucide-react';
 
 // Zod schema for line items
@@ -74,6 +75,7 @@ export default function RequestForm({
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isEdit = !!requestId;
@@ -104,6 +106,11 @@ export default function RequestForm({
 
   // Watch line items to calculate totals
   const watchLines = watch('lines');
+  const selectedDepartment = watch('department');
+  const departmentOptions =
+    selectedDepartment && !departments.some((d) => d.name === selectedDepartment)
+      ? [{ id: 'legacy', name: selectedDepartment, employee_count: 0, created_at: '', updated_at: '' }, ...departments]
+      : departments;
 
   // Calculate estimated amount
   const calculateEstimatedAmount = () => {
@@ -120,13 +127,15 @@ export default function RequestForm({
         setLoading(true);
         
         // Fetch products and users
-        const [productsRes, usersRes] = await Promise.all([
+        const [productsRes, usersRes, departmentsRes] = await Promise.all([
           apiClient.get('/inventory/products/'),
           apiClient.get('/auth/users/'),
+          getDepartments(),
         ]);
         
         setProducts(productsRes.data.results || productsRes.data || []);
         setUsers(usersRes.data.results || usersRes.data || []);
+        setDepartments(departmentsRes || []);
       } catch (error: any) {
         console.error('Failed to load form data:', error);
         toast.error('Failed to load form data. Please refresh the page.');
@@ -286,13 +295,18 @@ export default function RequestForm({
             error={errors.department}
             required
           >
-            <input
+            <select
               {...register('department')}
-              type="text"
               id="department"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Operations"
-            />
+            >
+              <option value="">Select department</option>
+              {departmentOptions.map((dept) => (
+                <option key={dept.id} value={dept.name}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
           </FormField>
 
           <FormField

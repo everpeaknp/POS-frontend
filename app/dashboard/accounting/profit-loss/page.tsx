@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -41,22 +42,18 @@ function normalizePLData(data: PLData): PLData {
   const normalizeAccounts = (accounts: PLAccount[]) =>
     (accounts || []).map((acc) => ({
       ...acc,
-      amount: Number(acc.amount) || 0,
-    }));
+      amount: Number(acc.amount) || 0 }));
 
   return {
     ...data,
     income: {
       accounts: normalizeAccounts(data.income?.accounts),
-      total: Number(data.income?.total) || 0,
-    },
+      total: Number(data.income?.total) || 0 },
     expenses: {
       accounts: normalizeAccounts(data.expenses?.accounts),
-      total: Number(data.expenses?.total) || 0,
-    },
+      total: Number(data.expenses?.total) || 0 },
     net_profit: Number(data.net_profit) || 0,
-    net_margin: Number(data.net_margin) || 0,
-  };
+    net_margin: Number(data.net_margin) || 0 };
 }
 
 function getPeriodDates(period: (typeof PERIODS)[number]): { from: string; to: string } | null {
@@ -85,8 +82,7 @@ function getPeriodDates(period: (typeof PERIODS)[number]): { from: string; to: s
 
   return {
     from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-  };
+    to: to.toISOString().split("T")[0] };
 }
 
 function ReportRow({
@@ -94,8 +90,7 @@ function ReportRow({
   amount,
   bold,
   indent,
-  accountId,
-}: {
+  accountId }: {
   label: string;
   amount: number;
   bold?: boolean;
@@ -212,12 +207,7 @@ export default function ProfitLossPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Profit & Loss Statement" subtitle="Income and expense summary" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto" />
-            <p className="mt-4 text-gray-600">Loading profit & loss...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading profit & loss…" />
       </div>
     );
   }

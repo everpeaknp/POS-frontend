@@ -1,5 +1,7 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -41,8 +43,7 @@ export default function EditTaxRulePage() {
     applicable_on: "Both" as ApplicableOn,
     account: "",
     status: "active" as Status,
-    description: "",
-  });
+    description: "" });
 
   useEffect(() => {
     if (!id) return;
@@ -63,8 +64,7 @@ export default function EditTaxRulePage() {
           applicable_on: tax.applicable_on,
           account: String(tax.account),
           status: tax.status,
-          description: tax.description ?? "",
-        });
+          description: tax.description ?? "" });
       } catch (error) {
         console.error("Failed to load tax rule:", error);
         toast.error("Failed to load tax rule");
@@ -99,8 +99,7 @@ export default function EditTaxRulePage() {
         applicable_on: formData.applicable_on,
         account: String(formData.account),
         status: formData.status,
-        description: formData.description.trim(),
-      });
+        description: formData.description.trim() });
       toast.success("Tax rule updated successfully");
       router.push("/dashboard/accounting/tax-management");
     } catch (error: unknown) {
@@ -117,8 +116,7 @@ export default function EditTaxRulePage() {
       accounts.map((a) => ({
         value: String(a.id),
         label: `${a.code} — ${a.name}`,
-        subtitle: a.type,
-      })),
+        subtitle: a.type })),
     [accounts]
   );
 
@@ -126,9 +124,7 @@ export default function EditTaxRulePage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Edit Tax Rule" subtitle="Loading..." />
-        <div className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

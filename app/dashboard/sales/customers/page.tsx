@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreVertical } from "lucide-react";
+import { Plus, Search, MoreVertical, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { customerAPI } from "@/lib/api/sales";
@@ -107,6 +108,24 @@ export default function CustomersPage() {
   }
 
   const customers = customersData?.data?.results || [];
+
+  if (customers.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Customers" subtitle="Manage your customers" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Add your first customer to start tracking sales"
+            actionLabel="Add Customer"
+            actionHref="/dashboard/sales/customers/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   const filtered = customers.filter((c: any) => {
     const matchesSearch = search === "" || 
       c.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -148,6 +167,11 @@ export default function CustomersPage() {
           </Link>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No customers found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -215,6 +239,7 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

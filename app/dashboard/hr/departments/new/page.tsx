@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
 import { createDepartment, getEmployees, type Employee } from "@/lib/api/hr";
 
@@ -82,10 +82,12 @@ export default function NewDepartmentPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-0">
-      <DashHeader title="Add New Department" subtitle="Create a new department for your organization" />
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+    <HRPageShell
+      title="Add New Department"
+      subtitle="Create a new department for your organization"
+      variant="fullscreen"
+    >
+      <div className={`${hrCardClass} p-6 lg:p-8 w-full min-h-full`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Department Details</h3>
@@ -160,8 +162,7 @@ export default function NewDepartmentPage() {
               </Button>
             </div>
           </form>
-        </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

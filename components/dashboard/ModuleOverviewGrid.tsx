@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { dashboardCardClass } from "@/components/dashboard/DashboardPageShell";
 import type { DashboardModuleSection } from "@/lib/dashboard/types";
 import type { OrgModuleDefinition } from "@/lib/modules/catalog";
 
@@ -20,8 +20,10 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
 
         return (
           <Link key={module.id} href={module.href} className="group block cursor-pointer">
-            <Card className="h-full bg-white py-0 ring-gray-100 transition-all duration-200 hover:ring-[#22C55E]/40 hover:shadow-md dark:bg-card dark:ring-border">
-              <CardHeader className="border-b border-gray-100 px-4 py-3.5 dark:border-border">
+            <div
+              className={`${dashboardCardClass} h-full transition-all duration-200 hover:border-[#22C55E]/30 hover:shadow-md`}
+            >
+              <div className="border-b border-gray-100 px-4 py-3.5 dark:border-border">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     {Icon ? (
@@ -35,9 +37,9 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-[#22C55E]" />
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="px-4 py-4">
+              <div className="px-4 py-4">
                 {module.stats.length > 0 ? (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     {module.stats.slice(0, 4).map((stat) => (
@@ -70,8 +72,8 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
                 ) : (
                   <p className="text-sm text-gray-500 dark:text-muted-foreground">View module</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </Link>
         );
       })}

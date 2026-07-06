@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Loader2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { AccountingPageShell } from "@/components/dashboard/AccountingPageShell";
 import { accountsAPI, journalEntriesAPI } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 
@@ -91,32 +89,23 @@ export default function AccountingDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Accounting" subtitle="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
+      <AccountingPageShell
+        title="Accounting"
+        subtitle="Financial overview"
+        loading
+        loadingMessage="Loading dashboard…"
+      />
     );
   }
 
   if (error || !dashboardData) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Accounting" subtitle="Error" />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-4">{error || "Failed to load dashboard"}</p>
-            <Button onClick={fetchDashboardData} size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AccountingPageShell
+        title="Accounting"
+        subtitle="Error"
+        error={error || "Failed to load dashboard"}
+        onRetry={fetchDashboardData}
+      />
     );
   }
 
@@ -139,9 +128,8 @@ export default function AccountingDashboard() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Accounting" subtitle="Financial overview" />
-      <div className="flex-1 p-6 space-y-5">
+    <AccountingPageShell title="Accounting" subtitle="Financial overview">
+      <div className="space-y-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total Assets", value: fmt(totalAssets), sub: "All asset accounts" },
@@ -279,6 +267,6 @@ export default function AccountingDashboard() {
           )}
         </div>
       </div>
-    </div>
+    </AccountingPageShell>
   );
 }

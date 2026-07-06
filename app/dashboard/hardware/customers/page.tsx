@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HardwarePageShell,
+  hardwareCardClass,
   hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -45,14 +47,30 @@ export default function HardwareCustomersPage() {
       customer.phone?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (!loading && customers.length === 0 && !searchTerm) {
+    return (
+      <HardwarePageShell
+        title="Hardware Customers"
+        subtitle="Manage customers with credit limits and payment tracking"
+      >
+        <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Add your first customer to start tracking credit limits and payments"
+            actionLabel="New Customer"
+            actionHref="/dashboard/hardware/customers/new"
+          />
+      </HardwarePageShell>
+    );
+  }
+
   return (
     <HardwarePageShell
       title="Hardware Customers"
       subtitle="Manage customers with credit limits and payment tracking"
       loading={loading}
-    >
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      toolbar={
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -62,14 +80,21 @@ export default function HardwareCustomersPage() {
             className={hardwareInputClass}
           />
         </div>
+      }
+      action={
         <Link href="/dashboard/hardware/customers/new">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" />
             New Customer
           </Button>
         </Link>
-      </div>
-
+      }
+    >
+      {filteredCustomers.length === 0 ? (
+        <div className={`${hardwareCardClass} p-12 text-center`}>
+          <p className="text-gray-500 dark:text-muted-foreground">No customers found matching your search</p>
+        </div>
+      ) : (
       <div className={hardwareTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -88,14 +113,7 @@ export default function HardwareCustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredCustomers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
-                    No customers found
-                  </td>
-                </tr>
-              ) : (
-                filteredCustomers.map((customer) => (
+              {filteredCustomers.map((customer) => (
                   <tr
                     key={customer.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
@@ -134,12 +152,12 @@ export default function HardwareCustomersPage() {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         </div>
       </div>
+      )}
     </HardwarePageShell>
   );
 }

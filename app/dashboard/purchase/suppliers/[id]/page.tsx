@@ -1,9 +1,11 @@
 "use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Edit, Loader2, ArrowLeft } from "lucide-react";
+import { Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
@@ -14,8 +16,7 @@ import {
   purchaseInvoicesAPI,
   type Supplier,
   type PurchaseOrder,
-  type PurchaseInvoice,
-} from "@/lib/api/purchase";
+  type PurchaseInvoice } from "@/lib/api/purchase";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -56,9 +57,7 @@ export default function SupplierProfilePage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Loading..." subtitle="Supplier Profile" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
+        <PageLoading message="Loading…" />
       </div>
     );
   }

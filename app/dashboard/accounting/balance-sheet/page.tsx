@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -65,8 +66,7 @@ function normalizeBalanceSheet(data: BalanceSheetData): BalanceSheetData {
       total_current: Number(data.assets?.total_current) || 0,
       total_fixed: Number(data.assets?.total_fixed) || 0,
       total_other: Number(data.assets?.total_other) || 0,
-      total: Number(data.assets?.total) || 0,
-    },
+      total: Number(data.assets?.total) || 0 },
     liabilities: {
       current: (data.liabilities?.current || []).map(normalizeAccount),
       long_term: (data.liabilities?.long_term || []).map(normalizeAccount),
@@ -74,15 +74,12 @@ function normalizeBalanceSheet(data: BalanceSheetData): BalanceSheetData {
       total_current: Number(data.liabilities?.total_current) || 0,
       total_long_term: Number(data.liabilities?.total_long_term) || 0,
       total_other: Number(data.liabilities?.total_other) || 0,
-      total: Number(data.liabilities?.total) || 0,
-    },
+      total: Number(data.liabilities?.total) || 0 },
     equity: {
       accounts: (data.equity?.accounts || []).map(normalizeAccount),
-      total: Number(data.equity?.total) || 0,
-    },
+      total: Number(data.equity?.total) || 0 },
     total_liabilities_equity: Number(data.total_liabilities_equity) || 0,
-    is_balanced: Boolean(data.is_balanced),
-  };
+    is_balanced: Boolean(data.is_balanced) };
 }
 
 function Section({ title }: { title: string }) {
@@ -95,8 +92,7 @@ function Row({
   bold,
   indent,
   accountId,
-  italic,
-}: {
+  italic }: {
   label: string;
   amount: number;
   bold?: boolean;
@@ -310,12 +306,7 @@ export default function BalanceSheetPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Balance Sheet" subtitle="Assets, liabilities and equity" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto" />
-            <p className="mt-4 text-gray-600">Loading balance sheet...</p>
-          </div>
-        </div>
+        <PageLoading message="Loading balance sheet…" />
       </div>
     );
   }

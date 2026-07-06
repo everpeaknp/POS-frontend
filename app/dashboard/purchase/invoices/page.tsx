@@ -3,11 +3,12 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Eye, Edit, CreditCard, Printer, Loader2, Download } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Edit, CreditCard, Printer, Download, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { PaymentModal } from "@/components/purchase/PaymentModal";
 import { purchaseInvoicesAPI, type PurchaseInvoice } from "@/lib/api/purchase";
@@ -91,6 +92,34 @@ export default function PurchaseInvoicesPage() {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Invoices" subtitle="Loading..." />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-gray-500">Loading invoices...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (invoices.length === 0 && !search && status === "All") {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Purchase Invoices" subtitle="Manage supplier invoices and payables" />
+        <div className="flex-1 p-6">
+          <EmptyState
+            icon={Receipt}
+            title="No purchase invoices yet"
+            description="Create your first purchase invoice to track supplier payables"
+            actionLabel="New Invoice"
+            actionHref="/dashboard/purchase/invoices/new"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Purchase Invoices" subtitle="Manage supplier invoices and payables" />
@@ -113,6 +142,11 @@ export default function PurchaseInvoicesPage() {
           </Button>
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No invoices found matching your filters</p>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -122,12 +156,7 @@ export default function PurchaseInvoicesPage() {
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-gray-400" /></td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center text-sm text-gray-400">No invoices found</td></tr>
-                ) : (
-                  filtered.map((inv) => (
+                {filtered.map((inv) => (
                     <tr key={inv.id} className={`hover:bg-gray-50/50 transition-colors ${inv.status === "Overdue" ? "border-l-2 border-red-400" : ""}`}>
                       <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/invoices/${inv.id}`)}>{inv.invoice_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={inv.date} /></td>
@@ -160,12 +189,12 @@ export default function PurchaseInvoicesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
+                  ))}
               </tbody>
             </table>
           </div>
         </div>
+        )}
       </div>
 
       <PaymentModal

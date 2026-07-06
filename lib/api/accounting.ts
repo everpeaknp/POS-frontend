@@ -199,6 +199,18 @@ export const accountsAPI = {
     await apiClient.delete(`/accounting/accounts/${id}/`);
   },
 
+  // Seed standard chart of accounts (idempotent)
+  seedDefault: async () => {
+    const response = await apiClient.post<{
+      created: number;
+      skipped: number;
+      total: number;
+      message: string;
+      accounts: Account[];
+    }>('/accounting/accounts/seed_default/');
+    return response.data;
+  },
+
   // Get account tree structure
   tree: async () => {
     const response = await apiClient.get<Account[]>('/accounting/accounts/tree/');

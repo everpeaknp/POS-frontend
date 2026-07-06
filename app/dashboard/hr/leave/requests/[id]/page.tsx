@@ -4,9 +4,9 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, User, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, Calendar, User, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DashHeader } from "@/components/dashboard/dash-header";
+import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import { LeaveStatusBadge } from "@/components/hr/LeaveStatusBadge";
 import { getLeaveRequest, approveLeaveRequest, rejectLeaveRequest, deleteLeaveRequest, type LeaveRequest } from "@/lib/api/hr";
 import toast from "react-hot-toast";
@@ -222,53 +222,84 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Leave Request Details" subtitle="View leave request information" />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
-        </div>
-      </div>
+      <HRPageShell title="Leave Request Details" subtitle="Loading leave request…" loading />
     );
   }
 
   if (!leaveRequest) {
     return (
-      <div className="flex flex-col min-h-full">
-        <DashHeader title="Leave Request Details" subtitle="View leave request information" />
-        <div className="flex-1 p-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
-            <p className="text-gray-500">Leave request not found</p>
-            <Link href="/dashboard/hr/leave">
-              <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A]">Back to Leave Management</Button>
-            </Link>
-          </div>
+      <HRPageShell title="Leave Request Details" subtitle="Leave request not found">
+        <div className={`${hrCardClass} p-8 text-center`}>
+          <p className="text-gray-500">Leave request not found</p>
+          <Link href="/dashboard/hr/leave">
+            <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A]">Back to Leave Management</Button>
+          </Link>
         </div>
-      </div>
+      </HRPageShell>
     );
   }
 
+  const actionButtons = leaveRequest.status === 'pending' ? (
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        onClick={handleApprove}
+        className="h-9 bg-green-600 hover:bg-green-700 text-white"
+      >
+        <CheckCircle className="h-4 w-4 mr-2" />
+        Approve
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleReject}
+        className="h-9 border-red-600 text-red-600 hover:bg-red-50"
+      >
+        <XCircle className="h-4 w-4 mr-2" />
+        Reject
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleDelete}
+        className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50"
+      >
+        Cancel Request
+      </Button>
+    </div>
+  ) : (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={handleDelete}
+      className="h-9 border-red-600 text-red-600 hover:bg-red-50"
+    >
+      Cancel Request
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col min-h-full">
-      <DashHeader title="Leave Request Details" subtitle="View and manage leave request" />
-      <div className="flex-1 p-6">
-        <Link href="/dashboard/hr/leave" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Leave Management
-        </Link>
+    <HRPageShell
+      title={leaveRequest.employee_name}
+      subtitle={leaveRequest.leave_type_name}
+      action={actionButtons}
+    >
+      <Link href="/dashboard/hr/leave" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
+        <ChevronLeft className="h-4 w-4" /> Back to Leave Management
+      </Link>
 
-        <div className="max-w-4xl space-y-4">
-          {/* Header Card */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">{leaveRequest.employee_name}</h2>
-                <p className="text-sm text-gray-500 mt-1">{leaveRequest.leave_type_name}</p>
-              </div>
-              <LeaveStatusBadge status={leaveRequest.status} />
+      <div className="max-w-4xl space-y-4">
+        <div className={`${hrCardClass} p-6`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{leaveRequest.employee_name}</h2>
+              <p className="text-sm text-gray-500 mt-1">{leaveRequest.leave_type_name}</p>
             </div>
+            <LeaveStatusBadge status={leaveRequest.status} />
           </div>
+        </div>
 
-          {/* Details Card */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className={`${hrCardClass} p-6`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Leave Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-start gap-3">
@@ -367,54 +398,8 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Actions */}
-          {leaveRequest.status === 'pending' && (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
-              <div className="flex gap-3">
-                <Button 
-                  onClick={handleApprove}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-                <Button 
-                  onClick={handleReject}
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
-                <Button 
-                  onClick={handleDelete}
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel Request
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {leaveRequest.status !== 'pending' && (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-              <div className="flex gap-3">
-                <Button 
-                  onClick={handleDelete}
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50"
-                >
-                  Cancel Request
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </div>
+    </HRPageShell>
   );
 }

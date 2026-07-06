@@ -11,6 +11,10 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { constructionApi, Site, DailyLog } from '@/lib/api/construction';
 import FormField from '@/components/shared/FormField';
+import {
+  ConstructionPageShell,
+  constructionCardClass,
+} from '@/components/dashboard/ConstructionPageShell';
 
 const dailyLogSchema = z.object({
   site: z.string().min(1, 'Site is required'),
@@ -153,32 +157,22 @@ export default function EditDailyLogPage() {
 
   if (loadingLog) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E]"></div>
-      </div>
+      <ConstructionPageShell
+        title="Edit Daily Log"
+        subtitle="Loading daily log..."
+        variant="form"
+        loading
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href={`/dashboard/construction/daily-logs/${id}`}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Edit Daily Log</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Update daily site activities and progress
-          </p>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-lg shadow p-6">
+    <ConstructionPageShell
+      title="Edit Daily Log"
+      subtitle="Update daily site activities and progress"
+      variant="form"
+    >
+      <div className={`${constructionCardClass} p-6 lg:p-8`}>
         {log && log.hours_until_immutable !== undefined && log.hours_until_immutable < 24 && (
           <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
             <div className="flex items-center gap-2">
@@ -325,6 +319,6 @@ export default function EditDailyLogPage() {
           </div>
         </form>
       </div>
-    </div>
+    </ConstructionPageShell>
   );
 }
