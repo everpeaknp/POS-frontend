@@ -1,4 +1,5 @@
 "use client";
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 
 const B = "#22C55E";
@@ -106,7 +107,7 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white" style={{ backgroundColor: "#1A2E1A" }}>
-        <TiggLogo size="md" />
+        <KhataLogo size="md" />
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-4">Join thousands of<br />businesses on Khata</h2>
           <p className="text-green-300 text-base leading-relaxed">Start your free trial today. No credit card required.</p>
@@ -126,7 +127,7 @@ export default function SignupPage() {
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50 overflow-y-auto">
         <div className="w-full max-w-[480px] my-8">
-          <div className="flex justify-center mb-8 lg:hidden"><TiggLogo size="lg" /></div>
+          <div className="flex justify-center mb-8 lg:hidden"><KhataLogo size="lg" /></div>
           <Card className="border-0 shadow-xl bg-white">
             <CardContent className="p-8">
               <div className="flex items-start justify-between mb-6">
@@ -134,7 +135,7 @@ export default function SignupPage() {
                   <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
                   <p className="text-sm text-gray-400 mt-1">Get started with Khata for free</p>
                 </div>
-                <div className="hidden lg:block"><TiggLogo size="sm" /></div>
+                <div className="hidden lg:block"><KhataLogo size="sm" /></div>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -274,7 +275,7 @@ export default function SignupPage() {
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <KhataSpinner variant="onPrimary" className="mr-2" />
                       Creating Account...
                     </>
                   ) : (

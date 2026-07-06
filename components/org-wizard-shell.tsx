@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { Button } from "@/components/ui/button";
 import { OrgWizardStepper, ORG_WIZARD_STEPS } from "@/components/org-wizard-stepper";
 
@@ -18,7 +18,7 @@ export function OrgWizardShell({ step, onBack, children }: OrgWizardShellProps) 
     <div className="min-h-screen bg-[#F3F4F6] flex flex-col">
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
           <Button
             variant="ghost"
             onClick={onBack}

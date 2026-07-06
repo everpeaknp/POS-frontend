@@ -15,7 +15,7 @@ import {
 import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { UserMenuDropdown } from "@/components/shared/UserMenuDropdown";
 import { OrgTabs } from "@/components/org-tabs";
 import { OrgCard } from "@/components/org-card";
@@ -141,7 +141,7 @@ export default function ErpPage() {
       {/* Top bar */}
       <header className="bg-white dark:bg-card border-b border-gray-100 dark:border-border shadow-sm sticky top-0 z-20">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
           <UserMenuDropdown detail="email" />
         </div>
       </header>

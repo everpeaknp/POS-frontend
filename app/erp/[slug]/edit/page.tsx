@@ -7,7 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { OrgForm } from "@/components/org-form";
 import { tenantApi, Tenant, TenantData } from "@/lib/api/tenant";
 import toast from "react-hot-toast";
@@ -89,7 +89,7 @@ export default function EditOrganizationPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
           <Button
             variant="ghost"
             onClick={() => router.push("/erp")}

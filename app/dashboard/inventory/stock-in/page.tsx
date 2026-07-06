@@ -1,4 +1,5 @@
 "use client";
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -237,7 +238,7 @@ export default function StockInPage() {
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <KhataSpinner variant="onPrimary" />
                       Receiving...
                     </>
                   ) : (

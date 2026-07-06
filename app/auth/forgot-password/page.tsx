@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 
 const B = "#22C55E";
 const BD = "#16A34A";
@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-[420px]">
-        <div className="flex justify-center mb-8"><TiggLogo size="lg" /></div>
+        <div className="flex justify-center mb-8"><KhataLogo size="lg" /></div>
         <Card className="border-0 shadow-xl bg-white">
           <CardContent className="p-8">
             {sent ? (

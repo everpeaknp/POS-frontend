@@ -1,3 +1,4 @@
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -179,7 +180,7 @@ export default function SiteForm({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+        <KhataSpinner size="lg" />
         <span className="ml-3 text-gray-600">Loading form data...</span>
       </div>
     );
@@ -371,7 +372,7 @@ export default function SiteForm({
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {isSubmitting && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <KhataSpinner variant="onPrimary" />
           )}
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Site' : 'Create Site'}
         </button>

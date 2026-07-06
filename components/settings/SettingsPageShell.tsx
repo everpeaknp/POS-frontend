@@ -2,6 +2,7 @@
 
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { PageLoader } from "@/components/shared/PageLoader";
+import { cn } from "@/lib/utils";
 
 interface SettingsPageShellProps {
   title: string;
@@ -21,23 +22,24 @@ export function SettingsPageShell({
   loadingMessage,
 }: SettingsPageShellProps) {
   return (
-    <div className="flex h-full min-h-0 w-full flex-col">
+    <div className="relative flex h-full min-h-0 w-full flex-col">
       {!loading && <DashHeader title={title} subtitle={subtitle} />}
-      <div
-        className={
-          loading
-            ? "flex flex-1 min-h-0 w-full"
-            : "flex-1 p-6 w-full"
-        }
-      >
-        {loading ? (
+
+      {loading ? (
+        <div className="absolute inset-0 z-10 flex min-h-0 w-full bg-[#F3F4F6] dark:bg-background">
           <PageLoader message={loadingMessage} className="h-full flex-1" />
-        ) : (
-          <>
-            {action && <div className="flex justify-end mb-6">{action}</div>}
-            {children}
-          </>
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          "flex flex-1 min-h-0 w-full flex-col",
+          loading ? "invisible" : "flex-1 p-6"
         )}
+        aria-hidden={loading}
+      >
+        {action ? <div className="mb-6 flex justify-end">{action}</div> : null}
+        {children}
       </div>
     </div>
   );

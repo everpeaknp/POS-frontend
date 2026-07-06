@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Home, LayoutDashboard } from "lucide-react";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 
 interface NotFoundViewProps {
   code?: string;
@@ -34,7 +34,7 @@ export function NotFoundView({
   const content = (
     <div className="w-full max-w-md text-center">
       <div className="mb-6 flex justify-center">
-        <TiggLogo size="md" />
+        <KhataLogo size="md" />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-10">
@@ -76,7 +76,7 @@ export function NotFoundView({
         className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white shrink-0"
         style={{ backgroundColor: "#1A2E1A" }}
       >
-        <TiggLogo size="md" />
+        <KhataLogo size="md" />
         <div>
           <h2 className="text-3xl font-bold leading-tight mb-3">
             This page could not be found

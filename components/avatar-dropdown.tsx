@@ -18,7 +18,7 @@ export function AvatarDropdown({ name }: AvatarDropdownProps) {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("tigg_user");
+    localStorage.removeItem("khata_user");
     router.push("/auth/login");
   };
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Menu, X } from "lucide-react";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
 
@@ -39,7 +39,7 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
             </div>
           </div>
         ) : (
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
         )}
         {onClose && (
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors lg:hidden" aria-label="Close">

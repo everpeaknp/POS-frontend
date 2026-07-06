@@ -1,3 +1,4 @@
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
@@ -252,7 +253,7 @@ export default function EquipmentDetailPage() {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {deleting && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <KhataSpinner variant="onPrimary" />
                 )}
                 {deleting ? 'Deleting...' : 'Delete Equipment'}
               </button>

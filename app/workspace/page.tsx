@@ -8,7 +8,7 @@ import { Building2, Users, Package, ArrowRight, Settings, LogOut } from "lucide-
 import { useAuth } from "@/lib/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { setVisitedWorkspace, setSkipWorkspace } from "@/lib/utils/workspace";
 
 const B = "#22C55E";
@@ -99,7 +99,7 @@ export default function WorkspacePage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">

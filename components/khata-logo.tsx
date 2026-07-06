@@ -2,12 +2,12 @@
 
 // Brand color: #22C55E (Khata green) — used everywhere
 
-interface TiggLogoProps {
+interface KhataLogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export function TiggLogo({ size = "md", className = "" }: TiggLogoProps) {
+export function KhataLogo({ size = "md", className = "" }: KhataLogoProps) {
   const iconSize = size === "sm" ? 22 : size === "lg" ? 44 : 30;
   const textSize = size === "sm" ? "text-base" : size === "lg" ? "text-3xl" : "text-xl";
   const color = "#22C55E";

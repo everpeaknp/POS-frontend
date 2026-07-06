@@ -1,3 +1,4 @@
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -239,7 +240,7 @@ export default function AttendanceGrid() {
             <>
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+                  <KhataSpinner size="lg" />
                 </div>
               ) : workers.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
@@ -355,7 +356,7 @@ export default function AttendanceGrid() {
                       className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                       {submitting && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <KhataSpinner variant="onPrimary" />
                       )}
                       {submitting ? 'Saving...' : 'Save Attendance'}
                     </button>

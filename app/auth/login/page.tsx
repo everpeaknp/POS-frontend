@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 
 const B = "#22C55E";
@@ -61,7 +61,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white" style={{ backgroundColor: "#1A2E1A" }}>
-        <TiggLogo size="md" />
+        <KhataLogo size="md" />
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-4">
             Smart accounting<br />for modern businesses
@@ -89,7 +89,7 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
         <div className="w-full max-w-[400px]">
           <div className="flex justify-center mb-8 lg:hidden">
-            <TiggLogo size="lg" />
+            <KhataLogo size="lg" />
           </div>
           <Card className="border-0 shadow-xl bg-white">
             <CardContent className="p-8">
@@ -98,7 +98,7 @@ export default function LoginPage() {
                   <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
                   <p className="text-sm text-gray-400 mt-1">Sign in to your Khata account</p>
                 </div>
-                <div className="hidden lg:block"><TiggLogo size="sm" /></div>
+                <div className="hidden lg:block"><KhataLogo size="sm" /></div>
               </div>
 
               <form onSubmit={handleLogin} className="flex flex-col gap-5">

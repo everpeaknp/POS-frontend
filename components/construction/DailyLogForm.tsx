@@ -1,3 +1,4 @@
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -252,7 +253,7 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {loading && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <KhataSpinner variant="onPrimary" />
           )}
           {loading ? 'Creating...' : 'Create Daily Log'}
         </button>

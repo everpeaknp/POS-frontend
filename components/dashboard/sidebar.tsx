@@ -7,7 +7,7 @@ import {
   LayoutDashboard, TrendingUp, ShoppingCart, Package, BookOpen,
   Monitor, Users, BarChart2, Settings, ChevronDown, X, Menu, HardHat, Plus, Wrench,
 } from "lucide-react";
-import { TiggLogo } from "@/components/tigg-logo";
+import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 
@@ -341,7 +341,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </div>
           </div>
         ) : (
-          <TiggLogo size="md" />
+          <KhataLogo size="md" />
         )}
         {onClose && (
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors lg:hidden" aria-label="Close">
