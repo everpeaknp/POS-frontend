@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-/** Base loader is 48px at scale 1. */
+/** Scale wrapper around the fixed 48px loader (--size: 1px). */
 const SIZE_SCALE = {
   xs: 16 / 48,
   sm: 20 / 48,
@@ -17,9 +17,7 @@ export type KhataSpinnerVariant = "brand" | "onPrimary" | "muted";
 export interface KhataSpinnerProps {
   size?: KhataSpinnerSize;
   variant?: KhataSpinnerVariant;
-  /** @deprecated Layered loader has built-in animation; kept for API compatibility. */
   pulse?: boolean;
-  /** @deprecated Layered loader has built-in animation; kept for API compatibility. */
   dots?: boolean;
   className?: string;
 }
@@ -64,25 +62,26 @@ export function KhataSpinner({
   const resolvedSize = size ?? inferSize(className);
   const scale = SIZE_SCALE[resolvedSize];
   const layout = layoutClassName(className);
-  const pad = 28 * scale;
+  const stagePad = 30 * scale;
 
   return (
     <div
-      className={cn("inline-flex items-center justify-center", layout)}
-      style={{ padding: pad }}
+      className={cn("inline-flex items-center justify-center overflow-visible", layout)}
+      style={{ padding: stagePad }}
     >
       <div
-        className="khata-loader-wrap"
-        style={{ "--khata-loader-size": `${scale}px` } as React.CSSProperties}
+        className="khata-loader-stage"
+        style={{ transform: `scale(${scale})` }}
       >
-        <span
+        <div
           role="status"
           aria-label="Loading"
           aria-live="polite"
           aria-busy="true"
           className={cn("khata-loader", VARIANT_CLASS[variant])}
-          style={{ "--khata-loader-size": `${scale}px` } as React.CSSProperties}
-        />
+        >
+          <span className="khata-loader__top" aria-hidden />
+        </div>
       </div>
     </div>
   );

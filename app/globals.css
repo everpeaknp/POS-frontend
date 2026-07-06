@@ -193,9 +193,9 @@
     color-scheme: light dark;
   }
 
-  html[data-reduce-motion="true"] *,
-  html[data-reduce-motion="true"] *::before,
-  html[data-reduce-motion="true"] *::after {
+  html[data-reduce-motion="true"] *:not(.khata-loader):not(.khata-loader *),
+  html[data-reduce-motion="true"] *:not(.khata-loader)::before,
+  html[data-reduce-motion="true"] *:not(.khata-loader)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -283,4 +283,12 @@
   .overflow-scroll::-webkit-scrollbar-thumb:hover {
     background-color: #14532d;
   }
+}
+
+/* Khata loader — keep layered animation alive (after all @layer rules). */
+html[data-reduce-motion="true"] .khata-loader,
+html[data-reduce-motion="true"] .khata-loader__top {
+  animation-duration: 1s !important;
+  animation-iteration-count: infinite !important;
+  animation-play-state: running !important;
 }
