@@ -26,15 +26,15 @@ export function SettingsPageShell({
       {!loading && <DashHeader title={title} subtitle={subtitle} />}
 
       {loading ? (
-        <div className="absolute inset-0 z-10 flex min-h-0 w-full bg-[#F3F4F6] dark:bg-background">
+        <div className="absolute inset-0 z-20 flex min-h-0 w-full bg-[#F3F4F6] dark:bg-background">
           <PageLoader message={loadingMessage} className="h-full flex-1" />
         </div>
       ) : null}
 
       <div
         className={cn(
-          "flex flex-1 min-h-0 w-full flex-col",
-          loading ? "invisible" : "flex-1 p-6"
+          "flex min-h-0 w-full flex-col flex-1 p-6",
+          loading && "pointer-events-none opacity-0"
         )}
         aria-hidden={loading}
       >

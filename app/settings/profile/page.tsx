@@ -2,40 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, ImageIcon, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DashHeader } from "@/components/dashboard/dash-header";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getMediaUrl } from "@/lib/utils";
+import type { ProfileUpdateData } from "@/lib/types/user";
 import toast from "react-hot-toast";
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-sm">
-        {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
-      </Label>
-      {children}
-    </div>
-  );
-}
+import { SettingsPageShell } from "@/components/settings/SettingsPageShell";
+import {
+  SettingsCard,
+  SettingsCardBody,
+  SettingsCardHeader,
+  SettingsField,
+  SettingsNotice,
+  SettingsPageContent,
+  settingsInputClass,
+} from "@/components/settings/settings-ui";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     first_name: user?.first_name || "",
@@ -54,6 +43,7 @@ export default function ProfilePage() {
       });
       setExistingAvatarUrl(getMediaUrl(user.avatar));
       setAvatarFile(null);
+      setRemoveAvatar(false);
     }
   }, [user]);
 
@@ -66,16 +56,18 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-      const updateData: Record<string, unknown> = {
+      const updateData: ProfileUpdateData = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         phone: formData.phone.trim(),
       };
       if (avatarFile) updateData.avatar = avatarFile;
+      if (removeAvatar) updateData.remove_avatar = true;
 
       await updateUser(updateData);
       toast.success("Profile updated successfully");
       setAvatarFile(null);
+      setRemoveAvatar(false);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
       toast.error(err.response?.data?.detail || "Failed to update profile");
@@ -89,122 +81,132 @@ export default function ProfilePage() {
     user?.username?.[0] ||
     "U";
 
+  const displayAvatarUrl = removeAvatar ? null : existingAvatarUrl;
+
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <DashHeader
-        title="Profile"
-        subtitle="Manage your personal information and profile photo"
-      />
+    <SettingsPageShell
+      title="Profile"
+      subtitle="Manage your personal information and profile photo"
+    >
+      <SettingsPageContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,17rem)_1fr]">
+            <SettingsCard>
+              <SettingsCardHeader
+                icon={ImageIcon}
+                title="Profile photo"
+                description="Your avatar across Khata"
+              />
+              <SettingsCardBody className="flex justify-center">
+                <ProfilePhotoUpload
+                  layout="stacked"
+                  align="center"
+                  existingUrl={displayAvatarUrl}
+                  initials={initials}
+                  disabled={isLoading}
+                  onChange={(file) => {
+                    setAvatarFile(file);
+                    if (file) setRemoveAvatar(false);
+                  }}
+                  onRemove={() => setRemoveAvatar(true)}
+                />
+              </SettingsCardBody>
+            </SettingsCard>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-card rounded-xl border border-border shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
-          {user && (
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pb-2 border-b border-border">
-              <span>
-                Username:{" "}
-                <span className="font-medium text-foreground">{user.username}</span>
-              </span>
-              <span>
-                Role:{" "}
-                <span className="font-medium text-foreground capitalize">{user.role}</span>
-              </span>
-              {user.tenant && (
-                <span>
-                  Organization:{" "}
-                  <span className="font-medium text-foreground">{user.tenant.name}</span>
-                </span>
-              )}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2 mb-4">
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="First name" required>
-                    <Input
-                      className="h-9 text-sm border-border"
+            <SettingsCard>
+              <SettingsCardHeader
+                icon={User}
+                title="Personal information"
+                description="Name and contact details"
+              />
+              <SettingsCardBody className="space-y-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <SettingsField label="First name">
+                    <input
+                      className={settingsInputClass}
                       value={formData.first_name}
                       onChange={(e) => updateField("first_name", e.target.value)}
                       disabled={isLoading}
+                      required
+                      autoComplete="given-name"
                     />
-                  </Field>
+                  </SettingsField>
 
-                  <Field label="Last name" required>
-                    <Input
-                      className="h-9 text-sm border-border"
+                  <SettingsField label="Last name">
+                    <input
+                      className={settingsInputClass}
                       value={formData.last_name}
                       onChange={(e) => updateField("last_name", e.target.value)}
                       disabled={isLoading}
+                      required
+                      autoComplete="family-name"
                     />
-                  </Field>
-
-                  <Field label="Email address">
-                    <div className="relative">
-                      <Input
-                        type="email"
-                        className="h-9 text-sm border-border bg-muted text-muted-foreground pr-10"
-                        value={formData.email}
-                        readOnly
-                        disabled
-                      />
-                      <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#22C55E]" />
-                    </div>
-                  </Field>
-
-                  <Field label="Phone number">
-                    <Input
-                      type="tel"
-                      className="h-9 text-sm border-border"
-                      placeholder="+977 98XXXXXXXX"
-                      value={formData.phone}
-                      onChange={(e) => updateField("phone", e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </Field>
+                  </SettingsField>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <ProfilePhotoUpload
-                    existingUrl={existingAvatarUrl}
-                    initials={initials}
+                <SettingsField label="Phone number" hint="Used for account recovery and alerts">
+                  <input
+                    type="tel"
+                    className={settingsInputClass}
+                    placeholder="+977 98XXXXXXXX"
+                    value={formData.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
                     disabled={isLoading}
-                    onChange={setAvatarFile}
+                    autoComplete="tel"
                   />
-                </div>
-              </div>
-            </div>
+                </SettingsField>
 
-            <div className="text-xs text-muted-foreground">
-              Your email is verified. To change it, go to{" "}
-              <Link href="/settings/security" className="font-medium text-[#22C55E] hover:underline">
-                Security settings
-              </Link>
-              .
-            </div>
+                <SettingsField label="Email address" hint="Managed in Security settings">
+                  <div className="relative">
+                    <input
+                      type="email"
+                      className={`${settingsInputClass} bg-muted pr-10 text-muted-foreground`}
+                      value={formData.email}
+                      readOnly
+                      disabled
+                    />
+                    <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#22C55E]" />
+                  </div>
+                </SettingsField>
 
-            <div className="pt-2 border-t border-border">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
+                {user && (
+                  <p className="text-xs text-muted-foreground">
+                    Signed in as{" "}
+                    <span className="font-medium text-foreground">{user.username}</span>
+                    {" · "}
+                    <span className="capitalize">{user.role}</span>
+                  </p>
                 )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+
+                <div className="flex justify-end border-t border-border pt-5">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-[#22C55E] px-6 text-white hover:bg-[#16A34A]"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save changes"
+                    )}
+                  </Button>
+                </div>
+              </SettingsCardBody>
+            </SettingsCard>
+          </div>
+
+          <SettingsNotice variant="info">
+            To change your email or password, visit{" "}
+            <Link href="/settings/security" className="font-medium underline underline-offset-2">
+              Security settings
+            </Link>
+            .
+          </SettingsNotice>
+        </form>
+      </SettingsPageContent>
+    </SettingsPageShell>
   );
 }

@@ -24,6 +24,7 @@ export const userApi = {
     if (data.last_name) formData.append('last_name', data.last_name);
     if (data.phone) formData.append('phone', data.phone);
     if (data.avatar) formData.append('avatar', data.avatar);
+    if (data.remove_avatar) formData.append('remove_avatar', 'true');
     
     const response = await apiClient.patch('/auth/me/', formData, {
       headers: {

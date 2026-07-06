@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Key, Shield, Smartphone, ChevronRight, Fingerprint, Loader2, CheckCircle2 } from "lucide-react";
+import { Key, Shield, Smartphone, ChevronRight, Fingerprint, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { userApi } from "@/lib/api/user";
@@ -91,12 +91,6 @@ export default function SecurityPage() {
       subtitle="Password, two-factor authentication, and session management"
       loading={prefsLoading}
       loadingMessage="Loading security settings…"
-      action={
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-[#22C55E] rounded-lg border border-emerald-100 text-xs font-medium">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          Account secure
-        </span>
-      }
     >
       <SettingsPageContent>
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

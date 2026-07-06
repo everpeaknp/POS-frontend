@@ -86,6 +86,7 @@ export interface ProfileUpdateData {
   last_name?: string;
   phone?: string;
   avatar?: File;
+  remove_avatar?: boolean;
 }
 
 export interface AppearancePreferences {

@@ -3,11 +3,6 @@ import type { IconType } from "react-icons";
 import type { IconBaseProps } from "react-icons";
 import * as Hi from "react-icons/hi2";
 import { cn } from "@/lib/utils";
-import {
-  KhataSpinner,
-  inferKhataSpinnerVariant,
-  type KhataSpinnerSize,
-} from "@/components/shared/KhataSpinner";
 
 export type LucideIcon = IconType;
 export type LucideProps = IconBaseProps;
@@ -72,21 +67,11 @@ export const Laptop: IconType = Hi.HiOutlineComputerDesktop;
 export const Layers: IconType = Hi.HiOutlineSquare3Stack3D;
 export const LayoutDashboard: IconType = Hi.HiOutlineSquares2X2;
 export const LayoutGrid: IconType = Hi.HiOutlineSquares2X2;
-function inferLoaderSize(className?: string): KhataSpinnerSize {
-  if (!className) return "sm";
-  if (/h-16|w-16/.test(className)) return "xl";
-  if (/h-10|w-10|h-8|w-8/.test(className)) return "lg";
-  if (/h-6|w-6|h-5|w-5/.test(className)) return "md";
-  if (/h-4|w-4|h-3\.5|w-3\.5/.test(className)) return "xs";
-  return "sm";
-}
-
 export function Loader2({ className }: IconBaseProps) {
   return (
-    <KhataSpinner
-      size={inferLoaderSize(className)}
-      variant={inferKhataSpinnerVariant(className)}
-      className={className}
+    <Hi.HiOutlineArrowPath
+      className={cn("shrink-0 animate-spin", className)}
+      aria-hidden
     />
   );
 }

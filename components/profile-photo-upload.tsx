@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ImageIcon } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ImageIcon, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ProfilePhotoUploadProps {
@@ -9,7 +10,11 @@ interface ProfilePhotoUploadProps {
   initials?: string;
   disabled?: boolean;
   onChange: (file: File | null) => void;
+  onRemove?: () => void;
   className?: string;
+  layout?: "horizontal" | "stacked";
+  align?: "center" | "start";
+  variant?: "default" | "compact";
 }
 
 export function ProfilePhotoUpload({
@@ -17,10 +22,17 @@ export function ProfilePhotoUpload({
   initials = "U",
   disabled = false,
   onChange,
+  onRemove,
   className,
+  layout = "stacked",
+  align = "center",
+  variant = "default",
 }: ProfilePhotoUploadProps) {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const isCompact = variant === "compact";
 
   useEffect(() => {
     return () => {
@@ -42,14 +54,13 @@ export function ProfilePhotoUpload({
       return;
     }
 
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      setError("Please upload a JPG, PNG, or GIF image");
+      setError("Please upload a JPG, PNG, GIF, or WebP image");
       return;
     }
 
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > 5 * 1024 * 1024) {
       setError("File size must be less than 5MB");
       return;
     }
@@ -63,69 +74,165 @@ export function ProfilePhotoUpload({
   };
 
   const displayUrl = preview || existingUrl || null;
+  const hasPhoto = Boolean(displayUrl);
 
   const handleRemove = () => {
     handlePhotoChange(null);
+    onRemove?.();
+    if (inputRef.current) inputRef.current.value = "";
   };
 
-  return (
-    <div className={cn("space-y-3", className)}>
-      <h4 className="text-sm font-semibold text-gray-700">Profile photo</h4>
-      <div
-        className={cn(
-          "border-2 border-dashed border-gray-200 rounded-xl p-5 text-center bg-white transition-colors",
-          !disabled && "hover:border-[#22C55E]/40"
-        )}
+  const openFilePicker = () => {
+    if (!disabled) inputRef.current?.click();
+  };
+
+  const avatarSize = isCompact ? "h-20 w-20" : "h-24 w-24";
+
+  const avatarButton = (
+    <button
+      type="button"
+      onClick={openFilePicker}
+      disabled={disabled}
+      className={cn(
+        "group relative shrink-0 overflow-hidden rounded-full border-2 border-border bg-muted",
+        avatarSize,
+        layout === "stacked" && align === "center" && !isCompact && "mx-auto",
+        !disabled && "cursor-pointer transition-colors hover:border-[#22C55E]/50"
+      )}
+      aria-label={hasPhoto ? "Replace profile photo" : "Upload profile photo"}
+    >
+      {displayUrl ? (
+        <img src={displayUrl} alt="Profile" className="h-full w-full object-cover" />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center bg-[#22C55E]/10 text-lg font-semibold text-[#16A34A]">
+          {initials.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+      {!disabled && (
+        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
+          <ImageIcon className="h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+        </span>
+      )}
+    </button>
+  );
+
+  const compactActions = !disabled && (
+    <div className="flex flex-col items-center gap-1.5">
+      <button
+        type="button"
+        onClick={openFilePicker}
+        className="text-xs font-medium text-[#22C55E] hover:underline"
       >
-        {displayUrl ? (
-          <div className="space-y-4">
-            <div className="w-32 h-32 mx-auto border-2 border-gray-200 rounded-full overflow-hidden bg-white">
-              <img src={displayUrl} alt="Profile photo" className="w-full h-full object-cover" />
-            </div>
-            {!disabled && (
-              <button
-                type="button"
-                onClick={handleRemove}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
-              >
-                Remove photo
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="w-20 h-20 mx-auto bg-[#22C55E]/10 rounded-full flex items-center justify-center text-[#16A34A] font-semibold text-xl">
-              {initials ? (
-                initials.slice(0, 2).toUpperCase()
-              ) : (
-                <ImageIcon className="w-10 h-10 text-gray-400" />
-              )}
-            </div>
-            {!disabled && (
-              <div>
-                <label htmlFor="profile-photo-upload" className="cursor-pointer">
-                  <span className="text-sm font-medium text-[#22C55E] hover:text-[#16A34A]">
-                    Upload a photo
-                  </span>
-                  <input
-                    id="profile-photo-upload"
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif"
-                    onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            )}
-            <p className="text-xs text-gray-500">
-              JPG, PNG or GIF
-              <br />
-              Max 5MB
-            </p>
-          </div>
-        )}
-        {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
+        {hasPhoto ? "Replace" : "Upload"}
+      </button>
+      {hasPhoto && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
+        >
+          <Trash2 className="h-3 w-3" />
+          Remove
+        </button>
+      )}
+    </div>
+  );
+
+  const defaultActions = !disabled && (
+    <div
+      className={cn(
+        "flex gap-2",
+        layout === "stacked" ? "w-full flex-col" : "flex-wrap justify-center sm:justify-start"
+      )}
+    >
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className={cn("h-9", layout === "stacked" && "w-full")}
+        onClick={openFilePicker}
+      >
+        <ImageIcon className="mr-1.5 h-3.5 w-3.5" />
+        {hasPhoto ? "Replace photo" : "Upload photo"}
+      </Button>
+      {hasPhoto && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-9 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30",
+            layout === "stacked" && "w-full"
+          )}
+          onClick={handleRemove}
+        >
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          Remove photo
+        </Button>
+      )}
+    </div>
+  );
+
+  const hint = (
+    <p className="text-[11px] text-muted-foreground">
+      JPG, PNG, GIF or WebP · Max 5MB
+    </p>
+  );
+
+  if (isCompact) {
+    return (
+      <div className={cn("flex flex-col items-center gap-3", className)}>
+        {avatarButton}
+        {compactActions}
+        {hint}
+        {error && <p className="text-xs text-red-500">{error}</p>}
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+          className="hidden"
+          disabled={disabled}
+        />
       </div>
+    );
+  }
+
+  return (
+    <div className={cn(className)}>
+      {layout === "stacked" ? (
+        <div
+          className={cn(
+            "flex flex-col gap-4",
+            align === "center" ? "items-center text-center" : "items-start text-left"
+          )}
+        >
+          {avatarButton}
+          {defaultActions}
+          {hint}
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+          {avatarButton}
+          <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
+            {defaultActions}
+            {hint}
+            {error && <p className="text-xs text-red-500">{error}</p>}
+          </div>
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        id={inputId}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+        className="hidden"
+        disabled={disabled}
+      />
     </div>
   );
 }

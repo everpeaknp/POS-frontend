@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { authApi, User, LoginCredentials, RegisterData } from '@/lib/api/auth';
 import { tenantApi, type Tenant } from '@/lib/api/tenant';
 import { notifyAppearanceRefresh } from '@/lib/theme';
+import type { ProfileUpdateData } from '@/lib/types/user';
 
 interface AuthContextType {
   user: User | null;
@@ -13,7 +14,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  updateUser: (data: Partial<User>) => Promise<void>;
+  updateUser: (data: ProfileUpdateData) => Promise<void>;
   refreshUser: () => Promise<void>;
   switchOrganization: (slug: string, redirectTo?: string) => Promise<void>;
 }
@@ -112,11 +113,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/auth/login');
   };
 
-  const updateUser = async (data: Partial<User>) => {
+  const updateUser = async (data: ProfileUpdateData) => {
     try {
-      // Import userApi here to avoid circular dependency
       const { userApi } = await import('@/lib/api/user');
-      const updatedUser = await userApi.updateProfile(data as any);
+      const updatedUser = await userApi.updateProfile(data);
       setUser(updatedUser);
     } catch (error) {
       console.error('Update failed:', error);

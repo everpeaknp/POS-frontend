@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Building2, ChevronDown, LogOut, User } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getMediaUrl } from "@/lib/utils";
@@ -10,11 +10,22 @@ import toast from "react-hot-toast";
 interface UserMenuDropdownProps {
   showUserDetails?: boolean;
   detail?: "role" | "email";
+  /** When omitted, organization shows only inside an opened workspace (/dashboard). */
+  showOrganization?: boolean;
 }
 
-export function UserMenuDropdown({ showUserDetails = true, detail = "role" }: UserMenuDropdownProps) {
+function shouldShowOrganization(pathname: string) {
+  return pathname.startsWith("/dashboard");
+}
+
+export function UserMenuDropdown({
+  showUserDetails = true,
+  detail = "role",
+  showOrganization,
+}: UserMenuDropdownProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -41,6 +52,8 @@ export function UserMenuDropdown({ showUserDetails = true, detail = "role" }: Us
 
   const avatarUrl = getMediaUrl(user?.avatar);
   const displayName = user ? `${user.first_name} ${user.last_name}`.trim() : "User";
+  const organizationVisible =
+    (showOrganization ?? shouldShowOrganization(pathname)) && Boolean(user?.tenant);
 
   const navigate = (href: string) => {
     setOpen(false);
@@ -90,9 +103,9 @@ export function UserMenuDropdown({ showUserDetails = true, detail = "role" }: Us
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{user?.email}</p>
-            {user?.tenant && (
+            {organizationVisible && (
               <p className="text-xs text-muted-foreground mt-2 truncate">
-                Organization: <span className="font-medium text-foreground">{user.tenant.name}</span>
+                Organization: <span className="font-medium text-foreground">{user!.tenant!.name}</span>
               </p>
             )}
           </div>
