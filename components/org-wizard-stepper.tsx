@@ -14,27 +14,34 @@ interface OrgWizardStepperProps {
 
 export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between gap-2 sm:gap-4">
+    <nav aria-label="Organization setup progress" className="w-full">
+      <ol className="flex items-center">
         {STEPS.map((step, index) => {
           const isComplete = currentStep > step.id;
           const isCurrent = currentStep === step.id;
 
           return (
-            <div key={step.id} className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+            <li
+              key={step.id}
+              className={`flex items-center ${index < STEPS.length - 1 ? "flex-1" : ""}`}
+            >
+              <div className="flex flex-col items-center gap-2 min-w-[4.5rem]">
                 <div
-                  className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all ${
                     isComplete || isCurrent
-                      ? "bg-[#22C55E] text-white shadow-sm shadow-green-200"
-                      : "bg-gray-100 text-gray-500"
+                      ? "bg-[#22C55E] text-white shadow-sm shadow-green-200/80"
+                      : "bg-white border-2 border-gray-200 text-gray-400"
                   }`}
                 >
                   {isComplete ? <Check className="h-4 w-4" strokeWidth={2.5} /> : step.id}
                 </div>
                 <span
-                  className={`text-[11px] sm:text-xs font-medium whitespace-nowrap ${
-                    isCurrent ? "text-[#16A34A]" : isComplete ? "text-gray-700" : "text-gray-400"
+                  className={`text-xs font-medium ${
+                    isCurrent
+                      ? "text-[#16A34A]"
+                      : isComplete
+                        ? "text-gray-700"
+                        : "text-gray-400"
                   }`}
                 >
                   {step.label}
@@ -42,32 +49,36 @@ export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
               </div>
 
               {index < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 rounded-full bg-gray-200 overflow-hidden mb-5">
+                <div
+                  className="flex-1 mx-2 sm:mx-4 h-0.5 rounded-full bg-gray-200 overflow-hidden -mt-6"
+                  aria-hidden
+                >
                   <div
-                    className="h-full bg-[#22C55E] transition-all duration-300"
-                    style={{ width: currentStep > step.id ? "100%" : "0%" }}
+                    className={`h-full bg-[#22C55E] transition-all duration-500 ${
+                      isComplete ? "w-full" : isCurrent ? "w-1/2" : "w-0"
+                    }`}
                   />
                 </div>
               )}
-            </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </nav>
   );
 }
 
 export const ORG_WIZARD_STEPS = {
   1: {
     title: "Set up your organization",
-    description: "Enter your business details to create a new workspace on Khata.",
+    description: "Enter your business details to create a new Khata workspace.",
   },
   2: {
     title: "Choose your modules",
-    description: "Select the features that match how your business operates.",
+    description: "Pick the features you need now. You can change modules later from Settings.",
   },
   3: {
     title: "Review and create",
-    description: "Confirm everything looks right before we create your organization.",
+    description: "Double-check your details and selected modules before creating the organization.",
   },
 } as const;

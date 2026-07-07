@@ -25,6 +25,17 @@ export interface OrgModuleDefinition {
 
 export const REQUIRED_MODULE_IDS = ["accounting", "settings", "dashboard"] as const;
 
+/** Mirrors backend billing free-plan module list + core modules */
+export const FREE_PLAN_MODULE_IDS = [
+  "dashboard",
+  "accounting",
+  "settings",
+  "inventory",
+  "sales",
+  "purchase",
+  "reports",
+] as const;
+
 export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
   {
     id: "dashboard",
@@ -115,6 +126,31 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
     defaultEnabled: false,
   },
 ];
+
+export function getAllowedModulesForPlanType(planType: string): string[] {
+  const key = (planType || "free").toLowerCase();
+  if (key === "enterprise") {
+    return ORG_MODULE_CATALOG.map((module) => module.id);
+  }
+  if (key === "premium") {
+    return [...FREE_PLAN_MODULE_IDS, "pos", "hr"];
+  }
+  return [...FREE_PLAN_MODULE_IDS];
+}
+
+export function getModuleById(moduleId: string): OrgModuleDefinition | undefined {
+  const normalized = moduleId.toLowerCase();
+  return ORG_MODULE_CATALOG.find((module) => module.id === normalized);
+}
+
+export function isModuleAllowed(moduleId: string, allowedModuleIds: string[]): boolean {
+  const normalized = moduleId.toLowerCase();
+  return allowedModuleIds.some((id) => id.toLowerCase() === normalized);
+}
+
+export function filterModuleIds(moduleIds: string[], allowedModuleIds: string[]): string[] {
+  return moduleIds.filter((id) => isModuleAllowed(id, allowedModuleIds));
+}
 
 export function getDefaultSelectedModuleIds(): string[] {
   return ORG_MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.id);

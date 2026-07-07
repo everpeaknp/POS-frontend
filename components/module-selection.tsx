@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Lock, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { OrgWizardFooter } from "@/components/org-wizard-footer";
+import { billingApi } from "@/lib/api/billing";
 import {
+  filterModuleIds,
   getDefaultSelectedModuleIds,
   getModuleCatalogSections,
+  isModuleAllowed,
   isRequiredModule,
   normalizeModuleList,
   type OrgModuleDefinition,
@@ -30,18 +33,37 @@ interface ModuleSelectionProps {
   onNext: (modules: string[]) => void;
 }
 
-export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSelectionProps) {
+export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
+  const [allowedModules, setAllowedModules] = useState<string[] | null>(null);
+  const [planName, setPlanName] = useState("Free");
   const [selectedModules, setSelectedModules] = useState<string[]>(getDefaultSelectedModuleIds());
 
+  useEffect(() => {
+    billingApi
+      .getAccountLimits()
+      .then((limits) => {
+        const allowed = limits.new_org_allowed_modules;
+        setAllowedModules(allowed);
+        setPlanName(limits.new_org_plan_name);
+        setSelectedModules((prev) =>
+          normalizeModuleList(
+            filterModuleIds(prev.length ? prev : getDefaultSelectedModuleIds(), allowed)
+          )
+        );
+      })
+      .catch(() => {
+        setAllowedModules(getDefaultSelectedModuleIds());
+      });
+  }, []);
+
   const toggleModule = (moduleId: string) => {
+    if (allowedModules && !isModuleAllowed(moduleId, allowedModules)) {
+      toast.error(`Upgrade from ${planName} to enable this module`);
+      return;
+    }
+
     if (isRequiredModule(moduleId)) {
-      const label =
-        moduleId === "accounting"
-          ? "Accounting"
-          : moduleId === "settings"
-            ? "Settings"
-            : "Dashboard";
-      toast.error(`${label} is a core module and cannot be deselected`);
+      toast.error("Core modules are always included");
       return;
     }
 
@@ -55,115 +77,137 @@ export function ModuleSelection({ organizationData, onBack, onNext }: ModuleSele
       toast.error("Please select at least one module");
       return;
     }
-
     onNext(normalizeModuleList(selectedModules));
   };
 
+  const lockedCount = useMemo(() => {
+    if (!allowedModules) return 0;
+    return getModuleCatalogSections()
+      .flatMap((section) => section.modules)
+      .filter((module) => !isModuleAllowed(module.id, allowedModules)).length;
+  }, [allowedModules]);
+
   const renderModuleCard = (module: OrgModuleDefinition) => {
     const isSelected = selectedModules.includes(module.id);
+    const isLocked = allowedModules ? !isModuleAllowed(module.id, allowedModules) : false;
+    const isRequired = isRequiredModule(module.id) || module.required;
     const IconComponent = module.icon;
+    const interactive = !isLocked && !isRequired;
 
     return (
       <div
         key={module.id}
-        onClick={() => toggleModule(module.id)}
-        className={`relative border rounded-xl p-5 cursor-pointer transition-all flex flex-col ${
-          isSelected
-            ? "border-[#22C55E] bg-green-50/60 shadow-sm"
-            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+        onClick={() => interactive && toggleModule(module.id)}
+        className={`group flex items-start gap-3 rounded-xl border px-4 py-3.5 transition-all ${
+          isLocked
+            ? "border-gray-100 bg-gray-50/80 opacity-70 cursor-not-allowed"
+            : isSelected
+              ? "border-[#22C55E]/50 bg-[#22C55E]/[0.06] cursor-pointer"
+              : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer"
         }`}
       >
-        <div className="flex items-start gap-4 flex-1">
-          <div className="flex-shrink-0 mt-1">
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={() => toggleModule(module.id)}
-              className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E] h-5 w-5"
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-lg ${isSelected ? "bg-green-100" : "bg-gray-100"}`}>
-                <IconComponent
-                  className={`h-5 w-5 ${isSelected ? "text-[#22C55E]" : "text-gray-600"}`}
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">{module.name}</h3>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed">{module.description}</p>
-          </div>
-
-          {isSelected && (
-            <div className="flex-shrink-0">
-              <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          )}
+        <div
+          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+            isSelected ? "bg-[#22C55E]/15 text-[#22C55E]" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          <IconComponent className="h-[18px] w-[18px]" />
         </div>
 
-        {(module.required || module.recommended) && (
-          <div className="flex justify-end mt-auto pt-3">
-            {module.required ? (
-              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
-                Required
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900">{module.name}</h3>
+            {isRequired && (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+                Always on
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 bg-green-100 text-[#16A34A] text-xs font-semibold px-2 py-1 rounded-full">
+            )}
+            {!isRequired && module.recommended && !isLocked && (
+              <span className="rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
                 Recommended
               </span>
             )}
+            {isLocked && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                <Lock className="h-3 w-3" />
+                Upgrade
+              </span>
+            )}
           </div>
-        )}
+          <p className="mt-1 text-xs text-gray-500 leading-relaxed line-clamp-2">
+            {module.description}
+          </p>
+        </div>
+
+        <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
+          {isLocked ? null : isRequired ? (
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white">
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </div>
+          ) : (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => toggleModule(module.id)}
+              className="h-5 w-5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+            />
+          )}
+        </div>
       </div>
     );
   };
 
+  if (allowedModules === null) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mb-3" />
+        <p className="text-sm">Loading available modules…</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-5 border-b border-gray-100">
+        <div>
+          <p className="text-sm font-medium text-gray-900">
+            {selectedModules.length} modules selected
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            New organizations start on the {planName} plan
+          </p>
+        </div>
+        {lockedCount > 0 && (
+          <div className="rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900 max-w-md">
+            {lockedCount} module{lockedCount === 1 ? "" : "s"} require a paid plan
+          </div>
+        )}
+      </div>
+
       <div className="space-y-8">
         {getModuleCatalogSections().map((section) => (
-          <div key={section.key} className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700">{section.label}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <section key={section.key} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {section.label}
+              </h3>
+              <span className="text-xs text-gray-400 tabular-nums">
+                {section.modules.filter((m) => selectedModules.includes(m.id)).length}/
+                {section.modules.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {section.modules.map((module) => renderModuleCard(module))}
             </div>
-          </div>
+          </section>
         ))}
       </div>
 
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          {selectedModules.length} {selectedModules.length === 1 ? "module" : "modules"} selected
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-        <p className="text-sm text-green-900">
-          <strong className="font-semibold">Note:</strong> Dashboard, Accounting, and Settings are always included.
-          You can change other modules later from Settings → Modules.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-          className="px-5 h-11 border-gray-300 text-gray-700 hover:bg-gray-50 gap-1.5"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        <Button
-          type="button"
-          onClick={handleNext}
-          disabled={selectedModules.length === 0}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
-        >
-          Next: Review <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <OrgWizardFooter
+        onBack={onBack}
+        onPrimary={handleNext}
+        primaryLabel="Next: Review"
+        primaryDisabled={selectedModules.length === 0}
+      />
     </div>
   );
 }

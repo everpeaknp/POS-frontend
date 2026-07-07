@@ -69,9 +69,9 @@ const defaultForm: OrgFormData = {
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      {children}
+    <section className="space-y-4">
+      <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">{title}</h3>
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
@@ -275,9 +275,9 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
   const selectItemCls = "focus:bg-green-50 focus:text-green-900";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 [color-scheme:light] [--autofill-bg:#ffffff] [--autofill-text:#111827]">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
+    <form onSubmit={handleSubmit} className="flex flex-col [color-scheme:light] [--autofill-bg:#ffffff] [--autofill-text:#111827]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+        <div className="lg:col-span-2 space-y-8">
           <FormSection title="Organization details">
             <FieldGroup label="Organization Name" required>
               <Input 
@@ -371,10 +371,10 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
           </FormSection>
         </div>
 
-        <div className="lg:col-span-1">
-          <div className="lg:sticky lg:top-6">
-            <FormSection title="Company logo">
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center bg-white hover:border-[#22C55E]/40 transition-colors">
+        <div className="lg:col-span-1 order-first lg:order-last">
+          <div className="lg:sticky lg:top-24">
+            <FormSection title="Company logo (optional)">
+              <div className="border border-dashed border-gray-200 rounded-xl p-5 text-center bg-gray-50/50 hover:border-[#22C55E]/40 transition-colors">
               {logoPreview ? (
                 <div className="space-y-4">
                   <div className="w-full aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -425,8 +425,8 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+      <div className="space-y-3 mt-8">
+        <div className="border border-gray-100 rounded-xl overflow-hidden">
           <Collapsible open={moreInfoOpen} onOpenChange={setMoreInfoOpen}>
             <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <span>Add more organization info (optional)</span>
@@ -455,7 +455,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
         </div>
 
         {/* Referral Code (Collapsible) */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-gray-100 rounded-xl overflow-hidden">
           <Collapsible open={referralOpen} onOpenChange={setReferralOpen}>
             <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <span>Have a referral code?</span>
@@ -475,7 +475,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       </div>
 
       {/* Agreement */}
-      <div className="flex items-start gap-3 p-4 bg-green-50/50 rounded-xl border border-green-100">
+      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-green-100 bg-green-50/50">
         <Checkbox id="terms" checked={form.agreeToTerms}
           onCheckedChange={(checked) => setForm({ ...form, agreeToTerms: checked === true })}
           className="mt-0.5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]" />
@@ -487,17 +487,28 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       </div>
 
       {/* Submit Button */}
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center mt-8 pt-6 border-t border-gray-100">
         {showBackButton && (
-          <Button type="button" variant="outline" onClick={() => router.back()}
-            className="px-5 h-11 border-gray-200 text-gray-700 hover:bg-gray-50 gap-1.5"
-            disabled={loading}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            className="h-11 border-gray-200 text-gray-700 hover:bg-gray-50 gap-1.5 sm:min-w-[120px]"
+            disabled={loading}
+          >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
         )}
-        <Button type="submit" disabled={!isValid || loading || isSubmitting}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50">
-          {loading || isSubmitting ? (submitLabel || "Processing...") : (submitLabel || (onNext ? "Next: Select Modules" : "Create Organization"))} <ArrowRight className="h-4 w-4" />
+        {!showBackButton && <div className="hidden sm:block sm:min-w-[120px]" />}
+        <Button
+          type="submit"
+          disabled={!isValid || loading || isSubmitting}
+          className="h-11 flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
+        >
+          {loading || isSubmitting
+            ? submitLabel || "Processing..."
+            : submitLabel || (onNext ? "Next: Select Modules" : "Create Organization")}{" "}
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </form>

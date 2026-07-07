@@ -178,9 +178,16 @@ export function BillingPanel({
                 )}
 
                 <p className="font-bold text-gray-900 text-lg pt-1">{plan.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {plan.max_users != null ? `Up to ${plan.max_users} users` : "Unlimited users"}
-                </p>
+                <div className="text-xs text-gray-500 mt-0.5 space-y-0.5">
+                  <p>
+                    {plan.max_users != null ? `Up to ${plan.max_users} users` : "Unlimited users"}
+                  </p>
+                  <p>
+                    {plan.max_orgs != null
+                      ? `Up to ${plan.max_orgs} ${plan.max_orgs === 1 ? "organization" : "organizations"}`
+                      : "Unlimited organizations"}
+                  </p>
+                </div>
 
                 <div className="mt-4 mb-5">
                   <span className="text-3xl font-bold text-gray-900">{formatPlanPrice(plan.price)}</span>

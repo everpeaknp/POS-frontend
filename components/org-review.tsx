@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  ArrowLeft, 
-  ArrowRight, 
+import {
   Building2,
   MapPin,
   Calendar,
@@ -12,22 +9,14 @@ import {
   XCircle,
   Globe,
   Briefcase,
-  BarChart3,
   Package,
-  DollarSign,
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  HardHat,
-  Wrench,
-  Monitor,
-  Settings,
-  type LucideIcon
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { OrgWizardFooter } from "@/components/org-wizard-footer";
 import { tenantApi } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
+import { getModuleById } from "@/lib/modules/catalog";
 
 interface OrgReviewProps {
   organizationData: {
@@ -50,32 +39,6 @@ interface OrgReviewProps {
   onCreationError: () => void;
 }
 
-const moduleIcons: Record<string, LucideIcon> = {
-  accounting: BarChart3,
-  inventory: Package,
-  sales: DollarSign,
-  purchase: ShoppingCart,
-  reports: TrendingUp,
-  pos: Monitor,
-  hr: Users,
-  construction: HardHat,
-  hardware: Wrench,
-  settings: Settings,
-};
-
-const moduleNames: Record<string, string> = {
-  accounting: "Accounting",
-  inventory: "Inventory Management",
-  sales: "Sales & Billing",
-  purchase: "Purchase Management",
-  reports: "Reports & Analytics",
-  pos: "Point of Sale (POS)",
-  hr: "HR & Payroll",
-  construction: "Construction Management",
-  hardware: "Hardware Business",
-  settings: "Settings",
-};
-
 const businessTypeLabels: Record<string, string> = {
   construction: "Construction",
   hardware: "Hardware",
@@ -86,227 +49,197 @@ const businessTypeLabels: Record<string, string> = {
   other: "Other",
 };
 
-export function OrgReview({ 
-  organizationData, 
-  selectedModules, 
-  onBack, 
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+  valueClassName,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+        <Icon className="h-4 w-4 text-gray-500" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className={`text-sm font-medium text-gray-900 mt-0.5 break-words ${valueClassName ?? ""}`}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function OrgReview({
+  organizationData,
+  selectedModules,
+  onBack,
   onEdit,
   onCreationStart,
   onCreationSuccess,
-  onCreationError
+  onCreationError,
 }: OrgReviewProps) {
-  const router = useRouter();
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
-  // Generate workspace URL
   const workspaceUrl = organizationData.workspace_name
-    ? `${organizationData.workspace_name.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')}.khata.app`
+    ? `${organizationData.workspace_name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-")}.khata.app`
     : "your-workspace.khata.app";
 
   const handleSubmit = async () => {
     setLoading(true);
-    onCreationStart(); // Show loading screen
-    
+    onCreationStart();
+
     try {
-      // Create tenant with all data
       const tenant = await tenantApi.create({
         ...organizationData,
         active_modules: selectedModules,
       });
 
-      // Wait for backend to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Refresh user data
-      console.log('[OrgReview] Refreshing user data...');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       try {
         await refreshUser();
-        console.log('[OrgReview] User data refreshed');
       } catch (error) {
-        console.error('[OrgReview] Failed to refresh user:', error);
+        console.error("[OrgReview] Failed to refresh user:", error);
       }
 
-      // Show success screen
       onCreationSuccess(tenant.name);
-      
-    } catch (err: any) {
-      onCreationError(); // Hide loading screen
+    } catch (err: unknown) {
+      onCreationError();
       setLoading(false);
-      
-      if (err.response?.status === 400) {
-        const errorData = err.response?.data;
+
+      const error = err as { response?: { status?: number; data?: Record<string, unknown> } };
+      if (error.response?.status === 400) {
+        const errorData = error.response?.data;
         if (errorData?.name) {
-          toast.error(`Organization Name: ${errorData.name[0]}`);
+          toast.error(`Organization Name: ${(errorData.name as string[])[0]}`);
+        } else if (errorData?.active_modules) {
+          const msg = errorData.active_modules;
+          toast.error(Array.isArray(msg) ? String(msg[0]) : String(msg));
         } else {
-          toast.error(errorData?.detail || "Invalid data. Please check your input.");
+          toast.error(String(errorData?.detail || "Invalid data. Please check your input."));
         }
-      } else if (err.response?.status === 500) {
+      } else if (error.response?.status === 500) {
         toast.error("Server error. Please try again later.");
       } else {
-        toast.error(err.response?.data?.detail || "Failed to create organization. Please try again.");
+        toast.error(String(error.response?.data?.detail || "Failed to create organization."));
       }
     }
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Organization Details</h3>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onEdit}
-            className="text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
-          >
-            Edit
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {/* Name */}
-          <div className="flex items-start gap-3">
-            <Building2 className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">Name</p>
-              <p className="text-sm font-medium text-gray-900">{organizationData.name}</p>
-            </div>
+    <div className="flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-gray-900">Organization</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
+            >
+              Edit
+            </Button>
           </div>
-
-          {/* Workspace URL */}
-          <div className="flex items-start gap-3">
-            <Globe className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">Workspace URL</p>
-              <p className="text-sm font-medium text-[#16A34A] font-mono break-all">{workspaceUrl}</p>
-            </div>
-          </div>
-
-          {/* Industry */}
-          <div className="flex items-start gap-3">
-            <Briefcase className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">Industry</p>
-              <p className="text-sm font-medium text-gray-900">
-                {businessTypeLabels[organizationData.business_type] || organizationData.business_type}
-              </p>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">Address</p>
-              <p className="text-sm font-medium text-gray-900">{organizationData.address}</p>
-            </div>
-          </div>
-
-          {/* Accounting Start Date */}
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">Accounting Start Date</p>
-              <p className="text-sm font-medium text-gray-900">
-                {formatDate(organizationData.accounting_start_date)}
-              </p>
-            </div>
-          </div>
-
-          {/* VAT Registered */}
-          <div className="flex items-start gap-3">
-            {organizationData.vat_registered ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-            ) : (
-              <XCircle className="h-5 w-5 text-gray-400 mt-0.5" />
-            )}
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 mb-1">VAT Registered</p>
-              <p className="text-sm font-medium text-gray-900">
-                {organizationData.vat_registered ? "Yes" : "No"}
-              </p>
-            </div>
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 px-4">
+            <DetailRow icon={Building2} label="Name" value={organizationData.name} />
+            <DetailRow
+              icon={Globe}
+              label="Workspace URL"
+              value={workspaceUrl}
+              valueClassName="font-mono text-[#16A34A] text-xs sm:text-sm"
+            />
+            <DetailRow
+              icon={Briefcase}
+              label="Industry"
+              value={
+                businessTypeLabels[organizationData.business_type] ||
+                organizationData.business_type
+              }
+            />
+            <DetailRow icon={MapPin} label="Address" value={organizationData.address} />
+            <DetailRow
+              icon={Calendar}
+              label="Accounting start"
+              value={formatDate(organizationData.accounting_start_date)}
+            />
+            <DetailRow
+              icon={organizationData.vat_registered ? CheckCircle2 : XCircle}
+              label="VAT registered"
+              value={organizationData.vat_registered ? "Yes" : "No"}
+            />
           </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Selected features</h3>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
-          >
-            Edit
-          </Button>
-        </div>
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Modules ({selectedModules.length})
+            </h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
+            >
+              Edit
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {selectedModules.map((moduleId) => {
+              const moduleDef = getModuleById(moduleId);
+              const IconComponent = moduleDef?.icon ?? Package;
+              const moduleName = moduleDef?.name ?? moduleId;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {selectedModules.map((moduleId) => {
-            const IconComponent = moduleIcons[moduleId];
-            const moduleName = moduleNames[moduleId];
-
-            return (
-              <div
-                key={moduleId}
-                className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
-              >
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <IconComponent className="h-4 w-4 text-[#22C55E]" />
+              return (
+                <div
+                  key={moduleId}
+                  className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-green-50/60 px-3 py-2.5"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-100">
+                    <IconComponent className="h-4 w-4 text-[#22C55E]" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 truncate">{moduleName}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-900">{moduleName}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          {selectedModules.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8">No modules selected</p>
+          )}
         </div>
-
-        {selectedModules.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-4">
-            No modules selected
-          </p>
-        )}
       </div>
 
-      <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-        <p className="text-sm text-green-900">
-          <strong className="font-semibold">Note:</strong> By creating your organization, you agree to our Terms of Service and Privacy Policy. You can update these settings later.
-        </p>
-      </div>
+      <p className="text-xs text-gray-500 mt-6 leading-relaxed">
+        By creating your organization, you agree to Khata&apos;s Terms of Service and Privacy Policy.
+        You can update these settings anytime after setup.
+      </p>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-          disabled={loading}
-          className="px-5 h-11 border-gray-300 text-gray-700 hover:bg-gray-50 gap-1.5"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="flex-1 h-11 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
-        >
-          {loading ? "Creating Organization..." : "Create Organization"} <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <OrgWizardFooter
+        onBack={onBack}
+        onPrimary={handleSubmit}
+        primaryLabel="Create Organization"
+        primaryDisabled={loading}
+        primaryLoading={loading}
+      />
     </div>
   );
 }

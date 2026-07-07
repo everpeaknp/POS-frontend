@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   Plus,
@@ -15,25 +15,38 @@ import {
 import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { KhataLogo } from "@/components/khata-logo";
-import { UserMenuDropdown } from "@/components/shared/UserMenuDropdown";
+import { ErpHeader } from "@/components/erp/erp-header";
 import { OrgTabs } from "@/components/org-tabs";
 import { OrgCard } from "@/components/org-card";
 import { EmptyState } from "@/components/empty-state";
 import { Organization } from "@/lib/types";
 import { tenantApi, Tenant, invitationApi, Invitation } from "@/lib/api/tenant";
+import { billingApi, type AccountLimits } from "@/lib/api/billing";
 import { getMediaUrl } from "@/lib/utils";
 import { PageLoading } from "@/components/shared/PageLoading";
 import toast from "react-hot-toast";
 
 export default function ErpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("organizations");
   const [searchQuery, setSearchQuery] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accountLimits, setAccountLimits] = useState<AccountLimits | null>(null);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "invitation" || tab === "invitations") {
+      setActiveTab("invitation");
+    } else if (tab === "requests") {
+      setActiveTab("requests");
+    } else if (tab === "organizations") {
+      setActiveTab("organizations");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user) {
@@ -41,6 +54,7 @@ export default function ErpPage() {
     } else {
       fetchTenants();
       fetchInvitations();
+      billingApi.getAccountLimits().then(setAccountLimits).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, router]);
@@ -86,6 +100,17 @@ export default function ErpPage() {
     } catch {
       toast.error("Failed to decline invitation");
     }
+  };
+
+  const handleCreateOrganization = () => {
+    if (accountLimits && !accountLimits.can_create_org) {
+      const limit = accountLimits.max_orgs ?? 0;
+      toast.error(
+        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} organization${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
+      );
+      return;
+    }
+    router.push("/erp/new");
   };
 
   if (!user || loading) {
@@ -138,13 +163,7 @@ export default function ErpPage() {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
-      {/* Top bar */}
-      <header className="bg-white dark:bg-card border-b border-gray-100 dark:border-border shadow-sm sticky top-0 z-20">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <KhataLogo size="md" />
-          <UserMenuDropdown detail="email" />
-        </div>
-      </header>
+      <ErpHeader />
 
       <OrgTabs
         activeTab={activeTab}
@@ -301,10 +320,10 @@ export default function ErpPage() {
         </div>
       </main>
 
-      {activeTab === "organizations" && (
+      {activeTab === "organizations" && (accountLimits?.can_create_org ?? true) && (
         <button
           type="button"
-          onClick={() => router.push("/erp/new")}
+          onClick={handleCreateOrganization}
           className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
           aria-label="Add new organization"
         >

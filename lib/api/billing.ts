@@ -5,6 +5,7 @@ export interface BillingPlan {
   name: string;
   price: number;
   max_users: number | null;
+  max_orgs: number | null;
   features: string[];
   is_current: boolean;
   is_popular?: boolean;
@@ -38,6 +39,19 @@ export interface BillingOverview {
   payments: BillingPaymentRecord[];
   esewa_enabled: boolean;
   can_manage_billing: boolean;
+  allowed_modules?: string[];
+}
+
+export interface AccountLimits {
+  account_plan_code: string;
+  account_plan_name: string;
+  max_orgs: number | null;
+  orgs_created: number;
+  can_create_org: boolean;
+  new_org_plan_code: string;
+  new_org_plan_name: string;
+  new_org_allowed_modules: string[];
+  max_users: number | null;
 }
 
 export interface EsewaCheckoutForm {
@@ -62,6 +76,11 @@ export function isPlanActivation(result: CheckoutResponse): result is PlanActiva
 }
 
 export const billingApi = {
+  getAccountLimits: async (): Promise<AccountLimits> => {
+    const response = await apiClient.get<AccountLimits>('/billing/account-limits/');
+    return response.data;
+  },
+
   getOverview: async (): Promise<BillingOverview> => {
     const response = await apiClient.get<BillingOverview>('/billing/overview/');
     return response.data;

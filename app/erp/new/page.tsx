@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { OrgWizardShell } from "@/components/org-wizard-shell";
 import { OrgForm } from "@/components/org-form";
 import { ModuleSelection } from "@/components/module-selection";
 import { OrgReview } from "@/components/org-review";
 import { OrgCreationLoading } from "@/components/org-creation-loading";
 import { OrgCreationSuccess } from "@/components/org-creation-success";
+import { billingApi } from "@/lib/api/billing";
+import { ErpHeader } from "@/components/erp/erp-header";
+import { PageLoading } from "@/components/shared/PageLoading";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -17,6 +21,24 @@ export default function NewOrgPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [createdOrgName, setCreatedOrgName] = useState("");
+  const [limitsLoading, setLimitsLoading] = useState(true);
+
+  useEffect(() => {
+    billingApi
+      .getAccountLimits()
+      .then((limits) => {
+        if (!limits.can_create_org) {
+          const max = limits.max_orgs ?? 0;
+          toast.error(
+            `Your ${limits.account_plan_name} plan allows up to ${max} organization${max === 1 ? "" : "s"}.`
+          );
+          router.replace("/erp");
+          return;
+        }
+        setLimitsLoading(false);
+      })
+      .catch(() => setLimitsLoading(false));
+  }, [router]);
 
   const handleStep1Complete = (data: any) => {
     setOrganizationData(data);
@@ -32,12 +54,21 @@ export default function NewOrgPage() {
     return <OrgCreationLoading />;
   }
 
+  if (limitsLoading) {
+    return (
+      <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
+        <ErpHeader />
+        <PageLoading message="Checking plan limits…" className="flex-1 min-h-[50vh]" />
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return <OrgCreationSuccess organizationName={createdOrgName} />;
   }
 
   return (
-    <OrgWizardShell step={step} onBack={() => router.push("/erp")}>
+    <OrgWizardShell step={step}>
       {step === 1 && (
         <OrgForm onNext={handleStep1Complete} showBackButton={false} />
       )}

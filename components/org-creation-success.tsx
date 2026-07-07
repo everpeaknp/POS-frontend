@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ArrowRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErpHeader } from "@/components/erp/erp-header";
 import confetti from "canvas-confetti";
 
 interface OrgCreationSuccessProps {
@@ -57,8 +58,10 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 w-full max-w-md text-center">
+    <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
+      <ErpHeader />
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+      <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-gray-200/80 dark:border-border p-10 sm:p-12 w-full max-w-md text-center">
         {/* Success Icon */}
         <div className="flex justify-center mb-6">
           <div className="relative">
@@ -110,6 +113,7 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
           You can access your organization anytime from the dashboard
         </p>
       </div>
+      </main>
     </div>
   );
 }

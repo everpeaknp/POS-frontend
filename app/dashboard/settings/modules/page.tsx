@@ -9,9 +9,11 @@ import { OrganizationModulePicker } from "@/components/settings/OrganizationModu
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import {
   ORG_MODULE_CATALOG,
+  getAllowedModulesForPlanType,
   isModuleActive,
   isModuleInActiveList,
-  isRequiredModule } from "@/lib/modules/catalog";
+  isRequiredModule,
+} from "@/lib/modules/catalog";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
 
@@ -23,6 +25,8 @@ export default function OrganizationModulesPage() {
     null
   );
   const [activeModules, setActiveModules] = useState<string[]>([]);
+  const [allowedModules, setAllowedModules] = useState<string[]>([]);
+  const [planName, setPlanName] = useState("Free");
 
   const canEdit = tenantMeta?.user_role === "admin" || user?.role === "admin";
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -48,6 +52,16 @@ export default function OrganizationModulesPage() {
         plan_type: data.plan_type,
         user_role: data.user_role });
       setActiveModules(data.active_modules || []);
+      setAllowedModules(
+        data.allowed_modules?.length
+          ? data.allowed_modules
+          : getAllowedModulesForPlanType(data.plan_type || "free")
+      );
+      setPlanName(
+        data.plan_type
+          ? data.plan_type.charAt(0).toUpperCase() + data.plan_type.slice(1)
+          : "Free"
+      );
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 404) {
@@ -71,10 +85,7 @@ export default function OrganizationModulesPage() {
     await refreshUser();
   };
 
-  const planLabel = tenantMeta?.plan_type
-    ? tenantMeta.plan_type.charAt(0).toUpperCase() +
-      tenantMeta.plan_type.slice(1).replace(/_/g, " ")
-    : "Free";
+  const planLabel = planName;
 
   if (loading) {
     return (
@@ -154,6 +165,8 @@ export default function OrganizationModulesPage() {
             <OrganizationModulePicker
               tenantSlug={tenantMeta.slug}
               activeModules={activeModules}
+              allowedModules={allowedModules}
+              planName={planLabel}
               canEdit={canEdit}
               onUpdated={handleModulesUpdated}
             />
