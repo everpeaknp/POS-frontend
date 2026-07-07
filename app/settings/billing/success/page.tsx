@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle } from "lucide-react";
@@ -13,8 +13,12 @@ function BillingSuccessContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
+  const verifyStarted = useRef(false);
 
   useEffect(() => {
+    if (verifyStarted.current) return;
+    verifyStarted.current = true;
+
     const verify = async () => {
       const data = searchParams.get("data");
       const transactionUuid =

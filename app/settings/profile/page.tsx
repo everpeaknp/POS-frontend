@@ -144,39 +144,32 @@ export default function ProfilePage() {
                   </SettingsField>
                 </div>
 
-                <SettingsField label="Phone number" hint="Used for account recovery and alerts">
-                  <input
-                    type="tel"
-                    className={settingsInputClass}
-                    placeholder="+977 98XXXXXXXX"
-                    value={formData.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    disabled={isLoading}
-                    autoComplete="tel"
-                  />
-                </SettingsField>
-
-                <SettingsField label="Email address" hint="Managed in Security settings">
-                  <div className="relative">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <SettingsField label="Phone number" hint="Used for account recovery and alerts">
                     <input
-                      type="email"
-                      className={`${settingsInputClass} bg-muted pr-10 text-muted-foreground`}
-                      value={formData.email}
-                      readOnly
-                      disabled
+                      type="tel"
+                      className={settingsInputClass}
+                      placeholder="+977 98XXXXXXXX"
+                      value={formData.phone}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                      disabled={isLoading}
+                      autoComplete="tel"
                     />
-                    <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#22C55E]" />
-                  </div>
-                </SettingsField>
+                  </SettingsField>
 
-                {user && (
-                  <p className="text-xs text-muted-foreground">
-                    Signed in as{" "}
-                    <span className="font-medium text-foreground">{user.username}</span>
-                    {" · "}
-                    <span className="capitalize">{user.role}</span>
-                  </p>
-                )}
+                  <SettingsField label="Email address" hint="Managed in Security settings">
+                    <div className="relative">
+                      <input
+                        type="email"
+                        className={`${settingsInputClass} bg-muted pr-10 text-muted-foreground`}
+                        value={formData.email}
+                        readOnly
+                        disabled
+                      />
+                      <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#22C55E]" />
+                    </div>
+                  </SettingsField>
+                </div>
 
                 <div className="flex justify-end border-t border-border pt-5">
                   <Button

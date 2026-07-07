@@ -18,6 +18,10 @@ function shouldShowOrganization(pathname: string) {
   return pathname.startsWith("/dashboard");
 }
 
+function detailForPath(pathname: string, detail: "role" | "email") {
+  return shouldShowOrganization(pathname) ? detail : "email";
+}
+
 export function UserMenuDropdown({
   showUserDetails = true,
   detail = "role",
@@ -54,13 +58,14 @@ export function UserMenuDropdown({
   const displayName = user ? `${user.first_name} ${user.last_name}`.trim() : "User";
   const organizationVisible =
     (showOrganization ?? shouldShowOrganization(pathname)) && Boolean(user?.tenant);
+  const resolvedDetail = detailForPath(pathname, detail);
 
   const navigate = (href: string) => {
     setOpen(false);
     router.push(href);
   };
 
-  const detailsBreakpoint = detail === "email" ? "sm" : "md";
+  const detailsBreakpoint = resolvedDetail === "email" ? "sm" : "md";
 
   return (
     <div className="relative" ref={ref}>
@@ -83,7 +88,7 @@ export function UserMenuDropdown({
             <div className={`hidden ${detailsBreakpoint}:block text-left min-w-0`}>
               <p className="text-sm font-medium text-foreground leading-tight truncate">{displayName}</p>
               <p className="text-xs text-muted-foreground truncate">
-                {detail === "email" ? user?.email : user?.role || "Role"}
+                {resolvedDetail === "email" ? user?.email : user?.role || "Role"}
               </p>
             </div>
             <ChevronDown

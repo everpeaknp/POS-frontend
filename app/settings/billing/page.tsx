@@ -10,7 +10,7 @@ export default function BillingPage() {
   return (
     <SettingsPageShell
       title="Billing & Subscription"
-      subtitle="Organization plan and payment history"
+      subtitle="Manage your account subscription and payment history"
       loading={loading}
       loadingMessage="Loading billing information…"
     >

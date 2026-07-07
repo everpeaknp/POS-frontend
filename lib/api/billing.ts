@@ -31,14 +31,31 @@ export interface BillingPaymentRecord {
   payment_method: string;
   completed_at: string | null;
   created_at: string;
+  period_end?: string | null;
+  invoice_available?: boolean;
+}
+
+export interface MemberOrganization {
+  name: string;
+  plan_code: string;
+  plan_name: string;
+}
+
+export interface BillingAccount {
+  name: string;
+  email: string;
 }
 
 export interface BillingOverview {
+  account?: BillingAccount;
   subscription: BillingSubscription;
   plans: BillingPlan[];
   payments: BillingPaymentRecord[];
   esewa_enabled: boolean;
   can_manage_billing: boolean;
+  can_upgrade_account?: boolean;
+  billing_scope?: 'account' | 'organization';
+  member_organization?: MemberOrganization | null;
   allowed_modules?: string[];
 }
 
@@ -95,6 +112,13 @@ export const billingApi = {
     const response = await apiClient.post('/billing/verify/', {
       transaction_uuid,
       ...(data ? { data } : {}),
+    });
+    return response.data;
+  },
+
+  fetchInvoiceHtml: async (paymentId: number): Promise<string> => {
+    const response = await apiClient.get(`/billing/payments/${paymentId}/invoice/`, {
+      responseType: 'text',
     });
     return response.data;
   },
