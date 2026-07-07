@@ -16,8 +16,6 @@ import { billingApi, submitEsewaForm, isPlanActivation, type BillingOverview } f
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const POPULAR_PLAN = "business";
-
 function formatPlanPrice(price: number) {
   return price === 0 ? "Free" : formatCurrency(price);
 }
@@ -155,7 +153,7 @@ export function BillingPanel({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-5">
           {plans.map((plan) => {
-            const isPopular = plan.code === POPULAR_PLAN && !plan.is_current;
+            const isPopular = Boolean(plan.is_popular) && !plan.is_current;
             const isFree = plan.price === 0;
             return (
               <div

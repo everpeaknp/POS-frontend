@@ -7,6 +7,7 @@ export interface BillingPlan {
   max_users: number | null;
   features: string[];
   is_current: boolean;
+  is_popular?: boolean;
 }
 
 export interface BillingSubscription {
