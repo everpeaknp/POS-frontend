@@ -5,7 +5,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MoreVertical, Trash2, X, Search, Mail, Shield, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ManagePermissionsModal } from "@/components/settings/ManagePermissionsModal";
+import { buildFullRolePermissions } from "@/lib/permissions/catalog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +17,11 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import apiClient from "@/lib/api/client";
+import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
-import { invitationApi, Invitation } from "@/lib/api/tenant";
+import { invitationApi, Invitation, tenantApi, TenantUserLimits } from "@/lib/api/tenant";
 import { permissionsApi, PermissionsMatrix, usersApi, EmployeeInviteOption } from "@/lib/api/auth";
+import { usePermissions } from "@/lib/hooks/usePermissions";
 import toast from "react-hot-toast";
 
 interface User {
@@ -53,20 +56,6 @@ const roleColors: Record<string, string> = {
   viewer: "bg-gray-100 text-gray-600",
 };
 
-const modules = [
-  { name: "Sales", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Purchase", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Dashboard", actions: ["View"] },
-  { name: "Inventory", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Accounting", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Construction", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Hardware", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "HR", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "POS", actions: ["View", "Create", "Edit", "Delete"] },
-  { name: "Reports", actions: ["View", "Export"] },
-  { name: "Settings", actions: ["View", "Edit"] },
-];
-
 const cardClass =
   "bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm";
 const tableWrapClass = `${cardClass} overflow-hidden`;
@@ -77,9 +66,11 @@ export default function UsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: currentUser } = useAuth();
+  const { canEdit, loading: permissionsLoading } = usePermissions();
+  const canManageUsers = canEdit("settings");
   const [users, setUsers] = useState<User[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [permissions, setPermissions] = useState<PermissionsMatrix | null>(null);
+  const [userLimits, setUserLimits] = useState<TenantUserLimits | null>(null);
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState<number | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -102,42 +93,26 @@ export default function UsersPage() {
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [userForPermissions, setUserForPermissions] = useState<User | null>(null);
   const [rolePermissions, setRolePermissions] = useState<Record<string, boolean>>({});
-
-  // Check if current user can manage users (Settings-Edit permission)
-  const canManageUsers = () => {
-    if (!currentUser?.role || !permissions) return false;
-    
-    // Capitalize role to match permissions matrix keys
-    const roleKey = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1).toLowerCase();
-    
-    // Check if role exists in permissions matrix
-    if (!(roleKey in permissions)) return false;
-    
-    // Check Settings-Edit permission
-    const rolePermissions = permissions[roleKey as keyof PermissionsMatrix];
-    return rolePermissions?.['Settings-Edit'] === true;
-  };
+  const [savingPermissions, setSavingPermissions] = useState(false);
 
   useEffect(() => {
-    fetchPermissions();
     fetchUsers();
     fetchInvitations();
+    fetchUserLimits();
   }, []);
 
   useEffect(() => {
-    if (permissions && canManageUsers()) {
+    if (canManageUsers) {
       fetchEmployees();
     }
-  }, [permissions, currentUser?.role]);
+  }, [canManageUsers]);
 
-  const fetchPermissions = async () => {
+  const fetchUserLimits = async () => {
     try {
-      const data = await permissionsApi.getPermissions();
-      setPermissions(data);
-    } catch (error: any) {
-      console.error("Failed to fetch permissions:", error);
-      // Don't show error toast - permissions might not be set up yet
-      // Default to no access if permissions can't be loaded
+      const tenant = await tenantApi.getCurrent();
+      setUserLimits(tenant.user_limits ?? null);
+    } catch (error) {
+      console.error("Failed to fetch user limits:", error);
     }
   };
 
@@ -184,8 +159,16 @@ export default function UsersPage() {
   };
 
   const handleInvite = useCallback(() => {
-    if (!canManageUsers()) {
+    if (!canManageUsers) {
       toast.error("You don't have permission to invite users");
+      return;
+    }
+    if (userLimits && !userLimits.can_invite) {
+      toast.error(
+        userLimits.max_users != null
+          ? `Your ${userLimits.plan_name} plan allows up to ${userLimits.max_users} users. Upgrade to invite more.`
+          : "You cannot invite more users on your current plan."
+      );
       return;
     }
     setInviteData({
@@ -196,15 +179,15 @@ export default function UsersPage() {
     setSelectedEmployee("");
     setErrors({});
     setShowInviteModal(true);
-  }, [permissions, currentUser?.role]);
+  }, [canManageUsers, userLimits]);
 
   useEffect(() => {
     if (searchParams.get("invite") !== "1") return;
-    if (!permissions) return;
+    if (permissionsLoading) return;
 
     handleInvite();
     router.replace("/dashboard/settings/users", { scroll: false });
-  }, [searchParams, permissions, handleInvite, router]);
+  }, [searchParams, permissionsLoading, handleInvite, router]);
 
   const handleEmployeeSelect = (employeeId: string) => {
     setSelectedEmployee(employeeId);
@@ -280,6 +263,7 @@ export default function UsersPage() {
       await invitationApi.create(inviteData);
       toast.success("Invitation sent successfully!");
       await fetchInvitations();
+      await fetchUserLimits();
       setShowInviteModal(false);
       // Reset form
       setInviteData({
@@ -350,6 +334,7 @@ export default function UsersPage() {
       await invitationApi.cancel(id);
       toast.success("Invitation cancelled");
       await fetchInvitations();
+      await fetchUserLimits();
     } catch (error: any) {
       console.error("Failed to cancel invitation:", error);
       toast.error("Failed to cancel invitation");
@@ -372,6 +357,7 @@ export default function UsersPage() {
       toast.dismiss(loadingToast);
       toast.success("User removed successfully from organization");
       await fetchUsers();
+      await fetchUserLimits();
       setShowDeleteConfirm(false);
       setUserToDelete(null);
     } catch (error: any) {
@@ -433,7 +419,9 @@ export default function UsersPage() {
     try {
       const allPermissions = await permissionsApi.getPermissions();
       const roleKey = user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
-      setRolePermissions(allPermissions[roleKey as keyof PermissionsMatrix] || {});
+      setRolePermissions(
+        buildFullRolePermissions(allPermissions[roleKey as keyof PermissionsMatrix] || {})
+      );
     } catch (error: any) {
       console.error("Failed to load permissions:", error);
       toast.error("Failed to load permissions");
@@ -451,18 +439,15 @@ export default function UsersPage() {
     if (!userForPermissions) return;
     
     const loadingToast = toast.loading("Saving permissions...");
-    
+    setSavingPermissions(true);
+
     try {
-      // Get all permissions
       const allPermissions = await permissionsApi.getPermissions();
-      
-      // Update the specific role's permissions
       const roleKey = userForPermissions.role.charAt(0).toUpperCase() + userForPermissions.role.slice(1).toLowerCase();
-      allPermissions[roleKey as keyof PermissionsMatrix] = rolePermissions;
-      
-      // Save back to server
+      allPermissions[roleKey as keyof PermissionsMatrix] = buildFullRolePermissions(rolePermissions);
+
       await permissionsApi.updatePermissions(allPermissions);
-      
+
       toast.dismiss(loadingToast);
       toast.success("Permissions updated successfully");
       setShowPermissionsModal(false);
@@ -470,10 +455,19 @@ export default function UsersPage() {
       console.error("Failed to save permissions:", error);
       toast.dismiss(loadingToast);
       toast.error(error.response?.data?.detail || "Failed to save permissions");
+    } finally {
+      setSavingPermissions(false);
     }
   };
 
   const pendingInvites = invitations.filter((i) => i.status === "pending").length;
+  const inviteableEmployees = employees.filter((emp) => emp.email?.trim());
+
+  const limitsLabel = userLimits
+    ? userLimits.max_users != null
+      ? `${userLimits.seats_used} / ${userLimits.max_users} seats used`
+      : `${userLimits.current_users} users · unlimited plan`
+    : null;
 
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
@@ -482,10 +476,52 @@ export default function UsersPage() {
         subtitle={
           loading
             ? "Loading team..."
-            : `${users.length} team member${users.length !== 1 ? "s" : ""}${pendingInvites > 0 ? ` · ${pendingInvites} pending invite${pendingInvites !== 1 ? "s" : ""}` : ""}`
+            : `${users.length} team member${users.length !== 1 ? "s" : ""}${pendingInvites > 0 ? ` · ${pendingInvites} pending invite${pendingInvites !== 1 ? "s" : ""}` : ""}${limitsLabel ? ` · ${limitsLabel}` : ""}`
         }
       />
       <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
+        {userLimits && canManageUsers && (
+          <div
+            className={`${cardClass} p-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
+              !userLimits.can_invite ? "border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20" : ""
+            }`}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-foreground">
+                {userLimits.plan_name} plan
+              </p>
+              <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
+                {userLimits.max_users != null ? (
+                  <>
+                    {userLimits.current_users} member{userLimits.current_users !== 1 ? "s" : ""}
+                    {userLimits.pending_invites > 0 &&
+                      ` · ${userLimits.pending_invites} pending invite${userLimits.pending_invites !== 1 ? "s" : ""}`}
+                    {" · "}
+                    {userLimits.seats_used} of {userLimits.max_users} seats used
+                  </>
+                ) : (
+                  <>Unlimited users on your plan</>
+                )}
+              </p>
+            </div>
+            {!userLimits.can_invite && (
+              <Link
+                href="/settings/billing"
+                className="text-sm font-medium text-[#16A34A] hover:underline shrink-0"
+              >
+                Upgrade plan
+              </Link>
+            )}
+          </div>
+        )}
+
+        {!permissionsLoading && !canManageUsers && (
+          <div className={`${cardClass} p-4 border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20`}>
+            <p className="text-sm text-blue-900 dark:text-blue-200">
+              You can view team members but need Settings edit permission to invite users or manage roles.
+            </p>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 bg-gray-100 dark:bg-muted p-1 rounded-xl">
             <button
@@ -528,13 +564,16 @@ export default function UsersPage() {
               </div>
             )}
             <div className="flex-1" />
-            <Button
-              size="sm"
-              onClick={handleInvite}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
-            >
-              <Mail className="h-4 w-4" /> Invite User
-            </Button>
+            {canManageUsers && (
+              <Button
+                size="sm"
+                onClick={handleInvite}
+                disabled={userLimits != null && !userLimits.can_invite}
+                className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0 disabled:opacity-60"
+              >
+                <Mail className="h-4 w-4" /> Invite User
+              </Button>
+            )}
           </div>
         </div>
 
@@ -547,8 +586,8 @@ export default function UsersPage() {
                 icon={Users}
                 title="No team members yet"
                 description="Invite colleagues to collaborate in your organization"
-                actionLabel="Invite User"
-                onAction={handleInvite}
+                actionLabel={canManageUsers ? "Invite User" : undefined}
+                onAction={canManageUsers ? handleInvite : undefined}
               />
             ) : (
               <div className={tableWrapClass}>
@@ -620,7 +659,7 @@ export default function UsersPage() {
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               {u.id === currentUser?.id ? (
                                 <span className="text-xs text-gray-400">You</span>
-                              ) : canManageUsers() ? (
+                              ) : canManageUsers ? (
                                 <DropdownMenu
                                   open={menu === u.id}
                                   onOpenChange={(open) => setMenu(open ? u.id : null)}
@@ -670,8 +709,8 @@ export default function UsersPage() {
                 icon={Mail}
                 title="No pending invitations"
                 description="Send an invitation to add someone to your organization"
-                actionLabel="Send Invitation"
-                onAction={handleInvite}
+                actionLabel={canManageUsers ? "Send Invitation" : undefined}
+                onAction={canManageUsers ? handleInvite : undefined}
               />
             ) : (
               <div className={tableWrapClass}>
@@ -723,13 +762,17 @@ export default function UsersPage() {
                               <FormattedDate value={inv.expires_at} />
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleCancelInvitation(inv.id)}
-                                className="text-xs text-red-600 hover:text-red-700 font-medium"
-                              >
-                                Cancel
-                              </button>
+                              {canManageUsers ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelInvitation(inv.id)}
+                                  className="text-xs text-red-600 hover:text-red-700 font-medium"
+                                >
+                                  Cancel
+                                </button>
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -840,103 +883,19 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Permissions Modal */}
-      {showPermissionsModal && userForPermissions && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-8">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Manage Permissions - {userForPermissions.first_name} {userForPermissions.last_name}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Role: <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleColors[userForPermissions.role]}`}>
-                    {userForPermissions.role}
-                  </span>
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Note: Permissions are role-based. Changes will affect all users with the "{userForPermissions.role}" role.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowPermissionsModal(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-48">
-                        Module / Action
-                      </th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Allowed
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modules.map((mod, modIdx) => (
-                      <React.Fragment key={`module-${modIdx}`}>
-                        <tr className="bg-gray-50/50">
-                          <td 
-                            className="px-4 py-2 font-semibold text-gray-700 text-xs uppercase tracking-wide" 
-                            colSpan={2}
-                          >
-                            {mod.name}
-                          </td>
-                        </tr>
-                        {mod.actions.map((action) => {
-                          const key = `${mod.name}-${action}`;
-                          const checked = rolePermissions[key] === true;
-                          
-                          return (
-                            <tr 
-                              key={`${mod.name}-${action}`} 
-                              className="border-t border-gray-50 hover:bg-gray-50/30"
-                            >
-                              <td className="px-4 py-2.5 text-gray-600 pl-8">{action}</td>
-                              <td className="px-4 py-2.5 text-center">
-                                <Checkbox 
-                                  checked={checked}
-                                  onCheckedChange={(checked) => 
-                                    handlePermissionChange(key, checked === true)
-                                  }
-                                  className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]" 
-                                />
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="flex gap-3 p-6 border-t border-gray-100">
-              <Button
-                type="button"
-                onClick={() => setShowPermissionsModal(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSavePermissions}
-                className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                Save Permissions
-              </Button>
-            </div>
-          </div>
-        </div>
+      {userForPermissions && (
+        <ManagePermissionsModal
+          open={showPermissionsModal}
+          onOpenChange={setShowPermissionsModal}
+          userName={`${userForPermissions.first_name} ${userForPermissions.last_name}`.trim() || userForPermissions.email}
+          roleLabel={roleOptions.find((r) => r.value === userForPermissions.role)?.label || userForPermissions.role}
+          roleBadgeClass={roleColors[userForPermissions.role] || roleColors.viewer}
+          rolePermissions={rolePermissions}
+          activeModules={currentUser?.tenant?.active_modules}
+          saving={savingPermissions}
+          onPermissionChange={handlePermissionChange}
+          onSave={handleSavePermissions}
+        />
       )}
 
       {/* Invite Modal */}
@@ -955,7 +914,7 @@ export default function UsersPage() {
 
             <form onSubmit={handleSendInvite} className="p-6 space-y-4">
               {/* Employee Selector */}
-              {employees.length > 0 && (
+              {inviteableEmployees.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Select from Employees (Optional)
@@ -966,7 +925,7 @@ export default function UsersPage() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
                   >
                     <option value="">-- Select an employee --</option>
-                    {employees.map((emp) => (
+                    {inviteableEmployees.map((emp) => (
                       <option key={emp.id} value={emp.id}>
                         {emp.name} - {emp.designation} ({emp.email})
                       </option>

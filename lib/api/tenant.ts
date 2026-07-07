@@ -16,6 +16,16 @@ export interface TenantData {
   logo?: File | null;
 }
 
+export interface TenantUserLimits {
+  plan_code: string;
+  plan_name: string;
+  max_users: number | null;
+  current_users: number;
+  pending_invites: number;
+  seats_used: number;
+  can_invite: boolean;
+}
+
 export interface Tenant {
   id: number;
   name: string;
@@ -39,6 +49,7 @@ export interface Tenant {
   updated_at: string;
   created_by: number | null;
   user_role?: string;
+  user_limits?: TenantUserLimits;
 }
 
 export interface PaginatedResponse<T> {
@@ -156,7 +167,7 @@ export interface Invitation {
   invited_user_name: string;
   invited_by: number;
   invited_by_name: string;
-  role: 'admin' | 'manager' | 'supervisor' | 'accountant' | 'viewer';
+  role: 'admin' | 'manager' | 'supervisor' | 'accountant' | 'cashier' | 'viewer';
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled';
   message: string;
   created_at: string;

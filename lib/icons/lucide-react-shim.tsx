@@ -43,7 +43,6 @@ export const CircleCheck: IconType = Hi.HiOutlineCheckCircle;
 export const ClipboardCheck: IconType = Hi.HiOutlineClipboardDocumentCheck;
 export const ClipboardList: IconType = Hi.HiOutlineClipboardDocumentList;
 export const Clock: IconType = Hi.HiOutlineClock;
-export const Code2: IconType = Hi.HiOutlineCodeBracket;
 export const CreditCard: IconType = Hi.HiOutlineCreditCard;
 export const DollarSign: IconType = Hi.HiOutlineCurrencyDollar;
 export const Download: IconType = Hi.HiOutlineArrowDownTray;
@@ -52,6 +51,7 @@ export const Edit2: IconType = Hi.HiOutlinePencilSquare;
 export const ExternalLink: IconType = Hi.HiOutlineArrowTopRightOnSquare;
 export const Eye: IconType = Hi.HiOutlineEye;
 export const EyeOff: IconType = Hi.HiOutlineEyeSlash;
+export const FileDown: IconType = Hi.HiOutlineDocumentArrowDown;
 export const FileText: IconType = Hi.HiOutlineDocumentText;
 export const Filter: IconType = Hi.HiOutlineFunnel;
 export const Fingerprint: IconType = Hi.HiOutlineFingerPrint;
@@ -62,18 +62,11 @@ export const History: IconType = Hi.HiOutlineClock;
 export const Home: IconType = Hi.HiOutlineHome;
 export const ImageIcon: IconType = Hi.HiOutlinePhoto;
 export const Key: IconType = Hi.HiOutlineKey;
-export const Landmark: IconType = Hi.HiOutlineBuildingLibrary;
 export const Laptop: IconType = Hi.HiOutlineComputerDesktop;
 export const Layers: IconType = Hi.HiOutlineSquare3Stack3D;
 export const LayoutDashboard: IconType = Hi.HiOutlineSquares2X2;
-export const LayoutGrid: IconType = Hi.HiOutlineSquares2X2;
-export function Loader2({ className }: IconBaseProps) {
-  return (
-    <Hi.HiOutlineArrowPath
-      className={cn("shrink-0 animate-spin", className)}
-      aria-hidden
-    />
-  );
+export function Loader2({ className, ...props }: IconBaseProps) {
+  return <Hi.HiOutlineArrowPath className={cn("animate-spin", className)} {...props} />;
 }
 
 export const Lock: IconType = Hi.HiOutlineLockClosed;
@@ -81,7 +74,6 @@ export const LogOut: IconType = Hi.HiOutlineArrowRightOnRectangle;
 export const Mail: IconType = Hi.HiOutlineEnvelope;
 export const MapPin: IconType = Hi.HiOutlineMapPin;
 export const Menu: IconType = Hi.HiOutlineBars3;
-export const MessageSquare: IconType = Hi.HiOutlineChatBubbleLeftRight;
 export const Minus: IconType = Hi.HiOutlineMinus;
 export const Monitor: IconType = Hi.HiOutlineComputerDesktop;
 export const Moon: IconType = Hi.HiOutlineMoon;
@@ -93,7 +85,6 @@ export const PackageMinus: IconType = Hi.HiOutlineCube;
 export const Palette: IconType = Hi.HiOutlineSwatch;
 export const Pencil: IconType = Hi.HiOutlinePencil;
 export const Phone: IconType = Hi.HiOutlinePhone;
-export const Plug: IconType = Hi.HiOutlineBolt;
 export const Plus: IconType = Hi.HiOutlinePlus;
 export const Printer: IconType = Hi.HiOutlinePrinter;
 export const Receipt: IconType = Hi.HiOutlineReceiptPercent;
@@ -106,7 +97,6 @@ export const Search: IconType = Hi.HiOutlineMagnifyingGlass;
 export const SearchX: IconType = Hi.HiOutlineMagnifyingGlass;
 export const Settings: IconType = Hi.HiOutlineCog6Tooth;
 export const Shield: IconType = Hi.HiOutlineShieldCheck;
-export const ShieldCheck: IconType = Hi.HiOutlineShieldCheck;
 export const ShoppingBag: IconType = Hi.HiOutlineShoppingBag;
 export const ShoppingCart: IconType = Hi.HiOutlineShoppingCart;
 export const SlidersHorizontal: IconType = Hi.HiOutlineAdjustmentsHorizontal;
