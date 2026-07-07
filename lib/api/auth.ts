@@ -21,6 +21,7 @@ export interface Tenant {
   name: string;
   slug: string;
   workspace_name?: string;
+  address?: string;
   email?: string;
   business_type: string;
   is_active: boolean;

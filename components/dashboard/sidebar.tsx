@@ -329,15 +329,17 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         {user?.tenant ? (
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-              {(user.tenant.workspace_name || user.tenant.name).charAt(0).toUpperCase()}
+              {user.tenant.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-white font-semibold text-sm leading-tight truncate">
-                {user.tenant.workspace_name || user.tenant.name}
+                {user.tenant.name}
               </span>
-              <span className="text-gray-400 text-xs leading-tight truncate">
-                {user.tenant.slug}.khata.app
-              </span>
+              {user.role && (
+                <span className="text-gray-400 text-xs leading-tight truncate capitalize">
+                  {user.role}
+                </span>
+              )}
             </div>
           </div>
         ) : (
@@ -356,8 +358,15 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         ))}
       </nav>
 
-      <div className="px-5 py-4 border-t border-white/10">
-        <p className="text-xs text-gray-600">© 2025 Khata Business OS</p>
+      <div className="px-5 py-4 border-t border-white/10 space-y-1.5">
+        {user?.tenant && (
+          <p className="text-[11px] font-mono break-all text-gray-500 leading-relaxed">
+            https://{user.tenant.slug}.khata.app
+          </p>
+        )}
+        <p className="text-xs text-gray-600">
+          © {new Date().getFullYear()} Khata Business OS
+        </p>
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ function toAuthTenant(tenant: Tenant): NonNullable<User['tenant']> {
     name: tenant.name,
     slug: tenant.slug,
     workspace_name: tenant.workspace_name,
+    address: tenant.address,
     email: tenant.email,
     business_type: tenant.business_type,
     is_active: tenant.is_active,
