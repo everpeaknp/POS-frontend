@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 
 const B = "#22C55E";
@@ -285,6 +286,8 @@ export default function SignupPage() {
                   )}
                 </Button>
               </form>
+
+              <GoogleSignInButton label="signup_with" />
 
               <div className="border-t border-gray-100 my-5" />
               <p className="text-center text-sm text-gray-500">

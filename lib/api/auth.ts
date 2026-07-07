@@ -72,10 +72,25 @@ export interface AuthResponse {
   session_id?: string;
 }
 
+export interface GoogleOAuthConfig {
+  enabled: boolean;
+  client_id: string;
+}
+
 export const authApi = {
   // Login
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await apiClient.post('/auth/login/', credentials);
+    return response.data;
+  },
+
+  getGoogleConfig: async (): Promise<GoogleOAuthConfig> => {
+    const response = await apiClient.get('/auth/google/config/');
+    return response.data;
+  },
+
+  loginWithGoogle: async (credential: string): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/google/', { credential });
     return response.data;
   },
 

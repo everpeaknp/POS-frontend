@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 
 const B = "#22C55E";
@@ -131,6 +132,8 @@ export default function LoginPage() {
                   {loading ? "Signing in..." : "Sign In"} {!loading && <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />}
                 </Button>
               </form>
+
+              <GoogleSignInButton label="signin_with" />
 
               <div className="border-t border-gray-100 my-5" />
               <p className="text-center text-sm text-gray-500">

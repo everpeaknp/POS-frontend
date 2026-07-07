@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (data: ProfileUpdateData) => Promise<void>;
@@ -65,26 +66,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
+  const persistSession = async (access: string, refresh: string, session_id?: string) => {
+    localStorage.setItem('access_token', access);
+    localStorage.setItem('refresh_token', refresh);
+    if (session_id) {
+      localStorage.setItem('session_id', session_id);
+    }
+
+    document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`;
+
+    const userData = await authApi.getProfile();
+    setUser(userData);
+    notifyAppearanceRefresh();
+    router.push('/erp');
+  };
+
   const login = async (credentials: LoginCredentials) => {
     try {
       const { access, refresh, session_id } = await authApi.login(credentials);
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      if (session_id) {
-        localStorage.setItem('session_id', session_id);
-      }
-      
-      document.cookie = `access_token=${access}; path=/; max-age=${60 * 60 * 24 * 7}`;
-      document.cookie = `refresh_token=${refresh}; path=/; max-age=${60 * 60 * 24 * 30}`;
-
-      const userData = await authApi.getProfile();
-      setUser(userData);
-      notifyAppearanceRefresh();
-
-      router.push('/erp');
+      await persistSession(access, refresh, session_id);
     } catch (error) {
       console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
+  const loginWithGoogle = async (credential: string) => {
+    try {
+      const { access, refresh, session_id } = await authApi.loginWithGoogle(credential);
+      await persistSession(access, refresh, session_id);
+    } catch (error) {
+      console.error('Google login failed:', error);
       throw error;
     }
   };
@@ -149,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, refreshUser, switchOrganization }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser, refreshUser, switchOrganization }}>
       {children}
     </AuthContext.Provider>
   );
