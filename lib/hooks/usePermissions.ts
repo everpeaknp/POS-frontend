@@ -5,7 +5,7 @@ import { isModuleActive } from '@/lib/modules/catalog';
 
 export interface PermissionCheck {
   module: string;
-  action: 'View' | 'Create' | 'Edit' | 'Delete' | 'Export' | 'Approve';
+  action: 'View' | 'Create' | 'Edit' | 'Delete' | 'Export' | 'Approve' | 'Invite' | 'Assign' | 'Configure';
 }
 
 export function usePermissions() {
@@ -64,6 +64,7 @@ export function usePermissions() {
 
   const getRoleKey = (): string | null => {
     if (!user?.role) return null;
+    if (user.role === 'super_admin') return 'Admin';
     return user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
   };
 
@@ -111,7 +112,7 @@ export function usePermissions() {
     if (!user?.role) return false;
     if (!hasModuleAccess(module)) return false;
 
-    if (user.role === 'admin') {
+    if (user.role === 'admin' || user.role === 'super_admin') {
       return true;
     }
 
@@ -140,6 +141,12 @@ export function usePermissions() {
   const canEdit = (module: string) => hasPermission(module, 'Edit');
   const canDelete = (module: string) => hasPermission(module, 'Delete');
   const canExport = (module: string) => hasPermission(module, 'Export');
+  const canInviteUsers = () =>
+    hasPermission('settings', 'Edit') || hasPermission('hr', 'Invite');
+  const canAssignRoles = () =>
+    hasPermission('settings', 'Edit') || hasPermission('hr', 'Assign');
+  const canConfigurePermissions = () =>
+    hasPermission('settings', 'Edit') || hasPermission('hr', 'Configure');
 
   return {
     permissions,
@@ -151,6 +158,9 @@ export function usePermissions() {
     canEdit,
     canDelete,
     canExport,
+    canInviteUsers,
+    canAssignRoles,
+    canConfigurePermissions,
     reload: loadPermissions,
   };
 }

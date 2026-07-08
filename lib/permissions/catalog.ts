@@ -7,7 +7,10 @@ export type PermissionAction =
   | "Edit"
   | "Delete"
   | "Export"
-  | "Approve";
+  | "Approve"
+  | "Invite"
+  | "Assign"
+  | "Configure";
 
 export interface PermissionModuleDefinition {
   /** Backend module id (lowercase) */
@@ -31,7 +34,11 @@ export const PERMISSION_MODULES: PermissionModuleDefinition[] = [
   { id: "reports", name: "Reports", actions: ["View", "Export"] },
   { id: "settings", name: "Settings", actions: ["View", "Edit"] },
   { id: "pos", name: "POS", actions: ["View", "Create", "Edit", "Delete"] },
-  { id: "hr", name: "HR", actions: ["View", "Create", "Edit", "Delete"] },
+  {
+    id: "hr",
+    name: "HR",
+    actions: ["View", "Create", "Edit", "Delete", "Invite", "Assign", "Configure"],
+  },
   {
     id: "construction",
     name: "Construction",

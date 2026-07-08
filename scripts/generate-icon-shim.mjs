@@ -136,6 +136,8 @@ const map = {
   Volume2: "HiOutlineSpeakerWave",
   Wallet: "HiOutlineWallet",
   Warehouse: "HiOutlineBuildingStorefront",
+  Maximize2: "HiOutlineArrowsPointingOut",
+  Minimize2: "HiOutlineArrowsPointingIn",
   X: "HiOutlineXMark",
   XCircle: "HiOutlineXCircle",
   XIcon: "HiOutlineXMark",

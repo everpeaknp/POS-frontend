@@ -77,8 +77,12 @@ export default function UsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: currentUser } = useAuth();
-  const { canEdit, loading: permissionsLoading } = usePermissions();
-  const canManageUsers = canEdit("settings");
+  const { canEdit, canInviteUsers, canAssignRoles, canConfigurePermissions, loading: permissionsLoading } = usePermissions();
+  const canManageSettings = canEdit("settings");
+  const canInvite = canInviteUsers();
+  const canChangeRoles = canAssignRoles();
+  const canSetPermissions = canConfigurePermissions();
+  const canManageUsers = canManageSettings || canInvite || canChangeRoles || canSetPermissions;
   const [users, setUsers] = useState<User[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [userLimits, setUserLimits] = useState<TenantUserLimits | null>(null);
@@ -142,10 +146,10 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    if (canManageUsers) {
+    if (canInvite) {
       fetchEmployees();
     }
-  }, [canManageUsers]);
+  }, [canInvite]);
 
   const fetchUserLimits = async () => {
     try {
@@ -199,7 +203,7 @@ export default function UsersPage() {
   };
 
   const handleInvite = useCallback(() => {
-    if (!canManageUsers) {
+    if (!canInvite) {
       toast.error("You don't have permission to invite users");
       return;
     }
@@ -219,7 +223,7 @@ export default function UsersPage() {
     setSelectedEmployee("");
     setErrors({});
     setShowInviteModal(true);
-  }, [canManageUsers, userLimits]);
+  }, [canInvite, userLimits]);
 
   useEffect(() => {
     if (searchParams.get("invite") !== "1") return;
@@ -460,6 +464,11 @@ export default function UsersPage() {
   };
 
   const handlePromoteRoleClick = (userId: number, currentRole: string) => {
+    if (!canChangeRoles) {
+      toast.error("You don't have permission to change roles");
+      setMenu(null);
+      return;
+    }
     const target = users.find((u) => u.id === userId);
     if (isSuperAdminUser(target)) {
       toast.error("No one can change the Super Admin role");
@@ -549,6 +558,11 @@ export default function UsersPage() {
   );
 
   const handleViewPermissions = async (user: User) => {
+    if (!canSetPermissions) {
+      toast.error("You don't have permission to manage role permissions");
+      setMenu(null);
+      return;
+    }
     if (isSuperAdminUser(user)) {
       toast.error("No one can change Super Admin permissions");
       setMenu(null);
@@ -639,7 +653,7 @@ export default function UsersPage() {
         {!permissionsLoading && !canManageUsers && (
           <div className={`${cardClass} p-4 border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20`}>
             <p className="text-sm text-blue-900 dark:text-blue-200">
-              You can view team members but need Settings edit permission to invite users or manage roles.
+              You can view team members but need HR &quot;Add / invite users&quot; or &quot;Change user roles&quot; permission to manage the team.
             </p>
           </div>
         )}
@@ -727,7 +741,7 @@ export default function UsersPage() {
             )}
 
             <div className="flex items-center gap-2 lg:ml-auto shrink-0">
-              {canManageUsers && (
+              {canInvite && (
                 <Button
                   size="sm"
                   onClick={handleInvite}
@@ -750,8 +764,8 @@ export default function UsersPage() {
                 icon={Users}
                 title="No team members yet"
                 description="Invite colleagues to collaborate in your organization"
-                actionLabel={canManageUsers ? "Invite User" : undefined}
-                onAction={canManageUsers ? handleInvite : undefined}
+                actionLabel={canInvite ? "Invite User" : undefined}
+                onAction={canInvite ? handleInvite : undefined}
               />
             ) : (
               <div className={tableWrapClass}>
@@ -843,7 +857,7 @@ export default function UsersPage() {
                                 >
                                   Protected
                                 </span>
-                              ) : canManageUsers ? (
+                              ) : canSetPermissions || canChangeRoles || canInvite ? (
                                 <DropdownMenu
                                   open={menu === u.id}
                                   onOpenChange={(open) => setMenu(open ? u.id : null)}
@@ -852,36 +866,44 @@ export default function UsersPage() {
                                     <MoreVertical className="h-4 w-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem onClick={() => handleViewPermissions(u)}>
-                                      <Shield className="h-3.5 w-3.5 mr-2" />
-                                      Permissions
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => handlePromoteRoleClick(u.id, u.role)}
-                                    >
-                                      <UserPlus className="h-3.5 w-3.5 mr-2" />
-                                      Change Role
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleToggleActiveClick(u)}>
-                                      {u.is_active ? (
-                                        <>
-                                          <XCircle className="h-3.5 w-3.5 mr-2" />
-                                          Disable
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CircleCheck className="h-3.5 w-3.5 mr-2" />
-                                          Enable
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="text-red-600 focus:text-red-600"
-                                      onClick={() => handleDeleteClick(u.id)}
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                      Remove
-                                    </DropdownMenuItem>
+                                    {canSetPermissions && (
+                                      <DropdownMenuItem onClick={() => handleViewPermissions(u)}>
+                                        <Shield className="h-3.5 w-3.5 mr-2" />
+                                        Permissions
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canChangeRoles && (
+                                      <DropdownMenuItem
+                                        onClick={() => handlePromoteRoleClick(u.id, u.role)}
+                                      >
+                                        <UserPlus className="h-3.5 w-3.5 mr-2" />
+                                        Change Role
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canChangeRoles && (
+                                      <DropdownMenuItem onClick={() => handleToggleActiveClick(u)}>
+                                        {u.is_active ? (
+                                          <>
+                                            <XCircle className="h-3.5 w-3.5 mr-2" />
+                                            Disable
+                                          </>
+                                        ) : (
+                                          <>
+                                            <CircleCheck className="h-3.5 w-3.5 mr-2" />
+                                            Enable
+                                          </>
+                                        )}
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canInvite && (
+                                      <DropdownMenuItem
+                                        className="text-red-600 focus:text-red-600"
+                                        onClick={() => handleDeleteClick(u.id)}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                        Remove
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               ) : (
@@ -906,8 +928,8 @@ export default function UsersPage() {
                 icon={Mail}
                 title="No pending invitations"
                 description="Send an invitation to add someone to your organization"
-                actionLabel={canManageUsers ? "Send Invitation" : undefined}
-                onAction={canManageUsers ? handleInvite : undefined}
+                actionLabel={canInvite ? "Send Invitation" : undefined}
+                onAction={canInvite ? handleInvite : undefined}
               />
             ) : (
               <div className={tableWrapClass}>
@@ -961,7 +983,7 @@ export default function UsersPage() {
                               <FormattedDate value={inv.expires_at} />
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
-                              {canManageUsers ? (
+                              {canInvite ? (
                                 <button
                                   type="button"
                                   onClick={() => handleCancelInvitation(inv.id)}
