@@ -5,8 +5,10 @@ import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { authApi, User, LoginCredentials, RegisterData } from '@/lib/api/auth';
 import { tenantApi, type Tenant } from '@/lib/api/tenant';
+import { acceptInviteToken, getInviteTokenFromRedirect } from '@/lib/invitations/accept';
 import { notifyAppearanceRefresh } from '@/lib/theme';
 import type { ProfileUpdateData } from '@/lib/types/user';
+import toast from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -85,6 +87,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userData = await authApi.getProfile();
     setUser(userData);
     notifyAppearanceRefresh();
+
+    const inviteToken = getInviteTokenFromRedirect(redirectTo);
+    if (inviteToken) {
+      try {
+        const result = await acceptInviteToken(inviteToken);
+        if (result.tenant_slug) {
+          const switchedTenant = await tenantApi.switch(result.tenant_slug);
+          const refreshedUser = await authApi.getProfile();
+          const tenant = toAuthTenant(switchedTenant);
+          const nextUser: User = {
+            ...refreshedUser,
+            tenant: refreshedUser.tenant?.slug === tenant.slug ? refreshedUser.tenant : tenant,
+          };
+
+          localStorage.setItem('active_tenant_slug', tenant.slug);
+          flushSync(() => setUser(nextUser));
+          toast.success(result.message || `Joined ${switchedTenant.name}`);
+          router.push('/dashboard');
+          return;
+        }
+      } catch (error) {
+        console.error('[AuthContext] Invite accept failed:', error);
+        router.push(redirectTo);
+        return;
+      }
+    }
+
     router.push(redirectTo);
   };
 

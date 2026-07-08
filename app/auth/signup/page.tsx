@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { buildInviteRedirect } from "@/lib/invitations/accept";
 
 const B = "#22C55E";
 const BD = "#16A34A";
@@ -44,7 +45,7 @@ export default function SignupPage() {
 
   const inviteToken = searchParams.get("invite") || "";
   const inviteEmail = searchParams.get("email") || "";
-  const inviteRedirect = inviteToken ? `/invite/${inviteToken}` : "";
+  const inviteRedirect = inviteToken ? buildInviteRedirect(inviteToken) : "";
 
   const {
     register,
@@ -92,7 +93,9 @@ export default function SignupPage() {
         phone: data.phone.trim(),
       });
 
-      toast.success("Account created! Signing you in...");
+      toast.success(
+        inviteToken ? "Account created! Joining your organization..." : "Account created! Signing you in..."
+      );
       await login(
         { email: data.email, password: data.password },
         inviteRedirect || "/erp"

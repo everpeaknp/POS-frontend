@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 import { KhataSpinner } from "@/components/shared/KhataSpinner";
 import { invitationApi, type InvitationPreview } from "@/lib/api/tenant";
+import { acceptInviteToken, inviteErrorMessage } from "@/lib/invitations/accept";
 import { useAuth } from "@/lib/context/AuthContext";
 
 const B = "#22C55E";
@@ -24,6 +25,7 @@ export default function InviteAcceptPage() {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoAcceptAttempted = useRef(false);
 
   useEffect(() => {
     if (!token) return;
@@ -38,7 +40,8 @@ export default function InviteAcceptPage() {
           setError(null);
         }
       } catch (err: unknown) {
-        const status = (err as { response?: { status?: number; data?: { detail?: string } } })?.response;
+        const status = (err as { response?: { status?: number; data?: { detail?: string } } })
+          ?.response;
         if (!cancelled) {
           setError(status?.data?.detail || "Invitation not found or no longer valid.");
           setPreview(null);
@@ -65,11 +68,11 @@ export default function InviteAcceptPage() {
     !preview.is_expired &&
     emailMatches;
 
-  const handleAccept = async () => {
-    if (!canAccept) return;
+  const handleAccept = useCallback(async () => {
+    if (!token || !canAccept) return;
     setAccepting(true);
     try {
-      const result = await invitationApi.acceptByToken(token);
+      const result = await acceptInviteToken(token);
       toast.success(result.message || "Invitation accepted");
       if (result.tenant_slug) {
         try {
@@ -81,15 +84,17 @@ export default function InviteAcceptPage() {
       }
       router.push("/erp?tab=invitation");
     } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { detail?: string; error?: string } } })?.response?.data?.detail ||
-        (err as { response?: { data?: { detail?: string; error?: string } } })?.response?.data?.error ||
-        "Failed to accept invitation";
-      toast.error(detail);
+      toast.error(inviteErrorMessage(err));
     } finally {
       setAccepting(false);
     }
-  };
+  }, [token, canAccept, switchOrganization, router]);
+
+  useEffect(() => {
+    if (loading || authLoading || !canAccept || autoAcceptAttempted.current) return;
+    autoAcceptAttempted.current = true;
+    void handleAccept();
+  }, [loading, authLoading, canAccept, handleAccept]);
 
   const signupHref = `/auth/signup?invite=${encodeURIComponent(token)}${
     preview?.invited_email ? `&email=${encodeURIComponent(preview.invited_email)}` : ""
@@ -97,6 +102,8 @@ export default function InviteAcceptPage() {
   const loginHref = `/auth/login?invite=${encodeURIComponent(token)}${
     preview?.invited_email ? `&email=${encodeURIComponent(preview.invited_email)}` : ""
   }`;
+
+  const showJoining = canAccept && (accepting || autoAcceptAttempted.current);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-background dark:to-background flex flex-col">
@@ -121,6 +128,16 @@ export default function InviteAcceptPage() {
                 <Link href="/auth/login">
                   <Button variant="outline">Go to login</Button>
                 </Link>
+              </div>
+            ) : showJoining ? (
+              <div className="text-center space-y-4 py-12">
+                <KhataSpinner />
+                <h1 className="text-lg font-semibold text-foreground">
+                  Joining {preview.tenant_name}...
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Setting up your workspace access.
+                </p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -168,35 +185,23 @@ export default function InviteAcceptPage() {
                   </div>
                 ) : user ? (
                   <div className="space-y-3">
-                    {!emailMatches ? (
-                      <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-                        You&apos;re signed in as <strong>{user.email}</strong>, but this invite is
-                        for <strong>{preview.invited_email}</strong>. Sign in with the invited email
-                        to continue.
-                      </div>
-                    ) : null}
-                    <Button
-                      className="w-full text-white"
-                      style={{ backgroundColor: B }}
-                      disabled={!canAccept || accepting}
-                      onClick={handleAccept}
-                    >
-                      {accepting ? "Joining..." : `Join ${preview.tenant_name}`}
-                    </Button>
-                    {!emailMatches ? (
-                      <Link href={loginHref} className="block">
-                        <Button variant="outline" className="w-full">
-                          Switch account
-                        </Button>
-                      </Link>
-                    ) : null}
+                    <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                      You&apos;re signed in as <strong>{user.email}</strong>, but this invite is for{" "}
+                      <strong>{preview.invited_email}</strong>. Sign in with the invited email to
+                      continue.
+                    </div>
+                    <Link href={loginHref} className="block">
+                      <Button variant="outline" className="w-full">
+                        Switch account
+                      </Button>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
                       {preview.requires_signup
-                        ? "Create a Khata account with this email to join the organization."
-                        : "Sign in with the invited email to accept."}
+                        ? "Create a Khata account with this email — you'll join automatically after signup."
+                        : "Sign in with the invited email — you'll join automatically after login."}
                     </p>
                     <Link href={signupHref} className="block">
                       <Button className="w-full text-white" style={{ backgroundColor: B }}>
@@ -218,4 +223,3 @@ export default function InviteAcceptPage() {
     </div>
   );
 }
-

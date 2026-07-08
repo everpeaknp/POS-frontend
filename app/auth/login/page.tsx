@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { buildInviteRedirect } from "@/lib/invitations/accept";
 
 const B = "#22C55E";
 const BD = "#16A34A";
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const inviteToken = searchParams.get("invite") || "";
   const inviteEmail = searchParams.get("email") || "";
-  const inviteRedirect = inviteToken ? `/invite/${inviteToken}` : "";
+  const inviteRedirect = inviteToken ? buildInviteRedirect(inviteToken) : "";
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,9 @@ export default function LoginPage() {
 
     try {
       await login({ email, password }, inviteRedirect || "/erp");
-      toast.success("Login successful! Redirecting...");
+      toast.success(
+        inviteToken ? "Signed in! Joining your organization..." : "Login successful! Redirecting..."
+      );
     } catch (err: any) {
       // Handle different error scenarios
       if (err.response?.status === 401) {
