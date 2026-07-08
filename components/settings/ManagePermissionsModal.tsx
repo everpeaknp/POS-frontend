@@ -13,10 +13,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { isModuleActive } from "@/lib/modules/catalog";
 import {
-  PERMISSION_MODULES,
+  getAllPermissionKeys,
   getPermissionModuleIcon,
+  getVisiblePermissionModules,
   permissionKey,
   type PermissionAction,
   type PermissionModuleDefinition,
@@ -183,11 +183,7 @@ export function ManagePermissionsModal({
 
   const visibleModules = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return PERMISSION_MODULES.filter((mod) => {
-      if (activeModules?.length) {
-        const active = isModuleActive(activeModules, mod.id);
-        if (!active) return false;
-      }
+    return getVisiblePermissionModules(activeModules).filter((mod) => {
       if (!query) return true;
       return (
         mod.name.toLowerCase().includes(query) ||
@@ -197,9 +193,14 @@ export function ManagePermissionsModal({
     });
   }, [activeModules, search]);
 
+  const visibleKeys = useMemo(
+    () => getAllPermissionKeys(activeModules),
+    [activeModules]
+  );
+
   const totalEnabled = useMemo(
-    () => Object.values(rolePermissions).filter(Boolean).length,
-    [rolePermissions]
+    () => visibleKeys.filter((key) => rolePermissions[key] === true).length,
+    [rolePermissions, visibleKeys]
   );
 
   return (
@@ -225,7 +226,7 @@ export function ManagePermissionsModal({
                   {roleLabel}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-muted-foreground">
-                  {totalEnabled} permissions enabled
+                  {totalEnabled} / {visibleKeys.length} permissions enabled
                 </span>
               </div>
             </div>

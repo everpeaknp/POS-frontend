@@ -9,6 +9,8 @@ export interface Organization {
   status: "trial" | "active" | "expired";
   user_role?: string;
   workspace_name?: string;
+  created_by?: number | null;
+  can_delete?: boolean;
 }
 
 export interface User {

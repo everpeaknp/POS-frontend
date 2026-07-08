@@ -134,30 +134,14 @@ export function BillingPanel({
   }
 
   const {
-    account,
     plans,
     payments,
     can_manage_billing,
     esewa_enabled,
-    subscription,
   } = overview;
 
   return (
     <div className="space-y-6">
-      {account && (
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm px-6 py-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Your account</p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">{account.name}</p>
-          <p className="text-sm text-gray-500">{account.email}</p>
-          {subscription.current_period_end && (
-            <p className="mt-2 text-sm text-gray-600">
-              Plan expires{" "}
-              <FormattedDate value={subscription.current_period_end} />
-            </p>
-          )}
-        </div>
-      )}
-
       {!esewa_enabled && (
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
           <CreditCard className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />

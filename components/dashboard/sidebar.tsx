@@ -291,7 +291,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     }
 
     if (item.requiredRoles && user) {
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'super_admin') {
         return true;
       }
       if (!item.requiredRoles.includes(user.role)) {
@@ -337,7 +337,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               </span>
               {user.role && (
                 <span className="text-gray-400 text-xs leading-tight truncate capitalize">
-                  {user.role}
+                  {user.role === "super_admin" ? "Super Admin" : user.role}
                 </span>
               )}
             </div>

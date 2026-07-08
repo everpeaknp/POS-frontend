@@ -27,6 +27,7 @@ export interface Tenant {
   is_active: boolean;
   plan_type: string;
   active_modules: string[];
+  created_by?: number | null;
 }
 
 export interface UserPermissions {
@@ -61,10 +62,11 @@ export interface User {
   first_name: string;
   last_name: string;
   role: string;
-  phone: string;
+  phone?: string;
   avatar?: string;
   tenant: Tenant | null;
   permissions?: UserPermissions;
+  is_super_admin?: boolean;
 }
 
 export interface AuthResponse {

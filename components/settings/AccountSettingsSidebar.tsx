@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Menu, X } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
+import { billingApi } from "@/lib/api/billing";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
 
 function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [planName, setPlanName] = useState<string | null>(null);
 
   const displayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
@@ -18,6 +20,27 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
   const initials = user
     ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() || user.username?.[0]?.toUpperCase() || "U"
     : "U";
+
+  useEffect(() => {
+    if (!user) {
+      setPlanName(null);
+      return;
+    }
+
+    let cancelled = false;
+    billingApi
+      .getAccountLimits()
+      .then((limits) => {
+        if (!cancelled) setPlanName(limits.account_plan_name || "Free");
+      })
+      .catch(() => {
+        if (!cancelled) setPlanName("Free");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   return (
     <div className="flex flex-col h-full">
@@ -35,7 +58,9 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
               <span className="text-white font-semibold text-sm leading-tight truncate">
                 {displayName}
               </span>
-              <span className="text-gray-400 text-xs leading-tight truncate">{user.email}</span>
+              <span className="text-gray-400 text-xs leading-tight truncate">
+                {planName ? `${planName} plan` : "…"}
+              </span>
             </div>
           </div>
         ) : (

@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { getModuleById } from "@/lib/modules/catalog";
+import { getModuleById, isModuleActive } from "@/lib/modules/catalog";
 
 export type PermissionAction =
   | "View"
@@ -48,20 +48,40 @@ export function permissionKey(moduleName: string, action: PermissionAction): str
   return `${moduleName}-${action}`;
 }
 
-export function getAllPermissionKeys(): string[] {
-  return PERMISSION_MODULES.flatMap((mod) =>
+export function getVisiblePermissionModules(
+  activeModules?: string[]
+): PermissionModuleDefinition[] {
+  if (!activeModules?.length) {
+    return PERMISSION_MODULES;
+  }
+  return PERMISSION_MODULES.filter((mod) => isModuleActive(activeModules, mod.id));
+}
+
+export function getAllPermissionKeys(activeModules?: string[]): string[] {
+  return getVisiblePermissionModules(activeModules).flatMap((mod) =>
     mod.actions.map((action) => permissionKey(mod.name, action))
   );
 }
 
 export function buildFullRolePermissions(
-  partial: Record<string, boolean> = {}
+  partial: Record<string, boolean> = {},
+  activeModules?: string[]
 ): Record<string, boolean> {
   const full: Record<string, boolean> = {};
-  for (const key of getAllPermissionKeys()) {
+  for (const key of getAllPermissionKeys(activeModules)) {
     full[key] = partial[key] === true;
   }
   return full;
+}
+
+/** Count enabled permissions for a role, limited to active-org modules. */
+export function countEnabledPermissions(
+  permissions: Record<string, boolean> | undefined,
+  activeModules?: string[]
+): number {
+  if (!permissions) return 0;
+  const keys = getAllPermissionKeys(activeModules);
+  return keys.filter((key) => permissions[key] === true).length;
 }
 
 export function getPermissionModuleIcon(

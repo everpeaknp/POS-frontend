@@ -128,6 +128,8 @@ export default function ErpPage() {
     status: tenant.is_active ? "active" : "trial",
     user_role: tenant.user_role,
     workspace_name: tenant.workspace_name,
+    created_by: tenant.created_by,
+    can_delete: tenant.user_role === "super_admin" || tenant.created_by === user?.id,
   }));
 
   const filteredOrgs = organizations.filter(

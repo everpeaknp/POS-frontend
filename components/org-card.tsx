@@ -26,6 +26,13 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   // Check if user is a member of THIS specific organization
   // user_role is set by backend if user has membership in this tenant
   const isMember = !!org.user_role;
+  const isSuperAdmin = org.user_role === "super_admin" || !!org.can_delete;
+  const roleLabel =
+    org.user_role === "super_admin"
+      ? "Super Admin"
+      : org.user_role
+        ? org.user_role.replace(/_/g, " ")
+        : null;
 
   const handleOpenKhata = async () => {
     try {
@@ -87,7 +94,9 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
     } catch (error: any) {
       // Handle different error types
       if (error.response?.status === 403) {
-        const errorMsg = error.response?.data?.detail || "Only admins can delete the organization";
+        const errorMsg =
+          error.response?.data?.detail ||
+          "Only the Super Admin who created this business can delete it";
         toast.error(errorMsg);
       } else if (error.response?.status === 404) {
         toast.error("Organization not found");
@@ -127,23 +136,30 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
             >
               Edit
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="cursor-pointer text-sm text-red-600 focus:text-red-600"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : showDeleteConfirm ? "Click again to confirm" : "Delete"}
-            </DropdownMenuItem>
+            {isSuperAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="cursor-pointer text-sm text-red-600 focus:text-red-600"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : showDeleteConfirm ? "Click again to confirm" : "Delete"}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       <div>
         <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
         <p className="text-xs text-muted-foreground mt-0.5 font-mono">{org.subdomain}</p>
-        {org.user_role && (
-          <p className="text-xs text-muted-foreground capitalize mt-1">
-            Role: <span className="font-medium text-foreground">{org.user_role}</span>
+        {roleLabel && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Role:{" "}
+            <span className={`font-medium ${isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
+              {roleLabel}
+            </span>
           </p>
         )}
       </div>

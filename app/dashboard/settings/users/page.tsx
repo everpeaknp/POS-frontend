@@ -3,10 +3,14 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MoreVertical, Trash2, X, Search, Mail, Shield, Users, UserPlus } from "lucide-react";
+import { MoreVertical, Trash2, X, Search, Mail, Shield, Users, UserPlus, CircleCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagePermissionsModal } from "@/components/settings/ManagePermissionsModal";
-import { buildFullRolePermissions } from "@/lib/permissions/catalog";
+import {
+  buildFullRolePermissions,
+  countEnabledPermissions,
+  getAllPermissionKeys,
+} from "@/lib/permissions/catalog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";  
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import apiClient from "@/lib/api/client";
 import Link from "next/link";
@@ -36,6 +40,7 @@ interface User {
   last_login?: string;
   date_joined: string;
   permissions?: any;
+  is_super_admin?: boolean;
 }
 
 const roleOptions = [
@@ -47,7 +52,13 @@ const roleOptions = [
   { value: "viewer", label: "Viewer" },
 ];
 
+const roleLabel = (role: string) => {
+  if (role === "super_admin") return "Super Admin";
+  return roleOptions.find((r) => r.value === role)?.label || role;
+};
+
 const roleColors: Record<string, string> = {
+  super_admin: "bg-emerald-100 text-emerald-800",
   admin: "bg-purple-100 text-purple-700",
   manager: "bg-blue-100 text-blue-700",
   supervisor: "bg-green-100 text-green-700",
@@ -78,6 +89,8 @@ export default function UsersPage() {
   const [activeTab, setActiveTab] = useState<'users' | 'invitations'>('users');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [showActiveConfirm, setShowActiveConfirm] = useState(false);
+  const [userToToggleActive, setUserToToggleActive] = useState<User | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [userToChangeRole, setUserToChangeRole] = useState<{id: number, currentRole: string} | null>(null);
   const [newRole, setNewRole] = useState("");
@@ -94,12 +107,39 @@ export default function UsersPage() {
   const [userForPermissions, setUserForPermissions] = useState<User | null>(null);
   const [rolePermissions, setRolePermissions] = useState<Record<string, boolean>>({});
   const [savingPermissions, setSavingPermissions] = useState(false);
+  const [permissionsMatrix, setPermissionsMatrix] = useState<PermissionsMatrix | null>(null);
+  const activeModules = currentUser?.tenant?.active_modules;
+  const totalPermissionSlots = getAllPermissionKeys(activeModules).length;
 
   useEffect(() => {
     fetchUsers();
     fetchInvitations();
     fetchUserLimits();
+    fetchPermissionsMatrix();
   }, []);
+
+  const fetchPermissionsMatrix = async () => {
+    try {
+      const data = await permissionsApi.getPermissions();
+      setPermissionsMatrix(data);
+    } catch {
+      try {
+        const mine = await permissionsApi.getMyPermissions();
+        setPermissionsMatrix(mine);
+      } catch (error) {
+        console.error("Failed to fetch permissions matrix:", error);
+        setPermissionsMatrix(null);
+      }
+    }
+  };
+
+  const countRolePermissions = (role: string): number | null => {
+    if (!permissionsMatrix) return null;
+    if (role === "super_admin") return totalPermissionSlots;
+    const roleKey = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+    const perms = permissionsMatrix[roleKey as keyof PermissionsMatrix];
+    return countEnabledPermissions(perms, activeModules);
+  };
 
   useEffect(() => {
     if (canManageUsers) {
@@ -337,7 +377,21 @@ export default function UsersPage() {
     }
   };
 
+  const isSuperAdminUser = (user?: User | null) => {
+    if (!user) return false;
+    if (user.is_super_admin === true || user.role === "super_admin") return true;
+    const createdBy = currentUser?.tenant?.created_by;
+    if (createdBy == null) return false;
+    return Number(createdBy) === Number(user.id);
+  };
+
   const handleDeleteClick = (userId: number) => {
+    const target = users.find((u) => u.id === userId);
+    if (isSuperAdminUser(target)) {
+      toast.error("No one can remove the Super Admin");
+      setMenu(null);
+      return;
+    }
     setUserToDelete(userId);
     setShowDeleteConfirm(true);
     setMenu(null);
@@ -363,35 +417,127 @@ export default function UsersPage() {
     }
   };
 
-  const handlePromoteRoleClick = (userId: number, currentRole: string) => {
-    setUserToChangeRole({ id: userId, currentRole });
-    setNewRole(currentRole);
-    setShowRoleModal(true);
+  const handleToggleActiveClick = (user: User) => {
+    if (isSuperAdminUser(user)) {
+      toast.error("No one can enable or disable the Super Admin");
+      setMenu(null);
+      return;
+    }
+    if (user.id === currentUser?.id) {
+      toast.error("You cannot disable your own access to this organization");
+      setMenu(null);
+      return;
+    }
+    setUserToToggleActive(user);
+    setShowActiveConfirm(true);
     setMenu(null);
   };
 
+  const handleToggleActiveConfirm = async () => {
+    if (!userToToggleActive) return;
+
+    const nextActive = !userToToggleActive.is_active;
+    const loadingToast = toast.loading(
+      nextActive ? "Enabling organization access..." : "Disabling organization access..."
+    );
+
+    try {
+      await apiClient.patch(`/auth/users/${userToToggleActive.id}/`, { is_active: nextActive });
+      toast.dismiss(loadingToast);
+      toast.success(
+        nextActive
+          ? "User can access this organization again"
+          : "User access to this organization disabled"
+      );
+      setShowActiveConfirm(false);
+      setUserToToggleActive(null);
+      await fetchUsers();
+    } catch (error: any) {
+      console.error("Failed to update organization access:", error);
+      toast.dismiss(loadingToast);
+      toast.error(error.response?.data?.detail || "Failed to update organization access");
+    }
+  };
+
+  const handlePromoteRoleClick = (userId: number, currentRole: string) => {
+    const target = users.find((u) => u.id === userId);
+    if (isSuperAdminUser(target)) {
+      toast.error("No one can change the Super Admin role");
+      setMenu(null);
+      return;
+    }
+
+    const normalizedRole =
+      currentRole === "super_admin"
+        ? "admin"
+        : (currentRole || "viewer").toLowerCase();
+
+    setMenu(null);
+    // Defer modal open so Base UI dropdown can release focus trap first
+    window.setTimeout(() => {
+      setUserToChangeRole({ id: userId, currentRole: normalizedRole });
+      setNewRole(normalizedRole);
+      setShowRoleModal(true);
+    }, 0);
+  };
+
   const handleRoleChangeConfirm = async () => {
-    if (!userToChangeRole || !newRole) return;
-    
-    if (newRole === userToChangeRole.currentRole) {
-      toast("Role unchanged", { icon: "ℹ️" });
-      setShowRoleModal(false);
+    if (!userToChangeRole) {
+      toast.error("No user selected");
+      return;
+    }
+
+    const nextRole = (newRole || "").toLowerCase().trim();
+    if (!nextRole) {
+      toast.error("Please select a role");
+      return;
+    }
+
+    if (nextRole === userToChangeRole.currentRole.toLowerCase()) {
+      toast("Role unchanged — pick a different role", { icon: "ℹ️" });
       return;
     }
 
     const loadingToast = toast.loading("Updating user role...");
 
     try {
-      await apiClient.patch(`/auth/users/${userToChangeRole.id}/`, { role: newRole.toLowerCase() });
+      const response = await apiClient.patch(`/auth/users/${userToChangeRole.id}/`, {
+        role: nextRole,
+      });
       toast.dismiss(loadingToast);
-      toast.success(`Role successfully updated to ${newRole.charAt(0).toUpperCase() + newRole.slice(1)}`);
-      await fetchUsers();
+      const label = roleOptions.find((r) => r.value === nextRole)?.label || nextRole;
+      toast.success(`Role updated to ${label}`);
+
+      const updated = response.data;
+      if (updated?.id) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === updated.id
+              ? {
+                  ...u,
+                  role: updated.role || nextRole,
+                  is_super_admin: updated.is_super_admin,
+                  is_active: updated.is_active ?? u.is_active,
+                }
+              : u
+          )
+        );
+      }
+
       setShowRoleModal(false);
       setUserToChangeRole(null);
+      await fetchUsers();
+      await fetchPermissionsMatrix();
     } catch (error: any) {
       console.error("Failed to update role:", error);
       toast.dismiss(loadingToast);
-      toast.error(error.response?.data?.detail || "Failed to update role. Please try again.");
+      const data = error.response?.data;
+      const message =
+        data?.role?.[0] ||
+        data?.detail ||
+        (typeof data === "string" ? data : null) ||
+        "Failed to update role. Please try again.";
+      toast.error(message);
     }
   };
 
@@ -402,25 +548,32 @@ export default function UsersPage() {
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Never";
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const handleViewPermissions = async (user: User) => {
+    if (isSuperAdminUser(user)) {
+      toast.error("No one can change Super Admin permissions");
+      setMenu(null);
+      return;
+    }
     setUserForPermissions(user);
     setShowPermissionsModal(true);
-    
-    // Load permissions for this user's role
+    setRolePermissions({});
+
     try {
       const allPermissions = await permissionsApi.getPermissions();
       const roleKey = user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
       setRolePermissions(
-        buildFullRolePermissions(allPermissions[roleKey as keyof PermissionsMatrix] || {})
+        buildFullRolePermissions(
+          allPermissions[roleKey as keyof PermissionsMatrix] || {},
+          activeModules
+        )
       );
     } catch (error: any) {
       console.error("Failed to load permissions:", error);
-      toast.error("Failed to load permissions");
+      toast.error(
+        error.response?.data?.detail || "Failed to load permissions. You may need Settings edit access."
+      );
+      setShowPermissionsModal(false);
+      setUserForPermissions(null);
     }
   };
 
@@ -433,20 +586,27 @@ export default function UsersPage() {
 
   const handleSavePermissions = async () => {
     if (!userForPermissions) return;
-    
+
     const loadingToast = toast.loading("Saving permissions...");
     setSavingPermissions(true);
 
     try {
-      const allPermissions = await permissionsApi.getPermissions();
-      const roleKey = userForPermissions.role.charAt(0).toUpperCase() + userForPermissions.role.slice(1).toLowerCase();
-      allPermissions[roleKey as keyof PermissionsMatrix] = buildFullRolePermissions(rolePermissions);
+      const roleKey =
+        userForPermissions.role.charAt(0).toUpperCase() +
+        userForPermissions.role.slice(1).toLowerCase();
 
-      await permissionsApi.updatePermissions(allPermissions);
+      // Only send the role being edited to reduce write contention on SQLite
+      await permissionsApi.updatePermissions({
+        [roleKey]: buildFullRolePermissions(rolePermissions, activeModules),
+      } as PermissionsMatrix);
 
       toast.dismiss(loadingToast);
-      toast.success("Permissions updated successfully");
+      toast.success(
+        `Permissions for ${roleOptions.find((r) => r.value === userForPermissions.role)?.label || userForPermissions.role} updated`
+      );
+      await fetchPermissionsMatrix();
       setShowPermissionsModal(false);
+      setUserForPermissions(null);
     } catch (error: any) {
       console.error("Failed to save permissions:", error);
       toast.dismiss(loadingToast);
@@ -476,41 +636,6 @@ export default function UsersPage() {
         }
       />
       <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
-        {userLimits && canManageUsers && (
-          <div
-            className={`${cardClass} p-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
-              !userLimits.can_invite ? "border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20" : ""
-            }`}
-          >
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-foreground">
-                {userLimits.plan_name} plan
-              </p>
-              <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
-                {userLimits.max_users != null ? (
-                  <>
-                    {userLimits.current_users} member{userLimits.current_users !== 1 ? "s" : ""}
-                    {userLimits.pending_invites > 0 &&
-                      ` · ${userLimits.pending_invites} pending invite${userLimits.pending_invites !== 1 ? "s" : ""}`}
-                    {" · "}
-                    {userLimits.seats_used} of {userLimits.max_users} seats used
-                  </>
-                ) : (
-                  <>Unlimited users on your plan</>
-                )}
-              </p>
-            </div>
-            {!userLimits.can_invite && (
-              <Link
-                href="/settings/billing"
-                className="text-sm font-medium text-[#16A34A] hover:underline shrink-0"
-              >
-                Upgrade plan
-              </Link>
-            )}
-          </div>
-        )}
-
         {!permissionsLoading && !canManageUsers && (
           <div className={`${cardClass} p-4 border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20`}>
             <p className="text-sm text-blue-900 dark:text-blue-200">
@@ -545,10 +670,16 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <div className={`${cardClass} p-4 lg:p-5`}>
-          <div className="flex flex-wrap items-center gap-3 w-full">
+        <div
+          className={`${cardClass} p-4 ${
+            userLimits && canManageUsers && !userLimits.can_invite
+              ? "border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10"
+              : ""
+          }`}
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
             {activeTab === "users" && (
-              <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <div className="relative w-full lg:flex-1 lg:min-w-[220px] lg:max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -559,17 +690,54 @@ export default function UsersPage() {
                 />
               </div>
             )}
-            <div className="flex-1" />
-            {canManageUsers && (
-              <Button
-                size="sm"
-                onClick={handleInvite}
-                disabled={userLimits != null && !userLimits.can_invite}
-                className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0 disabled:opacity-60"
-              >
-                <Mail className="h-4 w-4" /> Invite User
-              </Button>
+
+            {userLimits && canManageUsers && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 lg:shrink-0">
+                <span className="text-xs text-gray-500 dark:text-muted-foreground">
+                  {userLimits.max_users != null ? (
+                    <>
+                      {userLimits.current_users} member
+                      {userLimits.current_users !== 1 ? "s" : ""}
+                      {userLimits.pending_invites > 0 &&
+                        ` · ${userLimits.pending_invites} pending`}
+                      {" · "}
+                      <span
+                        className={
+                          !userLimits.can_invite
+                            ? "font-medium text-amber-700 dark:text-amber-400"
+                            : ""
+                        }
+                      >
+                        {userLimits.seats_used} of {userLimits.max_users} seats used
+                      </span>
+                    </>
+                  ) : (
+                    <>Unlimited users</>
+                  )}
+                </span>
+                {!userLimits.can_invite && (
+                  <Link
+                    href="/settings/billing"
+                    className="text-xs font-semibold text-[#16A34A] hover:underline"
+                  >
+                    Upgrade plan
+                  </Link>
+                )}
+              </div>
             )}
+
+            <div className="flex items-center gap-2 lg:ml-auto shrink-0">
+              {canManageUsers && (
+                <Button
+                  size="sm"
+                  onClick={handleInvite}
+                  disabled={userLimits != null && !userLimits.can_invite}
+                  className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 disabled:opacity-60"
+                >
+                  <Mail className="h-4 w-4" /> Invite User
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -591,7 +759,7 @@ export default function UsersPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
                       <tr>
-                        {["User", "Email", "Role", "Last Login", "Status", ""].map((h) => (
+                        {["User", "Email", "Role", "Permissions", "Status", ""].map((h) => (
                           <th
                             key={h || "actions"}
                             className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider whitespace-nowrap"
@@ -635,11 +803,24 @@ export default function UsersPage() {
                                   roleColors[u.role] ?? "bg-gray-100 text-gray-600"
                                 }`}
                               >
-                                {u.role}
+                                {roleLabel(u.role)}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground text-xs whitespace-nowrap">
-                              {formatDate(u.last_login)}
+                            <td className="px-4 py-3 text-gray-600 dark:text-muted-foreground text-xs whitespace-nowrap">
+                              {(() => {
+                                const count = countRolePermissions(u.role);
+                                if (count == null) {
+                                  return <span className="text-gray-400">—</span>;
+                                }
+                                return (
+                                  <span className="inline-flex items-center gap-1">
+                                    <span className="font-medium text-gray-800 dark:text-foreground">
+                                      {count}
+                                    </span>
+                                    <span className="text-gray-400">/ {totalPermissionSlots}</span>
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <span
@@ -655,6 +836,13 @@ export default function UsersPage() {
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               {u.id === currentUser?.id ? (
                                 <span className="text-xs text-gray-400">You</span>
+                              ) : isSuperAdminUser(u) ? (
+                                <span
+                                  className="text-xs text-emerald-700 dark:text-emerald-400"
+                                  title="No one can enable, disable, change role, or permissions of Super Admin"
+                                >
+                                  Protected
+                                </span>
                               ) : canManageUsers ? (
                                 <DropdownMenu
                                   open={menu === u.id}
@@ -673,6 +861,19 @@ export default function UsersPage() {
                                     >
                                       <UserPlus className="h-3.5 w-3.5 mr-2" />
                                       Change Role
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleToggleActiveClick(u)}>
+                                      {u.is_active ? (
+                                        <>
+                                          <XCircle className="h-3.5 w-3.5 mr-2" />
+                                          Disable
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CircleCheck className="h-3.5 w-3.5 mr-2" />
+                                          Enable
+                                        </>
+                                      )}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       className="text-red-600 focus:text-red-600"
@@ -816,13 +1017,60 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Change Role Modal */}
-      {showRoleModal && userToChangeRole && (
+      {/* Enable / Disable Organization Access Modal */}
+      {showActiveConfirm && userToToggleActive && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                {userToToggleActive.is_active
+                  ? "Disable Organization Access"
+                  : "Enable Organization Access"}
+              </h2>
+              <p className="text-gray-600 mb-6">
+                {userToToggleActive.is_active
+                  ? `Are you sure you want to disable ${userToToggleActive.first_name || userToToggleActive.email}'s access to this organization? They will no longer see this business on their organization list until re-enabled.`
+                  : `Are you sure you want to enable ${userToToggleActive.first_name || userToToggleActive.email}'s access to this organization? They will see this business again and can open it.`}
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowActiveConfirm(false);
+                    setUserToToggleActive(null);
+                  }}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleToggleActiveConfirm}
+                  className={`flex-1 text-white ${
+                    userToToggleActive.is_active
+                      ? "bg-amber-600 hover:bg-amber-700"
+                      : "bg-[#22C55E] hover:bg-[#16A34A]"
+                  }`}
+                >
+                  {userToToggleActive.is_active ? "Disable Access" : "Enable Access"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Role Modal */}
+      {showRoleModal && userToChangeRole && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-gray-800">Change User Role</h2>
               <button
+                type="button"
                 onClick={() => {
                   setShowRoleModal(false);
                   setUserToChangeRole(null);
@@ -835,19 +1083,24 @@ export default function UsersPage() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Role: <span className="text-[#22C55E]">{userToChangeRole.currentRole}</span>
-                </label>
+                <p className="text-sm font-medium text-gray-700">
+                  Current Role:{" "}
+                  <span className="text-[#22C55E]">{roleLabel(userToChangeRole.currentRole)}</span>
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="change-role-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Select New Role <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="change-role-select"
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] bg-white"
                 >
                   {roleOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -858,23 +1111,23 @@ export default function UsersPage() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button
+                <button
                   type="button"
                   onClick={() => {
                     setShowRoleModal(false);
                     setUserToChangeRole(null);
                   }}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  className="flex-1 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  onClick={handleRoleChangeConfirm}
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  onClick={() => void handleRoleChangeConfirm()}
+                  className="flex-1 h-10 rounded-lg bg-[#22C55E] hover:bg-[#16A34A] text-white text-sm font-medium"
                 >
                   Update Role
-                </Button>
+                </button>
               </div>
             </div>
           </div>
