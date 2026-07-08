@@ -11,8 +11,8 @@ import type { ProfileUpdateData } from '@/lib/types/user';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  login: (credentials: LoginCredentials, redirectTo?: string) => Promise<void>;
+  loginWithGoogle: (credential: string, redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (data: ProfileUpdateData) => Promise<void>;
@@ -67,7 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  const persistSession = async (access: string, refresh: string, session_id?: string) => {
+  const persistSession = async (
+    access: string,
+    refresh: string,
+    session_id?: string,
+    redirectTo = '/erp'
+  ) => {
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
     if (session_id) {
@@ -80,23 +85,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userData = await authApi.getProfile();
     setUser(userData);
     notifyAppearanceRefresh();
-    router.push('/erp');
+    router.push(redirectTo);
   };
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials, redirectTo = '/erp') => {
     try {
       const { access, refresh, session_id } = await authApi.login(credentials);
-      await persistSession(access, refresh, session_id);
+      await persistSession(access, refresh, session_id, redirectTo);
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
   };
 
-  const loginWithGoogle = async (credential: string) => {
+  const loginWithGoogle = async (credential: string, redirectTo = '/erp') => {
     try {
       const { access, refresh, session_id } = await authApi.loginWithGoogle(credential);
-      await persistSession(access, refresh, session_id);
+      await persistSession(access, refresh, session_id, redirectTo);
     } catch (error) {
       console.error('Google login failed:', error);
       throw error;

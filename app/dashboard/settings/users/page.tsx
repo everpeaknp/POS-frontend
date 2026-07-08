@@ -291,12 +291,8 @@ export default function UsersPage() {
             ? errorData.invited_user_email[0] 
             : errorData.invited_user_email;
           
-          // User-friendly message for "user not found"
-          if (emailError.toLowerCase().includes('no user found')) {
-            errorMessages.push("This user hasn't registered yet. Please ask them to sign up first at /auth/signup");
-          } else {
-            errorMessages.push(emailError);
-          }
+          // Keep API validation messages as-is for invite failures
+          errorMessages.push(emailError);
         }
         if (errorData.invited_user) {
           errorMessages.push(Array.isArray(errorData.invited_user) ? errorData.invited_user[0] : errorData.invited_user);
@@ -735,10 +731,12 @@ export default function UsersPage() {
                           <tr key={inv.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="font-medium text-gray-900 dark:text-foreground">
-                                {inv.invited_user_name}
+                                {inv.invited_user_name || inv.invited_email || "Pending user"}
                               </div>
                               <div className="text-xs text-gray-500 dark:text-muted-foreground">
+                                {inv.invited_email ? `${inv.invited_email} · ` : ""}
                                 Invited by {inv.invited_by_name}
+                                {inv.requires_signup ? " · awaiting signup" : ""}
                               </div>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
@@ -950,7 +948,7 @@ export default function UsersPage() {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  The user must already be registered. They will receive an invitation to join your organization.
+                  They&apos;ll get an email invite. New users can create an account from the link; existing users can accept after signing in.
                 </p>
                 {errors.invited_user_email && (
                   <p className="text-xs text-red-500 mt-1">{errors.invited_user_email}</p>

@@ -161,10 +161,12 @@ export const tenantApi = {
 // Invitation types
 export interface Invitation {
   id: number;
+  token?: string;
   tenant: number;
   tenant_name: string;
-  invited_user: number;
+  invited_user: number | null;
   invited_user_name: string;
+  invited_email?: string;
   invited_by: number;
   invited_by_name: string;
   role: 'admin' | 'manager' | 'supervisor' | 'accountant' | 'cashier' | 'viewer';
@@ -175,6 +177,21 @@ export interface Invitation {
   expires_at: string;
   responded_at?: string;
   is_expired: boolean;
+  requires_signup?: boolean;
+}
+
+export interface InvitationPreview {
+  token: string;
+  tenant_name: string;
+  role: string;
+  role_display: string;
+  invited_email: string;
+  invited_by_name: string;
+  message: string;
+  expires_at: string;
+  is_expired: boolean;
+  status: string;
+  requires_signup: boolean;
 }
 
 export interface InvitationCreate {
@@ -207,4 +224,16 @@ export const invitationApi = {
   
   // Delete invitation
   delete: (id: number) => apiClient.delete(`/tenants/invitations/${id}/`),
+
+  previewByToken: async (token: string): Promise<InvitationPreview> => {
+    const response = await apiClient.get(`/tenants/invitations/by-token/${token}/`);
+    return response.data;
+  },
+
+  acceptByToken: async (
+    token: string
+  ): Promise<{ message: string; invitation: Invitation; tenant_slug: string }> => {
+    const response = await apiClient.post(`/tenants/invitations/by-token/${token}/accept/`);
+    return response.data;
+  },
 };

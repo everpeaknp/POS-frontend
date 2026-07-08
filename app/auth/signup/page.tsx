@@ -2,7 +2,7 @@
 import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,17 +37,26 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { register: registerUser, user } = useAuth();
+  const searchParams = useSearchParams();
+  const { register: registerUser, user, login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const inviteToken = searchParams.get("invite") || "";
+  const inviteEmail = searchParams.get("email") || "";
+  const inviteRedirect = inviteToken ? `/invite/${inviteToken}` : "";
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: inviteEmail,
+    },
   });
 
   const password = watch("password");
@@ -55,15 +64,26 @@ export default function SignupPage() {
   const passwordMatch = confirmPassword && password === confirmPassword;
   const passwordMismatch = confirmPassword && password !== confirmPassword;
 
+  useEffect(() => {
+    if (inviteEmail) {
+      setValue("email", inviteEmail);
+    }
+  }, [inviteEmail, setValue]);
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      router.push("/dashboard");
+      router.push(inviteRedirect || "/dashboard");
     }
-  }, [user, router]);
+  }, [user, router, inviteRedirect]);
 
   const onSubmit = async (data: SignupFormData) => {
     try {
+      if (inviteEmail && data.email.trim().toLowerCase() !== inviteEmail.trim().toLowerCase()) {
+        toast.error(`Please register with the invited email: ${inviteEmail}`);
+        return;
+      }
+
       await registerUser({
         email: data.email,
         password: data.password,
@@ -71,9 +91,12 @@ export default function SignupPage() {
         last_name: data.last_name,
         phone: data.phone.trim(),
       });
-      
-      toast.success("Registration successful! Redirecting to workspace...");
-      router.push("/erp");
+
+      toast.success("Account created! Signing you in...");
+      await login(
+        { email: data.email, password: data.password },
+        inviteRedirect || "/erp"
+      );
     } catch (error: any) {
       // Handle different error scenarios
       if (error.response?.status === 400) {
@@ -287,7 +310,7 @@ export default function SignupPage() {
                 </Button>
               </form>
 
-              <GoogleSignInButton label="signup_with" />
+              <GoogleSignInButton label="signup_with" redirectTo={inviteRedirect || undefined} />
 
               <div className="border-t border-gray-100 my-5" />
               <p className="text-center text-sm text-gray-500">

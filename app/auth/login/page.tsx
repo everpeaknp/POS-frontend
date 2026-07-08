@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,21 +18,32 @@ const BD = "#16A34A";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const inviteToken = searchParams.get("invite") || "";
+  const inviteEmail = searchParams.get("email") || "";
+  const inviteRedirect = inviteToken ? `/invite/${inviteToken}` : "";
+  const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Don't redirect here - let AuthContext handle it after login
-  // The login() function in AuthContext will redirect to /workspace
+  useEffect(() => {
+    if (inviteEmail) setEmail(inviteEmail);
+  }, [inviteEmail]);
+
+  useEffect(() => {
+    if (user && inviteRedirect) {
+      router.replace(inviteRedirect);
+    }
+  }, [user, inviteRedirect, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await login({ email, password });
+      await login({ email, password }, inviteRedirect || "/erp");
       toast.success("Login successful! Redirecting...");
     } catch (err: any) {
       // Handle different error scenarios
@@ -133,12 +144,24 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <GoogleSignInButton label="signin_with" />
+              <GoogleSignInButton label="signin_with" redirectTo={inviteRedirect || undefined} />
 
               <div className="border-t border-gray-100 my-5" />
               <p className="text-center text-sm text-gray-500">
                 Don&apos;t have an account?{" "}
-                <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: B }}>Create one</Link>
+                <Link
+                  href={
+                    inviteToken
+                      ? `/auth/signup?invite=${encodeURIComponent(inviteToken)}${
+                          inviteEmail ? `&email=${encodeURIComponent(inviteEmail)}` : ""
+                        }`
+                      : "/auth/signup"
+                  }
+                  className="font-semibold hover:underline"
+                  style={{ color: B }}
+                >
+                  Create one
+                </Link>
               </p>
             </CardContent>
           </Card>

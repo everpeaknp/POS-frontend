@@ -65,9 +65,13 @@ function loadGoogleScript(): Promise<void> {
 
 interface GoogleSignInButtonProps {
   label?: "signin_with" | "signup_with" | "continue_with";
+  redirectTo?: string;
 }
 
-export function GoogleSignInButton({ label = "continue_with" }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({
+  label = "continue_with",
+  redirectTo,
+}: GoogleSignInButtonProps) {
   const { loginWithGoogle } = useAuth();
   const buttonRef = useRef<HTMLDivElement>(null);
   const [config, setConfig] = useState<GoogleOAuthConfig | null>(null);
@@ -77,16 +81,14 @@ export function GoogleSignInButton({ label = "continue_with" }: GoogleSignInButt
   const handleCredential = useCallback(
     async (response: { credential: string }) => {
       try {
-        await loginWithGoogle(response.credential);
-        toast.success("Signed in with Google!");
-      } catch (err: unknown) {
-        const message =
-          (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-          "Google sign-in failed. Please try again.";
-        toast.error(typeof message === "string" ? message : "Google sign-in failed.");
+        await loginWithGoogle(response.credential, redirectTo);
+        toast.success("Signed in with Google");
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { detail?: string } } };
+        toast.error(err.response?.data?.detail || "Google sign-in failed");
       }
     },
-    [loginWithGoogle]
+    [loginWithGoogle, redirectTo]
   );
 
   // Load OAuth config from backend
