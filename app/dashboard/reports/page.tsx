@@ -12,6 +12,7 @@ import {
   ChevronRight,
   AlertTriangle,
   HardHat,
+  BarChart3,
 } from "lucide-react";
 import {
   BarChart,
@@ -32,15 +33,19 @@ import {
   reportsCardClass,
   reportsTableWrapClass,
 } from "@/components/reports/ReportsPageShell";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
 import { reportsAPI, type DashboardSummary } from "@/lib/api/reports";
+import { tenantApi } from "@/lib/api/tenant";
+import { usePermissions } from "@/lib/hooks/usePermissions";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
 
-const reportCards = [
+const ALL_REPORT_CARDS = [
   {
+    module: "sales" as const,
     icon: TrendingUp,
     title: "Sales Report",
     desc: "Sales performance and trends",
@@ -48,6 +53,7 @@ const reportCards = [
     color: "bg-green-50 text-[#22C55E]",
   },
   {
+    module: "purchase" as const,
     icon: ShoppingCart,
     title: "Purchase Report",
     desc: "Purchase history and analysis",
@@ -55,6 +61,7 @@ const reportCards = [
     color: "bg-blue-50 text-blue-600",
   },
   {
+    module: "inventory" as const,
     icon: Package,
     title: "Inventory Report",
     desc: "Stock levels and valuation",
@@ -62,6 +69,7 @@ const reportCards = [
     color: "bg-amber-50 text-amber-600",
   },
   {
+    module: "accounting" as const,
     icon: DollarSign,
     title: "Financial Report",
     desc: "P&L, Balance Sheet, Trial Balance",
@@ -69,6 +77,7 @@ const reportCards = [
     color: "bg-purple-50 text-purple-600",
   },
   {
+    module: "accounting" as const,
     icon: FileText,
     title: "Tax Report",
     desc: "VAT, TDS and tax summaries",
@@ -76,6 +85,7 @@ const reportCards = [
     color: "bg-red-50 text-red-600",
   },
   {
+    module: "reports" as const,
     icon: Settings,
     title: "Custom Reports",
     desc: "Build your own report",
@@ -85,17 +95,50 @@ const reportCards = [
 ];
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { hasModuleAccess } = usePermissions();
   const [loading, setLoading] = useState(true);
+  const [enablingModule, setEnablingModule] = useState(false);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+
+  const reportsModuleActive = hasModuleAccess("reports");
+  const canEnableReports = user?.role === "admin" && !!user?.tenant?.slug;
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Business analytics and insights`;
 
+  const visibleReportCards = useMemo(
+    () =>
+      ALL_REPORT_CARDS.filter((card) => {
+        if (card.module === "reports") return true;
+        return hasModuleAccess(card.module);
+      }),
+    [hasModuleAccess, user?.tenant?.active_modules]
+  );
+
   useEffect(() => {
+    if (!reportsModuleActive) {
+      setLoading(false);
+      return;
+    }
     fetchData();
-  }, []);
+  }, [reportsModuleActive]);
+
+  const handleEnableReportsModule = async () => {
+    if (!user?.tenant?.slug) return;
+    try {
+      setEnablingModule(true);
+      await tenantApi.activateModule(user.tenant.slug, "reports");
+      await refreshUser();
+      toast.success("Reports module enabled");
+    } catch (err) {
+      console.error("Failed to enable reports module:", err);
+      toast.error("Failed to enable reports module");
+    } finally {
+      setEnablingModule(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -111,13 +154,15 @@ export default function ReportsPage() {
   };
 
   const financials = summary?.financials;
+  const showInventoryAlerts = hasModuleAccess("inventory");
+  const showConstructionAlerts = hasModuleAccess("construction");
 
   const statCards = financials
     ? [
         {
           label: "Total Revenue",
           value: formatNPR(financials.total_revenue),
-          sub: `Sales + invoices`,
+          sub: "Invoices + unbilled sales",
           icon: TrendingUp,
           color: "bg-green-50 text-[#22C55E]",
         },
@@ -168,6 +213,28 @@ export default function ReportsPage() {
   const lowStockItems = summary?.inventory.low_stock_items ?? [];
   const budgetAlerts = summary?.construction.budget_alert_sites ?? [];
 
+  if (!reportsModuleActive) {
+    return (
+      <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
+        <div className={`${reportsCardClass} p-8 text-center max-w-lg mx-auto`}>
+          <BarChart3 className="h-10 w-10 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Reports module is not enabled</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Enable the reports module to access business analytics, financial summaries, and custom
+            reports.
+          </p>
+          {canEnableReports ? (
+            <Button onClick={handleEnableReportsModule} disabled={enablingModule}>
+              {enablingModule ? "Enabling…" : "Enable Reports Module"}
+            </Button>
+          ) : (
+            <p className="text-sm text-gray-500">Contact your administrator to enable this module.</p>
+          )}
+        </div>
+      </ReportsPageShell>
+    );
+  }
+
   if (loading) {
     return (
       <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
@@ -183,109 +250,102 @@ export default function ReportsPage() {
 
   return (
     <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((s) => (
-            <div key={s.label} className={`${reportsCardClass} p-4`}>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-500">{s.label}</p>
-                <div className={`p-2 rounded-lg ${s.color}`}>
-                  <s.icon className="h-4 w-4" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((s) => (
+          <div key={s.label} className={`${reportsCardClass} p-4`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-gray-500">{s.label}</p>
+              <div className={`p-2 rounded-lg ${s.color}`}>
+                <s.icon className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">All Reports</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visibleReportCards.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`p-3 rounded-lg ${card.color} group-hover:scale-105 transition-transform`}
+                >
+                  <card.icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
+                  <span className="inline-flex items-center gap-1 text-xs text-[#22C55E] font-medium mt-2 group-hover:gap-1.5 transition-all">
+                    View report
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
               </div>
-              <p className="text-xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
-            </div>
+            </Link>
           ))}
         </div>
+      </div>
 
-        {/* Report navigation */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">All Reports</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reportCards.map((card) => (
-              <Link
-                key={card.title}
-                href={card.href}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg ${card.color} group-hover:scale-105 transition-transform`}>
-                    <card.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
-                    <span className="inline-flex items-center gap-1 text-xs text-[#22C55E] font-medium mt-2 group-hover:gap-1.5 transition-all">
-                      View report
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className={`${reportsCardClass} p-5`}>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Revenue vs Expenses</h3>
+          {revenueExpenseChart.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={revenueExpenseChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
+                <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+              No financial data yet
+            </div>
+          )}
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className={`${reportsCardClass} p-5`}>
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
-              Revenue vs Expenses
-            </h3>
-            {revenueExpenseChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={revenueExpenseChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                  <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
-                No financial data yet
-              </div>
-            )}
-          </div>
-
-          <div className={`${reportsCardClass} p-5`}>
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
-              Revenue & Expense Breakdown
-            </h3>
-            {breakdownChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={breakdownChart}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    dataKey="value"
-                    paddingAngle={3}
-                  >
-                    {breakdownChart.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                  <Legend iconType="circle" iconSize={8} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
-                No breakdown data yet
-              </div>
-            )}
-          </div>
+        <div className={`${reportsCardClass} p-5`}>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Revenue & Expense Breakdown</h3>
+          {breakdownChart.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={breakdownChart}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  dataKey="value"
+                  paddingAngle={3}
+                >
+                  {breakdownChart.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
+                <Legend iconType="circle" iconSize={8} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[240px] flex items-center justify-center text-gray-400 text-sm">
+              No breakdown data yet
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {showInventoryAlerts && (
           <div className={reportsTableWrapClass}>
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -343,7 +403,9 @@ export default function ReportsPage() {
               </table>
             )}
           </div>
+        )}
 
+        {showConstructionAlerts && (
           <div className={reportsTableWrapClass}>
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -405,7 +467,8 @@ export default function ReportsPage() {
               </table>
             )}
           </div>
-        </div>
+        )}
+      </div>
     </ReportsPageShell>
   );
 }

@@ -369,6 +369,60 @@ export const reportsAPI = {
     return response.data;
   },
 
+  inventoryStockSummary: async () => {
+    const response = await apiClient.get<{
+      summary: {
+        total_products: number;
+        total_units: number;
+        low_stock: number;
+        out_of_stock: number;
+      };
+      stock_data: Array<{ name: string; stock: number }>;
+    }>('/reports/inventory-stock-summary/');
+    return response.data;
+  },
+
+  inventoryLowStock: async () => {
+    const response = await apiClient.get<{
+      items: Array<{
+        id: number;
+        name: string;
+        sku: string;
+        current_stock: number;
+        reorder_level: number;
+        shortage: number;
+        status: string;
+        category: string | null;
+        unit: string;
+      }>;
+      total_count: number;
+    }>('/reports/inventory-low-stock/');
+    return response.data;
+  },
+
+  inventoryValuationReport: async () => {
+    const response = await apiClient.get<{
+      summary: {
+        total_cost_value: number;
+        total_sale_value: number;
+        potential_profit: number;
+      };
+      items: Array<{
+        id: number;
+        name: string;
+        sku: string;
+        stock: number;
+        cost_price: number;
+        selling_price: number;
+        total_cost_value: number;
+        total_sale_value: number;
+        unit: string;
+      }>;
+      valuation_data: Array<{ name: string; value: number }>;
+    }>('/reports/inventory-valuation-report/');
+    return response.data;
+  },
+
   /**
    * Get credit summary report
    * Total outstanding credit and top debtors
@@ -781,7 +835,7 @@ export interface CustomReport {
   name: string;
   description: string;
   report_type: 'table' | 'chart' | 'both';
-  module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos';
+  module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos' | 'construction' | 'hardware';
   fields: string[];
   filters: CustomReportFilter[];
   grouping: any;
@@ -822,7 +876,7 @@ export interface CustomReportCreateData {
   name: string;
   description?: string;
   report_type: 'table' | 'chart' | 'both';
-  module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos';
+  module: 'sales' | 'purchase' | 'inventory' | 'accounting' | 'hr' | 'pos' | 'construction' | 'hardware';
   fields?: string[];
   filters?: CustomReportFilter[];
   grouping?: any;

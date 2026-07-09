@@ -42,10 +42,14 @@ export default function FinancialReportPage() {
       });
       setData(result);
     } catch (err: unknown) {
-      const apiErr = err as { response?: { data?: { detail?: string } } };
+      const apiErr = err as { response?: { status?: number; data?: { detail?: string } } };
       console.error("Failed to load financial reports:", err);
-      setError(apiErr.response?.data?.detail || "Failed to load financial reports");
-      toast.error("Failed to load financial reports");
+      const detail =
+        apiErr.response?.status === 403
+          ? "You do not have permission to view financial reports."
+          : apiErr.response?.data?.detail || "Failed to load financial reports";
+      setError(detail);
+      toast.error(detail);
     } finally {
       setLoading(false);
     }

@@ -27,6 +27,7 @@ import {
   CustomReportCreateData,
   type CustomReportRunResult,
 } from "@/lib/api/reports";
+import { REPORTS_LIST_PARAMS } from "@/lib/api/reports-helpers";
 import { emptyCustomReportForm } from "@/lib/reports/customReportConfig";
 import toast from "react-hot-toast";
 
@@ -60,7 +61,7 @@ export default function CustomReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const data = await customReportsAPI.list();
+      const data = await customReportsAPI.list(REPORTS_LIST_PARAMS);
       setReports(data.results);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };

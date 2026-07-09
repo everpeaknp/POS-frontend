@@ -18,16 +18,14 @@ import {
   reportsCardClass,
   reportsTableWrapClass,
 } from "@/components/reports/ReportsPageShell";
-import { inventoryApi } from "@/lib/api/inventory";
+import { reportsAPI } from "@/lib/api/reports";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { ExportTableData } from "@/lib/utils/export";
 
-type StockSummary = Awaited<
-  ReturnType<typeof inventoryApi.reports.stockSummary>
->["data"];
-type LowStock = Awaited<ReturnType<typeof inventoryApi.reports.lowStock>>["data"];
-type Valuation = Awaited<ReturnType<typeof inventoryApi.reports.valuation>>["data"];
+type StockSummary = Awaited<ReturnType<typeof reportsAPI.inventoryStockSummary>>;
+type LowStock = Awaited<ReturnType<typeof reportsAPI.inventoryLowStock>>;
+type Valuation = Awaited<ReturnType<typeof reportsAPI.inventoryValuationReport>>;
 
 export default function InventoryReportPage() {
   const [loading, setLoading] = useState(true);
@@ -42,13 +40,13 @@ export default function InventoryReportPage() {
     setError(null);
     try {
       const [stockRes, lowRes, valRes] = await Promise.all([
-        inventoryApi.reports.stockSummary(),
-        inventoryApi.reports.lowStock(),
-        inventoryApi.reports.valuation(),
+        reportsAPI.inventoryStockSummary(),
+        reportsAPI.inventoryLowStock(),
+        reportsAPI.inventoryValuationReport(),
       ]);
-      setSummary(stockRes.data);
-      setLowStock(lowRes.data);
-      setValuation(valRes.data);
+      setSummary(stockRes);
+      setLowStock(lowRes);
+      setValuation(valRes);
     } catch (err: unknown) {
       const apiErr = err as { response?: { data?: { detail?: string } } };
       console.error("Failed to fetch inventory reports:", err);
