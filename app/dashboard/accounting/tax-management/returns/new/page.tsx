@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { vatReturnsAPI } from "@/lib/api/accounting";
+import { getCurrentBsPeriod } from "@/lib/dates";
 
 const fmt = (n: number) =>
   `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -35,9 +36,10 @@ function Field({ label, required, children }: { label: string; required?: boolea
 export default function NewVatReturnPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const currentYear = new Date().getFullYear();
-  const [month, setMonth] = useState("Chaitra");
-  const [fiscalYear, setFiscalYear] = useState(String(currentYear));
+  const [calculating, setCalculating] = useState(false);
+  const defaultPeriod = getCurrentBsPeriod();
+  const [month, setMonth] = useState(defaultPeriod.month);
+  const [fiscalYear, setFiscalYear] = useState(String(defaultPeriod.year));
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [outputTax, setOutputTax] = useState("");
@@ -83,6 +85,25 @@ export default function NewVatReturnPage() {
       const msg = Array.isArray(value) ? String(value[0]) : String(value);
       toast.error(`${field}: ${msg}`);
     });
+  };
+
+  const handleCalculateFromGl = async () => {
+    if (!fromDate || !toDate) {
+      toast.error("Set from and to dates first");
+      return;
+    }
+    try {
+      setCalculating(true);
+      const data = await vatReturnsAPI.calculate(fromDate, toDate);
+      setOutputTax(String(data.output_tax));
+      setInputTax(String(data.input_tax));
+      toast.success("Tax amounts loaded from general ledger");
+    } catch (error: unknown) {
+      console.error("Failed to calculate VAT from GL:", error);
+      showApiErrors(error);
+    } finally {
+      setCalculating(false);
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -142,7 +163,7 @@ export default function NewVatReturnPage() {
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="Fiscal Year" required>
+              <Field label="Fiscal Year (BS)" required>
                 <Input
                   className="h-9 text-sm border-gray-200"
                   value={fiscalYear}
@@ -161,7 +182,18 @@ export default function NewVatReturnPage() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Tax Amounts</h3>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
+              <h3 className="text-sm font-semibold text-gray-700">Tax Amounts</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCalculateFromGl}
+                disabled={loading || calculating || !fromDate || !toDate}
+              >
+                {calculating ? "Loading..." : "Load from GL"}
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <Field label="Output Tax (VAT Collected)">
                 <Input
@@ -208,8 +240,8 @@ export default function NewVatReturnPage() {
           </div>
 
           <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
-            Enter totals from your sales and purchase records for this period. Line-item breakdown from invoices will be
-            available when sales and purchase modules are linked to accounting.
+            Use &quot;Load from GL&quot; to pull output and input VAT from posted journal entries on your VAT
+            accounts for the selected period. You can still adjust amounts manually before filing.
           </p>
 
           <Field label="Notes">

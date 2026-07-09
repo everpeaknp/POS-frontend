@@ -1,17 +1,15 @@
 import apiClient from './client';
+import { ACCOUNTING_LIST_PARAMS, unwrapList } from './accounting-helpers';
 
 type Paginated<T> = T[] | { results?: T[]; next?: string | null; count?: number };
 
-function unwrapList<T>(data: Paginated<T>): T[] {
-  if (Array.isArray(data)) return data;
-  return data.results ?? [];
-}
+export { unwrapList };
 
 async function fetchAllPages<T>(url: string, params?: Record<string, unknown>): Promise<T[]> {
   const all: T[] = [];
   let page = 1;
   while (true) {
-    const response = await apiClient.get<Paginated<T>>(url, { params: { ...params, page } });
+    const response = await apiClient.get<Paginated<T>>(url, { params: { ...ACCOUNTING_LIST_PARAMS, ...params, page } });
     const data = response.data;
     if (Array.isArray(data)) return data;
     const results = data.results ?? [];
@@ -457,9 +455,24 @@ export const bankAccountsAPI = {
     return response.data;
   },
 
-  // Delete bank account
+  // Delete bank account (closes when transactions exist)
   delete: async (id: string) => {
     await apiClient.delete(`/accounting/bank-accounts/${id}/`);
+  },
+
+  completeReconciliation: async (
+    id: string,
+    data: { statement_balance: number; transaction_ids: string[] }
+  ) => {
+    const response = await apiClient.post<{
+      reconciled_count: number;
+      adjusted_book: number;
+      statement_balance: number;
+      difference: number;
+      adjustment_entry_id: number | null;
+      bank_account: BankAccount;
+    }>(`/accounting/bank-accounts/${id}/complete-reconciliation/`, data);
+    return response.data;
   },
 
   // Get bank statement
@@ -619,6 +632,17 @@ export const vatReturnsAPI = {
   // Mark VAT return as paid
   markPaid: async (id: string) => {
     const response = await apiClient.post<VATReturn>(`/accounting/vat-returns/${id}/mark_paid/`);
+    return response.data;
+  },
+
+  calculate: async (from_date: string, to_date: string) => {
+    const response = await apiClient.get<{
+      from_date: string;
+      to_date: string;
+      output_tax: number;
+      input_tax: number;
+      net_payable: number;
+    }>('/accounting/vat-returns/calculate/', { params: { from_date, to_date } });
     return response.data;
   },
 };

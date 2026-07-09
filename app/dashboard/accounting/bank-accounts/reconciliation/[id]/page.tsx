@@ -78,16 +78,20 @@ export default function BankReconciliationPage() {
     if (!bank || pendingReconcile.length === 0) return;
     setSubmitting(true);
     try {
-      await Promise.all(pendingReconcile.map((t) => bankTransactionsAPI.reconcile(t.id)));
-      await bankAccountsAPI.patch(bank.id, {
-        last_reconciled: new Date().toISOString().split("T")[0] });
-      toast.success("Reconciliation completed");
+      const result = await bankAccountsAPI.completeReconciliation(bank.id, {
+        statement_balance: stmtBal,
+        transaction_ids: pendingReconcile.map((t) => t.id),
+      });
+      setBank(result.bank_account);
       const txData = await bankTransactionsAPI.list({ bank_account: id });
       const txs = Array.isArray(txData) ? txData : [];
       setTransactions(txs);
       setSelected(new Set(txs.filter((t) => t.reconciled).map((t) => t.id)));
-      const updatedBank = await bankAccountsAPI.get(id);
-      setBank(updatedBank);
+      if (result.adjustment_entry_id) {
+        toast.success("Reconciliation completed with adjusting journal entry");
+      } else {
+        toast.success("Reconciliation completed");
+      }
     } catch (error) {
       console.error("Reconciliation failed:", error);
       toast.error("Failed to complete reconciliation");
@@ -228,13 +232,13 @@ export default function BankReconciliationPage() {
           >
             {isBalanced
               ? "Balances match — ready to complete reconciliation"
-              : "Not yet reconciled — unmatched items highlighted in yellow"}
+              : "Difference will be posted as an adjusting journal entry when you complete reconciliation"}
           </div>
           <Button
-            disabled={!isBalanced || pendingReconcile.length === 0 || submitting}
+            disabled={pendingReconcile.length === 0 || submitting}
             onClick={handleComplete}
             className={`mt-4 w-full text-white ${
-              isBalanced && pendingReconcile.length > 0
+              pendingReconcile.length > 0
                 ? "bg-[#22C55E] hover:bg-[#16A34A]"
                 : "bg-gray-300 cursor-not-allowed"
             }`}

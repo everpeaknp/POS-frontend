@@ -4,15 +4,23 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import toast from "react-hot-toast";
+import { Calculator } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AccountingPageShell } from "@/components/dashboard/AccountingPageShell";
 import { accountsAPI, journalEntriesAPI } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
+import { useAuth } from "@/lib/context/AuthContext";
+import { usePermissions } from "@/lib/hooks/usePermissions";
+import { tenantApi } from "@/lib/api/tenant";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 const COLORS = ["#22C55E", "#86EFAC", "#4ADE80", "#16A34A", "#15803D", "#F59E0B", "#60A5FA"];
 
 export default function AccountingDashboard() {
+  const { user, refreshUser } = useAuth();
+  const { hasModuleAccess, canView } = usePermissions();
   const [loading, setLoading] = useState(true);
+  const [enablingModule, setEnablingModule] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<{
     totalAssets: number;
@@ -28,11 +36,39 @@ export default function AccountingDashboard() {
     expenseTotal: number;
   } | null>(null);
 
+  const accountingModuleActive = hasModuleAccess("accounting");
+  const canEnableAccounting = user?.role === "admin" && !!user?.tenant?.slug;
+
   useEffect(() => {
+    if (!accountingModuleActive) {
+      setLoading(false);
+      return;
+    }
     fetchDashboardData();
-  }, []);
+  }, [accountingModuleActive]);
+
+  const handleEnableAccountingModule = async () => {
+    if (!user?.tenant?.slug) return;
+
+    try {
+      setEnablingModule(true);
+      await tenantApi.activateModule(user.tenant.slug, "accounting");
+      await refreshUser();
+      toast.success("Accounting module enabled");
+    } catch (err) {
+      console.error("Failed to enable accounting module:", err);
+      toast.error("Failed to enable accounting module");
+    } finally {
+      setEnablingModule(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
+    if (!canView("accounting")) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -52,14 +88,19 @@ export default function AccountingDashboard() {
       const totalLiabilities = balanceSheet?.liabilities?.total || 0;
       const netProfit = profitLoss?.net_profit || 0;
 
-      const cashAccount = accounts.find((a) => a.sub_type === "Cash");
-      const bankAccounts = accounts.filter((a) => a.sub_type === "Bank");
-      const cashBank =
-        (cashAccount?.balance || 0) + bankAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+      const cashBank = accounts
+        .filter((a) => a.sub_type === "Cash" || a.sub_type === "Bank")
+        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
 
-      const arAccount = accounts.find((a) => a.sub_type === "Receivable");
-      const apAccount = accounts.find((a) => a.sub_type === "Payable");
-      const taxAccount = accounts.find((a) => a.sub_type === "Tax" && a.type === "Liabilities");
+      const arTotal = accounts
+        .filter((a) => a.sub_type === "Receivable")
+        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+      const apTotal = accounts
+        .filter((a) => a.sub_type === "Payable")
+        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+      const vatTotal = accounts
+        .filter((a) => a.sub_type === "Tax" && a.type === "Liabilities")
+        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
 
       const expenseBreakdown = (profitLoss?.expenses?.accounts || [])
         .filter((a) => a.amount > 0)
@@ -70,9 +111,9 @@ export default function AccountingDashboard() {
         totalLiabilities,
         netProfit,
         cashBank,
-        ar: arAccount?.balance || 0,
-        ap: apAccount?.balance || 0,
-        vatPayable: taxAccount?.balance || 0,
+        ar: arTotal,
+        ap: apTotal,
+        vatPayable: vatTotal,
         recentJournalEntries: journalEntries.slice(0, 5),
         expenseBreakdown,
         incomeTotal: profitLoss?.income?.total || 0,
@@ -86,6 +127,31 @@ export default function AccountingDashboard() {
       setLoading(false);
     }
   };
+
+  if (!accountingModuleActive) {
+    return (
+      <AccountingPageShell title="Accounting" subtitle="Financial overview">
+        <div className="bg-white rounded-xl border border-gray-100 p-8 max-w-xl mx-auto text-center shadow-sm">
+          <Calculator className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-gray-900">Accounting is not enabled</h2>
+          <p className="text-sm text-gray-500 mt-2">
+            Enable the accounting module to manage your chart of accounts, journals, bank accounts, and tax returns.
+          </p>
+          {canEnableAccounting ? (
+            <Button
+              className="mt-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              onClick={handleEnableAccountingModule}
+              disabled={enablingModule}
+            >
+              {enablingModule ? "Enabling..." : "Enable Accounting"}
+            </Button>
+          ) : (
+            <p className="text-sm text-gray-500 mt-6">Contact your organization admin to enable this module.</p>
+          )}
+        </div>
+      </AccountingPageShell>
+    );
+  }
 
   if (loading) {
     return (

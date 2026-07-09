@@ -58,7 +58,7 @@ export default function BankAccountsPage() {
     try {
       setDeletingId(confirmDelete.id);
       await bankAccountsAPI.delete(confirmDelete.id);
-      toast.success('Bank account deleted successfully');
+      toast.success('Bank account removed or closed successfully');
       setAccounts(accounts.filter(acc => acc.id !== confirmDelete.id));
       setConfirmDelete(null);
     } catch (error: any) {
