@@ -1,67 +1,126 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   HardwarePageShell,
   hardwareStatCardClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
-import { customerAPI, type Customer } from "@/lib/api/sales";
+import { customerAPI, customerCreditAPI, type AgingReport } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS, unwrapList, availableCredit } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
+interface AgingRow extends AgingReport {
+  id: string;
+}
+
 export default function HardwareAgingPage() {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [rows, setRows] = useState<AgingRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCustomers();
+    fetchAging();
   }, []);
 
-  const fetchCustomers = async () => {
+  const fetchAging = async () => {
     try {
       setLoading(true);
-      const response = await customerAPI.list();
-      const customersWithBalance = (response.data.results || []).filter(
-        (c: Customer) => (c.current_balance || 0) > 0
+      const response = await customerAPI.list(HARDWARE_LIST_PARAMS);
+      const customers = unwrapList(response.data).filter((c) => (c.current_balance || 0) > 0);
+
+      const reports = await Promise.all(
+        customers.map(async (customer) => {
+          try {
+            const report = await customerCreditAPI.getAgingReport(customer.id);
+            return { ...report, id: customer.id };
+          } catch {
+            return {
+              id: customer.id,
+              customer_id: customer.id,
+              customer_name: customer.name,
+              total_outstanding: customer.current_balance || 0,
+              current: customer.current_balance || 0,
+              days_30_60: 0,
+              days_60_90: 0,
+              days_90_plus: 0,
+              overdue_invoices: [],
+              credit_limit: customer.credit_limit || 0,
+              available_credit: availableCredit(customer),
+              is_over_limit: customer.is_over_limit ?? false,
+            } satisfies AgingRow;
+          }
+        })
       );
-      setCustomers(customersWithBalance);
+
+      setRows(reports);
     } catch (error) {
-      console.error("Failed to fetch customers:", error);
+      console.error("Failed to fetch aging data:", error);
       toast.error("Failed to load aging data");
     } finally {
       setLoading(false);
     }
   };
 
-  const totalOutstanding = customers.reduce((sum, c) => sum + (c.current_balance || 0), 0);
-  const totalCreditLimit = customers.reduce((sum, c) => sum + (c.credit_limit || 0), 0);
+  const totals = useMemo(
+    () =>
+      rows.reduce(
+        (acc, row) => ({
+          outstanding: acc.outstanding + (row.total_outstanding || 0),
+          current: acc.current + (row.current || 0),
+          days_30_60: acc.days_30_60 + (row.days_30_60 || 0),
+          days_60_90: acc.days_60_90 + (row.days_60_90 || 0),
+          days_90_plus: acc.days_90_plus + (row.days_90_plus || 0),
+          credit_limit: acc.credit_limit + (row.credit_limit || 0),
+        }),
+        { outstanding: 0, current: 0, days_30_60: 0, days_60_90: 0, days_90_plus: 0, credit_limit: 0 }
+      ),
+    [rows]
+  );
 
   return (
     <HardwarePageShell
       title="Aging Report"
-      subtitle="Outstanding balances and credit utilization"
+      subtitle="Outstanding balances by invoice age (0–30, 31–60, 61–90, 90+ days)"
       loading={loading}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className={hardwareStatCardClass}>
           <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Outstanding</p>
-          <p className="text-xl font-medium text-red-600 dark:text-red-400 tabular-nums mt-1">
-            {formatNPR(totalOutstanding)}
+          <p className="text-lg font-medium text-red-600 dark:text-red-400 tabular-nums mt-1">
+            {formatNPR(totals.outstanding)}
           </p>
         </div>
         <div className={hardwareStatCardClass}>
-          <p className="text-xs text-gray-500 dark:text-muted-foreground">Total Credit Limit</p>
-          <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums mt-1">
-            {formatNPR(totalCreditLimit)}
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">Current (0–30d)</p>
+          <p className="text-lg font-medium text-gray-900 dark:text-foreground tabular-nums mt-1">
+            {formatNPR(totals.current)}
           </p>
         </div>
         <div className={hardwareStatCardClass}>
-          <p className="text-xs text-gray-500 dark:text-muted-foreground">Customers with Balance</p>
-          <p className="text-xl font-medium text-gray-900 dark:text-foreground tabular-nums mt-1">
-            {customers.length}
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">31–60 days</p>
+          <p className="text-lg font-medium text-amber-600 tabular-nums mt-1">
+            {formatNPR(totals.days_30_60)}
+          </p>
+        </div>
+        <div className={hardwareStatCardClass}>
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">61–90 days</p>
+          <p className="text-lg font-medium text-orange-600 tabular-nums mt-1">
+            {formatNPR(totals.days_60_90)}
+          </p>
+        </div>
+        <div className={hardwareStatCardClass}>
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">90+ days</p>
+          <p className="text-lg font-medium text-red-700 tabular-nums mt-1">
+            {formatNPR(totals.days_90_plus)}
+          </p>
+        </div>
+        <div className={hardwareStatCardClass}>
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">Customers</p>
+          <p className="text-lg font-medium text-gray-900 dark:text-foreground tabular-nums mt-1">
+            {rows.length}
           </p>
         </div>
       </div>
@@ -71,7 +130,7 @@ export default function HardwareAgingPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
               <tr>
-                {["Customer", "Credit Limit", "Outstanding", "Available", ""].map((h) => (
+                {["Customer", "Current", "31–60", "61–90", "90+", "Total", ""].map((h) => (
                   <th
                     key={h || "actions"}
                     className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
@@ -84,29 +143,35 @@ export default function HardwareAgingPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {customers.length === 0 ? (
+              {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
                     No customers with outstanding balance
                   </td>
                 </tr>
               ) : (
-                customers.map((item) => (
+                rows.map((item) => (
                   <tr
                     key={item.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
-                      {item.name}
+                      {item.customer_name}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-900 dark:text-foreground tabular-nums">
-                      {formatNPR(item.credit_limit || 0)}
+                      {formatNPR(item.current || 0)}
                     </td>
-                    <td className="px-4 py-3 text-right text-red-600 dark:text-red-400 font-medium tabular-nums">
-                      {formatNPR(item.current_balance || 0)}
+                    <td className="px-4 py-3 text-right text-amber-600 tabular-nums">
+                      {formatNPR(item.days_30_60 || 0)}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900 dark:text-foreground tabular-nums">
-                      {formatNPR((item.credit_limit || 0) - (item.current_balance || 0))}
+                    <td className="px-4 py-3 text-right text-orange-600 tabular-nums">
+                      {formatNPR(item.days_60_90 || 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-red-600 dark:text-red-400 tabular-nums">
+                      {formatNPR(item.days_90_plus || 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-foreground tabular-nums">
+                      {formatNPR(item.total_outstanding || 0)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

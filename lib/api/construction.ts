@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { CONSTRUCTION_LIST_PARAMS, unwrapList } from './construction-helpers';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -22,6 +23,7 @@ export interface Site {
   // Calculated fields
   material_cost?: number;
   labor_cost?: number;
+  equipment_cost?: number;
   other_expenses?: number;
   actual_spend?: number;
   remaining_budget?: number;
@@ -159,6 +161,28 @@ export interface SiteReport {
   actual_end_date?: string;
 }
 
+export interface PayrollWorkerBreakdown {
+  worker_id: string;
+  worker_name: string;
+  category: string;
+  daily_wage?: number;
+  days_present: number;
+  days_half_day: number;
+  days_overtime: number;
+  days_absent?: number;
+  total_wage: number;
+}
+
+export interface SitePayrollSummary {
+  site_id: string;
+  site_name: string;
+  month: number;
+  year: number;
+  total_payroll: number;
+  worker_count: number;
+  worker_breakdown: PayrollWorkerBreakdown[];
+}
+
 // ============================================================================
 // SITES API
 // ============================================================================
@@ -171,9 +195,10 @@ export const sitesAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: Site[]; count: number; next: string | null; previous: string | null }>('/construction/sites/', { params });
-    // Handle paginated response
-    return response.data.results || response.data;
+    const response = await apiClient.get<{ results: Site[]; count: number; next: string | null; previous: string | null }>('/construction/sites/', {
+      params: { ...CONSTRUCTION_LIST_PARAMS, ...params },
+    });
+    return unwrapList(response.data);
   },
 
   // Get site by ID
@@ -231,9 +256,10 @@ export const workersAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: Worker[]; count: number; next: string | null; previous: string | null }>('/construction/workers/', { params });
-    // Handle paginated response
-    return response.data.results || response.data;
+    const response = await apiClient.get<{ results: Worker[]; count: number; next: string | null; previous: string | null }>('/construction/workers/', {
+      params: { ...CONSTRUCTION_LIST_PARAMS, ...params },
+    });
+    return unwrapList(response.data);
   },
 
   // Get worker by ID
@@ -280,12 +306,11 @@ export const attendanceAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: Attendance[]; count: number; next: string | null; previous: string | null } | Attendance[]>('/construction/attendance/', { params });
-    // Handle both paginated and non-paginated responses
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return response.data.results || [];
+    const response = await apiClient.get<{ results: Attendance[]; count: number; next: string | null; previous: string | null } | Attendance[]>(
+      '/construction/attendance/',
+      { params: { ...CONSTRUCTION_LIST_PARAMS, ...params } },
+    );
+    return unwrapList(response.data);
   },
 
   // Get attendance by ID
@@ -331,6 +356,19 @@ export const attendanceAPI = {
     const response = await apiClient.post('/construction/attendance/bulk_mark/', data);
     return response.data;
   },
+
+  payrollSummaryBySite: async (params: { site: string; month: number; year: number }) => {
+    const response = await apiClient.get<SitePayrollSummary>(
+      '/construction/attendance/payroll_summary_by_site/',
+      { params },
+    );
+    return response.data;
+  },
+
+  payrollSummaryByWorker: async (params: { worker: string; month: number; year: number }) => {
+    const response = await apiClient.get('/construction/attendance/payroll_summary_by_worker/', { params });
+    return response.data;
+  },
 };
 
 // ============================================================================
@@ -345,12 +383,11 @@ export const dailyLogsAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: DailyLog[]; count: number; next: string | null; previous: string | null } | DailyLog[]>('/construction/daily-logs/', { params });
-    // Handle both paginated and non-paginated responses
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return response.data.results || [];
+    const response = await apiClient.get<{ results: DailyLog[]; count: number; next: string | null; previous: string | null } | DailyLog[]>(
+      '/construction/daily-logs/',
+      { params: { ...CONSTRUCTION_LIST_PARAMS, ...params } },
+    );
+    return unwrapList(response.data);
   },
 
   // Get daily log by ID
@@ -402,12 +439,11 @@ export const materialConsumptionAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: MaterialConsumption[]; count: number; next: string | null; previous: string | null } | MaterialConsumption[]>('/construction/material-consumption/', { params });
-    // Handle both paginated and non-paginated responses
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return response.data.results || [];
+    const response = await apiClient.get<{ results: MaterialConsumption[]; count: number; next: string | null; previous: string | null } | MaterialConsumption[]>(
+      '/construction/material-consumption/',
+      { params: { ...CONSTRUCTION_LIST_PARAMS, ...params } },
+    );
+    return unwrapList(response.data);
   },
 
   // Get material consumption by ID
@@ -453,12 +489,11 @@ export const equipmentAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: Equipment[]; count: number; next: string | null; previous: string | null } | Equipment[]>('/construction/equipment/', { params });
-    // Handle both paginated and non-paginated responses
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return response.data.results || [];
+    const response = await apiClient.get<{ results: Equipment[]; count: number; next: string | null; previous: string | null } | Equipment[]>(
+      '/construction/equipment/',
+      { params: { ...CONSTRUCTION_LIST_PARAMS, ...params } },
+    );
+    return unwrapList(response.data);
   },
 
   // Get equipment by ID
@@ -504,12 +539,11 @@ export const equipmentUsageAPI = {
     search?: string;
     ordering?: string;
   }) => {
-    const response = await apiClient.get<{ results: EquipmentUsageLog[]; count: number; next: string | null; previous: string | null } | EquipmentUsageLog[]>('/construction/equipment-usage/', { params });
-    // Handle both paginated and non-paginated responses
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return response.data.results || [];
+    const response = await apiClient.get<{ results: EquipmentUsageLog[]; count: number; next: string | null; previous: string | null } | EquipmentUsageLog[]>(
+      '/construction/equipment-usage/',
+      { params: { ...CONSTRUCTION_LIST_PARAMS, ...params } },
+    );
+    return unwrapList(response.data);
   },
 
   // Get equipment usage log by ID

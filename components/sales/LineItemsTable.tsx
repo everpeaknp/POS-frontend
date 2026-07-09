@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import type { LineItem } from "@/lib/types/sales";
 import type { Product } from "@/lib/api/inventory";
+import { inventoryApi } from "@/lib/api/inventory";
 
 interface LineItemsTableProps {
   items: LineItem[];
   onChange: (items: LineItem[]) => void;
   products?: Product[];
   readOnly?: boolean;
+  useBulkPricing?: boolean;
 }
 
 function calcAmount(item: LineItem): number {
@@ -21,16 +23,33 @@ function calcAmount(item: LineItem): number {
   return afterDiscount + (afterDiscount * item.tax) / 100;
 }
 
-export function LineItemsTable({ items, onChange, products = [], readOnly = false }: LineItemsTableProps) {
+export function LineItemsTable({ items, onChange, products = [], readOnly = false, useBulkPricing = false }: LineItemsTableProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const update = (idx: number, field: keyof LineItem, value: string | number) => {
-    const updated = items.map((item, i) => {
-      if (i !== idx) return item;
-      const next = { ...item, [field]: value };
-      next.amount = calcAmount(next);
-      return next;
-    });
+  const parseSellingPrice = (product?: Product) => {
+    if (!product?.selling_price) return 0;
+    return typeof product.selling_price === "string"
+      ? parseFloat(product.selling_price)
+      : product.selling_price;
+  };
+
+  const applyBulkPrice = async (idx: number, productId: string, qty: number, fallback: number) => {
+    if (!useBulkPricing || !productId || qty <= 0) return fallback;
+    return inventoryApi.bulkPricing.resolveUnitPrice(Number(productId), qty, fallback);
+  };
+
+  const update = async (idx: number, field: keyof LineItem, value: string | number) => {
+    const updated = [...items];
+    const item = { ...updated[idx], [field]: value };
+
+    if (useBulkPricing && item.product && (field === "qty" || field === "product")) {
+      const product = products.find((p) => String(p.id) === item.product);
+      const fallback = parseSellingPrice(product);
+      item.unitPrice = await applyBulkPrice(idx, item.product, Number(item.qty), fallback);
+    }
+
+    item.amount = calcAmount(item);
+    updated[idx] = item;
     onChange(updated);
   };
 
@@ -43,22 +62,20 @@ export function LineItemsTable({ items, onChange, products = [], readOnly = fals
 
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
 
-  const setProduct = (idx: number, productId: string) => {
+  const setProduct = async (idx: number, productId: string) => {
     const p = products.find((x) => String(x.id) === productId);
+    const sellingPrice = parseSellingPrice(p);
+    const qty = items[idx]?.qty || 1;
+    const unitPrice = await applyBulkPrice(idx, productId, qty, sellingPrice);
+
     const updated = items.map((item, i) => {
       if (i !== idx) return item;
-      
-      // Parse selling_price to ensure it's a number
-      const sellingPrice = p?.selling_price 
-        ? (typeof p.selling_price === 'string' ? parseFloat(p.selling_price) : p.selling_price)
-        : item.unitPrice;
-      
-      const next = { 
-        ...item, 
-        product: productId, 
-        unit: p?.unit_name ?? item.unit, 
-        unitPrice: sellingPrice, 
-        tax: 13 // Default VAT
+      const next = {
+        ...item,
+        product: productId,
+        unit: p?.unit_name ?? item.unit,
+        unitPrice,
+        tax: 13,
       };
       next.amount = calcAmount(next);
       return next;
@@ -146,7 +163,7 @@ export function LineItemsTable({ items, onChange, products = [], readOnly = fals
                 <td className="px-3 py-3">
                   {readOnly ? <span>{item.qty}</span> : (
                     <Input type="number" value={item.qty} min={1}
-                      onChange={(e) => update(idx, "qty", Number(e.target.value))}
+                      onChange={(e) => void update(idx, "qty", Number(e.target.value))}
                       className="h-8 text-sm border-gray-200 w-16" />
                   )}
                 </td>

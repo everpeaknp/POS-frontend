@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { customerAPI, paymentReceivedAPI, type Customer } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
+import { getErrorMessage } from "@/lib/utils/form-errors";
 import { formatNPR } from "@/lib/utils";
 import { Loader2, Save } from "lucide-react";
 import toast from "react-hot-toast";
@@ -43,9 +45,8 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
   const fetchCustomers = async () => {
     try {
       setLoadingCustomers(true);
-      const response = await customerAPI.list();
-      const list = Array.isArray(response.data) ? response.data : response.data.results || [];
-      setCustomers(list);
+      const response = await customerAPI.list(HARDWARE_LIST_PARAMS);
+      setCustomers(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       toast.error("Failed to load customers");
@@ -54,10 +55,20 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
     }
   };
 
+  const selectedCustomer = customers.find((c) => String(c.id) === formData.customer);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.customer || !formData.amount) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const amount = parseFloat(formData.amount);
+    if (selectedCustomer && amount > (selectedCustomer.current_balance || 0)) {
+      toast.error(
+        `Amount exceeds outstanding balance of ${formatNPR(selectedCustomer.current_balance || 0)}`
+      );
       return;
     }
 
@@ -82,14 +93,11 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
       onClose();
       onSuccess?.();
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string } } };
-      toast.error(err.response?.data?.detail || "Failed to record payment");
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
-
-  const selectedCustomer = customers.find((c) => c.id === formData.customer);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -113,7 +121,7 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
               </SelectTrigger>
               <SelectContent>
                 {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
+                  <SelectItem key={customer.id} value={String(customer.id)}>
                     {customer.name} — Balance {formatNPR(customer.current_balance || 0)}
                   </SelectItem>
                 ))}

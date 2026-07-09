@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -37,9 +38,8 @@ export default function HardwareProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await inventoryApi.products.list();
-      const data = response.data;
-      setProducts(Array.isArray(data) ? data : data.results || []);
+      const response = await inventoryApi.products.list(HARDWARE_LIST_PARAMS);
+      setProducts(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch products:", error);
       toast.error("Failed to load hardware products");

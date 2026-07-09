@@ -48,7 +48,7 @@ export default function WorkerDetailPage() {
     try {
       setDeleting(true);
       await constructionApi.workers.delete(workerId);
-      toast.success('Worker deleted successfully');
+      toast.success('Worker deactivated successfully');
       router.push('/dashboard/construction/workers');
     } catch (error: any) {
       console.error('Failed to delete worker:', error);
@@ -122,7 +122,7 @@ export default function WorkerDetailPage() {
             className="h-9"
             onClick={() => setDeleteModalOpen(true)}
           >
-            Delete
+            Deactivate
           </Button>
         </div>
       }
@@ -223,14 +223,14 @@ export default function WorkerDetailPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Worker</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
+                <h3 className="text-lg font-semibold text-gray-900">Deactivate Worker</h3>
+                <p className="text-sm text-gray-500">Attendance history will be preserved</p>
               </div>
             </div>
             
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete <span className="font-semibold">{worker.name}</span>? 
-              This will permanently remove the worker and all associated data.
+              Are you sure you want to deactivate <span className="font-semibold">{worker.name}</span>?
+              They will no longer appear in attendance, but past records are kept.
             </p>
             
             <div className="flex gap-3">
@@ -249,7 +249,7 @@ export default function WorkerDetailPage() {
                 {deleting && (
                   <KhataSpinner variant="onPrimary" />
                 )}
-                {deleting ? 'Deleting...' : 'Delete Worker'}
+                {deleting ? 'Deactivating...' : 'Deactivate Worker'}
               </button>
             </div>
           </div>

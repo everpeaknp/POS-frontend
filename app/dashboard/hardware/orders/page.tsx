@@ -14,19 +14,18 @@ import {
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { salesOrderAPI, type SalesOrder } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700 dark:bg-muted dark:text-muted-foreground",
-  confirmed: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
-  processing: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-  shipped: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
-  delivered: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
-  cancelled: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400",
+  Draft: "bg-gray-100 text-gray-700 dark:bg-muted dark:text-muted-foreground",
+  Confirmed: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
+  Delivered: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
+  Cancelled: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400",
 };
 
-const STATUS_FILTERS = ["all", "draft", "confirmed", "processing", "delivered"] as const;
+const STATUS_FILTERS = ["all", "Draft", "Confirmed", "Delivered", "Cancelled"] as const;
 
 export default function HardwareOrdersPage() {
   const router = useRouter();
@@ -44,9 +43,8 @@ export default function HardwareOrdersPage() {
       setLoading(true);
       const params: Record<string, string> = {};
       if (statusFilter !== "all") params.status = statusFilter;
-      const response = await salesOrderAPI.list(params);
-      const data = response.data;
-      setOrders(Array.isArray(data) ? data : data.results || []);
+      const response = await salesOrderAPI.list({ ...HARDWARE_LIST_PARAMS, ...params });
+      setOrders(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       toast.error("Failed to load hardware orders");
@@ -107,7 +105,7 @@ export default function HardwareOrdersPage() {
                     : "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80"
                 }`}
               >
-                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+                {status === "all" ? "All" : status}
               </button>
             ))}
           </div>
@@ -166,7 +164,7 @@ export default function HardwareOrdersPage() {
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          STATUS_STYLES[order.status] || STATUS_STYLES.draft
+                          STATUS_STYLES[order.status] || STATUS_STYLES.Draft
                         }`}
                       >
                         {order.status}

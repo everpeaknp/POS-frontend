@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
+import { getErrorMessage } from "@/lib/utils/form-errors";
 import { Loader2, Save } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -39,9 +41,8 @@ export function NewBulkPricingModal({ open, onClose, onSuccess }: NewBulkPricing
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
-      const response = await inventoryApi.products.list();
-      const data = response.data;
-      setProducts(Array.isArray(data) ? data : data.results || []);
+      const response = await inventoryApi.products.list({ ...HARDWARE_LIST_PARAMS, status: 'active' });
+      setProducts(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch products:", error);
       toast.error("Failed to load products");
@@ -72,8 +73,7 @@ export function NewBulkPricingModal({ open, onClose, onSuccess }: NewBulkPricing
       onClose();
       onSuccess?.();
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string } } };
-      toast.error(err.response?.data?.detail || "Failed to create pricing rule");
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export function NewBulkPricingModal({ open, onClose, onSuccess }: NewBulkPricing
             >
               <option value="">{loadingProducts ? "Loading products..." : "Select a product"}</option>
               {products.map((product) => (
-                <option key={product.id} value={product.id}>
+                <option key={product.id} value={String(product.id)}>
                   {product.name} ({product.sku})
                 </option>
               ))}

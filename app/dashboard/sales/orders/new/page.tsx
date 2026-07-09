@@ -51,11 +51,11 @@ export default function NewSalesOrderPage() {
     const fetchData = async () => {
       try {
         const [customersRes, productsRes] = await Promise.all([
-          customerAPI.list({ status: 'active' }),
-          inventoryApi.products.list({ status: 'active' })
+          customerAPI.list({ status: 'active', page_size: 500 }),
+          inventoryApi.products.list({ status: 'active', page_size: 500 })
         ]);
-        setCustomers(customersRes.data.results);
-        setProducts(productsRes.data.results);
+        setCustomers(customersRes.data.results || []);
+        setProducts(productsRes.data.results || []);
       } catch (error: any) {
         toast.error(error.response?.data?.message || "Failed to load customers and products");
       } finally {
@@ -386,30 +386,34 @@ export default function NewSalesOrderPage() {
                   subtitle: p.total_stock !== undefined ? `Stock: ${p.total_stock} | Price: Rs. ${p.selling_price}` : undefined,
                 }))}
               value=""
-              onValueChange={(productId) => {
+              onValueChange={async (productId) => {
                 const product = products.find((p) => String(p.id) === productId);
                 if (product) {
-                  // Check stock availability
                   if (!product.total_stock || product.total_stock <= 0) {
                     toast.error(`${product.name} is out of stock`);
                     return;
                   }
-                  
-                  // Parse selling_price as it comes as string from API
-                  const sellingPrice = typeof product.selling_price === 'string' 
-                    ? parseFloat(product.selling_price) 
+
+                  const sellingPrice = typeof product.selling_price === 'string'
+                    ? parseFloat(product.selling_price)
                     : (typeof product.selling_price === 'number' ? product.selling_price : 0);
-                  
+
+                  const unitPrice = await inventoryApi.bulkPricing.resolveUnitPrice(
+                    Number(productId),
+                    1,
+                    sellingPrice
+                  );
+
                   const newItem: LineItem = {
                     id: Date.now().toString(),
                     product: productId,
                     description: "",
                     qty: 1,
                     unit: product.unit_name,
-                    unitPrice: sellingPrice,
+                    unitPrice,
                     discount: 0,
                     tax: 13,
-                    amount: sellingPrice * 1.13,
+                    amount: unitPrice * 1.13,
                   };
                   setItems([...items, newItem]);
                 }
@@ -429,7 +433,7 @@ export default function NewSalesOrderPage() {
           {/* Line Items */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
-            <LineItemsTable items={items} onChange={setItems} products={products} />
+            <LineItemsTable items={items} onChange={setItems} products={products} useBulkPricing />
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6 justify-between">

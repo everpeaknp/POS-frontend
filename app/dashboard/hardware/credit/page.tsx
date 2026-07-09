@@ -11,6 +11,7 @@ import {
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
 import { customerAPI, type Customer } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS, unwrapList, availableCredit } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -27,8 +28,8 @@ export default function HardwareCreditPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await customerAPI.list();
-      setCustomers(Array.isArray(response.data.results) ? response.data.results : []);
+      const response = await customerAPI.list(HARDWARE_LIST_PARAMS);
+      setCustomers(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       toast.error("Failed to load customer credit data");
@@ -41,9 +42,9 @@ export default function HardwareCreditPage() {
     item.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalOutstanding = filteredData.reduce((sum, item) => sum + (item.current_balance || 0), 0);
-  const totalCreditLimit = filteredData.reduce((sum, item) => sum + (item.credit_limit || 0), 0);
-  const withBalance = filteredData.filter((c) => (c.current_balance || 0) > 0).length;
+  const totalOutstanding = customers.reduce((sum, item) => sum + (item.current_balance || 0), 0);
+  const totalCreditLimit = customers.reduce((sum, item) => sum + (item.credit_limit || 0), 0);
+  const withBalance = customers.filter((c) => (c.current_balance || 0) > 0).length;
 
   return (
     <HardwarePageShell
@@ -133,7 +134,7 @@ export default function HardwareCreditPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-900 dark:text-foreground tabular-nums">
-                      {formatNPR((item.credit_limit || 0) - (item.current_balance || 0))}
+                      {formatNPR(availableCredit(item))}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

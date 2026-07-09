@@ -13,6 +13,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NewBulkPricingModal } from "@/components/hardware/NewBulkPricingModal";
 import { inventoryApi, type BulkPricing } from "@/lib/api/inventory";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -49,9 +50,8 @@ export default function HardwareBulkPricingPage() {
   const fetchPricingRules = async () => {
     try {
       setLoading(true);
-      const response = await inventoryApi.bulkPricing.list();
-      const data = response.data;
-      setPricingRules(Array.isArray(data) ? data : data.results || []);
+      const response = await inventoryApi.bulkPricing.list(HARDWARE_LIST_PARAMS);
+      setPricingRules(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch bulk pricing:", error);
       toast.error("Failed to load bulk pricing rules");
@@ -78,18 +78,21 @@ export default function HardwareBulkPricingPage() {
 
   if (!loading && pricingRules.length === 0 && !searchTerm) {
     return (
-      <HardwarePageShell
-        title="Bulk Pricing"
-        subtitle="Volume-based pricing tiers for hardware products"
-      >
-        <EmptyState
+      <>
+        <HardwarePageShell
+          title="Bulk Pricing"
+          subtitle="Volume-based pricing tiers for hardware products"
+        >
+          <EmptyState
             icon={Layers}
             title="No bulk pricing rules yet"
             description="Create volume-based pricing tiers for your hardware products"
             actionLabel="New Rule"
-            actionHref="/dashboard/hardware/bulk-pricing/new"
+            onAction={openModal}
           />
-      </HardwarePageShell>
+        </HardwarePageShell>
+        <NewBulkPricingModal open={showModal} onClose={closeModal} onSuccess={fetchPricingRules} />
+      </>
     );
   }
 

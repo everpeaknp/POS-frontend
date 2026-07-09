@@ -46,7 +46,6 @@ export default function EquipmentUsagePage() {
     site: "",
     date: new Date().toISOString().split("T")[0],
     hours_used: "",
-    cost: "",
     notes: "",
   });
 
@@ -82,7 +81,6 @@ export default function EquipmentUsagePage() {
         site: form.site,
         date: form.date,
         hours_used: parseFloat(form.hours_used),
-        cost: parseFloat(form.cost || "0"),
         notes: form.notes || undefined,
       });
       toast.success("Usage logged");
@@ -92,7 +90,6 @@ export default function EquipmentUsagePage() {
         site: "",
         date: new Date().toISOString().split("T")[0],
         hours_used: "",
-        cost: "",
         notes: "",
       });
       fetchData();
@@ -157,30 +154,20 @@ export default function EquipmentUsagePage() {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Hours Used *</Label>
-              <Input
-                type="number"
-                step="0.5"
-                min="0"
-                value={form.hours_used}
-                onChange={(e) => setForm({ ...form, hours_used: e.target.value })}
-                className="mt-1"
-                required
-              />
-            </div>
-            <div>
-              <Label>Cost (Rs.)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.cost}
-                onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label>Hours Used *</Label>
+            <Input
+              type="number"
+              step="0.5"
+              min="0"
+              value={form.hours_used}
+              onChange={(e) => setForm({ ...form, hours_used: e.target.value })}
+              className="mt-1"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Cost is calculated automatically from equipment rental rates.
+            </p>
           </div>
           <div>
             <Label>Notes</Label>

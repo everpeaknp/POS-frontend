@@ -11,6 +11,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { reportsAPI } from "@/lib/api/reports";
 import { salesReportsAPI } from "@/lib/api/sales";
 import { inventoryApi } from "@/lib/api/inventory";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -81,7 +82,7 @@ export default function HardwareReportsPage() {
           data = await salesReportsAPI.getSalesSummary(params);
           break;
         case "bulk":
-          data = await inventoryApi.bulkPricing.list();
+          data = unwrapList((await inventoryApi.bulkPricing.list(HARDWARE_LIST_PARAMS)).data);
           break;
       }
 
@@ -273,6 +274,7 @@ export default function HardwareReportsPage() {
               <DateInput
                 value={dateRange.start}
                 onChange={(date) => setDateRange({ ...dateRange, start: date })}
+                disabled={activeReport === "inventory" || activeReport === "bulk"}
               />
             </div>
             <div>
@@ -280,9 +282,15 @@ export default function HardwareReportsPage() {
               <DateInput
                 value={dateRange.end}
                 onChange={(date) => setDateRange({ ...dateRange, end: date })}
+                disabled={activeReport === "inventory" || activeReport === "bulk"}
               />
             </div>
           </div>
+          {(activeReport === "inventory" || activeReport === "bulk") && (
+            <p className="text-xs text-gray-500 dark:text-muted-foreground mt-3">
+              Date range applies to sales, credit, and payment reports only. Inventory valuation and bulk pricing show current data.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

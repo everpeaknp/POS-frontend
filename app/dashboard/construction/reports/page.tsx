@@ -6,7 +6,7 @@ import {
   ConstructionPageShell,
   constructionCardClass,
 } from '@/components/dashboard/ConstructionPageShell';
-import { constructionApi, Site, SiteReport } from '@/lib/api/construction';
+import { constructionApi, Site, SiteReport, SitePayrollSummary } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -16,6 +16,11 @@ export default function ConstructionReportsPage() {
   const [report, setReport] = useState<SiteReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
+  const [payrollSite, setPayrollSite] = useState('');
+  const [payrollMonth, setPayrollMonth] = useState(() => new Date().getMonth() + 1);
+  const [payrollYear, setPayrollYear] = useState(() => new Date().getFullYear());
+  const [payroll, setPayroll] = useState<SitePayrollSummary | null>(null);
+  const [loadingPayroll, setLoadingPayroll] = useState(false);
 
   useEffect(() => {
     fetchSites();
@@ -49,6 +54,28 @@ export default function ConstructionReportsPage() {
       toast.error('Failed to generate report');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPayrollSummary = async () => {
+    if (!payrollSite) {
+      toast.error('Please select a site for payroll');
+      return;
+    }
+
+    try {
+      setLoadingPayroll(true);
+      const data = await constructionApi.attendance.payrollSummaryBySite({
+        site: payrollSite,
+        month: payrollMonth,
+        year: payrollYear,
+      });
+      setPayroll(data);
+    } catch (error: unknown) {
+      console.error('Failed to load payroll:', error);
+      toast.error('Failed to load payroll summary');
+    } finally {
+      setLoadingPayroll(false);
     }
   };
 
@@ -97,6 +124,102 @@ export default function ConstructionReportsPage() {
             </button>
           </div>
         </div>
+      </div>
+
+      <div className={`${constructionCardClass} p-6 lg:p-8`}>
+        <h2 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+          Monthly Payroll Summary
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Site</label>
+            <select
+              value={payrollSite}
+              onChange={(e) => setPayrollSite(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            >
+              <option value="">Choose a site...</option>
+              {sites.map((site) => (
+                <option key={site.id} value={site.id}>
+                  {site.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+            <select
+              value={payrollMonth}
+              onChange={(e) => setPayrollMonth(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>
+                  {new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+            <input
+              type="number"
+              min={2020}
+              max={2100}
+              value={payrollYear}
+              onChange={(e) => setPayrollYear(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          <div>
+            <button
+              onClick={loadPayrollSummary}
+              disabled={!payrollSite || loadingPayroll}
+              className="w-full px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {loadingPayroll ? 'Loading...' : 'Load Payroll'}
+            </button>
+          </div>
+        </div>
+
+        {payroll && (
+          <div className="mt-6 space-y-4">
+            <div className="flex flex-wrap justify-between gap-2">
+              <p className="text-sm text-gray-600">
+                {payroll.site_name} · {payroll.month}/{payroll.year}
+              </p>
+              <p className="text-lg font-bold text-gray-900">
+                Total: {formatNPR(payroll.total_payroll)}
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-medium text-gray-500">Worker</th>
+                    <th className="px-4 py-2 text-left font-medium text-gray-500">Category</th>
+                    <th className="px-4 py-2 text-right font-medium text-gray-500">Present</th>
+                    <th className="px-4 py-2 text-right font-medium text-gray-500">Half</th>
+                    <th className="px-4 py-2 text-right font-medium text-gray-500">OT</th>
+                    <th className="px-4 py-2 text-right font-medium text-gray-500">Total Wage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {payroll.worker_breakdown.map((row) => (
+                    <tr key={row.worker_id}>
+                      <td className="px-4 py-2">{row.worker_name}</td>
+                      <td className="px-4 py-2 capitalize">{row.category}</td>
+                      <td className="px-4 py-2 text-right">{row.days_present}</td>
+                      <td className="px-4 py-2 text-right">{row.days_half_day}</td>
+                      <td className="px-4 py-2 text-right">{row.days_overtime}</td>
+                      <td className="px-4 py-2 text-right font-medium">{formatNPR(row.total_wage)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {report && (

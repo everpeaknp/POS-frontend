@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { customerAPI, type Customer } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -29,9 +30,8 @@ export default function HardwareCustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await customerAPI.list();
-      const data = response.data;
-      setCustomers(Array.isArray(data) ? data : data.results || []);
+      const response = await customerAPI.list(HARDWARE_LIST_PARAMS);
+      setCustomers(unwrapList(response.data));
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       toast.error("Failed to load customers");

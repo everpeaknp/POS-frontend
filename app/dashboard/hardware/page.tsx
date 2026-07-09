@@ -21,6 +21,7 @@ import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
+import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -131,10 +132,8 @@ export default function HardwareDashboardPage() {
     try {
       setLoading(true);
 
-      const customersResponse = await customerAPI.list();
-      const customers = Array.isArray(customersResponse.data.results)
-        ? customersResponse.data.results
-        : [];
+      const customersResponse = await customerAPI.list(HARDWARE_LIST_PARAMS);
+      const customers = unwrapList(customersResponse.data);
 
       const customersWithCredit = customers.filter(
         (c: Customer) => (c.current_balance || 0) > 0
@@ -148,17 +147,14 @@ export default function HardwareDashboardPage() {
         0
       );
 
-      const productsResponse = await inventoryApi.products.list();
-      const products = Array.isArray(productsResponse.data.results)
-        ? productsResponse.data.results
-        : [];
+      const productsResponse = await inventoryApi.products.list(HARDWARE_LIST_PARAMS);
+      const products = unwrapList(productsResponse.data);
 
       const lowStockResponse = await inventoryApi.products.lowStock();
       const lowStock = Array.isArray(lowStockResponse.data) ? lowStockResponse.data : [];
 
-      const bulkPricingResponse = await inventoryApi.bulkPricing.list();
-      const bulkData = bulkPricingResponse.data;
-      const bulkPricing = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
+      const bulkPricingResponse = await inventoryApi.bulkPricing.list(HARDWARE_LIST_PARAMS);
+      const bulkPricing = unwrapList(bulkPricingResponse.data);
 
       setStats({
         totalProducts: products.length,
@@ -354,9 +350,10 @@ export default function HardwareDashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {lowStockProducts.map((product) => (
-                      <div
+                      <Link
                         key={product.id}
-                        className="flex items-center justify-between p-3 rounded-lg border border-amber-200/80 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/5"
+                        href={`/dashboard/hardware/products/${product.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg border border-amber-200/80 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/5 hover:border-amber-300 transition-colors"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
@@ -374,7 +371,7 @@ export default function HardwareDashboardPage() {
                             Reorder {product.reorder_level}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}

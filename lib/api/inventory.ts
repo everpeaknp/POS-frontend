@@ -363,11 +363,30 @@ export const inventoryApi = {
     byProduct: (productId: number) => 
       apiClient.get<BulkPricing[]>(`/inventory/bulk-pricing/by-product/${productId}/`),
     
-    getPrice: (productId: number, quantity: number) => 
-      apiClient.get<{ unit_price: number; discount_percent: number; final_price: number }>(
-        `/inventory/bulk-pricing/get-price/`, 
-        { params: { product: productId, quantity } }
+    getPrice: (productId: number, quantity: number) =>
+      apiClient.get<{
+        product_id: number;
+        product_name: string;
+        quantity: number;
+        unit_price: number;
+        bulk_pricing_applied: boolean;
+        tier: { id: number; min_quantity: number; max_quantity: number | null; discount_percent: number } | null;
+      }>(
+        `/inventory/bulk-pricing/get-price/`,
+        { params: { product_id: productId, quantity } }
       ),
+
+    resolveUnitPrice: async (productId: number, quantity: number, fallbackPrice = 0): Promise<number> => {
+      try {
+        const response = await apiClient.get<{ unit_price: number }>(
+          `/inventory/bulk-pricing/get-price/`,
+          { params: { product_id: productId, quantity } }
+        );
+        return Number(response.data.unit_price ?? fallbackPrice);
+      } catch {
+        return fallbackPrice;
+      }
+    },
   },
 
   customerPrices: {

@@ -14,6 +14,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RecordPaymentModal } from "@/components/hardware/RecordPaymentModal";
 import { paymentReceivedAPI, type PaymentReceived } from "@/lib/api/sales";
+import { HARDWARE_LIST_PARAMS } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -57,7 +58,7 @@ export default function HardwarePaymentsPage() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const data = await paymentReceivedAPI.list();
+      const data = await paymentReceivedAPI.list(HARDWARE_LIST_PARAMS);
       const paymentList = Array.isArray(data) ? data : (data as { results?: PaymentReceived[] }).results || [];
       setPayments(paymentList);
     } catch (error) {
@@ -76,18 +77,21 @@ export default function HardwarePaymentsPage() {
 
   if (!loading && payments.length === 0 && !searchTerm) {
     return (
-      <HardwarePageShell
-        title="Hardware Payments"
-        subtitle="Track customer payments and credit settlements"
-      >
-        <EmptyState
+      <>
+        <HardwarePageShell
+          title="Hardware Payments"
+          subtitle="Track customer payments and credit settlements"
+        >
+          <EmptyState
             icon={CreditCard}
             title="No payments yet"
             description="Record your first payment to track customer credit settlements"
             actionLabel="Record Payment"
-            actionHref="/dashboard/hardware/payments/new"
+            onAction={openModal}
           />
-      </HardwarePageShell>
+        </HardwarePageShell>
+        <RecordPaymentModal open={showModal} onClose={closeModal} onSuccess={fetchPayments} />
+      </>
     );
   }
 

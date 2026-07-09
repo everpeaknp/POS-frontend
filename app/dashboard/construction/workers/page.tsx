@@ -57,7 +57,7 @@ export default function WorkersPage() {
     try {
       setDeleting(true);
       await constructionApi.workers.delete(workerToDelete.id);
-      toast.success('Worker deleted successfully');
+      toast.success('Worker deactivated successfully');
       setWorkers(workers.filter(w => w.id !== workerToDelete.id));
       setDeleteModalOpen(false);
       setWorkerToDelete(null);
@@ -262,7 +262,7 @@ export default function WorkersPage() {
                       <button
                         onClick={(e) => handleDeleteClick(e, worker)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        title="Delete worker"
+                        title="Deactivate worker"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -288,14 +288,14 @@ export default function WorkersPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Worker</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
+                <h3 className="text-lg font-semibold text-gray-900">Deactivate Worker</h3>
+                <p className="text-sm text-gray-500">Attendance history will be preserved</p>
               </div>
             </div>
             
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete <span className="font-semibold">{workerToDelete?.name}</span>? 
-              This will permanently remove the worker and all associated attendance records.
+              Are you sure you want to deactivate <span className="font-semibold">{workerToDelete?.name}</span>?
+              They will no longer appear in attendance, but past records are kept.
             </p>
             
             <div className="flex gap-3">
@@ -317,7 +317,7 @@ export default function WorkersPage() {
                 {deleting && (
                   <KhataSpinner variant="onPrimary" />
                 )}
-                {deleting ? 'Deleting...' : 'Delete Worker'}
+                {deleting ? 'Deactivating...' : 'Deactivate Worker'}
               </button>
             </div>
           </div>

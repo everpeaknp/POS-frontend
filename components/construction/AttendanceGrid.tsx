@@ -61,25 +61,35 @@ export default function AttendanceGrid() {
     fetchSites();
   }, []);
 
-  // Fetch workers when site is selected
+  // Fetch workers and existing attendance when site or date changes
   useEffect(() => {
-    if (!selectedSite) return;
+    if (!selectedSite || !selectedDate) return;
 
-    const fetchWorkers = async () => {
+    const loadGrid = async () => {
       try {
         setLoading(true);
-        const workersData = await constructionApi.workers.list({ assigned_site: selectedSite });
-        const activeWorkers = Array.isArray(workersData) 
-          ? workersData.filter((w: Worker) => w.status === 'active')
-          : [];
-        setWorkers(activeWorkers);
-        
-        // Initialize attendance records with 'absent' status
+        const [workersData, attendanceData] = await Promise.all([
+          constructionApi.workers.list({ status: 'active' }),
+          constructionApi.attendance.list({ site: selectedSite, date: selectedDate }),
+        ]);
+
+        const siteWorkers = workersData.filter(
+          (w: Worker) => !w.assigned_site || w.assigned_site === selectedSite,
+        );
+        setWorkers(siteWorkers);
+
+        const existingByWorker = new Map(
+          attendanceData.map((a) => [a.worker, a]),
+        );
+
         const initialRecords = new Map<string, AttendanceRecord>();
-        activeWorkers.forEach((worker: Worker) => {
+        siteWorkers.forEach((worker: Worker) => {
+          const existing = existingByWorker.get(worker.id);
           initialRecords.set(worker.id, {
             worker: worker.id,
-            status: 'absent',
+            status: existing?.status ?? 'absent',
+            check_in: existing?.check_in,
+            check_out: existing?.check_out,
           });
         });
         setAttendanceRecords(initialRecords);
@@ -91,8 +101,8 @@ export default function AttendanceGrid() {
       }
     };
 
-    fetchWorkers();
-  }, [selectedSite]);
+    loadGrid();
+  }, [selectedSite, selectedDate]);
 
   const updateAttendanceStatus = (workerId: string, status: AttendanceRecord['status']) => {
     setAttendanceRecords(prev => {
@@ -155,19 +165,20 @@ export default function AttendanceGrid() {
         })),
       };
 
-      await constructionApi.attendance.bulkMark(payload);
-      
-      toast.success(`Attendance marked for ${attendances.length} workers`);
-      
-      // Reset to absent status after successful submission
-      const resetRecords = new Map<string, AttendanceRecord>();
-      workers.forEach(worker => {
-        resetRecords.set(worker.id, {
-          worker: worker.id,
-          status: 'absent',
-        });
-      });
-      setAttendanceRecords(resetRecords);
+      const result = await constructionApi.attendance.bulkMark(payload);
+      const created = result?.created?.length ?? 0;
+      const updated = result?.updated?.length ?? 0;
+      const errorCount = result?.errors?.length ?? 0;
+
+      if (errorCount > 0) {
+        toast.error(`Saved ${created + updated} records; ${errorCount} failed`);
+      } else {
+        toast.success(
+          updated > 0
+            ? `Attendance updated for ${updated + created} workers`
+            : `Attendance marked for ${created} workers`,
+        );
+      }
     } catch (error: any) {
       console.error('Failed to mark attendance:', error);
       const message = error.response?.data?.detail || 'Failed to mark attendance';
