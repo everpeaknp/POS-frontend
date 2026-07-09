@@ -22,9 +22,10 @@ export default function InvoicesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
-  const [paymentModal, setPaymentModal] = useState<{ open: boolean; id: string; balance: number }>({ 
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; id: string; invoiceNumber: string; balance: number }>({ 
     open: false, 
     id: "", 
+    invoiceNumber: "",
     balance: 0 
   });
 
@@ -44,8 +45,8 @@ export default function InvoicesPage() {
     router.push(`/dashboard/sales/invoices/${id}/edit`);
   };
 
-  const handleRecordPayment = (id: string, balance: number) => {
-    setPaymentModal({ open: true, id, balance });
+  const handleRecordPayment = (id: string, invoiceNumber: string, balance: number) => {
+    setPaymentModal({ open: true, id, invoiceNumber, balance });
   };
 
   const handleDelete = async (id: string, invoiceNumber: string) => {
@@ -230,7 +231,7 @@ export default function InvoicesPage() {
                           View
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => handleRecordPayment(inv.id, inv.balance)}
+                          onClick={() => handleRecordPayment(inv.id, inv.invoice_number, inv.balance)}
                           className="cursor-pointer"
                         >
                           Record Payment
@@ -267,8 +268,9 @@ export default function InvoicesPage() {
 
       <RecordPaymentModal 
         open={paymentModal.open} 
-        onClose={() => setPaymentModal({ open: false, id: "", balance: 0 })}
-        invoiceId={paymentModal.id} 
+        onClose={() => setPaymentModal({ open: false, id: "", invoiceNumber: "", balance: 0 })}
+        invoiceId={paymentModal.id}
+        invoiceNumber={paymentModal.invoiceNumber}
         balance={paymentModal.balance}
         onSuccess={refetch}
       />

@@ -217,8 +217,14 @@ export const invoiceAPI = {
   delete: (id: string) => 
     apiClient.delete(`/sales/invoices/${id}/`),
   
-  recordPayment: (id: string, amount: number) => 
-    apiClient.post<Invoice>(`/sales/invoices/${id}/record_payment/`, { amount }),
+  recordPayment: (id: string, data: {
+    amount: number;
+    date?: string;
+    payment_method?: string;
+    reference_number?: string;
+    notes?: string;
+  }) => 
+    apiClient.post<Invoice>(`/sales/invoices/${id}/record_payment/`, data),
 };
 
 // Credit Note API
@@ -410,6 +416,7 @@ export interface SalesDashboardData {
     ordersChange: number;
     customers: number;
     customersChange: number;
+    newCustomers?: number;
     products: number;
     productsChange: number;
   };
@@ -419,6 +426,7 @@ export interface SalesDashboardData {
   }>;
   recentOrders: Array<{
     id: string;
+    order_number?: string;
     customer: string;
     amount: string;
     status: string;

@@ -3,6 +3,7 @@
 import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect, useRef } from "react";
+import { RecordPaymentModal } from "@/components/sales/RecordPaymentModal";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, FileText, Calendar, DollarSign, User, Loader2, Trash2, Printer } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
@@ -34,6 +35,7 @@ export default function InvoiceDetailPage() {
   const [salesOrder, setSalesOrder] = useState<SalesOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -143,6 +145,15 @@ export default function InvoiceDetailPage() {
             <Printer className="h-4 w-4" />
             Print
           </Button>
+          {invoice.balance > 0 && invoice.status !== "Paid" && (
+            <Button
+              onClick={() => setPaymentOpen(true)}
+              className="gap-2 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+            >
+              <DollarSign className="h-4 w-4" />
+              Record Payment
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={handleDelete}
@@ -286,6 +297,15 @@ export default function InvoiceDetailPage() {
           />
         </div>
       )}
+
+      <RecordPaymentModal
+        open={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoice_number}
+        balance={invoice.balance}
+        onSuccess={loadInvoice}
+      />
     </div>
   );
 }

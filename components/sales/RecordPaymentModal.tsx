@@ -15,11 +15,12 @@ interface RecordPaymentModalProps {
   open: boolean;
   onClose: () => void;
   invoiceId: string;
+  invoiceNumber?: string;
   balance: number;
   onSuccess?: () => void;
 }
 
-export function RecordPaymentModal({ open, onClose, invoiceId, balance, onSuccess }: RecordPaymentModalProps) {
+export function RecordPaymentModal({ open, onClose, invoiceId, invoiceNumber, balance, onSuccess }: RecordPaymentModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
@@ -42,7 +43,13 @@ export function RecordPaymentModal({ open, onClose, invoiceId, balance, onSucces
 
     setSubmitting(true);
     try {
-      await invoiceAPI.recordPayment(invoiceId, form.amount);
+      await invoiceAPI.recordPayment(invoiceId, {
+        amount: form.amount,
+        date: form.date,
+        payment_method: form.method,
+        reference_number: form.reference,
+        notes: form.notes,
+      });
       toast.success(`Payment of Rs. ${form.amount.toLocaleString()} recorded successfully`);
       onClose();
       if (onSuccess) {
@@ -59,7 +66,7 @@ export function RecordPaymentModal({ open, onClose, invoiceId, balance, onSucces
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Record Payment — {invoiceId}</DialogTitle>
+          <DialogTitle>Record Payment — {invoiceNumber || invoiceId}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">

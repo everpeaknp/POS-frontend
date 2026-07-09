@@ -230,7 +230,9 @@ export default function CustomerProfilePage() {
                       invoices.map((inv: any) => (
                         <tr key={inv.id} className="hover:bg-gray-50/50">
                           <td className="px-2 py-2.5 font-mono text-xs text-[#22C55E]">
-                            {inv.invoice_number}
+                            <Link href={`/dashboard/sales/invoices/${inv.id}`} className="hover:underline">
+                              {inv.invoice_number}
+                            </Link>
                           </td>
                           <td className="px-2 py-2.5 text-gray-600">
                             <FormattedDate value={inv.date} />

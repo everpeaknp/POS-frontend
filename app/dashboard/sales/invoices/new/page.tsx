@@ -239,10 +239,11 @@ export default function NewInvoicePage() {
         status: status,
         notes: form.notes || undefined };
 
-      // If recording payment immediately, set paid_amount and status to Paid
+      // If recording payment immediately, treat as cash sale (no AR posting)
       if (recordPayment) {
         invoiceData.paid_amount = grandTotal;
         invoiceData.status = "Paid";
+        invoiceData.payment_type = "cash";
       }
 
       const response = await invoiceAPI.create(invoiceData);

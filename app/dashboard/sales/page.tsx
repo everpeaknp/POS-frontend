@@ -184,6 +184,7 @@ export default function SalesDashboardPage() {
       label: "Total Customers",
       value: stats.customers.toLocaleString(),
       change: stats.customersChange,
+      changeLabel: "new this period",
       icon: Users,
       color: "bg-purple-50 text-purple-600",
     },
@@ -203,7 +204,7 @@ export default function SalesDashboardPage() {
       <div className="flex-1 p-6 space-y-6">
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map(({ label, value, change, icon: Icon, color }) => (
+          {statCards.map(({ label, value, change, changeLabel, icon: Icon, color }) => (
             <div
               key={label}
               className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
@@ -225,7 +226,7 @@ export default function SalesDashboardPage() {
                 ) : (
                   <TrendingDown className="h-3 w-3" />
                 )}
-                {Math.abs(change)}% vs last period
+                {Math.abs(change)}% {changeLabel || "vs last period"}
               </div>
             </div>
           ))}
@@ -430,7 +431,7 @@ export default function SalesDashboardPage() {
                     className="hover:bg-gray-50/50 cursor-pointer"
                     onClick={() => router.push(`/dashboard/sales/orders/${o.id}`)}
                   >
-                    <td className="px-4 py-2.5 font-mono text-xs text-[#22C55E]">{o.id}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-[#22C55E]">{o.order_number || o.id}</td>
                     <td className="px-4 py-2.5 font-medium text-gray-800">{o.customer}</td>
                     <td className="px-4 py-2.5 text-gray-700">{o.amount}</td>
                     <td className="px-4 py-2.5">
