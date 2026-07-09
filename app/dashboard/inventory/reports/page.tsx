@@ -16,6 +16,8 @@ const TABS = ["Stock Summary", "Low Stock", "Valuation", "Movement"];
 
 export default function InventoryReportsPage() {
   const [tab, setTab] = useState("Stock Summary");
+  const [movementStartDate, setMovementStartDate] = useState("");
+  const [movementEndDate, setMovementEndDate] = useState("");
 
   // Fetch data for each tab
   const { data: stockSummaryData, loading: loadingSummary } = useApi(
@@ -33,9 +35,12 @@ export default function InventoryReportsPage() {
     { immediate: tab === "Valuation" }
   );
 
-  const { data: movementData, loading: loadingMovement } = useApi(
-    () => inventoryApi.reports.movement(),
-    { immediate: tab === "Movement" }
+  const { data: movementData, loading: loadingMovement, refetch: refetchMovement } = useApi(
+    () => inventoryApi.reports.movement({
+      start_date: movementStartDate || undefined,
+      end_date: movementEndDate || undefined,
+    }),
+    { immediate: tab === "Movement", deps: [tab, movementStartDate, movementEndDate] }
   );
 
   const summary = stockSummaryData?.data?.summary || { total_products: 0, total_units: 0, low_stock: 0, out_of_stock: 0 };
@@ -277,6 +282,36 @@ export default function InventoryReportsPage() {
         )}
 
         {tab === "Movement" && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-end gap-3 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Start date</label>
+                <input
+                  type="date"
+                  value={movementStartDate}
+                  onChange={(e) => setMovementStartDate(e.target.value)}
+                  className="h-9 rounded-md border border-gray-200 px-3 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">End date</label>
+                <input
+                  type="date"
+                  value={movementEndDate}
+                  onChange={(e) => setMovementEndDate(e.target.value)}
+                  className="h-9 rounded-md border border-gray-200 px-3 text-sm"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-9"
+                onClick={() => refetchMovement()}
+              >
+                Apply
+              </Button>
+            </div>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             {loadingMovement ? (
               <SkeletonTable rows={5} />
@@ -305,6 +340,7 @@ export default function InventoryReportsPage() {
                 </tbody>
               </table>
             )}
+          </div>
           </div>
         )}
       </div>

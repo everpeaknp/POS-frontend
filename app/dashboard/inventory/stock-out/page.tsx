@@ -33,12 +33,12 @@ export default function StockOutPage() {
 
   // Fetch products and warehouses
   const { data: productsData, loading: productsLoading } = useApi(
-    () => inventoryApi.products.list(),
+    () => inventoryApi.products.list({ page_size: 500, status: 'active' }),
     { immediate: true }
   );
 
   const { data: warehousesData, loading: warehousesLoading } = useApi(
-    () => inventoryApi.warehouses.list(),
+    () => inventoryApi.warehouses.list({ page_size: 500, is_active: true }),
     { immediate: true }
   );
 
@@ -65,7 +65,7 @@ export default function StockOutPage() {
         warehouse: parseInt(data.warehouse),
         quantity: data.quantity,
         reason: data.purpose,
-        notes: data.notes || undefined,
+        notes: [data.reference, data.notes].filter(Boolean).join(' — ') || undefined,
       });
 
       toast.success("Stock issued successfully");

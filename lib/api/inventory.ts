@@ -29,6 +29,7 @@ export interface Warehouse {
   manager_name: string | null;
   is_active: boolean;
   total_products: number;
+  total_value?: number;
   created_at: string;
   updated_at: string;
 }

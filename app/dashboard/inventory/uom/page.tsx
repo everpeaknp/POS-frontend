@@ -33,8 +33,8 @@ export default function UOMPage() {
 
   const { data: units, loading, refetch } = useApi(
     () => inventoryApi.units.list({
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
+      page: currentPage,
+      page_size: pageSize,
       search: searchTerm || undefined,
     }),
     { 

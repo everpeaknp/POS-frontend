@@ -34,7 +34,7 @@ export default function NewBulkPricingPage() {
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
-      const response = await apiClient.get("/inventory/products/");
+      const response = await apiClient.get("/inventory/products/", { params: { page_size: 500 } });
       setProducts(response.data.results || []);
     } catch (error) {
       toast.error("Failed to load products");
@@ -102,7 +102,7 @@ export default function NewBulkPricingPage() {
       // Create each tier
       for (const tier of tiers) {
         await apiClient.post("/inventory/bulk-pricing/", {
-          product: selectedProduct,
+          product: parseInt(selectedProduct, 10),
           min_quantity: parseFloat(tier.min_quantity),
           max_quantity: tier.max_quantity ? parseFloat(tier.max_quantity) : null,
           unit_price: parseFloat(tier.unit_price),
@@ -126,7 +126,7 @@ export default function NewBulkPricingPage() {
     }
   };
 
-  const product = products.find(p => p.id === selectedProduct);
+  const product = products.find((p) => String(p.id) === selectedProduct);
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -151,7 +151,7 @@ export default function NewBulkPricingPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
+                    <SelectItem key={product.id} value={String(product.id)}>
                       {product.name} ({product.sku})
                     </SelectItem>
                   ))}

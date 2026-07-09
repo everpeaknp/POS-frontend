@@ -47,6 +47,13 @@ const quickActions = [
     color: "bg-blue-50 text-blue-600",
   },
   {
+    href: "/dashboard/inventory/stock-out",
+    label: "Stock Out",
+    sub: "Issue goods",
+    icon: TrendingDown,
+    color: "bg-red-50 text-red-600",
+  },
+  {
     href: "/dashboard/inventory/adjustment?new=1",
     label: "Stock Adjustment",
     sub: "Correct levels",
@@ -329,18 +336,25 @@ export default function InventoryDashboardPage() {
                 <tbody className="divide-y divide-gray-50">
                   {lowStockItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        <Link
+                          href={`/dashboard/inventory/products/${item.id}`}
+                          className="hover:text-[#22C55E]"
+                        >
+                          {item.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-gray-600">{item.current_stock}</td>
                       <td className="px-4 py-3 text-gray-600">{item.reorder_level}</td>
                       <td className="px-4 py-3">
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            item.status === "out_of_stock"
+                            item.status === "Out of Stock"
                               ? "bg-red-100 text-red-700"
                               : "bg-orange-100 text-orange-700"
                           }`}
                         >
-                          {item.status === "out_of_stock" ? "Out of Stock" : "Low Stock"}
+                          {item.status}
                         </span>
                       </td>
                     </tr>

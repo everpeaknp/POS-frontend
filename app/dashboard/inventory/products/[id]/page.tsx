@@ -26,9 +26,9 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = Number(params.id);
 
-  const { data: product, loading } = useApi(
+  const { data: product, loading, error } = useApi(
     () => inventoryApi.products.get(productId).then(res => res.data),
-    { immediate: true }
+    { immediate: true, deps: [productId] }
   );
 
   const { data: activity, loading: activityLoading } = useApi(
@@ -60,7 +60,8 @@ export default function EditProductPage() {
     );
   }
 
-  if (!product) {
+  if (!loading && (error || !product)) {
+    const isNotFound = (error as { message?: string })?.message?.toLowerCase().includes('not found');
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader 
@@ -70,7 +71,9 @@ export default function EditProductPage() {
         <div className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm text-center">
-              <p className="text-gray-600">Product not found</p>
+              <p className="text-gray-600">
+                {isNotFound ? "Product not found" : "Failed to load product"}
+              </p>
               <button
                 onClick={() => router.push("/dashboard/inventory/products")}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -82,6 +85,10 @@ export default function EditProductPage() {
         </div>
       </div>
     );
+  }
+
+  if (!product) {
+    return null;
   }
 
   return (

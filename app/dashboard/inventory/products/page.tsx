@@ -32,13 +32,13 @@ export default function ProductsListPage() {
 
   // Fetch products
   const { data: productsData, loading: productsLoading, refetch } = useApi(
-    () => inventoryApi.products.list({ 
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
+    () => inventoryApi.products.list({
+      page: currentPage,
+      page_size: pageSize,
       search: searchTerm || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
     }),
-    { immediate: true }
+    { immediate: true, deps: [currentPage, pageSize, searchTerm, statusFilter] }
   );
 
   const products = productsData?.data?.results || [];

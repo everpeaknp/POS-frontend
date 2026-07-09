@@ -162,6 +162,9 @@ export default function WarehousesPage() {
   };
 
   const calculateTotalValue = (warehouse: any) => {
+    if (warehouse.total_value != null) {
+      return Number(warehouse.total_value);
+    }
     return warehouse.stocks?.reduce((total: number, stock: any) => {
       return total + (stock.quantity * (stock.product?.cost_price || 0));
     }, 0) || 0;
