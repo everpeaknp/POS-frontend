@@ -75,7 +75,11 @@ export default function CustomerProfilePage() {
 
   const orders = ordersData?.data?.results || [];
   const invoices = invoicesData?.data?.results || [];
-  const ledger = Array.isArray(ledgerData) ? ledgerData : (ledgerData as { results?: unknown[] })?.results || [];
+  const ledger = !ledgerData
+    ? []
+    : Array.isArray(ledgerData)
+      ? ledgerData
+      : (ledgerData as { results?: unknown[] }).results ?? [];
   const creditNotes = creditNotesData?.data?.results || [];
 
   return (

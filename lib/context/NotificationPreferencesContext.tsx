@@ -72,9 +72,8 @@ export function NotificationPreferencesProvider({
       const prefs = await userApi.getNotificationPreferences();
       setPreferences(prefs);
       cacheNotificationPreferences(prefs);
-    } catch (error) {
+    } catch {
       setPreferences(readCachedOrDefault());
-      throw error;
     } finally {
       setLoading(false);
     }

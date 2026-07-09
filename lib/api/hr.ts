@@ -50,6 +50,26 @@ export interface EmployeeFormData {
   user?: string;
 }
 
+export function buildEmployeePayload(data: EmployeeFormData): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    name: data.name.trim(),
+    dob: data.dob,
+    gender: data.gender,
+    phone: data.phone.trim(),
+    email: data.email.trim(),
+    department: Number(data.department),
+    designation: data.designation,
+    employment_type: data.employment_type,
+    join_date: data.join_date,
+    basic_salary: Number(data.basic_salary),
+    status: data.status ?? 'active',
+  };
+  if (data.user) {
+    payload.user = data.user;
+  }
+  return payload;
+}
+
 export interface Attendance {
   id: string;
   employee: string;
@@ -144,12 +164,12 @@ export const getEmployee = async (id: string): Promise<Employee> => {
 };
 
 export const createEmployee = async (data: EmployeeFormData): Promise<Employee> => {
-  const response = await apiClient.post('/hr/employees/', data);
+  const response = await apiClient.post('/hr/employees/', buildEmployeePayload(data));
   return response.data;
 };
 
 export const updateEmployee = async (id: string, data: Partial<EmployeeFormData>): Promise<Employee> => {
-  const response = await apiClient.put(`/hr/employees/${id}/`, data);
+  const response = await apiClient.put(`/hr/employees/${id}/`, buildEmployeePayload(data as EmployeeFormData));
   return response.data;
 };
 
@@ -218,9 +238,14 @@ export const getAttendanceStats = async (month?: string): Promise<any> => {
 
 
 // Leave Types
-export const getLeaveTypes = async (params?: Record<string, unknown>): Promise<{ results: LeaveType[]; count: number }> => {
+export const getLeaveTypes = async (params?: Record<string, unknown>): Promise<LeaveType[]> => {
   const response = await apiClient.get('/hr/leave-types/', { params: { ...HR_LIST_PARAMS, ...params } });
-  return response.data;
+  return unwrapList(response.data);
+};
+
+export const setupDefaultLeaveTypes = async (): Promise<LeaveType[]> => {
+  const response = await apiClient.post('/hr/leave-types/setup-defaults/');
+  return unwrapList(response.data);
 };
 
 export const getLeaveType = async (id: string): Promise<LeaveType> => {

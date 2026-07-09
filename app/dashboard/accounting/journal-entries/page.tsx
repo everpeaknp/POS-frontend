@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Plus, Search, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DateInput } from "@/components/shared/DateInput";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { JournalStatusBadge, JournalTypeBadge } from "@/components/accounting/JournalStatusBadge";
@@ -22,6 +24,9 @@ export default function JournalEntriesPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reverseEntry, setReverseEntry] = useState<JournalEntry | null>(null);
+  const [reversalDate, setReversalDate] = useState(new Date().toISOString().split("T")[0]);
+  const [reversing, setReversing] = useState(false);
 
   useEffect(() => {
     fetchEntries();
@@ -52,17 +57,21 @@ export default function JournalEntriesPage() {
     }
   };
 
-  const handleReverse = async (id: string) => {
-    if (!confirm("Are you sure you want to reverse this journal entry?")) return;
-    
+  const handleReverse = async () => {
+    if (!reverseEntry) return;
+
+    setReversing(true);
     try {
-      await journalEntriesAPI.reverse(id);
+      await journalEntriesAPI.reverse(reverseEntry.id, reversalDate);
       toast.success("Journal entry reversed successfully");
+      setReverseEntry(null);
       fetchEntries();
     } catch (error: any) {
       console.error('Failed to reverse entry:', error);
       const message = error.response?.data?.error || error.response?.data?.detail || 'Failed to reverse entry';
       toast.error(message);
+    } finally {
+      setReversing(false);
     }
   };
 
@@ -166,7 +175,15 @@ export default function JournalEntriesPage() {
                         {je.status === "posted" && (
                           <>
                             <span className="text-gray-300">|</span>
-                            <button onClick={() => handleReverse(je.id)} className="text-red-500 hover:text-red-700">Reverse</button>
+                            <button
+                              onClick={() => {
+                                setReversalDate(new Date().toISOString().split("T")[0]);
+                                setReverseEntry(je);
+                              }}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              Reverse
+                            </button>
                           </>
                         )}
                       </div>
@@ -178,6 +195,43 @@ export default function JournalEntriesPage() {
           </div>
         )}
       </div>
+
+      {reverseEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Reverse Journal Entry</h2>
+            <p className="text-sm text-gray-500">
+              Are you sure you want to reverse <span className="font-mono font-medium text-gray-700">{reverseEntry.entry_number}</span>?
+              This will create a new journal entry with swapped debits and credits.
+            </p>
+            <div>
+              <Label className="text-sm">Reversal Date</Label>
+              <DateInput
+                className="mt-1.5"
+                value={reversalDate}
+                onChange={setReversalDate}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setReverseEntry(null)}
+                className="flex-1 border-gray-200"
+                disabled={reversing}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                onClick={handleReverse}
+                disabled={reversing}
+              >
+                {reversing ? "Reversing..." : "Reverse Entry"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

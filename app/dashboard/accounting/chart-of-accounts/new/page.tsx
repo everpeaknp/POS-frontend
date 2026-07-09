@@ -170,7 +170,7 @@ export default function NewAccountPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader title="Add Account" subtitle="Loading..." />
-        <PageLoading message="Loading form…" />
+        <PageLoading message="Loading form..." />
       </div>
     );
   }
@@ -183,7 +183,7 @@ export default function NewAccountPage() {
           {missingCount > 0 && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 mb-8 rounded-lg border border-gray-100 bg-gray-50">
               <p className="text-sm text-gray-600">
-                Need a full chart? Create {missingCount} standard account{missingCount !== 1 ? "s" : ""} (Cash, Bank, AR, Inventory, VAT, Revenue, COGS, …) in one click.
+                Need a full chart? Create {missingCount} standard account{missingCount !== 1 ? "s" : ""} (Cash, Bank, AR, Inventory, VAT, Revenue, COGS, ...) in one click.
               </p>
               <Button
                 type="button"
@@ -191,7 +191,7 @@ export default function NewAccountPage() {
                 disabled={seeding}
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white shrink-0"
               >
-                {seeding ? "Creating…" : "Create Standard Accounts"}
+                {seeding ? "Creating..." : "Create Standard Accounts"}
               </Button>
             </div>
           )}
@@ -249,10 +249,10 @@ export default function NewAccountPage() {
                       <SelectValue placeholder="None (top level)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">— None (Top Level) —</SelectItem>
+                      <SelectItem value="__none__"> None (Top Level) </SelectItem>
                       {parentOptions.map((a) => (
                         <SelectItem key={a.id} value={String(a.id)}>
-                          {a.code} — {a.name}
+                          {a.code}  {a.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

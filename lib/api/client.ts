@@ -27,6 +27,19 @@ function clearAuthStorage() {
   }
 }
 
+export function isApiNetworkError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as AxiosError;
+  return (
+    !err.response &&
+    (err.message === 'Network Error' ||
+      err.code === 'ERR_NETWORK' ||
+      err.code === 'ECONNABORTED')
+  );
+}
+
+export { API_BASE_URL, clearAuthStorage, persistAccessToken, persistRefreshToken };
+
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

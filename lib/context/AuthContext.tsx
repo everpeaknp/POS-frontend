@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { authApi, User, LoginCredentials, RegisterData } from '@/lib/api/auth';
+import { isApiNetworkError } from '@/lib/api/client';
 import { tenantApi, type Tenant } from '@/lib/api/tenant';
 import { acceptInviteToken, getInviteTokenFromRedirect } from '@/lib/invitations/accept';
 import { notifyAppearanceRefresh } from '@/lib/theme';
@@ -39,6 +40,28 @@ function toAuthTenant(tenant: Tenant): NonNullable<User['tenant']> {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_CACHE_KEY = 'user';
+
+function cacheUser(user: User) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+}
+
+function readCachedUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearUserCache() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(USER_CACHE_KEY);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,14 +75,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await authApi.getProfile();
           setUser(userData);
-        } catch (error: any) {
-          console.error('[AuthContext] Failed to load user:', error);
-          
-          if (error?.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            document.cookie = 'access_token=; path=/; max-age=0';
-            document.cookie = 'refresh_token=; path=/; max-age=0';
+          cacheUser(userData);
+        } catch (error: unknown) {
+          if (isApiNetworkError(error)) {
+            const cachedUser = readCachedUser();
+            if (cachedUser) {
+              setUser(cachedUser);
+            }
+          } else {
+            console.error('[AuthContext] Failed to load user:', error);
+
+            const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status === 401) {
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('refresh_token');
+              clearUserCache();
+              document.cookie = 'access_token=; path=/; max-age=0';
+              document.cookie = 'refresh_token=; path=/; max-age=0';
+            }
           }
         }
       }
@@ -86,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const userData = await authApi.getProfile();
     setUser(userData);
+    cacheUser(userData);
     notifyAppearanceRefresh();
 
     const inviteToken = getInviteTokenFromRedirect(redirectTo);
@@ -102,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
 
           localStorage.setItem('active_tenant_slug', tenant.slug);
+          cacheUser(nextUser);
           flushSync(() => setUser(nextUser));
           toast.success(result.message || `Joined ${switchedTenant.name}`);
           router.push('/dashboard');
@@ -152,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('session_id');
+    clearUserCache();
     
     // Clear cookies
     document.cookie = 'access_token=; path=/; max-age=0';
@@ -166,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { userApi } = await import('@/lib/api/user');
       const updatedUser = await userApi.updateProfile(data);
       setUser(updatedUser);
+      cacheUser(updatedUser);
     } catch (error) {
       console.error('Update failed:', error);
       throw error;
@@ -176,7 +213,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userData = await authApi.getProfile();
       setUser(userData);
+      cacheUser(userData);
     } catch (error) {
+      if (isApiNetworkError(error)) {
+        const cachedUser = readCachedUser();
+        if (cachedUser) {
+          setUser(cachedUser);
+          return;
+        }
+      }
       console.error('[AuthContext] Refresh user failed:', error);
       throw error;
     }
@@ -192,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     localStorage.setItem('active_tenant_slug', tenant.slug);
+    cacheUser(nextUser);
     flushSync(() => setUser(nextUser));
     router.push(redirectTo);
   };

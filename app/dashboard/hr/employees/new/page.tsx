@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
@@ -105,6 +106,10 @@ export default function NewEmployeePage() {
         }
         return true;
       case 2:
+        if (departments.length === 0) {
+          toast.error("Create a department before adding employees");
+          return false;
+        }
         if (!formData.department || !formData.designation || !formData.employment_type || !formData.join_date) {
           toast.error("Please fill in all employment details");
           return false;
@@ -207,7 +212,15 @@ export default function NewEmployeePage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && currentStep < STEPS.length) {
+                e.preventDefault();
+              }
+            }}
+            className="space-y-6"
+          >
             {currentStep === 1 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Personal Information</h3>
@@ -275,9 +288,18 @@ export default function NewEmployeePage() {
                     <Select value={formData.department || ""} onValueChange={(v) => setFormData({ ...formData, department: v || "" })}>
                       <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select department" /></SelectTrigger>
                       <SelectContent>
-                        {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                        {departments.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {departments.length === 0 && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        No departments found.{" "}
+                        <Link href="/dashboard/hr/departments/new" className="underline font-medium">
+                          Create a department first
+                        </Link>
+                        .
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="designation" className="text-sm font-medium text-gray-700">Designation*</Label>

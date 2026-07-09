@@ -908,6 +908,7 @@ export const customReportsAPI = {
   list: async (params?: {
     module?: string;
     only_mine?: boolean;
+    page_size?: number;
   }) => {
     const response = await apiClient.get<CustomReportListResponse>('/reports/custom-reports/', { params });
     return response.data;

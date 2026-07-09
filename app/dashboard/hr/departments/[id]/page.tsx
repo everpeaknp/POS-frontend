@@ -4,7 +4,7 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Edit, Trash2, Users, User } from "lucide-react";
+import { Edit, Trash2, Users, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
@@ -117,9 +117,14 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
   if (!department) {
     return (
       <HRPageShell title="Department Not Found" subtitle="The department you're looking for doesn't exist">
-        <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-          <ChevronLeft className="h-4 w-4" /> Back to Departments
-        </Link>
+        <div className={`${hrCardClass} p-8 text-center`}>
+          <p className="text-gray-600 dark:text-muted-foreground mb-4">
+            The department you are looking for does not exist.
+          </p>
+          <Link href="/dashboard/hr/departments">
+            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View all departments</Button>
+          </Link>
+        </div>
       </HRPageShell>
     );
   }
@@ -128,34 +133,31 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
     <HRPageShell
       title={department.name}
       subtitle={department.head_name ? `Head: ${department.head_name}` : "No department head assigned"}
-      action={
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2"
-            onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
-          >
-            <Edit className="h-4 w-4" /> Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-4 w-4" /> Delete
-          </Button>
-        </div>
-      }
     >
-      <Link href="/dashboard/hr/departments" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
-        <ChevronLeft className="h-4 w-4" /> Back to Departments
-      </Link>
-
       <div className="space-y-6">
-        <div className={`${hrCardClass} p-6`}>
-          <div className="flex items-start gap-4 mb-6">
+        <div className={`${hrCardClass} p-6 relative`}>
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[#22C55E] hover:text-white hover:border-[#22C55E]"
+              onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
+            >
+              <Edit className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+
+          <div className="flex items-start gap-4 mb-6 pr-44">
             <div className="w-16 h-16 rounded-lg bg-green-100 flex items-center justify-center">
               <Users className="w-8 h-8 text-green-600" />
             </div>

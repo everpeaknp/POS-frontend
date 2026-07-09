@@ -2,22 +2,28 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
-import { getEmployee, updateEmployee, getDepartments, type Department, type EmployeeFormData } from "@/lib/api/hr";
+import { getEmployee, updateEmployee, getDepartments, type Department } from "@/lib/api/hr";
 import { isAtLeastAge, maxBirthDateForMinAge } from "@/lib/dates";
 
 const MIN_EMPLOYEE_AGE = 18;
 const MAX_EMPLOYEE_DOB = maxBirthDateForMinAge(MIN_EMPLOYEE_AGE);
+
+const STEPS = [
+  { id: 1, name: "Personal" },
+  { id: 2, name: "Employment" },
+  { id: 3, name: "Salary" },
+  { id: 4, name: "Documents" },
+  { id: 5, name: "Access" },
+];
 
 const DESIGNATIONS = [
   { value: "Manager", label: "Manager" },
@@ -57,7 +63,7 @@ const DESIGNATIONS = [
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [tab, setTab] = useState("personal");
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -84,9 +90,9 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       setLoadingData(true);
       const [employeeData, departmentsData] = await Promise.all([
         getEmployee(id),
-        getDepartments()
+        getDepartments(),
       ]);
-      
+
       setDepartments(departmentsData);
       setFormData({
         name: employeeData.name || "",
@@ -94,7 +100,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         gender: employeeData.gender || "",
         phone: employeeData.phone || "",
         email: employeeData.email || "",
-        department: employeeData.department || "",
+        department: employeeData.department ? String(employeeData.department) : "",
         designation: employeeData.designation || "",
         employment_type: employeeData.employment_type || "",
         join_date: employeeData.join_date || "",
@@ -102,28 +108,66 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         status: employeeData.status || "active",
       });
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error("Failed to load data:", error);
       toast.error("Failed to load employee data");
     } finally {
       setLoadingData(false);
     }
   };
 
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        if (!formData.name || !formData.dob || !formData.gender || !formData.phone || !formData.email) {
+          toast.error("Please fill in all personal information fields");
+          return false;
+        }
+        if (!isAtLeastAge(formData.dob, MIN_EMPLOYEE_AGE)) {
+          toast.error(`Employee must be at least ${MIN_EMPLOYEE_AGE} years old`);
+          return false;
+        }
+        return true;
+      case 2:
+        if (
+          !formData.department ||
+          !formData.designation ||
+          !formData.employment_type ||
+          !formData.join_date ||
+          !formData.status
+        ) {
+          toast.error("Please fill in all employment details");
+          return false;
+        }
+        return true;
+      case 3:
+        if (!formData.basic_salary || Number(formData.basic_salary) <= 0) {
+          toast.error("Please enter a valid salary amount");
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.name || !formData.dob || !formData.gender || !formData.phone || 
-        !formData.email || !formData.department || !formData.designation || 
-        !formData.employment_type || !formData.join_date || !formData.basic_salary) {
-      toast.error("Please fill in all required fields");
+
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+      toast.error("Please complete all required steps");
       return;
     }
-    if (!isAtLeastAge(formData.dob, MIN_EMPLOYEE_AGE)) {
-      toast.error(`Employee must be at least ${MIN_EMPLOYEE_AGE} years old`);
-      return;
-    }
-    
+
     setLoading(true);
 
     try {
@@ -131,21 +175,19 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         ...formData,
         basic_salary: Number(formData.basic_salary),
       };
-      
+
       await updateEmployee(id, payload);
       toast.success("Employee updated successfully");
       router.push(`/dashboard/hr/employees/${id}`);
     } catch (error: any) {
-      console.error('Failed to update employee:', error);
-      
-      // Show detailed validation errors
+      console.error("Failed to update employee:", error);
+
       if (error.response?.data) {
         const errorData = error.response.data;
-        
-        // Display field-specific errors
-        if (typeof errorData === 'object') {
+
+        if (typeof errorData === "object") {
           Object.entries(errorData).forEach(([field, messages]) => {
-            const errorMsg = Array.isArray(messages) ? messages.join(', ') : messages;
+            const errorMsg = Array.isArray(messages) ? messages.join(", ") : messages;
             toast.error(`${field}: ${errorMsg}`);
           });
         } else {
@@ -159,172 +201,210 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     }
   };
 
+  if (loadingData) {
+    return <HRPageShell title="Edit Employee" subtitle="Update employee information" loading />;
+  }
+
   return (
-    <HRPageShell
-      title="Edit Employee"
-      subtitle="Update employee information"
-      variant="form"
-      loading={loadingData}
-    >
-      <Link href={`/dashboard/hr/employees/${id}`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2">
-        <ChevronLeft className="h-4 w-4" /> Back to Employee Profile
-      </Link>
-
-      {!loadingData && (
-        <div className={`${hrCardClass} p-6`}>
-          <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="personal">Personal</TabsTrigger>
-              <TabsTrigger value="employment">Employment</TabsTrigger>
-              <TabsTrigger value="salary">Salary</TabsTrigger>
-              <TabsTrigger value="status">Status</TabsTrigger>
-              <TabsTrigger value="access">Access</TabsTrigger>
-            </TabsList>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Tab */}
-              <TabsContent value="personal" className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name*</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Enter full name" 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      className="mt-1 h-9 border-gray-200" 
-                      required 
-                    />
+    <HRPageShell title="Edit Employee" subtitle="Update employee information">
+      <div className={`${hrCardClass} p-6 lg:p-8 w-full`}>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {STEPS.map((step, index) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center flex-1">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                      currentStep > step.id
+                        ? "bg-[#22C55E] border-[#22C55E] text-white"
+                        : currentStep === step.id
+                          ? "bg-[#22C55E] border-[#22C55E] text-white"
+                          : "bg-white border-gray-300 text-gray-400"
+                    }`}
+                  >
+                    {currentStep > step.id ? <Check className="h-5 w-5" /> : step.id}
                   </div>
-                  <div>
-                    <Label htmlFor="dob" className="text-sm font-medium text-gray-700">Date of Birth*</Label>
-                    <DateInput 
-                      id="dob" 
-                      value={formData.dob} 
-                      onChange={(date) => setFormData({ ...formData, dob: date})} 
-                      max={MAX_EMPLOYEE_DOB}
-                      className="mt-1 h-9 border-gray-200" 
-                      required 
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Employee must be at least {MIN_EMPLOYEE_AGE} years old</p>
-                  </div>
+                  <span
+                    className={`mt-2 text-xs font-medium ${
+                      currentStep >= step.id ? "text-gray-900" : "text-gray-400"
+                    }`}
+                  >
+                    {step.name}
+                  </span>
                 </div>
+                {index < STEPS.length - 1 && (
+                  <div
+                    className={`h-0.5 flex-1 mx-2 transition-colors ${
+                      currentStep > step.id ? "bg-[#22C55E]" : "bg-gray-200"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="gender" className="text-sm font-medium text-gray-700">Gender*</Label>
-                    <Select value={formData.gender || ""} onValueChange={(v) => setFormData({ ...formData, gender: v || "" })}>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select gender" /></SelectTrigger>
-                      <SelectContent>
-                        {["Male", "Female", "Other"].map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone*</Label>
-                    <Input 
-                      id="phone" 
-                      placeholder="Enter phone number" 
-                      value={formData.phone} 
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
-                      className="mt-1 h-9 border-gray-200" 
-                      required 
-                    />
-                  </div>
-                </div>
-
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {currentStep === 1 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Personal Information
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email*</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Enter email" 
-                    value={formData.email} 
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                    className="mt-1 h-9 border-gray-200" 
-                    required 
+                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                    Full Name*
+                  </Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter full name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="mt-1 h-9 border-gray-200"
                   />
                 </div>
-              </TabsContent>
-
-              {/* Employment Tab */}
-              <TabsContent value="employment" className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department*</Label>
-                    <Select value={formData.department || ""} onValueChange={(v) => setFormData({ ...formData, department: v || "" })}>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select department" /></SelectTrigger>
-                      <SelectContent>
-                        {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="designation" className="text-sm font-medium text-gray-700">Designation*</Label>
-                    <Combobox
-                      options={DESIGNATIONS}
-                      value={formData.designation || ""}
-                      onValueChange={(v) => setFormData({ ...formData, designation: v })}
-                      placeholder="Search designation..."
-                      emptyText="No designation found"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="type" className="text-sm font-medium text-gray-700">Employment Type*</Label>
-                    <Select value={formData.employment_type || ""} onValueChange={(v) => setFormData({ ...formData, employment_type: v || "" })}>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent>
-                        {["Full-time", "Part-time", "Contract", "Probation"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="joinDate" className="text-sm font-medium text-gray-700">Join Date*</Label>
-                    <DateInput 
-                      id="joinDate" 
-                       
-                      value={formData.join_date} 
-                      onChange={(date) => setFormData({ ...formData, join_date: date})} 
-                      className="mt-1 h-9 border-gray-200" 
-                      required 
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Salary Tab */}
-              <TabsContent value="salary" className="space-y-6">
                 <div>
-                  <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Basic Salary (Rs.)*</Label>
-                  <Input 
-                    id="salary" 
-                    type="number" 
-                    placeholder="Enter salary" 
-                    value={formData.basic_salary || ''} 
-                    onChange={(e) => setFormData({ ...formData, basic_salary: Number(e.target.value) })} 
-                    className="mt-1 h-9 border-gray-200" 
-                    required 
+                  <Label htmlFor="dob" className="text-sm font-medium text-gray-700">
+                    Date of Birth (18+)*
+                  </Label>
+                  <DateInput
+                    id="dob"
+                    value={formData.dob}
+                    onChange={(date) => setFormData({ ...formData, dob: date })}
+                    max={MAX_EMPLOYEE_DOB}
+                    className="mt-1 h-9 border-gray-200"
                   />
                 </div>
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <p className="text-sm text-blue-700">PF (Provident Fund): 10% employee + 10% employer</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Current PF: Rs. {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employee) + 
-                    Rs. {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employer)
-                  </p>
-                </div>
-              </TabsContent>
-
-              {/* Status Tab */}
-              <TabsContent value="status" className="space-y-6">
                 <div>
-                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">Employment Status*</Label>
-                  <Select value={formData.status || ""} onValueChange={(v) => setFormData({ ...formData, status: v || "" })}>
-                    <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <Label htmlFor="gender" className="text-sm font-medium text-gray-700">
+                    Gender*
+                  </Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(v) => setFormData({ ...formData, gender: v ?? "" })}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Male", "Female", "Other"].map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {g}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                    Phone*
+                  </Label>
+                  <Input
+                    id="phone"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="mt-1 h-9 border-gray-200"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    Email*
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="mt-1 h-9 border-gray-200"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Employment Details
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="department" className="text-sm font-medium text-gray-700">
+                    Department*
+                  </Label>
+                  <Select
+                    value={formData.department}
+                    onValueChange={(v) => setFormData({ ...formData, department: v ?? "" })}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((d) => (
+                        <SelectItem key={d.id} value={String(d.id)}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="designation" className="text-sm font-medium text-gray-700">
+                    Designation*
+                  </Label>
+                  <Combobox
+                    options={DESIGNATIONS}
+                    value={formData.designation}
+                    onValueChange={(v) => setFormData({ ...formData, designation: v })}
+                    placeholder="Search designation..."
+                    emptyText="No designation found"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">
+                    Employment Type*
+                  </Label>
+                  <Select
+                    value={formData.employment_type}
+                    onValueChange={(v) => setFormData({ ...formData, employment_type: v ?? "" })}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Full-time", "Part-time", "Contract", "Probation"].map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="joinDate" className="text-sm font-medium text-gray-700">
+                    Join Date*
+                  </Label>
+                  <DateInput
+                    id="joinDate"
+                    value={formData.join_date}
+                    onChange={(date) => setFormData({ ...formData, join_date: date })}
+                    className="mt-1 h-9 border-gray-200"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+                    Employment Status*
+                  </Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(v) => setFormData({ ...formData, status: v ?? "" })}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
@@ -333,25 +413,104 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                     </SelectContent>
                   </Select>
                 </div>
-              </TabsContent>
-
-              {/* Access Tab */}
-              <TabsContent value="access" className="space-y-6">
-                <div className="text-sm text-gray-600">System login access can be configured separately.</div>
-              </TabsContent>
-
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <Button type="submit" className="bg-[#22C55E] hover:bg-[#16A34A] text-white" disabled={loading}>
-                  {loading ? 'Updating...' : 'Update Employee'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
-                  Cancel
-                </Button>
               </div>
-            </form>
-          </Tabs>
-        </div>
-      )}
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Salary Information
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="salary" className="text-sm font-medium text-gray-700">
+                    Basic Salary (Rs.)*
+                  </Label>
+                  <Input
+                    id="salary"
+                    type="number"
+                    placeholder="Enter salary"
+                    value={formData.basic_salary || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, basic_salary: Number(e.target.value) })
+                    }
+                    className="mt-1 h-9 border-gray-200"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 bg-green-50 border border-green-100 rounded-lg p-4 w-full">
+                <p className="text-sm text-green-700">PF (Provident Fund): 10% employee + 10% employer</p>
+                <p className="text-sm text-green-700 mt-1">
+                  Current PF: Rs. {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employee) + Rs.{" "}
+                  {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employer)
+                </p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Documents
+              </h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center w-full">
+                <p className="text-sm text-gray-600">Document uploads can be managed from the employee profile.</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  You can upload documents like ID proof, certificates, etc. from the employee profile page.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                System Access
+              </h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center w-full">
+                <p className="text-sm text-gray-600">System login access can be configured from the employee profile.</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  You can grant system access and assign roles from the employee profile page.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between gap-3 pt-4 border-t border-gray-100">
+            <div>
+              {currentStep > 1 && (
+                <Button type="button" variant="outline" onClick={handlePrevious} disabled={loading}>
+                  Previous
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
+                Cancel
+              </Button>
+              {currentStep < STEPS.length ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  disabled={loading}
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  disabled={loading}
+                >
+                  {loading ? "Updating..." : "Update Employee"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
     </HRPageShell>
   );
 }

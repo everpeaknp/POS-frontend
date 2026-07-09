@@ -1,54 +1,81 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
-import { getLeaveTypes, getEmployees, createLeaveRequest, type LeaveType, type Employee } from "@/lib/api/hr";
+import {
+  getLeaveTypes,
+  getEmployees,
+  createLeaveRequest,
+  setupDefaultLeaveTypes,
+  type LeaveType,
+  type Employee,
+} from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
 export default function NewLeaveRequestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedEmployee = searchParams.get("employee") ?? "";
+
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [settingUpTypes, setSettingUpTypes] = useState(false);
   const [formData, setFormData] = useState({
-    employee: "",
+    employee: preselectedEmployee,
     leave_type: "",
     start_date: "",
     end_date: "",
     reason: "",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [typesData, employeesData] = await Promise.all([
         getLeaveTypes(),
         getEmployees({ status: "active" }),
       ]);
-      setLeaveTypes(typesData.results || []);
+      setLeaveTypes(typesData);
       setEmployees(employeesData.results || []);
+      if (preselectedEmployee) {
+        setFormData((prev) => ({ ...prev, employee: preselectedEmployee }));
+      }
     } catch (error) {
-      console.error('Failed to load leave form data:', error);
+      console.error("Failed to load leave form data:", error);
       toast.error("Failed to load leave form data");
     } finally {
       setLoading(false);
+    }
+  }, [preselectedEmployee]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSetupDefaults = async () => {
+    try {
+      setSettingUpTypes(true);
+      const types = await setupDefaultLeaveTypes();
+      setLeaveTypes(types);
+      toast.success("Default leave types added");
+    } catch (error) {
+      console.error("Failed to set up leave types:", error);
+      toast.error("Failed to set up leave types");
+    } finally {
+      setSettingUpTypes(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.leave_type || !formData.start_date || !formData.end_date || !formData.reason) {
       toast.error("Please fill in all required fields");
       return;
@@ -56,7 +83,7 @@ export default function NewLeaveRequestPage() {
 
     try {
       setSubmitting(true);
-      
+
       await createLeaveRequest({
         ...(formData.employee ? { employee: formData.employee } : {}),
         leave_type: formData.leave_type,
@@ -68,11 +95,11 @@ export default function NewLeaveRequestPage() {
       toast.success("Leave request submitted successfully");
       router.push("/dashboard/hr/leave");
     } catch (error: any) {
-      console.error('Failed to submit leave request:', error);
-      
+      console.error("Failed to submit leave request:", error);
+
       if (error.response?.data) {
         const errors = error.response.data;
-        if (typeof errors === 'object') {
+        if (typeof errors === "object") {
           Object.entries(errors).forEach(([field, messages]) => {
             const message = Array.isArray(messages) ? messages[0] : messages;
             toast.error(`${field}: ${message}`);
@@ -99,10 +126,14 @@ export default function NewLeaveRequestPage() {
         <div className={`${hrCardClass} p-6 lg:p-8 w-full min-h-full`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Leave Details</h3>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Leave Details
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div>
-                  <Label htmlFor="employee" className="text-sm font-medium text-gray-700">Employee</Label>
+                  <Label htmlFor="employee" className="text-sm font-medium text-gray-700">
+                    Employee
+                  </Label>
                   <Select
                     value={formData.employee}
                     onValueChange={(v) => setFormData({ ...formData, employee: v ?? "" })}
@@ -123,46 +154,69 @@ export default function NewLeaveRequestPage() {
                     Leave blank if your user account is linked to an employee profile.
                   </p>
                 </div>
+
                 <div>
-                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">Leave Type*</Label>
-                  <Select 
-                    value={formData.leave_type} 
-                    onValueChange={(v) => v && setFormData({ ...formData, leave_type: v })}
-                    disabled={submitting}
-                  >
-                    <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select leave type" /></SelectTrigger>
-                    <SelectContent>
-                      {leaveTypes.map((lt) => (
-                        <SelectItem key={lt.id} value={String(lt.id)}>
-                          {lt.name} ({lt.days_allowed} days)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">
+                    Leave Type*
+                  </Label>
+                  {leaveTypes.length === 0 ? (
+                    <div className="mt-1 space-y-2">
+                      <p className="text-xs text-gray-500">No leave types configured yet.</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                        onClick={handleSetupDefaults}
+                        disabled={settingUpTypes}
+                      >
+                        {settingUpTypes ? "Adding..." : "Add default leave types"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={formData.leave_type}
+                      onValueChange={(v) => setFormData({ ...formData, leave_type: v ?? "" })}
+                      disabled={submitting}
+                    >
+                      <SelectTrigger className="mt-1 h-9 border-gray-200">
+                        <SelectValue placeholder="Select leave type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leaveTypes.map((lt) => (
+                          <SelectItem key={lt.id} value={String(lt.id)}>
+                            {lt.name} ({lt.days_allowed} days)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="from" className="text-sm font-medium text-gray-700">From Date*</Label>
-                  <DateInput 
-                    id="from" 
-                     
-                    value={formData.start_date} 
-                    onChange={(date) => setFormData({ ...formData, start_date: date})} 
-                    className="mt-1 h-9 border-gray-200" 
-                    required 
+                  <Label htmlFor="from" className="text-sm font-medium text-gray-700">
+                    From Date*
+                  </Label>
+                  <DateInput
+                    id="from"
+                    value={formData.start_date}
+                    onChange={(date) => setFormData({ ...formData, start_date: date })}
+                    className="mt-1 h-9 border-gray-200"
+                    required
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="to" className="text-sm font-medium text-gray-700">To Date*</Label>
-                  <DateInput 
-                    id="to" 
-                     
-                    value={formData.end_date} 
-                    onChange={(date) => setFormData({ ...formData, end_date: date})} 
-                    className="mt-1 h-9 border-gray-200" 
-                    required 
+                  <Label htmlFor="to" className="text-sm font-medium text-gray-700">
+                    To Date*
+                  </Label>
+                  <DateInput
+                    id="to"
+                    value={formData.end_date}
+                    onChange={(date) => setFormData({ ...formData, end_date: date })}
+                    className="mt-1 h-9 border-gray-200"
+                    required
                     disabled={submitting}
                   />
                 </div>
@@ -170,34 +224,40 @@ export default function NewLeaveRequestPage() {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Reason</h3>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
+                Reason
+              </h3>
               <div>
-                <Label htmlFor="reason" className="text-sm font-medium text-gray-700">Reason*</Label>
-                <textarea 
+                <Label htmlFor="reason" className="text-sm font-medium text-gray-700">
+                  Reason*
+                </Label>
+                <textarea
                   id="reason"
-                  placeholder="Enter reason for leave" 
-                  value={formData.reason} 
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, reason: e.target.value })} 
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]" 
-                  required 
+                  placeholder="Enter reason for leave"
+                  value={formData.reason}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setFormData({ ...formData, reason: e.target.value })
+                  }
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  required
                   disabled={submitting}
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => router.back()}
                 disabled={submitting}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-                disabled={submitting}
+                disabled={submitting || leaveTypes.length === 0}
               >
                 {submitting ? "Submitting..." : "Submit Request"}
               </Button>

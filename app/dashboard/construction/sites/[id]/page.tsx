@@ -1,5 +1,6 @@
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
+
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from 'react';

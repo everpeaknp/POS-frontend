@@ -13,7 +13,7 @@ import { HRPageShell, hrCardClass, hrTableWrapClass, hrStatCardClass, hrInputCla
 import { LeaveStatusBadge } from "@/components/hr/LeaveStatusBadge";
 import { LeaveBalanceCard } from "@/components/hr/LeaveBalanceCard";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { getLeaveRequests, getLeaveTypes, approveLeaveRequest, rejectLeaveRequest, deleteLeaveRequest, type LeaveRequest, type LeaveType } from "@/lib/api/hr";
+import { getLeaveRequests, getLeaveTypes, setupDefaultLeaveTypes, approveLeaveRequest, rejectLeaveRequest, deleteLeaveRequest, type LeaveRequest, type LeaveType } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +24,7 @@ export default function LeavePage() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [settingUpTypes, setSettingUpTypes] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -37,12 +38,26 @@ export default function LeavePage() {
         getLeaveTypes()
       ]);
       setLeaveRequests(requestsData.results || []);
-      setLeaveTypes(typesData.results || []);
+      setLeaveTypes(typesData);
     } catch (error) {
       console.error('Failed to load leave data:', error);
       toast.error("Failed to load leave data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSetupLeaveTypes = async () => {
+    try {
+      setSettingUpTypes(true);
+      const types = await setupDefaultLeaveTypes();
+      setLeaveTypes(types);
+      toast.success("Default leave types added");
+    } catch (error) {
+      console.error("Failed to set up leave types:", error);
+      toast.error("Failed to set up leave types");
+    } finally {
+      setSettingUpTypes(false);
     }
   };
 
@@ -436,7 +451,9 @@ export default function LeavePage() {
               <EmptyState
                 icon={CalendarDays}
                 title="No leave types configured"
-                description="Set up leave types in HR settings to track employee balances."
+                description="Add default leave types (Annual, Sick, Casual) so employees can apply for leave."
+                actionLabel={settingUpTypes ? "Adding..." : "Add default leave types"}
+                onAction={settingUpTypes ? undefined : handleSetupLeaveTypes}
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

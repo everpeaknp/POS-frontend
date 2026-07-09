@@ -5,7 +5,7 @@ import { DashboardShellLoading } from "@/components/dashboard/DashboardShellLoad
 import { Button } from "@/components/ui/button";
 
 interface HRPageShellProps {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   backHref?: string;
   showBack?: boolean;

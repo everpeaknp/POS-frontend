@@ -2,7 +2,7 @@
 
 import { DateInput } from "@/components/shared/DateInput";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,9 @@ function formatTimeForInput(value?: string | null): string {
 
 export default function MarkAttendancePage() {
   const router = useRouter();
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const searchParams = useSearchParams();
+  const initialDate = searchParams.get("date") ?? new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(initialDate);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendance, setAttendance] = useState<AttendanceFormData>({});
   const [loading, setLoading] = useState(true);

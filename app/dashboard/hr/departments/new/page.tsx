@@ -85,9 +85,8 @@ export default function NewDepartmentPage() {
     <HRPageShell
       title="Add New Department"
       subtitle="Create a new department for your organization"
-      variant="fullscreen"
     >
-      <div className={`${hrCardClass} p-6 lg:p-8 w-full min-h-full`}>
+      <div className={`${hrCardClass} p-6 lg:p-8 w-full`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Department Details</h3>

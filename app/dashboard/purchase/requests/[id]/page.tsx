@@ -378,7 +378,7 @@ export default function PurchaseRequestDetailPage() {
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
               <Label>Supplier</Label>
-              <Select value={convertSupplierId} onValueChange={setConvertSupplierId}>
+              <Select value={convertSupplierId} onValueChange={(value) => setConvertSupplierId(value || "")}>
                 <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => (

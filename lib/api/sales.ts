@@ -338,6 +338,7 @@ export const paymentReceivedAPI = {
     invoice?: string;
     search?: string;
     ordering?: string;
+    page_size?: number;
   }) => {
     const response = await apiClient.get<{ results: PaymentReceived[] } | PaymentReceived[]>(
       '/sales/payments/',
