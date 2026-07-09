@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -19,20 +19,19 @@ import { ErpHeader } from "@/components/erp/erp-header";
 import { OrgTabs } from "@/components/org-tabs";
 import { OrgCard } from "@/components/org-card";
 import { EmptyState } from "@/components/empty-state";
-import { Organization } from "@/lib/types";
-import { tenantApi, Tenant, invitationApi, Invitation } from "@/lib/api/tenant";
+import { tenantApi, invitationApi, Invitation } from "@/lib/api/tenant";
 import { billingApi, type AccountLimits } from "@/lib/api/billing";
-import { getMediaUrl } from "@/lib/utils";
+import { mapTenantToOrganization } from "@/lib/erp/org-mapper";
 import { PageLoading } from "@/components/shared/PageLoading";
 import toast from "react-hot-toast";
 
-export default function ErpPage() {
+function ErpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, switchOrganization } = useAuth();
   const [activeTab, setActiveTab] = useState("organizations");
   const [searchQuery, setSearchQuery] = useState("");
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<Awaited<ReturnType<typeof tenantApi.getAll>>>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [accountLimits, setAccountLimits] = useState<AccountLimits | null>(null);
@@ -43,49 +42,80 @@ export default function ErpPage() {
       setActiveTab("invitation");
     } else if (tab === "requests") {
       setActiveTab("requests");
-    } else if (tab === "organizations") {
+    } else {
       setActiveTab("organizations");
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/auth/login");
-    } else {
-      fetchTenants();
-      fetchInvitations();
-      billingApi.getAccountLimits().then(setAccountLimits).catch(() => {});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, router]);
-
-  const fetchTenants = async () => {
+  const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
       const data = await tenantApi.getAll();
       setTenants(data);
     } catch (error) {
       console.error("[ERP] Failed to fetch tenants:", error);
+      toast.error("Failed to load organizations");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
       const response = await invitationApi.getReceived();
-      setInvitations(response.data);
+      setInvitations(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("[ERP] Failed to fetch invitations:", error);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    fetchTenants();
+    fetchInvitations();
+    billingApi.getAccountLimits().then(setAccountLimits).catch(() => {});
+  }, [user, router, fetchTenants, fetchInvitations]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "organizations") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `/erp?${qs}` : "/erp");
+  };
+
+  const handleCreateOrganization = () => {
+    if (accountLimits && !accountLimits.can_create_org) {
+      const limit = accountLimits.max_orgs ?? 0;
+      toast.error(
+        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} organization${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
+      );
+      return;
+    }
+    router.push("/erp/new");
   };
 
   const handleAcceptInvitation = async (id: number) => {
     try {
-      await invitationApi.respond(id, "accept");
+      const response = await invitationApi.respond(id, "accept");
       toast.success("Invitation accepted! You've joined the organization.");
       await fetchInvitations();
-      await fetchTenants();
+      const updatedTenants = await tenantApi.getAll();
+      setTenants(updatedTenants);
+
+      const invitation = response.data.invitation;
+      const joinedTenant = updatedTenants.find((t) => t.id === invitation?.tenant);
+      if (joinedTenant?.slug) {
+        await switchOrganization(joinedTenant.slug, "/dashboard");
+      }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string } } };
       toast.error(err.response?.data?.error || "Failed to accept invitation");
@@ -102,35 +132,11 @@ export default function ErpPage() {
     }
   };
 
-  const handleCreateOrganization = () => {
-    if (accountLimits && !accountLimits.can_create_org) {
-      const limit = accountLimits.max_orgs ?? 0;
-      toast.error(
-        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} organization${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
-      );
-      return;
-    }
-    router.push("/erp/new");
-  };
-
   if (!user || loading) {
     return <PageLoading fullScreen message="Loading organizations…" />;
   }
 
-  const organizations: Organization[] = tenants.map((tenant) => ({
-    id: tenant.id.toString(),
-    slug: tenant.slug,
-    name: tenant.name,
-    subdomain: `${tenant.slug}.khata.app`,
-    icon: tenant.name.charAt(0).toUpperCase(),
-    logo: getMediaUrl(tenant.logo) || undefined,
-    trialDaysLeft: 30,
-    status: tenant.is_active ? "active" : "trial",
-    user_role: tenant.user_role,
-    workspace_name: tenant.workspace_name,
-    created_by: tenant.created_by,
-    can_delete: tenant.user_role === "super_admin" || tenant.created_by === user?.id,
-  }));
+  const organizations = tenants.map((tenant) => mapTenantToOrganization(tenant, user.id));
 
   const filteredOrgs = organizations.filter(
     (org) =>
@@ -169,13 +175,12 @@ export default function ErpPage() {
 
       <OrgTabs
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         pendingInvitationsCount={pendingInvitations.length}
       />
 
       <main className="flex-1 overflow-y-auto pb-24">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-xl font-bold text-foreground">{pageMeta.title}</h1>
@@ -204,7 +209,8 @@ export default function ErpPage() {
                     icon={Building2}
                     title="No organization yet"
                     subtitle="Get started by creating your first Khata workspace"
-                    showButton={true}
+                    showButton={accountLimits?.can_create_org ?? true}
+                    onAction={handleCreateOrganization}
                   />
                 </div>
               ) : filteredOrgs.length > 0 ? (
@@ -333,5 +339,13 @@ export default function ErpPage() {
         </button>
       )}
     </div>
+  );
+}
+
+export default function ErpPage() {
+  return (
+    <Suspense fallback={<PageLoading fullScreen message="Loading organizations…" />}>
+      <ErpPageContent />
+    </Suspense>
   );
 }

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { KhataLogo } from "@/components/khata-logo";
 import { OrgForm } from "@/components/org-form";
 import { tenantApi, Tenant, TenantData } from "@/lib/api/tenant";
+import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
 import toast from "react-hot-toast";
 
 export default function EditOrganizationPage() {
@@ -36,6 +37,11 @@ export default function EditOrganizationPage() {
     try {
       setLoading(true);
       const data = await tenantApi.getBySlug(slug);
+      if (!isTenantOrgAdmin(data.user_role)) {
+        toast.error("Only organization admins can edit organization settings");
+        router.push("/erp");
+        return;
+      }
       setTenant(data);
     } catch (error) {
       console.error("Failed to fetch tenant:", error);

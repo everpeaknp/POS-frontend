@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuth } from "@/lib/context/AuthContext";
 import { OrgWizardShell } from "@/components/org-wizard-shell";
 import { OrgForm } from "@/components/org-form";
 import { ModuleSelection } from "@/components/module-selection";
@@ -15,6 +16,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 export default function NewOrgPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [organizationData, setOrganizationData] = useState<any>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
@@ -24,6 +26,15 @@ export default function NewOrgPage() {
   const [limitsLoading, setLimitsLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.replace("/auth/login?redirect=/erp/new");
+    }
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+
     billingApi
       .getAccountLimits()
       .then((limits) => {
@@ -38,7 +49,7 @@ export default function NewOrgPage() {
         setLimitsLoading(false);
       })
       .catch(() => setLimitsLoading(false));
-  }, [router]);
+  }, [authLoading, user, router]);
 
   const handleStep1Complete = (data: any) => {
     setOrganizationData(data);
@@ -49,6 +60,15 @@ export default function NewOrgPage() {
     setSelectedModules(modules);
     setStep(3);
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
+        <ErpHeader />
+        <PageLoading message="Loading…" className="flex-1 min-h-[50vh]" />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <OrgCreationLoading />;

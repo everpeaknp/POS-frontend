@@ -11,6 +11,7 @@ export interface Organization {
   workspace_name?: string;
   created_by?: number | null;
   can_delete?: boolean;
+  active_modules?: string[];
 }
 
 export interface User {
