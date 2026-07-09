@@ -68,13 +68,8 @@ export const tenantApi = {
 
   // Get all tenants (handles pagination)
   getAll: async (): Promise<Tenant[]> => {
-    const response = await apiClient.get('/tenants/');
-    // Handle paginated response
-    if (response.data.results) {
-      return response.data.results;
-    }
-    // Handle non-paginated response (just in case)
-    return Array.isArray(response.data) ? response.data : [];
+    const { fetchAllPages } = await import('./settings-helpers');
+    return fetchAllPages<Tenant>('/tenants/');
   },
 
   // Create a new tenant

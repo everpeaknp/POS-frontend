@@ -29,7 +29,7 @@ export default function OrganizationModulesPage() {
   const [allowedModules, setAllowedModules] = useState<string[]>([]);
   const [planName, setPlanName] = useState("Free");
 
-  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role, user?.role);
+  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role);
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
 
   const enabledCount = useMemo(

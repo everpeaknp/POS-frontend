@@ -5,7 +5,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { Search, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import apiClient from "@/lib/api/client";
+import { fetchAllPages } from "@/lib/api/settings-helpers";
 import { downloadCsv } from "@/lib/utils/csv";
 import toast from "react-hot-toast";
 
@@ -46,12 +46,11 @@ export default function AuditPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const params: any = {};
-      if (actionFilter) params.action = actionFilter;
-      if (moduleFilter) params.module = moduleFilter;
-      
-      const response = await apiClient.get("/auth/audit-logs/", { params });
-      setLogs(response.data.results || response.data);
+      const data = await fetchAllPages<AuditLog>("/auth/audit-logs/", {
+        ...(actionFilter ? { action: actionFilter } : {}),
+        ...(moduleFilter ? { module: moduleFilter } : {}),
+      });
+      setLogs(data);
     } catch (error: any) {
       console.error("Failed to fetch audit logs:", error);
       if (error.response?.status === 403) {

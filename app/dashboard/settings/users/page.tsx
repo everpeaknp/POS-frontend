@@ -21,6 +21,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";  
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import apiClient from "@/lib/api/client";
+import { fetchAllPages } from "@/lib/api/settings-helpers";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
 import { invitationApi, Invitation, tenantApi, TenantUserLimits } from "@/lib/api/tenant";
@@ -163,9 +164,8 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get("/auth/users/");
-      // API returns paginated data: {count, next, previous, results}
-      setUsers(response.data.results || response.data);
+      const data = await fetchAllPages<User>("/auth/users/");
+      setUsers(data);
     } catch (error: any) {
       console.error("Failed to fetch users:", error);
       if (error.response?.status === 500 || error.response?.status === 403) {

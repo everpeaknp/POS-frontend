@@ -125,7 +125,7 @@ function OrgSettingsContent() {
     tenantToForm({ address: "" } as Tenant, "AD")
   );
 
-  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role, user?.role);
+  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role);
 
   const loadTenantData = useCallback(async () => {
     try {
