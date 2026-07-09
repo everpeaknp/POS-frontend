@@ -1,5 +1,6 @@
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
 'use client';
+
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';

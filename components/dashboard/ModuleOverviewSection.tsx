@@ -181,39 +181,58 @@ export function ModuleOverviewSection({
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {list.items.map((item, index) => (
-                      <div
-                        key={`${item.primary}-${index}`}
-                        className="flex items-center gap-3 rounded-lg border border-gray-100 dark:border-border px-3 py-2.5"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
-                            {item.primary}
-                          </p>
-                          {item.secondary ? (
-                            <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
-                              {item.secondary}
+                    {list.items.map((item, index) => {
+                      const rowClass =
+                        "flex items-center gap-3 rounded-lg border border-gray-100 dark:border-border px-3 py-2.5";
+                      const rowContent = (
+                        <>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
+                              {item.primary}
                             </p>
-                          ) : null}
+                            {item.secondary ? (
+                              <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
+                                {item.secondary}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {item.meta ? (
+                              <span className="text-xs text-gray-500 dark:text-muted-foreground">
+                                {item.meta}
+                              </span>
+                            ) : null}
+                            {item.status ? (
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  statusStyle[item.status] ?? "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {item.status}
+                              </span>
+                            ) : null}
+                          </div>
+                        </>
+                      );
+
+                      if (item.href) {
+                        return (
+                          <Link
+                            key={`${item.primary}-${index}`}
+                            href={item.href}
+                            className={`${rowClass} hover:bg-gray-50/80 dark:hover:bg-muted/40 transition-colors`}
+                          >
+                            {rowContent}
+                          </Link>
+                        );
+                      }
+
+                      return (
+                        <div key={`${item.primary}-${index}`} className={rowClass}>
+                          {rowContent}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {item.meta ? (
-                            <span className="text-xs text-gray-500 dark:text-muted-foreground">
-                              {item.meta}
-                            </span>
-                          ) : null}
-                          {item.status ? (
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                                statusStyle[item.status] ?? "bg-gray-100 text-gray-700"
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

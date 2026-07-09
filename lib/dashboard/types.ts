@@ -11,6 +11,7 @@ export interface DashboardModuleListItem {
   secondary?: string;
   meta?: string;
   status?: string;
+  href?: string;
 }
 
 export interface DashboardModuleTile {

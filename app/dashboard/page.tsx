@@ -14,6 +14,7 @@ import { ModuleOverviewSection } from "@/components/dashboard/ModuleOverviewSect
 import { reportsAPI } from "@/lib/api/reports";
 import { useAppearance } from "@/lib/context/AppearanceContext";
 import { useAuth } from "@/lib/context/AuthContext";
+import { usePermissions } from "@/lib/hooks/usePermissions";
 import {
   createEmptyUnifiedDashboard,
   type DashboardPeriod,
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { isDark } = useAppearance();
   const { user } = useAuth();
+  const { canView } = usePermissions();
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -57,7 +59,9 @@ export default function DashboardPage() {
     loadDashboard();
   }, [loadDashboard]);
 
-  const salesModule = data?.modules.find((module) => module.id === "sales");
+  const visibleModules = (data?.modules ?? []).filter((module) => canView(module.id));
+
+  const salesModule = visibleModules.find((module) => module.id === "sales");
 
   const periodToggle = salesModule?.chart ? (
     <div className="flex items-center bg-gray-100 dark:bg-muted rounded-lg p-1 gap-0.5">
@@ -97,28 +101,32 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {data.modules.length === 0 ? (
+          {visibleModules.length === 0 ? (
             <div className={`${dashboardCardClass} p-10 text-center`}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-foreground">
-                No modules enabled
+                {data.modules.length > 0 ? "No module access" : "No modules enabled"}
               </h2>
               <p className="text-sm text-gray-500 dark:text-muted-foreground mt-2 max-w-md mx-auto">
-                Enable modules in settings to see your organization overview here.
+                {data.modules.length > 0
+                  ? "Your role does not include view access to any enabled modules. Contact your organization administrator."
+                  : "Enable modules in settings to see your organization overview here."}
               </p>
-              <Link
-                href="/dashboard/settings/modules"
-                className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#22C55E] text-white text-sm font-medium hover:bg-[#16A34A] transition-colors"
-              >
-                <Settings className="h-4 w-4" />
-                Manage modules
-              </Link>
+              {data.modules.length === 0 ? (
+                <Link
+                  href="/dashboard/settings/modules"
+                  className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#22C55E] text-white text-sm font-medium hover:bg-[#16A34A] transition-colors"
+                >
+                  <Settings className="h-4 w-4" />
+                  Manage modules
+                </Link>
+              ) : null}
             </div>
           ) : (
             <>
-              <ModuleOverviewGrid modules={data.modules} catalogById={catalogById} />
+              <ModuleOverviewGrid modules={visibleModules} catalogById={catalogById} />
 
               <div className="space-y-6">
-                {data.modules.map((module) => (
+                {visibleModules.map((module) => (
                   <ModuleOverviewSection
                     key={module.id}
                     module={module}
