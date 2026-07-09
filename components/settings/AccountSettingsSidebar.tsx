@@ -7,6 +7,7 @@ import { ArrowLeft, Menu, X } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 import { billingApi } from "@/lib/api/billing";
+import { getMediaUrl } from "@/lib/utils";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
 
 function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
@@ -42,14 +43,16 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
     };
   }, [user?.id]);
 
+  const avatarUrl = user?.avatar ? getMediaUrl(user.avatar) : null;
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
         {user ? (
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-lg bg-[#22C55E] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
-              {user.avatar ? (
-                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 initials
               )}

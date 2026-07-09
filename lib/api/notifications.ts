@@ -16,13 +16,19 @@ export interface AppNotification {
 }
 
 export const notificationsAPI = {
-  list: async (params?: { is_read?: boolean }) => {
+  list: async (params?: { is_read?: boolean; page_size?: number }) => {
     const response = await apiClient.get<{ results?: AppNotification[] } | AppNotification[]>(
       '/auth/notifications/',
-      { params },
+      { params: { page_size: params?.page_size ?? 100, ...params } },
     );
     const data = response.data;
     return Array.isArray(data) ? data : data.results || [];
+  },
+
+  listRecent: async (limit = 5) => {
+    const { fetchAllPages } = await import('./settings-helpers');
+    const all = await fetchAllPages<AppNotification>('/auth/notifications/');
+    return all.slice(0, limit);
   },
 
   markRead: async (id: number) => {

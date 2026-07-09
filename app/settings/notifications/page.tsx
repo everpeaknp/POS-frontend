@@ -58,8 +58,8 @@ export default function NotificationsPage() {
   const loadRecent = async () => {
     setRecentLoading(true);
     try {
-      const data = await notificationsAPI.list();
-      setRecentNotifications(data.slice(0, 5));
+      const data = await notificationsAPI.listRecent(5);
+      setRecentNotifications(data);
     } catch {
       setRecentNotifications([]);
     } finally {

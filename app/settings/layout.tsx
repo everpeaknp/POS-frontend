@@ -14,9 +14,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth/login");
+      const redirect = encodeURIComponent(pathname || "/settings/profile");
+      router.push(`/auth/login?redirect=${redirect}`);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   useEffect(() => {
     if (!user) return;
