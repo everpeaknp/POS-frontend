@@ -41,7 +41,6 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
     try {
       const data = await getEmployees({ department: unwrappedParams.id });
       const employeesList = data.results || [];
-      console.log('Loaded employees for department:', unwrappedParams.id, employeesList);
       setEmployees(employeesList);
     } catch (error) {
       console.error('Failed to load employees:', error);
@@ -60,7 +59,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             router.push('/dashboard/hr/departments');
             return `Department "${department.name}" deleted successfully`;
           },
-          error: (err) => err.response?.data?.message || 'Failed to delete department'
+          error: (err) => err.response?.data?.error || err.response?.data?.message || 'Failed to delete department'
         }
       );
     };

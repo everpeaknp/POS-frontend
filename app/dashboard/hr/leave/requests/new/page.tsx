@@ -8,15 +8,17 @@ import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HRPageShell, hrCardClass } from "@/components/dashboard/HRPageShell";
-import { getLeaveTypes, createLeaveRequest, type LeaveType } from "@/lib/api/hr";
+import { getLeaveTypes, getEmployees, createLeaveRequest, type LeaveType, type Employee } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
 export default function NewLeaveRequestPage() {
   const router = useRouter();
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
+    employee: "",
     leave_type: "",
     start_date: "",
     end_date: "",
@@ -24,17 +26,21 @@ export default function NewLeaveRequestPage() {
   });
 
   useEffect(() => {
-    loadLeaveTypes();
+    loadData();
   }, []);
 
-  const loadLeaveTypes = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await getLeaveTypes();
-      setLeaveTypes(data.results || []);
+      const [typesData, employeesData] = await Promise.all([
+        getLeaveTypes(),
+        getEmployees({ status: "active" }),
+      ]);
+      setLeaveTypes(typesData.results || []);
+      setEmployees(employeesData.results || []);
     } catch (error) {
-      console.error('Failed to load leave types:', error);
-      toast.error("Failed to load leave types");
+      console.error('Failed to load leave form data:', error);
+      toast.error("Failed to load leave form data");
     } finally {
       setLoading(false);
     }
@@ -52,6 +58,7 @@ export default function NewLeaveRequestPage() {
       setSubmitting(true);
       
       await createLeaveRequest({
+        ...(formData.employee ? { employee: formData.employee } : {}),
         leave_type: formData.leave_type,
         start_date: formData.start_date,
         end_date: formData.end_date,
@@ -94,6 +101,28 @@ export default function NewLeaveRequestPage() {
             <div>
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Leave Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="employee" className="text-sm font-medium text-gray-700">Employee</Label>
+                  <Select
+                    value={formData.employee}
+                    onValueChange={(v) => setFormData({ ...formData, employee: v ?? "" })}
+                    disabled={submitting}
+                  >
+                    <SelectTrigger className="mt-1 h-9 border-gray-200">
+                      <SelectValue placeholder="My profile (if linked)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees.map((emp) => (
+                        <SelectItem key={emp.id} value={String(emp.id)}>
+                          {emp.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave blank if your user account is linked to an employee profile.
+                  </p>
+                </div>
                 <div>
                   <Label htmlFor="type" className="text-sm font-medium text-gray-700">Leave Type*</Label>
                   <Select 

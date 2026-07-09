@@ -18,10 +18,11 @@ export default function PayrollDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getPayrolls();
-        const all = data.results || [];
-        const filtered = all.filter((p) => `${p.year}-${p.month}` === monthKey);
-        setRecords(filtered);
+        const dashIdx = monthKey.indexOf("-");
+        const year = monthKey.slice(0, dashIdx);
+        const month = monthKey.slice(dashIdx + 1);
+        const data = await getPayrolls({ year: Number(year), month });
+        setRecords(data.results || []);
       } catch {
         toast.error("Failed to load payroll records");
       } finally {
@@ -31,7 +32,9 @@ export default function PayrollDetailPage() {
     load();
   }, [monthKey]);
 
-  const [year, month] = monthKey.split("-");
+  const dashIdx = monthKey.indexOf("-");
+  const year = monthKey.slice(0, dashIdx);
+  const month = monthKey.slice(dashIdx + 1);
   const gross = records.reduce((s, r) => s + Number(r.gross_salary), 0);
   const deductions = records.reduce((s, r) => s + Number(r.deductions), 0);
   const net = records.reduce((s, r) => s + Number(r.net_salary), 0);

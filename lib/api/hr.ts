@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { HR_LIST_PARAMS, unwrapList } from './hr-helpers';
 
 export interface Department {
   id: string;
@@ -28,7 +29,7 @@ export interface Employee {
   pf_employer?: number;
   total_pf?: number;
   gross_salary?: number;
-  status: 'active' | 'inactive' | 'terminated' | 'on_leave';
+  status: 'active' | 'inactive' | 'terminated';
   user?: string;
   created_at: string;
   updated_at: string;
@@ -108,8 +109,8 @@ export interface LeaveRequest {
 
 // Departments
 export const getDepartments = async (): Promise<Department[]> => {
-  const response = await apiClient.get('/hr/departments/');
-  return response.data.results || response.data;
+  const response = await apiClient.get('/hr/departments/', { params: HR_LIST_PARAMS });
+  return unwrapList(response.data);
 };
 
 export const getDepartment = async (id: string): Promise<Department> => {
@@ -132,8 +133,8 @@ export const deleteDepartment = async (id: string): Promise<void> => {
 };
 
 // Employees
-export const getEmployees = async (params?: any): Promise<{ results: Employee[]; count: number }> => {
-  const response = await apiClient.get('/hr/employees/', { params });
+export const getEmployees = async (params?: Record<string, unknown>): Promise<{ results: Employee[]; count: number }> => {
+  const response = await apiClient.get('/hr/employees/', { params: { ...HR_LIST_PARAMS, ...params } });
   return response.data;
 };
 
@@ -152,9 +153,13 @@ export const updateEmployee = async (id: string, data: Partial<EmployeeFormData>
   return response.data;
 };
 
-export const deleteEmployee = async (id: string): Promise<void> => {
+/** Soft-deactivate employee (preserves payroll/attendance history). */
+export const deactivateEmployee = async (id: string): Promise<void> => {
   await apiClient.delete(`/hr/employees/${id}/`);
 };
+
+/** @deprecated Use deactivateEmployee — backend performs soft deactivation. */
+export const deleteEmployee = deactivateEmployee;
 
 // Dashboard
 export const getHRDashboard = async (): Promise<any> => {
@@ -176,8 +181,8 @@ export const getManagers = async (): Promise<Array<{
 
 
 // Attendance
-export const getAttendance = async (params?: any): Promise<{ results: Attendance[]; count: number }> => {
-  const response = await apiClient.get('/hr/attendance/', { params });
+export const getAttendance = async (params?: Record<string, unknown>): Promise<{ results: Attendance[]; count: number }> => {
+  const response = await apiClient.get('/hr/attendance/', { params: { ...HR_LIST_PARAMS, ...params } });
   return response.data;
 };
 
@@ -213,8 +218,8 @@ export const getAttendanceStats = async (month?: string): Promise<any> => {
 
 
 // Leave Types
-export const getLeaveTypes = async (params?: any): Promise<{ results: LeaveType[]; count: number }> => {
-  const response = await apiClient.get('/hr/leave-types/', { params });
+export const getLeaveTypes = async (params?: Record<string, unknown>): Promise<{ results: LeaveType[]; count: number }> => {
+  const response = await apiClient.get('/hr/leave-types/', { params: { ...HR_LIST_PARAMS, ...params } });
   return response.data;
 };
 
@@ -239,8 +244,8 @@ export const deleteLeaveType = async (id: string): Promise<void> => {
 
 
 // Leave Requests
-export const getLeaveRequests = async (params?: any): Promise<{ results: LeaveRequest[]; count: number }> => {
-  const response = await apiClient.get('/hr/leave-requests/', { params });
+export const getLeaveRequests = async (params?: Record<string, unknown>): Promise<{ results: LeaveRequest[]; count: number }> => {
+  const response = await apiClient.get('/hr/leave-requests/', { params: { ...HR_LIST_PARAMS, ...params } });
   return response.data;
 };
 
@@ -249,7 +254,7 @@ export const getLeaveRequest = async (id: string): Promise<LeaveRequest> => {
   return response.data;
 };
 
-export const createLeaveRequest = async (data: Omit<Partial<LeaveRequest>, 'employee'>): Promise<LeaveRequest> => {
+export const createLeaveRequest = async (data: Partial<LeaveRequest>): Promise<LeaveRequest> => {
   const response = await apiClient.post('/hr/leave-requests/', data);
   return response.data;
 };
@@ -314,8 +319,8 @@ export interface PayrollCalculation {
 }
 
 // Payroll
-export const getPayrolls = async (params?: any): Promise<{ results: Payroll[]; count: number }> => {
-  const response = await apiClient.get('/hr/payroll/', { params });
+export const getPayrolls = async (params?: Record<string, unknown>): Promise<{ results: Payroll[]; count: number }> => {
+  const response = await apiClient.get('/hr/payroll/', { params: { ...HR_LIST_PARAMS, ...params } });
   return response.data;
 };
 

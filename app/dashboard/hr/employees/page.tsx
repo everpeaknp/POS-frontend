@@ -18,7 +18,7 @@ import {
 import { EmployeeStatusBadge } from "@/components/hr/EmployeeStatusBadge";
 import { EmploymentTypeBadge } from "@/components/hr/EmploymentTypeBadge";
 import toast from "react-hot-toast";
-import { getEmployees, getDepartments, deleteEmployee, type Employee, type Department } from "@/lib/api/hr";
+import { getEmployees, getDepartments, deactivateEmployee, type Employee, type Department } from "@/lib/api/hr";
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -50,17 +50,17 @@ export default function EmployeesPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const confirmDelete = () => {
+  const handleDeactivate = async (id: string, name: string) => {
+    const confirmDeactivate = () => {
       toast.promise(
-        deleteEmployee(id),
+        deactivateEmployee(id),
         {
-          loading: 'Deleting employee...',
+          loading: 'Deactivating employee...',
           success: () => {
             loadData();
-            return `Employee "${name}" deleted successfully`;
+            return `Employee "${name}" deactivated successfully`;
           },
-          error: (err) => 'Failed to delete employee'
+          error: () => 'Failed to deactivate employee'
         }
       );
     };
@@ -74,8 +74,8 @@ export default function EmployeesPage() {
             </svg>
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">Delete this employee?</p>
-            <p className="text-sm text-gray-600 mt-1">This action cannot be undone.</p>
+            <p className="font-semibold text-gray-900 text-base">Deactivate this employee?</p>
+            <p className="text-sm text-gray-600 mt-1">Their record will be kept for payroll and attendance history.</p>
           </div>
         </div>
         <div className="flex gap-3 justify-end">
@@ -88,11 +88,11 @@ export default function EmployeesPage() {
           <button
             onClick={() => {
               toast.dismiss(t.id);
-              confirmDelete();
+              confirmDeactivate();
             }}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
           >
-            Delete
+            Deactivate
           </button>
         </div>
       </div>
@@ -210,9 +210,9 @@ export default function EmployeesPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-red-600 focus:text-red-600" 
-                          onClick={() => handleDelete(emp.id, emp.name)}
+                          onClick={() => handleDeactivate(emp.id, emp.name)}
                         >
-                          Delete
+                          Deactivate
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

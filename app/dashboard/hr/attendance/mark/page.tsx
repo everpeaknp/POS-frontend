@@ -1,7 +1,7 @@
 "use client";
 
 import { DateInput } from "@/components/shared/DateInput";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HRPageShell, hrCardClass, hrTableWrapClass } from "@/components/dashboard/HRPageShell";
 import toast from "react-hot-toast";
-import { getEmployees, bulkMarkAttendance, type Employee, type AttendanceRecord } from "@/lib/api/hr";
+import {
+  getEmployees,
+  getAttendance,
+  bulkMarkAttendance,
+  type Employee,
+  type AttendanceRecord,
+} from "@/lib/api/hr";
+import { unwrapList } from "@/lib/api/hr-helpers";
 
 interface AttendanceFormData {
   [employeeId: string]: {
@@ -20,6 +27,11 @@ interface AttendanceFormData {
   };
 }
 
+function formatTimeForInput(value?: string | null): string {
+  if (!value) return "";
+  return value.slice(0, 5);
+}
+
 export default function MarkAttendancePage() {
   const router = useRouter();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -28,91 +40,137 @@ export default function MarkAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadEmployees();
+  const buildDefaultAttendance = useCallback((employeesList: Employee[]) => {
+    const initial: AttendanceFormData = {};
+    employeesList.forEach((emp) => {
+      initial[emp.id] = {
+        status: "present",
+        check_in: "",
+        check_out: "",
+        remarks: "",
+      };
+    });
+    return initial;
   }, []);
 
-  const loadEmployees = async () => {
+  const loadEmployees = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getEmployees({ status: 'active' });
+      const data = await getEmployees({ status: "active" });
       const employeesList = data.results || [];
       setEmployees(employeesList);
-      
-      // Initialize attendance data with default values
-      const initialAttendance: AttendanceFormData = {};
-      employeesList.forEach((emp) => {
-        initialAttendance[emp.id] = {
-          status: 'present',
-          check_in: '',
-          check_out: '',
-          remarks: ''
-        };
-      });
-      setAttendance(initialAttendance);
+      setAttendance(buildDefaultAttendance(employeesList));
     } catch (error) {
-      console.error('Failed to load employees:', error);
+      console.error("Failed to load employees:", error);
       toast.error("Failed to load employees");
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildDefaultAttendance]);
+
+  const loadAttendanceForDate = useCallback(
+    async (selectedDate: string, employeesList: Employee[]) => {
+      if (!employeesList.length) return;
+
+      try {
+        const data = await getAttendance({ date: selectedDate });
+        const records = unwrapList(data);
+        const byEmployee = new Map(records.map((r) => [r.employee, r]));
+        const merged = buildDefaultAttendance(employeesList);
+
+        employeesList.forEach((emp) => {
+          const existing = byEmployee.get(emp.id);
+          if (existing) {
+            merged[emp.id] = {
+              status: existing.status,
+              check_in: formatTimeForInput(existing.check_in),
+              check_out: formatTimeForInput(existing.check_out),
+              remarks: existing.remarks || "",
+            };
+          }
+        });
+
+        setAttendance(merged);
+      } catch (error) {
+        console.error("Failed to load attendance for date:", error);
+        setAttendance(buildDefaultAttendance(employeesList));
+      }
+    },
+    [buildDefaultAttendance]
+  );
+
+  useEffect(() => {
+    loadEmployees();
+  }, [loadEmployees]);
+
+  useEffect(() => {
+    if (employees.length > 0) {
+      loadAttendanceForDate(date, employees);
+    }
+  }, [date, employees, loadAttendanceForDate]);
 
   const handleMarkAll = (status: string) => {
     const updatedAttendance = { ...attendance };
     employees.forEach((emp) => {
       updatedAttendance[emp.id] = {
         ...updatedAttendance[emp.id],
-        status
+        status,
       };
     });
     setAttendance(updatedAttendance);
   };
 
-  const updateAttendanceField = (employeeId: string, field: keyof AttendanceFormData[string], value: string) => {
+  const updateAttendanceField = (
+    employeeId: string,
+    field: keyof AttendanceFormData[string],
+    value: string
+  ) => {
     setAttendance({
       ...attendance,
       [employeeId]: {
         ...attendance[employeeId],
-        [field]: value
-      }
+        [field]: value,
+      },
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
-      
-      // Prepare records for bulk submission
+
       const records: AttendanceRecord[] = employees.map((emp) => {
         const empAttendance = attendance[emp.id];
         const record: AttendanceRecord = {
           employee: emp.id,
-          status: empAttendance.status
+          status: empAttendance.status,
         };
-        
+
         if (empAttendance.check_in) record.check_in = empAttendance.check_in;
         if (empAttendance.check_out) record.check_out = empAttendance.check_out;
         if (empAttendance.remarks) record.remarks = empAttendance.remarks;
-        
+
         return record;
       });
 
       const response = await bulkMarkAttendance({
         date,
-        records
+        records,
       });
+
+      if (response.skipped?.length) {
+        toast.error(`${response.skipped.length} employee record(s) could not be saved`);
+      }
 
       toast.success(response.message || "Attendance marked successfully");
       router.push("/dashboard/hr/attendance");
     } catch (error: any) {
-      console.error('Failed to mark attendance:', error);
-      
+      console.error("Failed to mark attendance:", error);
+
       if (error.response?.data) {
         const errors = error.response.data;
-        if (typeof errors === 'object') {
+        if (typeof errors === "object") {
           Object.entries(errors).forEach(([field, messages]) => {
             const message = Array.isArray(messages) ? messages[0] : messages;
             toast.error(`${field}: ${message}`);
@@ -143,7 +201,7 @@ export default function MarkAttendancePage() {
           <div className={`${hrCardClass} p-6`}>
           <div className="mb-6">
             <label className="text-sm font-medium text-gray-700">Date</label>
-            <DateInput value={date} onChange={(date) => setDate(date)} />
+            <DateInput value={date} onChange={(selectedDate) => setDate(selectedDate)} />
           </div>
 
           <div className="flex gap-3 mb-6">

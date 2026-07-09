@@ -48,6 +48,7 @@ import {
   type HRReports,
 } from "@/lib/api/hr";
 import { formatNPR } from "@/lib/utils";
+import { getCurrentBsPeriod } from "@/lib/dates";
 import toast from "react-hot-toast";
 
 const quickActions = [
@@ -232,11 +233,9 @@ export default function HRDashboardPage() {
 
       if (payrollsResult.status === "fulfilled") {
         const payrolls = payrollsResult.value.results || [];
-        const now = new Date();
-        const currentMonth = now.toLocaleString("en-US", { month: "long" });
-        const currentYear = now.getFullYear();
+        const bsPeriod = getCurrentBsPeriod();
         const monthTotal = payrolls
-          .filter((p) => p.month === currentMonth && p.year === currentYear)
+          .filter((p) => p.month === bsPeriod.month && p.year === bsPeriod.year)
           .reduce((sum, p) => sum + (p.net_salary ?? 0), 0);
         setPayrollTotal(monthTotal);
       }

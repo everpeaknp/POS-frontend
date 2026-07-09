@@ -50,7 +50,7 @@ export default function DepartmentsPage() {
             loadDepartments();
             return `Department "${name}" deleted successfully`;
           },
-          error: (err) => err.response?.data?.message || 'Failed to delete department'
+          error: (err) => err.response?.data?.error || err.response?.data?.message || 'Failed to delete department'
         }
       );
     };
