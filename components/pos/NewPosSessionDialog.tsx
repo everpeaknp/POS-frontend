@@ -53,7 +53,7 @@ export function NewPosSessionDialog({
 
     const fetchWarehouses = async () => {
       try {
-        const response = await inventoryApi.warehouses.list();
+        const response = await inventoryApi.warehouses.list({ page_size: 500 });
         setWarehouses(response.data.results || []);
       } catch (error) {
         console.error("Error loading warehouses:", error);

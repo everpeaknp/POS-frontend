@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSTransaction } from "@/lib/api/pos";
+import posApi, { type POSTransaction, POS_PAGE_SIZE } from "@/lib/api/pos";
 import toast from "react-hot-toast";
 
 export default function POSTransactionsPage() {
@@ -260,10 +260,10 @@ export default function POSTransactionsPage() {
           </div>
 
           {/* Pagination */}
-          {totalCount > 20 && (
+          {totalCount > POS_PAGE_SIZE && (
             <div className="p-4 border-t border-gray-100 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, totalCount)} of {totalCount} transactions
+                Showing {(page - 1) * POS_PAGE_SIZE + 1} to {Math.min(page * POS_PAGE_SIZE, totalCount)} of {totalCount} transactions
               </div>
               <div className="flex gap-2">
                 <Button
@@ -278,7 +278,7 @@ export default function POSTransactionsPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => setPage(p => p + 1)}
-                  disabled={page * 20 >= totalCount}
+                  disabled={page * POS_PAGE_SIZE >= totalCount}
                 >
                   Next
                 </Button>

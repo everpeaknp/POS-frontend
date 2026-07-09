@@ -13,12 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";
 import posApi, { type POSDiscount } from "@/lib/api/pos";
+import { inventoryApi, type Category, type Product } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
 
 export default function POSDiscountsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [discounts, setDiscounts] = useState<POSDiscount[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,14 +38,22 @@ export default function POSDiscountsPage() {
     min_amount: "0",
     start_date: "",
     end_date: "",
-    is_active: true
+    is_active: true,
+    category: "",
+    product: "",
   });
 
   const fetchDiscounts = async () => {
     setLoading(true);
     try {
-      const data = await posApi.getDiscounts();
-      setDiscounts(data);
+      const [discountData, categoriesRes, productsRes] = await Promise.all([
+        posApi.getDiscounts(),
+        inventoryApi.categories.list({ page_size: 500 }),
+        inventoryApi.products.list({ page_size: 500, status: 'active' }),
+      ]);
+      setDiscounts(discountData);
+      setCategories(categoriesRes.data.results || []);
+      setProducts(productsRes.data.results || []);
     } catch (error: any) {
       toast.error("Failed to load discounts");
     } finally {
@@ -69,6 +80,8 @@ export default function POSDiscountsPage() {
       start_date: "",
       end_date: "",
       is_active: true,
+      category: "",
+      product: "",
     });
     setShowForm(true);
     router.replace("/dashboard/pos/discounts", { scroll: false });
@@ -86,7 +99,9 @@ export default function POSDiscountsPage() {
       min_amount: "0",
       start_date: "",
       end_date: "",
-      is_active: true
+      is_active: true,
+      category: "",
+      product: "",
     });
     setEditingId(null);
     setShowForm(false);
@@ -104,7 +119,9 @@ export default function POSDiscountsPage() {
       min_amount: discount.min_amount.toString(),
       start_date: discount.start_date || "",
       end_date: discount.end_date || "",
-      is_active: discount.is_active
+      is_active: discount.is_active,
+      category: discount.category || "",
+      product: discount.product || "",
     });
     setEditingId(discount.id);
     setShowForm(true);
@@ -115,6 +132,14 @@ export default function POSDiscountsPage() {
     
     if (!form.name || !form.code || !form.discount_value) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+    if (form.apply_to === "item" && !form.product) {
+      toast.error("Select a product for item-level discounts");
+      return;
+    }
+    if (form.apply_to === "category" && !form.category) {
+      toast.error("Select a category for category discounts");
       return;
     }
     
@@ -131,7 +156,9 @@ export default function POSDiscountsPage() {
         min_amount: parseFloat(form.min_amount),
         start_date: form.start_date || null,
         end_date: form.end_date || null,
-        is_active: form.is_active
+        is_active: form.is_active,
+        category: form.apply_to === "category" && form.category ? form.category : null,
+        product: form.apply_to === "item" && form.product ? form.product : null,
       };
       
       if (editingId) {
@@ -295,7 +322,7 @@ export default function POSDiscountsPage() {
                 
                 <div>
                   <Label className="text-sm">Apply To *</Label>
-                  <Select value={form.apply_to} onValueChange={(v: any) => setForm({ ...form, apply_to: v })}>
+                  <Select value={form.apply_to} onValueChange={(v) => v && setForm({ ...form, apply_to: v, category: "", product: "" })}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
@@ -306,6 +333,42 @@ export default function POSDiscountsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {form.apply_to === "item" && (
+                  <div>
+                    <Label className="text-sm">Product *</Label>
+                    <Select value={form.product} onValueChange={(v) => setForm({ ...form, product: v ?? "" })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.name} ({p.sku})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {form.apply_to === "category" && (
+                  <div>
+                    <Label className="text-sm">Category *</Label>
+                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v ?? "" })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 
                 <div>
                   <Label className="text-sm">Minimum Amount</Label>

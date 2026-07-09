@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction } from "@/lib/api/pos";
+import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction, type POSSession } from "@/lib/api/pos";
+import { POS_VAT_RATE } from "@/lib/api/pos-helpers";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
@@ -50,6 +51,7 @@ export default function POSPage() {
   const [processing, setProcessing] = useState(false);
   const [scanningBarcode, setScanningBarcode] = useState(false);
   const [todayTransactions, setTodayTransactions] = useState<POSTransaction[]>([]);
+  const [openSession, setOpenSession] = useState<POSSession | null>(null);
 
   const fetchTodayTransactions = async () => {
     try {
@@ -64,17 +66,20 @@ export default function POSPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [customersRes, warehousesRes, discountsRes] = await Promise.all([
-          customerAPI.list({ status: 'active' }),
-          inventoryApi.warehouses.list(),
-          posApi.getActiveDiscounts()
+        const [customersRes, warehousesRes, discountsRes, sessionRes] = await Promise.all([
+          customerAPI.list({ status: 'active', page_size: 500 }),
+          inventoryApi.warehouses.list({ page_size: 500 }),
+          posApi.getActiveDiscounts(),
+          posApi.getOpenSession(),
         ]);
         setCustomers(customersRes.data.results);
         setWarehouses(warehousesRes.data.results);
         setDiscounts(discountsRes);
-        
-        // Set default warehouse if available
-        if (warehousesRes.data.results.length > 0) {
+        setOpenSession(sessionRes);
+
+        if (sessionRes?.warehouse) {
+          setSelectedWarehouse(String(sessionRes.warehouse));
+        } else if (warehousesRes.data.results.length > 0) {
           setSelectedWarehouse(String(warehousesRes.data.results[0].id));
         }
       } catch (error: any) {
@@ -171,7 +176,7 @@ export default function POSPage() {
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const results = await posApi.searchProducts(searchQuery);
+        const results = await posApi.searchProducts(searchQuery, selectedWarehouse || undefined);
         setProducts(results);
       } catch (error) {
         toast.error("Failed to search products");
@@ -181,7 +186,7 @@ export default function POSPage() {
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, selectedWarehouse]);
 
   // Recalculate discounts when selected discount changes
   useEffect(() => {
@@ -222,7 +227,7 @@ export default function POSPage() {
     
     setScanningBarcode(true);
     try {
-      const product = await posApi.searchByBarcode(barcode);
+      const product = await posApi.searchByBarcode(barcode, selectedWarehouse || undefined);
       
       // Check stock before adding
       if (product.stock_quantity <= 0) {
@@ -273,11 +278,10 @@ export default function POSPage() {
 
       // Check applicability
       let applicable = false;
-      if (discount.apply_to === 'item' && discount.product === product.id) {
-        applicable = true;
-      } else if (discount.apply_to === 'category' && discount.category && product.category_name) {
-        // Note: This is a simplified check. In production, you'd compare category IDs
-        applicable = true;
+      if (discount.apply_to === 'item' && discount.product) {
+        applicable = String(discount.product) === String(product.id);
+      } else if (discount.apply_to === 'category' && discount.category && product.category_id) {
+        applicable = String(discount.category) === String(product.category_id);
       } else if (discount.apply_to === 'bill') {
         // Bill-level discounts are handled separately in calculateBillDiscount
         continue;
@@ -472,7 +476,7 @@ export default function POSPage() {
   const itemLevelDiscount = roundToTwo(cart.reduce((sum, item) => sum + item.discount_amount, 0));
   const billLevelDiscount = roundToTwo(calculateBillDiscount());
   const totalDiscount = roundToTwo(itemLevelDiscount + billLevelDiscount);
-  const taxAmount = roundToTwo((subtotal - totalDiscount) * 0.13); // 13% VAT on discounted amount
+  const taxAmount = roundToTwo((subtotal - totalDiscount) * POS_VAT_RATE);
   const total = roundToTwo(subtotal - totalDiscount + taxAmount);
   const changeGiven = amountPaid ? roundToTwo(Math.max(0, parseFloat(amountPaid) - total)) : 0;
 
@@ -533,6 +537,12 @@ export default function POSPage() {
       return;
     }
     
+    if (!openSession) {
+      toast.error("Open a POS session before completing sales");
+      router.push("/dashboard/pos/sessions/new");
+      return;
+    }
+
     if (!selectedWarehouse) {
       toast.error("Please select a warehouse");
       return;
@@ -541,6 +551,17 @@ export default function POSPage() {
     if (paymentMethod === "credit" && !selectedCustomer) {
       toast.error("Please select a customer for credit sales");
       return;
+    }
+
+    const customer = customers.find((c) => c.id === selectedCustomer);
+    if (paymentMethod === "credit" && customer) {
+      const available =
+        customer.available_credit ??
+        Math.max(0, (customer.credit_limit || 0) - (customer.current_balance || 0));
+      if (total > available) {
+        toast.error(`Credit limit exceeded. Available: Rs. ${available.toFixed(2)}`);
+        return;
+      }
     }
     
     const paidAmount = roundToTwo(parseFloat(amountPaid) || 0);
@@ -595,7 +616,11 @@ export default function POSPage() {
         router.push(`/dashboard/pos/transactions`);
       }, 1500);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to process transaction";
+      const errorMsg =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to process transaction";
       toast.error(errorMsg);
       console.error("Transaction error:", error);
     } finally {
@@ -616,6 +641,26 @@ export default function POSPage() {
     <div className="flex flex-col min-h-full bg-gray-50">
       <DashHeader title="Point of Sale" subtitle="Fast billing interface" />
       
+      {!openSession && (
+        <div className="mx-6 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-amber-900">
+            No open POS session. Open a session before ringing up sales.
+          </p>
+          <Link href="/dashboard/pos/sessions/new">
+            <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A]">
+              Open Session
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {openSession && (
+        <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          Session <span className="font-mono font-semibold">{openSession.session_number}</span> is open
+          {openSession.warehouse_name ? ` · ${openSession.warehouse_name}` : ""}
+        </div>
+      )}
+
       <div className="flex-1 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {/* Left: Product Search & Cart */}
@@ -1022,7 +1067,7 @@ export default function POSPage() {
               
               <Button
                 onClick={handleCheckout}
-                disabled={processing || cart.length === 0}
+                disabled={processing || cart.length === 0 || !openSession}
                 className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white h-12 text-lg font-semibold"
               >
                 {processing ? (

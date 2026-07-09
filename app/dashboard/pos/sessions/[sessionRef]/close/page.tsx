@@ -107,7 +107,7 @@ export default function CloseSessionPage() {
 
     try {
       setSubmitting(true);
-      await posApi.closeSession(String(session.id), parseFloat(closingCash));
+      await posApi.closeSession(String(session.id), parseFloat(closingCash), notes.trim() || undefined);
 
       toast.success("Session closed successfully");
       router.push(`/dashboard/pos/sessions/${session.id}`);

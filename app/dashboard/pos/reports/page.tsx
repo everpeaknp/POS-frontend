@@ -4,7 +4,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
-import { Calendar, DollarSign, ShoppingCart, TrendingUp, Loader2, Download } from "lucide-react";
+import { Calendar, DollarSign, ShoppingCart, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -30,7 +30,7 @@ export default function POSReportsPage() {
       try {
         const [reportsRes, warehousesRes] = await Promise.all([
           posApi.getDailySalesReports(),
-          inventoryApi.warehouses.list()
+          inventoryApi.warehouses.list({ page_size: 500 })
         ]);
         setReports(reportsRes.results || []);
         setWarehouses(warehousesRes.data.results || []);
@@ -209,15 +209,11 @@ export default function POSReportsPage() {
                     <h3 className="font-semibold text-lg">
                       <FormattedDate value={report.date} />
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {report.warehouse_name || "All Warehouses"} • 
-                      {report.cashier_name || "All Cashiers"}
-                    </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {report.warehouse_name || "All Warehouses"} ·{" "}
+                    {report.cashier_name || "All Cashiers"}
+                  </p>
                   </div>
-                  <Button size="sm" variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
                 </div>
 
                 {/* Summary Cards */}

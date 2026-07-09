@@ -4,6 +4,7 @@
  */
 
 import apiClient from './client';
+import { POS_LIST_PARAMS, unwrapList } from './pos-helpers';
 
 export interface POSSession {
   id: string;
@@ -111,16 +112,19 @@ export interface POSProduct {
   sku: string;
   selling_price: number;
   stock_quantity: number;
+  category_id?: number;
   category_name?: string;
   unit_name?: string;
   status: string;
 }
 
+export const POS_PAGE_SIZE = 25;
+
 const posApi = {
   // Discounts
   getDiscounts: async (): Promise<POSDiscount[]> => {
-    const response = await apiClient.get('/pos/discounts/');
-    return response.data.results || response.data;
+    const response = await apiClient.get('/pos/discounts/', { params: POS_LIST_PARAMS });
+    return unwrapList(response.data);
   },
 
   getActiveDiscounts: async (): Promise<POSDiscount[]> => {
@@ -148,8 +152,11 @@ const posApi = {
     payment_method?: string;
     search?: string;
     page?: number;
+    page_size?: number;
   }): Promise<{ results: POSTransaction[]; count: number }> => {
-    const response = await apiClient.get('/pos/transactions/', { params });
+    const response = await apiClient.get('/pos/transactions/', {
+      params: { page_size: POS_PAGE_SIZE, ...params },
+    });
     return response.data;
   },
 
@@ -174,16 +181,16 @@ const posApi = {
   },
 
   // Products
-  searchProducts: async (search: string): Promise<POSProduct[]> => {
+  searchProducts: async (search: string, warehouse?: string): Promise<POSProduct[]> => {
     const response = await apiClient.get('/pos/products/', {
-      params: { search }
+      params: { search, ...(warehouse ? { warehouse } : {}), ...POS_LIST_PARAMS },
     });
-    return response.data.results || response.data;
+    return unwrapList(response.data);
   },
 
-  searchByBarcode: async (barcode: string): Promise<POSProduct> => {
+  searchByBarcode: async (barcode: string, warehouse?: string): Promise<POSProduct> => {
     const response = await apiClient.get('/pos/products/barcode/', {
-      params: { barcode }
+      params: { barcode, ...(warehouse ? { warehouse } : {}) },
     });
     return response.data;
   },
@@ -194,8 +201,12 @@ const posApi = {
     cashier?: string;
     warehouse?: string;
   }): Promise<{ results: POSDailySalesReport[]; count: number }> => {
-    const response = await apiClient.get('/pos/reports/', { params });
-    return response.data;
+    const response = await apiClient.get('/pos/reports/', {
+      params: { ...POS_LIST_PARAMS, ...params },
+    });
+    const results = unwrapList<POSDailySalesReport>(response.data);
+    const count = Array.isArray(response.data) ? results.length : response.data.count ?? results.length;
+    return { results, count };
   },
 
   generateDailySalesReport: async (data: {
@@ -212,13 +223,27 @@ const posApi = {
     status?: string;
     cashier?: string;
     page?: number;
+    page_size?: number;
   }): Promise<{ results: POSSession[]; count: number }> => {
-    const response = await apiClient.get('/pos/sessions/', { params });
-    return response.data;
+    const response = await apiClient.get('/pos/sessions/', {
+      params: { ...POS_LIST_PARAMS, ...params },
+    });
+    const results = unwrapList<POSSession>(response.data);
+    const count = Array.isArray(response.data) ? results.length : response.data.count ?? results.length;
+    return { results, count };
+  },
+
+  getOpenSession: async (): Promise<POSSession | null> => {
+    try {
+      const response = await apiClient.get<POSSession>('/pos/sessions/my-open/');
+      return response.data;
+    } catch {
+      return null;
+    }
   },
 
   getSession: async (id: string): Promise<POSSession> => {
-    const response = await apiClient.get(`/pos/sessions/${id}/`);
+    const response = await apiClient.get<POSSession>(`/pos/sessions/${id}/`);
     return response.data;
   },
 
@@ -231,9 +256,14 @@ const posApi = {
     return response.data;
   },
 
-  closeSession: async (id: string, closing_cash: number): Promise<POSSession> => {
+  closeSession: async (
+    id: string,
+    closing_cash: number,
+    notes?: string,
+  ): Promise<POSSession> => {
     const response = await apiClient.post(`/pos/sessions/${id}/close/`, {
-      closing_cash
+      closing_cash,
+      ...(notes ? { notes } : {}),
     });
     return response.data;
   },
