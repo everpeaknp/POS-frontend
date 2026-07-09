@@ -20,10 +20,24 @@ export interface Supplier {
   credit_limit?: number;
   lead_time_days?: number;
   status: 'active' | 'inactive';
+  total_orders?: number;
+  total_purchased?: number;
+  outstanding_amount?: number;
+  /** @deprecated use total_purchased */
   total_purchases?: number;
+  /** @deprecated use outstanding_amount */
   outstanding_balance?: number;
   created_at: string;
   updated_at: string;
+}
+
+export function normalizeSupplier(supplier: Supplier): Supplier {
+  return {
+    ...supplier,
+    total_purchases: supplier.total_purchased ?? supplier.total_purchases ?? 0,
+    outstanding_balance: supplier.outstanding_amount ?? supplier.outstanding_balance ?? 0,
+    total_orders: supplier.total_orders ?? 0,
+  };
 }
 
 export interface PurchaseRequestLine {
@@ -57,6 +71,8 @@ export interface PurchaseRequest {
   approved_by_name?: string;
   approved_at?: string;
   rejection_reason?: string;
+  linked_po_id?: number | string | null;
+  linked_po_number?: string | null;
   lines: PurchaseRequestLine[];
   items_count?: number;
   created_at: string;
@@ -152,14 +168,14 @@ export const suppliersAPI = {
     ordering?: string;
   }) => {
     const response = await apiClient.get('/purchase/suppliers/', { params });
-    // Handle paginated response
-    return response.data.results || response.data;
+    const data = response.data.results || response.data;
+    return Array.isArray(data) ? data.map(normalizeSupplier) : data;
   },
 
   // Get supplier by ID
   get: async (id: string) => {
     const response = await apiClient.get<Supplier>(`/purchase/suppliers/${id}/`);
-    return response.data;
+    return normalizeSupplier(response.data);
   },
 
   // Create new supplier
@@ -245,9 +261,21 @@ export const purchaseRequestsAPI = {
     return response.data;
   },
 
+  // Submit for approval
+  submit: async (id: string) => {
+    const response = await apiClient.post<PurchaseRequest>(`/purchase/requests/${id}/submit/`);
+    return response.data;
+  },
+
   // Convert to purchase order
-  convertToPO: async (id: string) => {
-    const response = await apiClient.post<PurchaseOrder>(`/purchase/requests/${id}/convert_to_po/`);
+  convertToPO: async (
+    id: string,
+    data: { supplier: string; expected_delivery_date: string }
+  ) => {
+    const response = await apiClient.post<PurchaseOrder>(
+      `/purchase/requests/${id}/convert_to_po/`,
+      data
+    );
     return response.data;
   },
 };
@@ -301,7 +329,7 @@ export const purchaseOrdersAPI = {
 
   // Update status
   updateStatus: async (id: string, status: string) => {
-    const response = await apiClient.post<PurchaseOrder>(`/purchase/orders/${id}/update_status/`, { status });
+    const response = await apiClient.patch<PurchaseOrder>(`/purchase/orders/${id}/update_status/`, { status });
     return response.data;
   },
 

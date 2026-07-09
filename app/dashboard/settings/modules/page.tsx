@@ -15,6 +15,7 @@ import {
   isRequiredModule,
 } from "@/lib/modules/catalog";
 import { useAuth } from "@/lib/context/AuthContext";
+import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
 import toast from "react-hot-toast";
 
 export default function OrganizationModulesPage() {
@@ -28,7 +29,7 @@ export default function OrganizationModulesPage() {
   const [allowedModules, setAllowedModules] = useState<string[]>([]);
   const [planName, setPlanName] = useState("Free");
 
-  const canEdit = tenantMeta?.user_role === "admin" || user?.role === "admin";
+  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role, user?.role);
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
 
   const enabledCount = useMemo(
@@ -57,11 +58,7 @@ export default function OrganizationModulesPage() {
           ? data.allowed_modules
           : getAllowedModulesForPlanType(data.plan_type || "free")
       );
-      setPlanName(
-        data.plan_type
-          ? data.plan_type.charAt(0).toUpperCase() + data.plan_type.slice(1)
-          : "Free"
-      );
+      setPlanName(data.user_limits?.plan_name || "Free");
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 404) {

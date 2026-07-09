@@ -141,7 +141,7 @@ export default function SuppliersPage() {
                       <td className="px-4 py-3 text-gray-600">{s.phone || 'N/A'}</td>
                       <td className="px-4 py-3 text-gray-600">{s.email || 'N/A'}</td>
                       <td className="px-4 py-3 text-gray-600">{s.pan || 'N/A'}</td>
-                      <td className="px-4 py-3 text-gray-600">{0}</td>
+                      <td className="px-4 py-3 text-gray-600">{s.total_orders ?? 0}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">Rs. {Number(s.total_purchases || 0).toLocaleString()}</td>
                       <td className={`px-4 py-3 font-medium ${Number(s.outstanding_balance || 0) > 0 ? "text-red-500" : "text-gray-500"}`}>
                         {Number(s.outstanding_balance || 0) > 0 ? `Rs. ${Number(s.outstanding_balance).toLocaleString()}` : "—"}

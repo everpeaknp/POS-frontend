@@ -230,12 +230,14 @@ export default function InvoicesPage() {
                         >
                           View
                         </DropdownMenuItem>
+                        {inv.balance > 0 && inv.status !== "Paid" && inv.status !== "Draft" && (
                         <DropdownMenuItem 
                           onClick={() => handleRecordPayment(inv.id, inv.invoice_number, inv.balance)}
                           className="cursor-pointer"
                         >
                           Record Payment
                         </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => handleEdit(inv.id)}
                           className="cursor-pointer"

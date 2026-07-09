@@ -207,15 +207,7 @@ export function OrganizationModulePicker({
               {section.modules.length}
             </span>
           </div>
-          <div
-            className={
-              section.key === "required"
-                ? "grid grid-cols-1 gap-2"
-                : section.key === "other"
-                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2"
-                  : "grid grid-cols-1 md:grid-cols-2 gap-2"
-            }
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
             {section.modules.map((module) => renderModuleCard(module))}
           </div>
         </section>

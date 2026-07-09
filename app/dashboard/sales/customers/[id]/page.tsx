@@ -10,7 +10,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
-import { customerAPI, salesOrderAPI, invoiceAPI, customerLedgerAPI, creditNoteAPI } from "@/lib/api/sales";
+import { customerAPI, salesOrderAPI, invoiceAPI, customerCreditAPI, creditNoteAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
 import { CustomerPricingPanel } from "@/components/sales/CustomerPricingPanel";
 
@@ -36,7 +36,7 @@ export default function CustomerProfilePage() {
   );
 
   const { data: ledgerData, loading: ledgerLoading } = useApi(
-    () => customerLedgerAPI.list({ customer: id }),
+    () => customerCreditAPI.getLedger(id),
     { immediate: activeTab === "Ledger", deps: [id, activeTab] }
   );
 
@@ -75,7 +75,7 @@ export default function CustomerProfilePage() {
 
   const orders = ordersData?.data?.results || [];
   const invoices = invoicesData?.data?.results || [];
-  const ledger = ledgerData || [];
+  const ledger = Array.isArray(ledgerData) ? ledgerData : (ledgerData as { results?: unknown[] })?.results || [];
   const creditNotes = creditNotesData?.data?.results || [];
 
   return (
@@ -319,9 +319,21 @@ export default function CustomerProfilePage() {
                     ) : (
                       creditNotes.map((cn: any) => (
                         <tr key={cn.id} className="hover:bg-gray-50/50">
-                          <td className="px-2 py-2.5 font-mono text-xs text-[#22C55E]">{cn.credit_note_number}</td>
+                          <td className="px-2 py-2.5 font-mono text-xs text-[#22C55E]">
+                            <Link href={`/dashboard/sales/credit-notes/${cn.id}`} className="hover:underline">
+                              {cn.credit_note_number}
+                            </Link>
+                          </td>
                           <td className="px-2 py-2.5 text-gray-600"><FormattedDate value={cn.date} /></td>
-                          <td className="px-2 py-2.5 text-gray-600">{cn.invoice_number || "—"}</td>
+                          <td className="px-2 py-2.5 text-gray-600">
+                            {cn.invoice ? (
+                              <Link href={`/dashboard/sales/invoices/${cn.invoice}`} className="hover:underline">
+                                {cn.invoice_number || cn.invoice}
+                              </Link>
+                            ) : (
+                              cn.invoice_number || "—"
+                            )}
+                          </td>
                           <td className="px-2 py-2.5 font-medium">{formatCurrency(cn.amount)}</td>
                           <td className="px-2 py-2.5 text-gray-600">{cn.reason}</td>
                           <td className="px-2 py-2.5"><StatusBadge status={cn.status} /></td>

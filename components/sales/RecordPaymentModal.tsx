@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,18 @@ export function RecordPaymentModal({ open, onClose, invoiceId, invoiceNumber, ba
     notes: "" 
   });
 
+  useEffect(() => {
+    if (open) {
+      setForm({
+        date: new Date().toISOString().split('T')[0],
+        amount: balance,
+        method: "cash",
+        reference: "",
+        notes: "",
+      });
+    }
+  }, [open, balance, invoiceId]);
+
   const handleSave = async () => {
     if (!form.amount || form.amount <= 0) {
       toast.error("Please enter a valid payment amount");
@@ -56,7 +68,7 @@ export function RecordPaymentModal({ open, onClose, invoiceId, invoiceNumber, ba
         onSuccess();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to record payment");
+      toast.error(error.response?.data?.error || error.response?.data?.message || "Failed to record payment");
     } finally {
       setSubmitting(false);
     }

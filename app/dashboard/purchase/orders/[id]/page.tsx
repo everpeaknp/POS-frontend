@@ -9,7 +9,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Edit, Package, XCircle, CheckCircle, Clock, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { StatusBadge } from "@/components/sales/StatusBadge";
+import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { LineItemsTable } from "@/components/purchase/LineItemsTable";
 import { SalesSummaryBox } from "@/components/sales/SalesSummaryBox";
 import { ReceiveItemsModal } from "@/components/purchase/ReceiveItemsModal";
@@ -198,7 +198,7 @@ export default function PurchaseOrderDetailPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader 
         title={order.po_number} 
-        subtitle={`Purchase Order · $<FormattedDate value={order.date} />`} 
+        subtitle={`Purchase Order · ${order.date}`}
       />
       <div className="flex-1 p-6 space-y-4 max-w-5xl">
         {/* Action bar */}

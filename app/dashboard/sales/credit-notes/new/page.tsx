@@ -312,7 +312,6 @@ export default function NewCreditNotePage() {
                     <SelectContent>
                       <SelectItem value="Draft">Draft</SelectItem>
                       <SelectItem value="Issued">Issued</SelectItem>
-                      <SelectItem value="Applied">Applied</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>

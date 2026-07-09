@@ -8,13 +8,16 @@ import Link from "next/link";
 import { useReactToPrint } from "react-to-print";
 import { CheckCircle, XCircle, FileText, Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { LineItemsTable } from "@/components/purchase/LineItemsTable";
 import { PrintablePurchaseRequest } from "@/components/print/PrintablePurchaseRequest";
-import { purchaseRequestsAPI, type PurchaseRequest } from "@/lib/api/purchase";
+import { purchaseRequestsAPI, suppliersAPI, type PurchaseRequest, type Supplier } from "@/lib/api/purchase";
 import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -33,6 +36,10 @@ export default function PurchaseRequestDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [rejectModal, setRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [convertModal, setConvertModal] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [convertSupplierId, setConvertSupplierId] = useState("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
   const [convertedPoId, setConvertedPoId] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const { companyInfo } = useCompanyInfo();
@@ -47,6 +54,9 @@ export default function PurchaseRequestDetailPage() {
     try {
       const data = await purchaseRequestsAPI.get(id);
       setReq(data);
+      if (data.linked_po_id) {
+        setConvertedPoId(String(data.linked_po_id));
+      }
     } catch (error: any) {
       console.error("Error fetching request:", error);
       toast.error("Failed to load purchase request");
@@ -68,7 +78,7 @@ export default function PurchaseRequestDetailPage() {
       toast.success("Purchase request approved");
     } catch (error: any) {
       console.error("Error approving request:", error);
-      toast.error(error.response?.data?.detail || "Failed to approve request");
+      toast.error(error.response?.data?.error || error.response?.data?.detail || "Failed to approve request");
     } finally {
       setUpdating(false);
     }
@@ -89,7 +99,33 @@ export default function PurchaseRequestDetailPage() {
       toast.success("Purchase request rejected");
     } catch (error: any) {
       console.error("Error rejecting request:", error);
-      toast.error(error.response?.data?.detail || "Failed to reject request");
+      toast.error(error.response?.data?.error || error.response?.data?.detail || "Failed to reject request");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const openConvertModal = async () => {
+    if (!req) return;
+    try {
+      const list = await suppliersAPI.list({ status: "active" });
+      setSuppliers(Array.isArray(list) ? list : []);
+      setExpectedDeliveryDate(req.required_by || "");
+      setConvertModal(true);
+    } catch {
+      toast.error("Failed to load suppliers");
+    }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!req) return;
+    setUpdating(true);
+    try {
+      const data = await purchaseRequestsAPI.submit(req.id);
+      setReq(data);
+      toast.success("Request submitted for approval");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || error.response?.data?.detail || "Failed to submit request");
     } finally {
       setUpdating(false);
     }
@@ -97,16 +133,23 @@ export default function PurchaseRequestDetailPage() {
 
   const handleConvertToPO = async () => {
     if (!req) return;
+    if (!convertSupplierId || !expectedDeliveryDate) {
+      toast.error("Select a supplier and expected delivery date");
+      return;
+    }
     setUpdating(true);
     try {
-      const po = await purchaseRequestsAPI.convertToPO(req.id);
+      const po = await purchaseRequestsAPI.convertToPO(req.id, {
+        supplier: convertSupplierId,
+        expected_delivery_date: expectedDeliveryDate,
+      });
       setConvertedPoId(po.id);
+      setConvertModal(false);
       await fetchRequest();
       toast.success(`Converted to PO ${po.po_number}`);
       router.push(`/dashboard/purchase/orders/${po.id}`);
     } catch (error: any) {
-      console.error("Error converting request:", error);
-      toast.error(error.response?.data?.detail || "Failed to convert to purchase order");
+      toast.error(error.response?.data?.error || error.response?.data?.detail || "Failed to convert to purchase order");
     } finally {
       setUpdating(false);
     }
@@ -176,6 +219,16 @@ export default function PurchaseRequestDetailPage() {
             {req.priority} Priority
           </span>
           <div className="flex-1" />
+          {req.status === "Draft" && (
+            <Button
+              size="sm"
+              className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              onClick={handleSubmitForApproval}
+              disabled={updating}
+            >
+              Submit for Approval
+            </Button>
+          )}
           {req.status === "Pending Approval" && (
             <>
               <Button
@@ -202,19 +255,19 @@ export default function PurchaseRequestDetailPage() {
             <Button
               size="sm"
               className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
-              onClick={handleConvertToPO}
+              onClick={openConvertModal}
               disabled={updating}
             >
               {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
               Convert to Purchase Order
             </Button>
           )}
-          {req.status === "Converted to PO" && convertedPoId && (
+          {(req.status === "Converted to PO" && (convertedPoId || req.linked_po_id)) && (
             <Button
               size="sm"
               variant="outline"
               className="h-8 gap-1.5"
-              onClick={() => router.push(`/dashboard/purchase/orders/${convertedPoId}`)}
+              onClick={() => router.push(`/dashboard/purchase/orders/${convertedPoId || req.linked_po_id}`)}
             >
               <FileText className="h-3.5 w-3.5" /> View PO
             </Button>
@@ -312,6 +365,46 @@ export default function PurchaseRequestDetailPage() {
                 Confirm Reject
               </Button>
               <Button variant="outline" onClick={() => setRejectModal(false)} className="flex-1" disabled={updating}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={convertModal} onOpenChange={setConvertModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Convert to Purchase Order</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Supplier</Label>
+              <Select value={convertSupplierId} onValueChange={setConvertSupplierId}>
+                <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Expected Delivery Date</Label>
+              <Input
+                type="date"
+                value={expectedDeliveryDate}
+                onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleConvertToPO}
+                disabled={updating}
+                className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              >
+                {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Create PO
+              </Button>
+              <Button variant="outline" onClick={() => setConvertModal(false)} className="flex-1" disabled={updating}>
                 Cancel
               </Button>
             </div>

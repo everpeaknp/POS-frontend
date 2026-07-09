@@ -71,6 +71,7 @@ export default function NewSupplierPage() {
         type: form.type,
         phone: form.phone,
         email: form.email || undefined,
+        website: form.website || undefined,
         address: form.street || undefined,
         pan: form.pan || undefined,
         bank_name: form.bank_name || undefined,

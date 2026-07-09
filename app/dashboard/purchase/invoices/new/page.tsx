@@ -15,6 +15,7 @@ import { LineItemsTable } from "@/components/purchase/LineItemsTable";
 import { SummaryBox } from "@/components/purchase/SummaryBox";
 import toast from "react-hot-toast";
 import { purchaseInvoicesAPI, purchaseOrdersAPI, suppliersAPI, type Supplier, type PurchaseOrder } from "@/lib/api/purchase";
+import { inventoryApi, type Product } from "@/lib/api/inventory";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -29,6 +30,7 @@ export default function NewPurchaseInvoicePage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState<any[]>([]);
@@ -51,12 +53,14 @@ export default function NewPurchaseInvoicePage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [suppliersData, ordersData] = await Promise.all([
+      const [suppliersData, ordersData, productsData] = await Promise.all([
         suppliersAPI.list({ status: "active" }),
         purchaseOrdersAPI.list(),
+        inventoryApi.products.list({ status: "active" }),
       ]);
       setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
+      setProducts(Array.isArray(productsData) ? productsData : (productsData as { results?: Product[] })?.results || []);
     } catch (error) {
       toast.error("Failed to load data");
     } finally {
@@ -72,37 +76,42 @@ export default function NewPurchaseInvoicePage() {
   }, 0);
   const grandTotal = subtotal - totalDiscount + totalTax;
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (mode: "received" | "paid" = "received") => {
     if (!form.supplier) {
       toast.error("Supplier is required");
       return;
     }
-    if (items.length === 0) {
-      toast.error("At least one line item is required");
+    if (grandTotal <= 0) {
+      toast.error("Invoice amount must be greater than zero");
       return;
     }
 
     try {
       setSubmitting(true);
+      const noteParts = [
+        form.supplierInvoiceNumber ? `Supplier invoice: ${form.supplierInvoiceNumber}` : "",
+        form.paymentTerms ? `Payment terms: ${form.paymentTerms}` : "",
+        form.notes || "",
+      ].filter(Boolean);
+
       const invoiceData: any = {
         supplier: form.supplier,
-        purchase_order: form.purchaseOrder || undefined,
+        purchase_order: form.purchaseOrder && form.purchaseOrder !== "__none__" ? form.purchaseOrder : undefined,
         date: form.date,
         due_date: form.dueDate,
         amount: grandTotal,
-        paid_amount: 0,
-        status: "Received" as const,
-        notes: form.notes,
+        paid_amount: mode === "paid" ? grandTotal : 0,
+        status: mode === "paid" ? "Paid" as const : "Received" as const,
+        notes: noteParts.join("\n") || undefined,
       };
 
-      await purchaseInvoicesAPI.create(invoiceData);
+      const created = await purchaseInvoicesAPI.create(invoiceData);
       toast.success("Invoice created successfully");
-      router.push("/dashboard/purchase/invoices");
+      router.push(`/dashboard/purchase/invoices/${created.id}`);
     } catch (error: any) {
       const errorData = error?.response?.data;
-      console.error("Invoice creation error:", errorData || error);
-      const errorMsg = errorData?.detail || errorData?.message || (errorData ? JSON.stringify(errorData) : error?.message) || "Failed to create invoice";
-      toast.error(errorMsg);
+      const errorMsg = errorData?.error || errorData?.detail || errorData?.message || "Failed to create invoice";
+      toast.error(typeof errorMsg === "string" ? errorMsg : "Failed to create invoice");
     } finally {
       setSubmitting(false);
     }
@@ -155,7 +164,7 @@ export default function NewPurchaseInvoicePage() {
                   <SelectValue placeholder="— None —" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— None —</SelectItem>
+                  <SelectItem value="__none__">— None —</SelectItem>
                   {orders.filter((o) => o.status !== "Cancelled").map((o) => (
                     <SelectItem key={o.id} value={o.id}>
                       {o.po_number} — {o.supplier_name}
@@ -192,7 +201,7 @@ export default function NewPurchaseInvoicePage() {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Line Items</h3>
-            <LineItemsTable items={items} onChange={setItems} />
+            <LineItemsTable items={items} onChange={setItems} products={products} />
           </div>
           <div className="flex flex-col lg:flex-row gap-6 justify-between">
             <div className="flex-1 min-w-0">
@@ -206,17 +215,13 @@ export default function NewPurchaseInvoicePage() {
               <ArrowLeft className="h-4 w-4" /> Cancel
             </Button>
             <div className="flex-1" />
-            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit()} disabled={submitting}>
+            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit("received")} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Save Draft
+              Save as Received
             </Button>
-            <Button variant="outline" className="border-[#22C55E] text-[#22C55E] hover:bg-green-50" onClick={() => handleSubmit()} disabled={submitting}>
+            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Mark as Received
-            </Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit()} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Record Payment
+              Save & Mark Paid
             </Button>
           </div>
         </div>

@@ -21,6 +21,7 @@ import { DateSystemPreferenceCard } from "@/components/settings/DateSystemPrefer
 import { DateInput } from "@/components/shared/DateInput";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
+import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
 import type { DateCalendarSystem } from "@/lib/dates";
 import { getMediaUrl } from "@/lib/utils";
@@ -124,9 +125,7 @@ function OrgSettingsContent() {
     tenantToForm({ address: "" } as Tenant, "AD")
   );
 
-  const canEdit =
-    tenantMeta?.user_role === "admin" ||
-    user?.role === "admin";
+  const canEdit = isTenantOrgAdmin(tenantMeta?.user_role, user?.role);
 
   const loadTenantData = useCallback(async () => {
     try {

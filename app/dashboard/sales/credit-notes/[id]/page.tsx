@@ -46,6 +46,10 @@ export default function CreditNoteDetailPage() {
   };
 
   const handleDelete = async () => {
+    if (creditNote?.status === "Issued" || creditNote?.status === "Applied") {
+      toast.error("Cannot delete an issued credit note");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this credit note?")) {
       return;
     }
@@ -55,9 +59,8 @@ export default function CreditNoteDetailPage() {
       await creditNoteAPI.delete(creditNoteId);
       toast.success("Credit note deleted successfully");
       router.push("/dashboard/sales/credit-notes");
-    } catch (error) {
-      console.error("Error deleting credit note:", error);
-      toast.error("Failed to delete credit note");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to delete credit note");
     } finally {
       setDeleting(false);
     }
@@ -104,6 +107,7 @@ export default function CreditNoteDetailPage() {
             Back to Credit Notes
           </Button>
           <div className="flex-1" />
+          {creditNote.status === "Draft" && (
           <Button
             variant="outline"
             onClick={handleDelete}
@@ -122,6 +126,7 @@ export default function CreditNoteDetailPage() {
               </>
             )}
           </Button>
+          )}
         </div>
 
         {/* Credit Note Details */}

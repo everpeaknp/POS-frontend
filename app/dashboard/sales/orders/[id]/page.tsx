@@ -254,7 +254,7 @@ export default function OrderDetailPage() {
               </>
             )}
             
-            {order.status === 'Confirmed' && (
+            {order.status === 'Confirmed' && order.payment_type !== 'credit' && (
               <Button 
                 size="sm" 
                 onClick={() => handleStatusUpdate('Delivered')}
@@ -266,17 +266,15 @@ export default function OrderDetailPage() {
               </Button>
             )}
 
-            {order.payment_type === 'credit' &&
-              order.status !== 'Delivered' &&
-              order.status !== 'Cancelled' && (
+            {order.status === 'Confirmed' && order.payment_type === 'credit' && (
               <Button
                 size="sm"
                 onClick={handleFinalizeOnCredit}
                 disabled={updating}
-                className="bg-orange-500 hover:bg-orange-600 text-white gap-1.5 h-8"
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8"
               >
                 {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-                Finalize on Credit
+                Deliver & Post to Credit
               </Button>
             )}
             

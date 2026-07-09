@@ -186,9 +186,15 @@ export default function CustomerAgingReportPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {aging.overdue_invoices.map((invoice: any) => (
-                  <tr key={invoice.invoice_number} className="hover:bg-gray-50/50">
+                  <tr key={invoice.invoice_id || invoice.invoice_number} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
-                      {invoice.invoice_number}
+                      {invoice.invoice_id ? (
+                        <Link href={`/dashboard/sales/invoices/${invoice.invoice_id}`} className="hover:underline">
+                          {invoice.invoice_number}
+                        </Link>
+                      ) : (
+                        invoice.invoice_number
+                      )}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       <FormattedDate value={invoice.date} />

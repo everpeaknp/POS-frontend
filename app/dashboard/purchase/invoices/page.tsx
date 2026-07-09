@@ -40,7 +40,7 @@ export default function PurchaseInvoicesPage() {
       setLoading(true);
       const params: any = {};
       if (status !== "All") {
-        params.status = status.toLowerCase().replace(" ", "_");
+        params.status = status;
       }
       const data = await purchaseInvoicesAPI.list(params);
       setInvoices(Array.isArray(data) ? data : (data as any).results || []);

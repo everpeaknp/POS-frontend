@@ -133,7 +133,7 @@ export function getAllowedModulesForPlanType(planType: string): string[] {
     return ORG_MODULE_CATALOG.map((module) => module.id);
   }
   if (key === "premium") {
-    return [...FREE_PLAN_MODULE_IDS, "pos", "hr"];
+    return ORG_MODULE_CATALOG.map((module) => module.id);
   }
   return [...FREE_PLAN_MODULE_IDS];
 }

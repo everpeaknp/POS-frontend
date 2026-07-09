@@ -116,8 +116,7 @@ export default function DebitNotesPage() {
                             <div className="absolute right-0 top-8 z-10 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[160px]">
                               {[
                                 { icon: Eye, label: "View", action: () => router.push(`/dashboard/purchase/debit-notes/${dn.id}`) },
-                                { icon: CheckCircle, label: "Apply to Invoice", action: () => {} },
-                                { icon: Printer, label: "Print", action: () => {} },
+                                { icon: Printer, label: "Print", action: () => router.push(`/dashboard/purchase/debit-notes/${dn.id}?print=1`) },
                               ].map(({ icon: Icon, label, action }) => (
                                 <button key={label} onClick={() => { action(); setMenu(null); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
