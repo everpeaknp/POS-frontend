@@ -274,8 +274,16 @@ export default function POSReportsPage() {
                         <span className="font-medium">Rs. {report.card_sales.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">UPI/Digital</span>
-                        <span className="font-medium">Rs. {report.upi_sales.toLocaleString()}</span>
+                        <span className="text-gray-600">eSewa</span>
+                        <span className="font-medium">Rs. {report.esewa_sales.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Khalti</span>
+                        <span className="font-medium">Rs. {report.khalti_sales.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Fonepay</span>
+                        <span className="font-medium">Rs. {report.fonepay_sales.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Credit</span>

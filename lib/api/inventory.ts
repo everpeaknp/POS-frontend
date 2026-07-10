@@ -46,6 +46,7 @@ export interface Product {
   cost_price: number | string;  // Can be string from API
   selling_price: number | string;  // Can be string from API
   reorder_level: number;
+  expiry_date?: string | null;
   status: 'active' | 'inactive' | 'discontinued';
   total_stock?: number;
   stock_by_warehouse?: Array<{

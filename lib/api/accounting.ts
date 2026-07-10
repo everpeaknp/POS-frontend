@@ -56,7 +56,7 @@ export interface JournalEntry {
   date: string;
   reference?: string;
   description: string;
-  type: 'Manual' | 'Sales' | 'Purchase' | 'Payment' | 'Receipt' | 'Adjustment';
+  type: 'Manual' | 'Sales' | 'Purchase' | 'Payment' | 'Receipt' | 'Adjustment' | 'Construction' | 'Payroll' | 'Contra' | 'Opening' | 'Closing';
   status: 'draft' | 'posted' | 'reversed';
   total_debit: number;
   total_credit: number;
@@ -149,6 +149,147 @@ export interface LedgerEntry {
   credit: number;
   balance: number;
   source: string;
+}
+
+export interface AccountingDashboardSummary {
+  period: { from_date: string; to_date: string };
+  fiscal_year: { bs_start_year: number; label: string; from_date: string; to_date: string };
+  cash_in_hand: number;
+  bank_balance: number;
+  cash_and_bank: number;
+  today_income: number;
+  today_expenses: number;
+  monthly_income: number;
+  monthly_expenses: number;
+  monthly_gross_profit: number;
+  monthly_net_profit: number;
+  fiscal_revenue: number;
+  fiscal_expenses: number;
+  fiscal_gross_profit: number;
+  fiscal_net_profit: number;
+  total_assets: number;
+  total_liabilities: number;
+  accounts_receivable_gl: number;
+  accounts_payable_gl: number;
+  customer_outstanding: number;
+  supplier_outstanding: number;
+  vat_collected: number;
+  vat_paid: number;
+  vat_payable: number;
+  vat_payable_gl: number;
+  petty_cash?: number;
+  total_equity?: number;
+  working_capital?: number;
+  outstanding_taxes?: number;
+  asset_distribution?: Array<{ name: string; value: number }>;
+  liability_distribution?: Array<{ name: string; value: number }>;
+  income_breakdown?: Array<{ code: string; name: string; amount: number }>;
+  expense_breakdown?: Array<{ code: string; name: string; amount: number }>;
+  cash_flow_summary?: {
+    from_date: string;
+    to_date: string;
+    cash_inflows: number;
+    cash_outflows: number;
+    net_cash_flow: number;
+  };
+  recent_bank_transactions?: Array<{
+    id: number;
+    date: string;
+    reference: string;
+    description: string;
+    type: string;
+    debit: number;
+    credit: number;
+    balance: number;
+    bank_account__bank_name: string;
+  }>;
+  recent_journal_entries: Array<{
+    id: number;
+    entry_number: string;
+    date: string;
+    description: string;
+    type: string;
+    status: string;
+    total_debit: number;
+  }>;
+  recent_payments: Array<{
+    id: number;
+    entry_number: string;
+    date: string;
+    description: string;
+    type: string;
+    total_debit: number;
+    reference?: string;
+  }>;
+  monthly_trend: Array<{ month: string; income: number; expenses: number; net_profit: number }>;
+  financial_ratios: {
+    current_ratio: number | null;
+    net_margin_pct: number;
+    debt_to_equity?: number | null;
+    working_capital?: number;
+  };
+  upcoming_payments: Array<{
+    kind: 'receivable' | 'payable';
+    reference: string;
+    party: string;
+    due_date: string;
+    amount: number;
+  }>;
+}
+
+export interface FiscalYear {
+  id: number;
+  bs_start_year: number;
+  label: string;
+  start_date: string;
+  end_date: string;
+  is_closed: boolean;
+  closed_at?: string | null;
+  notes?: string;
+}
+
+export interface AgingReport {
+  as_of_date: string;
+  total_outstanding: number;
+  current: number;
+  days_30_60: number;
+  days_60_90: number;
+  days_90_plus: number;
+  customers?: Array<{ customer_id: number; customer_name: string; total: number; invoices: unknown[] }>;
+  suppliers?: Array<{ supplier_id: number; supplier_name: string; total: number; invoices: unknown[] }>;
+}
+
+export interface JournalRegisterReport {
+  from_date: string;
+  to_date: string;
+  entry_count: number;
+  lines: Array<{
+    entry_id: number;
+    entry_number: string;
+    date: string;
+    type: string;
+    reference: string;
+    description: string;
+    account_code: string;
+    account_name: string;
+    debit: number;
+    credit: number;
+    status: string;
+  }>;
+}
+
+export interface VatRegisterReport {
+  from_date: string;
+  to_date: string;
+  total_vat: number;
+  rows: Array<{
+    date: string;
+    reference: string;
+    entry_number: string;
+    description: string;
+    taxable_estimate: number;
+    vat_amount: number;
+  }>;
 }
 
 // ============================================================================
@@ -257,6 +398,18 @@ export const accountsAPI = {
         }>;
         total: number;
       };
+      cogs?: {
+        accounts: Array<{
+          id: string;
+          code: string;
+          name: string;
+          sub_type: string;
+          amount: number;
+        }>;
+        total: number;
+      };
+      gross_profit?: number;
+      operating_expenses_total?: number;
       expenses: {
         accounts: Array<{
           id: string;
@@ -270,6 +423,60 @@ export const accountsAPI = {
       net_profit: number;
       net_margin: number;
     }>('/accounting/accounts/profit_loss/', { params });
+    return response.data;
+  },
+
+  dashboardSummary: async (params?: {
+    from_date?: string;
+    to_date?: string;
+    bs_fiscal_start_year?: number | string;
+  }) => {
+    const response = await apiClient.get<AccountingDashboardSummary>(
+      '/accounting/accounts/dashboard_summary/',
+      { params },
+    );
+    return response.data;
+  },
+
+  receivableAging: async () => {
+    const response = await apiClient.get<AgingReport>('/accounting/accounts/receivable_aging/');
+    return response.data;
+  },
+
+  payableAging: async () => {
+    const response = await apiClient.get<AgingReport>('/accounting/accounts/payable_aging/');
+    return response.data;
+  },
+
+  journalRegister: async (params?: { from_date?: string; to_date?: string }) => {
+    const response = await apiClient.get<JournalRegisterReport>(
+      '/accounting/accounts/journal_register/',
+      { params },
+    );
+    return response.data;
+  },
+
+  vatSalesRegister: async (params?: { from_date?: string; to_date?: string }) => {
+    const response = await apiClient.get<VatRegisterReport>(
+      '/accounting/accounts/vat_sales_register/',
+      { params },
+    );
+    return response.data;
+  },
+
+  vatPurchaseRegister: async (params?: { from_date?: string; to_date?: string }) => {
+    const response = await apiClient.get<VatRegisterReport>(
+      '/accounting/accounts/vat_purchase_register/',
+      { params },
+    );
+    return response.data;
+  },
+
+  cashFlowSummary: async (params?: { from_date?: string; to_date?: string }) => {
+    const response = await apiClient.get<NonNullable<AccountingDashboardSummary['cash_flow_summary']>>(
+      '/accounting/accounts/cash_flow_summary/',
+      { params },
+    );
     return response.data;
   },
 
@@ -412,6 +619,40 @@ export const journalEntriesAPI = {
   // Reverse journal entry
   reverse: async (id: string, date?: string) => {
     const response = await apiClient.post<JournalEntry>(`/accounting/journal-entries/${id}/reverse/`, { date });
+    return response.data;
+  },
+
+  copy: async (id: string) => {
+    const response = await apiClient.post<JournalEntry>(`/accounting/journal-entries/${id}/copy_entry/`);
+    return response.data;
+  },
+};
+
+// ============================================================================
+// FISCAL YEARS API
+// ============================================================================
+
+export const fiscalYearsAPI = {
+  list: async () => {
+    const response = await apiClient.get<FiscalYear[] | { results: FiscalYear[] }>('/accounting/fiscal-years/');
+    const data = response.data;
+    return Array.isArray(data) ? data : data.results ?? [];
+  },
+
+  ensureCurrent: async () => {
+    const response = await apiClient.post<FiscalYear>('/accounting/fiscal-years/ensure_current/');
+    return response.data;
+  },
+
+  create: async (bs_start_year?: number) => {
+    const response = await apiClient.post<FiscalYear>('/accounting/fiscal-years/', {
+      bs_start_year,
+    });
+    return response.data;
+  },
+
+  close: async (id: number, notes?: string) => {
+    const response = await apiClient.post<FiscalYear>(`/accounting/fiscal-years/${id}/close/`, { notes });
     return response.data;
   },
 };

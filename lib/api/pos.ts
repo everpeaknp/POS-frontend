@@ -23,7 +23,9 @@ export interface POSSession {
   total_sales: number;
   cash_sales: number;
   card_sales: number;
-  upi_sales: number;
+  esewa_sales: number;
+  khalti_sales: number;
+  fonepay_sales: number;
   credit_sales: number;
   status: 'open' | 'closed';
   notes?: string;
@@ -71,7 +73,7 @@ export interface POSTransaction {
   discount_amount: number;
   tax_amount: number;
   total: number;
-  payment_method: 'cash' | 'card' | 'upi' | 'credit';
+  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'credit';
   amount_paid: number;
   change_given?: number;
   status?: 'completed' | 'cancelled' | 'refunded';
@@ -98,7 +100,9 @@ export interface POSDailySalesReport {
   net_sales: number;
   cash_sales: number;
   card_sales: number;
-  upi_sales: number;
+  esewa_sales: number;
+  khalti_sales: number;
+  fonepay_sales: number;
   credit_sales: number;
   cancelled_transactions: number;
   refunded_amount: number;

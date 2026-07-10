@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DateInput } from '@/components/shared/DateInput';
 import { cn } from '@/lib/utils';
 
 const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-[#22C55E]';
@@ -53,6 +54,7 @@ const productSchema = z
       .refine((val) => !val || val === '' || (!Number.isNaN(Number(val)) && Number(val) >= 0), {
         message: 'Reorder level must be 0 or greater',
       }),
+    expiry_date: z.string().optional().or(z.literal('')),
     description: z.string().max(2000, 'Description is too long').optional().or(z.literal('')),
     status: z.enum(['active', 'inactive', 'discontinued']),
     total_stock: z.number().optional(),
@@ -119,6 +121,7 @@ export default function ProductForm({
     cost_price: '',
     selling_price: '',
     reorder_level: '0',
+    expiry_date: '',
     description: '',
     status: 'active',
   };
@@ -250,6 +253,7 @@ export default function ProductForm({
         cost_price: Number(data.cost_price),
         selling_price: Number(data.selling_price),
         reorder_level: data.reorder_level ? Number(data.reorder_level) : 0,
+        expiry_date: data.expiry_date?.trim() || null,
         description: data.description?.trim() || '',
         status: data.status,
       };
@@ -441,6 +445,20 @@ export default function ProductForm({
               step="0.01"
               className={cn(inputClass, errors.reorder_level && 'border-red-500')}
               placeholder="0"
+            />
+          </FormField>
+
+          <FormField label="Expiry Date" name="expiry_date" error={errors.expiry_date} hint="Optional — enables expiry alerts for perishable stock">
+            <Controller
+              name="expiry_date"
+              control={control}
+              render={({ field }) => (
+                <DateInput
+                  value={field.value || ''}
+                  onChange={(value) => field.onChange(value)}
+                  className={cn(inputClass, errors.expiry_date && 'border-red-500')}
+                />
+              )}
             />
           </FormField>
 

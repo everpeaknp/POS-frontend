@@ -17,6 +17,7 @@ import { POS_VAT_RATE } from "@/lib/api/pos-helpers";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
+import { POS_PAYMENT_METHODS, type PosPaymentMethod } from "@/lib/pos/payment-methods";
 
 interface CartItem extends POSTransactionLine {
   product_name: string;
@@ -42,7 +43,7 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "upi" | "credit">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>("cash");
   const [amountPaid, setAmountPaid] = useState<string>("");
   const [notes, setNotes] = useState("");
   
@@ -957,15 +958,16 @@ export default function POSPage() {
                 
                 <div>
                   <Label className="text-sm">Payment Method *</Label>
-                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as "cash" | "card" | "upi" | "credit")}>
+                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PosPaymentMethod)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="upi">UPI/Digital</SelectItem>
-                      <SelectItem value="credit">Credit</SelectItem>
+                      {POS_PAYMENT_METHODS.map((method) => (
+                        <SelectItem key={method.value} value={method.value}>
+                          {method.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

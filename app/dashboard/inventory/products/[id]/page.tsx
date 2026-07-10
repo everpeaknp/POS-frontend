@@ -234,6 +234,7 @@ export default function EditProductPage() {
                 cost_price: product.cost_price.toString(),
                 selling_price: product.selling_price.toString(),
                 reorder_level: product.reorder_level.toString(),
+                expiry_date: product.expiry_date || '',
                 status: product.status,
                 total_stock: product.total_stock || 0,
               }}

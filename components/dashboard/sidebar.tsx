@@ -137,6 +137,8 @@ const navItems: NavItem[] = [
       { label: "Profit & Loss", href: "/dashboard/accounting/profit-loss" },
       { label: "Balance Sheet", href: "/dashboard/accounting/balance-sheet" },
       { label: "Tax Management", href: "/dashboard/accounting/tax-management", createHref: "/dashboard/accounting/tax-management/new" },
+      { label: "Financial Reports", href: "/dashboard/accounting/reports" },
+      { label: "Fiscal Year", href: "/dashboard/accounting/fiscal-year" },
       { label: "Bank Accounts", href: "/dashboard/accounting/bank-accounts", createHref: "/dashboard/accounting/bank-accounts/new" },
     ],
   },

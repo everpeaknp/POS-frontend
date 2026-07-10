@@ -7,6 +7,7 @@ import { Bell, Check, Loader2 } from "lucide-react";
 import { notificationsAPI, type AppNotification } from "@/lib/api/notifications";
 import { useNotificationPreferences } from "@/lib/context/NotificationPreferencesContext";
 import { showBrowserNotification } from "@/lib/notifications/browser";
+import { getNotificationTypeLabel } from "@/lib/notifications/labels";
 import toast from "react-hot-toast";
 
 const levelColors: Record<string, string> = {
@@ -168,7 +169,10 @@ export function NotificationBell() {
                 >
                   <p className="text-sm font-medium text-foreground">{n.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  <p className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-2">
+                    <span className="inline-flex px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      {getNotificationTypeLabel(n.notification_type)}
+                    </span>
                     {new Date(n.created_at).toLocaleString()}
                   </p>
                 </button>

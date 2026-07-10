@@ -25,6 +25,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { PosStatusBadge } from "@/components/pos/PosStatusBadge";
 import { NewPosSessionDialog } from "@/components/pos/NewPosSessionDialog";
 import posApi, { type POSSession } from "@/lib/api/pos";
+import { sumDigitalWalletSales } from "@/lib/pos/payment-methods";
 import toast from "react-hot-toast";
 
 interface PosSessionsPageContentProps {
@@ -209,7 +210,7 @@ export function PosSessionsPageContent({
                     Rs. {session.cash_sales.toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    Rs. {(session.card_sales + session.upi_sales).toLocaleString()}
+                    Rs. {(session.card_sales + sumDigitalWalletSales(session)).toLocaleString()}
                   </td>
                   <td className="px-4 py-3">
                     <PosStatusBadge status={session.status} />

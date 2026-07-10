@@ -30,6 +30,12 @@ interface PLData {
     accounts: PLAccount[];
     total: number;
   };
+  cogs?: {
+    accounts: PLAccount[];
+    total: number;
+  };
+  gross_profit?: number;
+  operating_expenses_total?: number;
   expenses: {
     accounts: PLAccount[];
     total: number;
@@ -49,6 +55,15 @@ function normalizePLData(data: PLData): PLData {
     income: {
       accounts: normalizeAccounts(data.income?.accounts),
       total: Number(data.income?.total) || 0 },
+    cogs: data.cogs
+      ? {
+          accounts: normalizeAccounts(data.cogs.accounts),
+          total: Number(data.cogs.total) || 0,
+        }
+      : undefined,
+    gross_profit: data.gross_profit != null ? Number(data.gross_profit) : undefined,
+    operating_expenses_total:
+      data.operating_expenses_total != null ? Number(data.operating_expenses_total) : undefined,
     expenses: {
       accounts: normalizeAccounts(data.expenses?.accounts),
       total: Number(data.expenses?.total) || 0 },
@@ -197,11 +212,13 @@ export default function ProfitLossPage() {
   };
 
   const totalIncome = plData?.income.total || 0;
-  const totalExpenses = plData?.expenses.total || 0;
+  const totalCogs = plData?.cogs?.total || 0;
+  const grossProfit = plData?.gross_profit ?? totalIncome - totalCogs;
+  const totalExpenses = plData?.operating_expenses_total ?? plData?.expenses.total ?? 0;
   const netProfit = plData?.net_profit || 0;
   const netMargin = plData?.net_margin || 0;
   const hasActivity =
-    (plData?.income.accounts.length || 0) > 0 || (plData?.expenses.accounts.length || 0) > 0;
+    totalIncome > 0 || totalExpenses > 0 || totalCogs > 0;
 
   if (loading && !plData) {
     return (
@@ -258,14 +275,18 @@ export default function ProfitLossPage() {
 
         {plData && (
           <div className="space-y-4 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Total Income</p>
                 <p className="text-xl font-bold text-gray-800 mt-1">{fmt(totalIncome)}</p>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Total Expenses</p>
-                <p className="text-xl font-bold text-gray-800 mt-1">{fmt(totalExpenses)}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Cost of Goods Sold</p>
+                <p className="text-xl font-bold text-gray-800 mt-1">{fmt(totalCogs)}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Gross Profit</p>
+                <p className="text-xl font-bold text-[#22C55E] mt-1">{fmt(grossProfit)}</p>
               </div>
               <div
                 className={`rounded-xl border shadow-sm p-4 ${netProfit >= 0 ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}`}

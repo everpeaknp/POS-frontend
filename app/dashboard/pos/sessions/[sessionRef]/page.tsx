@@ -11,6 +11,7 @@ import { NotFoundView } from "@/components/shared/NotFoundView";
 import posApi, { POSSession } from "@/lib/api/pos";
 import { isValidPosSessionRef } from "@/lib/pos/session-ref";
 import { formatNPR } from "@/lib/utils";
+import { sumDigitalWalletSales } from "@/lib/pos/payment-methods";
 import { toast } from "sonner";
 
 function useSessionRef(): string | undefined {
@@ -76,7 +77,7 @@ export default function PosSessionDetailPage() {
     );
   }
 
-  const digitalSales = session.card_sales + session.upi_sales;
+  const digitalSales = session.card_sales + sumDigitalWalletSales(session);
   const closeHref = `/dashboard/pos/sessions/${sessionRef}/close`;
 
   return (
@@ -193,8 +194,16 @@ export default function PosSessionDetailPage() {
                 <span className="font-medium">{formatNPR(session.card_sales)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-muted-foreground">UPI Sales</span>
-                <span className="font-medium">{formatNPR(session.upi_sales)}</span>
+                <span className="text-gray-500 dark:text-muted-foreground">eSewa Sales</span>
+                <span className="font-medium">{formatNPR(session.esewa_sales)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-muted-foreground">Khalti Sales</span>
+                <span className="font-medium">{formatNPR(session.khalti_sales)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-muted-foreground">Fonepay Sales</span>
+                <span className="font-medium">{formatNPR(session.fonepay_sales)}</span>
               </div>
               {session.closing_cash != null && (
                 <>

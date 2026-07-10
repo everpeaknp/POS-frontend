@@ -130,25 +130,25 @@ export default function NotificationsPage() {
   const emailSettings = [
     {
       title: "Order updates",
-      description: "Status changes on sales and purchase orders",
+      description: "Sales order status changes and purchase request decisions",
       icon: Package,
       key: "email_order_updates" as const,
     },
     {
       title: "Payment reminders",
-      description: "Reminders for pending payments",
+      description: "Customer receivables and supplier payables due or overdue",
       icon: CreditCard,
       key: "email_payment_reminders" as const,
     },
     {
       title: "Inventory alerts",
-      description: "Low stock, budget, and inventory updates",
+      description: "Low stock, product expiry, and budget alerts",
       icon: AlertCircle,
       key: "email_inventory_alerts" as const,
     },
     {
       title: "Team activity",
-      description: "Updates from your team members",
+      description: "Purchase approvals and pending team actions",
       icon: Users,
       key: "email_team_activity" as const,
     },

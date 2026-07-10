@@ -2,19 +2,33 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import toast from "react-hot-toast";
 import { Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountingPageShell } from "@/components/dashboard/AccountingPageShell";
-import { accountsAPI, journalEntriesAPI } from "@/lib/api/accounting";
+import { accountsAPI, type AccountingDashboardSummary } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useAuth } from "@/lib/context/AuthContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { tenantApi } from "@/lib/api/tenant";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
-const COLORS = ["#22C55E", "#86EFAC", "#4ADE80", "#16A34A", "#15803D", "#F59E0B", "#60A5FA"];
+const COLORS = ["#22C55E", "#86EFAC", "#FCA5A5", "#60A5FA", "#F59E0B", "#A78BFA"];
 
 export default function AccountingDashboard() {
   const { user, refreshUser } = useAuth();
@@ -22,19 +36,7 @@ export default function AccountingDashboard() {
   const [loading, setLoading] = useState(true);
   const [enablingModule, setEnablingModule] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dashboardData, setDashboardData] = useState<{
-    totalAssets: number;
-    totalLiabilities: number;
-    netProfit: number;
-    cashBank: number;
-    ar: number;
-    ap: number;
-    vatPayable: number;
-    recentJournalEntries: Awaited<ReturnType<typeof journalEntriesAPI.list>>;
-    expenseBreakdown: { name: string; value: number }[];
-    incomeTotal: number;
-    expenseTotal: number;
-  } | null>(null);
+  const [data, setData] = useState<AccountingDashboardSummary | null>(null);
 
   const accountingModuleActive = hasModuleAccess("accounting");
   const canEnableAccounting = user?.role === "admin" && !!user?.tenant?.slug;
@@ -44,87 +46,38 @@ export default function AccountingDashboard() {
       setLoading(false);
       return;
     }
-    fetchDashboardData();
+    void fetchDashboard();
   }, [accountingModuleActive]);
+
+  const fetchDashboard = async () => {
+    if (!canView("accounting")) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const summary = await accountsAPI.dashboardSummary();
+      setData(summary);
+    } catch {
+      setError("Failed to load dashboard data.");
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEnableAccountingModule = async () => {
     if (!user?.tenant?.slug) return;
-
     try {
       setEnablingModule(true);
       await tenantApi.activateModule(user.tenant.slug, "accounting");
       await refreshUser();
       toast.success("Accounting module enabled");
-    } catch (err) {
-      console.error("Failed to enable accounting module:", err);
+    } catch {
       toast.error("Failed to enable accounting module");
     } finally {
       setEnablingModule(false);
-    }
-  };
-
-  const fetchDashboardData = async () => {
-    if (!canView("accounting")) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const today = new Date();
-      const fromDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
-      const toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
-
-      const [accounts, journalEntries, profitLoss, balanceSheet] = await Promise.all([
-        accountsAPI.list(),
-        journalEntriesAPI.list({ ordering: "-date" }),
-        accountsAPI.profitLoss({ from_date: fromDate, to_date: toDate }),
-        accountsAPI.balanceSheet(),
-      ]);
-
-      const totalAssets = balanceSheet?.assets?.total || 0;
-      const totalLiabilities = balanceSheet?.liabilities?.total || 0;
-      const netProfit = profitLoss?.net_profit || 0;
-
-      const cashBank = accounts
-        .filter((a) => a.sub_type === "Cash" || a.sub_type === "Bank")
-        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
-
-      const arTotal = accounts
-        .filter((a) => a.sub_type === "Receivable")
-        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
-      const apTotal = accounts
-        .filter((a) => a.sub_type === "Payable")
-        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
-      const vatTotal = accounts
-        .filter((a) => a.sub_type === "Tax" && a.type === "Liabilities")
-        .reduce((sum, acc) => sum + (acc.balance || 0), 0);
-
-      const expenseBreakdown = (profitLoss?.expenses?.accounts || [])
-        .filter((a) => a.amount > 0)
-        .map((a) => ({ name: a.name, value: a.amount }));
-
-      setDashboardData({
-        totalAssets,
-        totalLiabilities,
-        netProfit,
-        cashBank,
-        ar: arTotal,
-        ap: apTotal,
-        vatPayable: vatTotal,
-        recentJournalEntries: journalEntries.slice(0, 5),
-        expenseBreakdown,
-        incomeTotal: profitLoss?.income?.total || 0,
-        expenseTotal: profitLoss?.expenses?.total || 0,
-      });
-    } catch (err) {
-      console.error("Failed to load dashboard data:", err);
-      setError("Failed to load dashboard data. Ensure you have selected an organization with accounting data.");
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -135,7 +88,7 @@ export default function AccountingDashboard() {
           <Calculator className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-lg font-semibold text-gray-900">Accounting is not enabled</h2>
           <p className="text-sm text-gray-500 mt-2">
-            Enable the accounting module to manage your chart of accounts, journals, bank accounts, and tax returns.
+            Enable the accounting module to manage chart of accounts, journals, bank accounts, and tax returns.
           </p>
           {canEnableAccounting ? (
             <Button
@@ -155,183 +108,333 @@ export default function AccountingDashboard() {
 
   if (loading) {
     return (
-      <AccountingPageShell
-        title="Accounting"
-        subtitle="Financial overview"
-        loading
-        loadingMessage="Loading dashboard…"
-      />
+      <AccountingPageShell title="Accounting" subtitle="Financial overview" loading loadingMessage="Loading dashboard…" />
     );
   }
 
-  if (error || !dashboardData) {
+  if (error || !data) {
     return (
-      <AccountingPageShell
-        title="Accounting"
-        subtitle="Error"
-        error={error || "Failed to load dashboard"}
-        onRetry={fetchDashboardData}
-      />
+      <AccountingPageShell title="Accounting" subtitle="Error" error={error || "Failed to load"} onRetry={fetchDashboard} />
     );
   }
 
-  const {
-    totalAssets,
-    totalLiabilities,
-    netProfit,
-    cashBank,
-    ar,
-    ap,
-    vatPayable,
-    recentJournalEntries,
-    expenseBreakdown,
-    incomeTotal,
-    expenseTotal,
-  } = dashboardData;
+  const expenseBreakdown =
+    data.expense_breakdown && data.expense_breakdown.length > 0
+      ? data.expense_breakdown.map((x) => ({ name: x.name, value: x.amount }))
+      : [
+          { name: "Monthly expenses", value: data.monthly_expenses },
+          { name: "COGS (est.)", value: Math.max(0, data.monthly_income - data.monthly_gross_profit) },
+        ].filter((x) => x.value > 0);
 
-  const monthlyIncomeExpense = [
-    { month: "This Month", income: incomeTotal, expense: expenseTotal },
-  ];
+  const incomeBreakdown =
+    data.income_breakdown && data.income_breakdown.length > 0
+      ? data.income_breakdown.map((x) => ({ name: x.name, value: x.amount }))
+      : [];
 
   return (
-    <AccountingPageShell title="Accounting" subtitle="Financial overview">
+    <AccountingPageShell
+      title="Accounting"
+      subtitle={`FY ${data.fiscal_year.label} (Nepal) · ${data.period.from_date} to ${data.period.to_date}`}
+    >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: "Total Assets", value: fmt(totalAssets), sub: "All asset accounts" },
-            { label: "Total Liabilities", value: fmt(totalLiabilities), sub: "All liability accounts" },
-            {
-              label: "Net Profit This Month",
-              value: fmt(netProfit),
-              sub: netProfit >= 0 ? "Profitable period" : "Loss this period",
-              green: netProfit >= 0,
-            },
-            { label: "Cash & Bank Balance", value: fmt(cashBank), sub: "Cash + bank accounts" },
+            { label: "Cash in Hand", value: fmt(data.cash_in_hand) },
+            { label: "Petty Cash", value: fmt(data.petty_cash ?? 0) },
+            { label: "Bank Balance", value: fmt(data.bank_balance) },
+            { label: "Today's Income", value: fmt(data.today_income) },
+            { label: "Today's Expenses", value: fmt(data.today_expenses) },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
               <p className="text-xs text-gray-500">{s.label}</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{s.value}</p>
-              <p className={`text-xs mt-0.5 ${s.green ? "text-[#22C55E]" : "text-gray-400"}`}>{s.sub}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Accounts Receivable", value: fmt(ar), sub: "Outstanding from customers", href: "/dashboard/accounting/chart-of-accounts" },
-            { label: "Accounts Payable", value: fmt(ap), sub: "Outstanding to suppliers", href: "/dashboard/accounting/chart-of-accounts" },
-            { label: "VAT Payable", value: fmt(vatPayable), sub: "Net VAT to IRD", href: "/dashboard/accounting/tax-management" },
+            { label: "Monthly Income", value: fmt(data.monthly_income) },
+            { label: "Monthly Expenses", value: fmt(data.monthly_expenses) },
+            { label: "Gross Profit", value: fmt(data.monthly_gross_profit), green: true },
+            { label: "Net Profit", value: fmt(data.monthly_net_profit), green: data.monthly_net_profit >= 0 },
           ].map((s) => (
-            <Link key={s.label} href={s.href} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 transition-colors">
+            <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <p className="text-xs text-gray-500">{s.label}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "FY Revenue", value: fmt(data.fiscal_revenue) },
+            { label: "FY Expenses", value: fmt(data.fiscal_expenses) },
+            { label: "FY Gross Profit", value: fmt(data.fiscal_gross_profit) },
+            { label: "FY Net Profit", value: fmt(data.fiscal_net_profit), green: data.fiscal_net_profit >= 0 },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <p className="text-xs text-gray-500">{s.label}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total Assets", value: fmt(data.total_assets) },
+            { label: "Total Liabilities", value: fmt(data.total_liabilities) },
+            { label: "Equity", value: fmt(data.total_equity ?? 0) },
+            { label: "Working Capital", value: fmt(data.working_capital ?? 0), green: (data.working_capital ?? 0) >= 0 },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <p className="text-xs text-gray-500">{s.label}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Accounts Receivable", value: fmt(data.customer_outstanding), href: "/dashboard/accounting/reports" },
+            { label: "Accounts Payable", value: fmt(data.supplier_outstanding), href: "/dashboard/accounting/reports" },
+            { label: "VAT Collected", value: fmt(data.vat_collected), href: "/dashboard/accounting/tax-management" },
+            { label: "Outstanding Taxes", value: fmt(data.outstanding_taxes ?? data.vat_payable), href: "/dashboard/accounting/tax-management" },
+          ].map((s) => (
+            <Link key={s.label} href={s.href} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30">
               <p className="text-xs text-gray-500">{s.label}</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{s.value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
             </Link>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Income vs Expense (This Month)</h3>
-            {incomeTotal === 0 && expenseTotal === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-16">No posted transactions this month yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={monthlyIncomeExpense}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v) => [`Rs. ${Number(v).toLocaleString("en-IN")}`]} />
-                  <Legend />
-                  <Bar dataKey="income" name="Income" fill="#22C55E" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" name="Expense" fill="#FCA5A5" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Revenue vs Expense (6 months)</h3>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data.monthly_trend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v) => fmt(Number(v))} />
+                <Legend />
+                <Bar dataKey="income" name="Income" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expenses" name="Expenses" fill="#FCA5A5" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Expense Breakdown (This Month)</h3>
-            {expenseBreakdown.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-16">No expenses recorded this month.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Financial Ratios</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Current ratio</span>
+                <span className="font-medium">{data.financial_ratios.current_ratio?.toFixed(2) ?? "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Net margin</span>
+                <span className="font-medium">{data.financial_ratios.net_margin_pct.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Debt to equity</span>
+                <span className="font-medium">{data.financial_ratios.debt_to_equity?.toFixed(2) ?? "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Working capital</span>
+                <span className="font-medium">{fmt(data.financial_ratios.working_capital ?? data.working_capital ?? 0)}</span>
+              </div>
+              {data.cash_flow_summary && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Cash inflows (period)</span>
+                    <span className="font-medium">{fmt(data.cash_flow_summary.cash_inflows)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Net cash flow</span>
+                    <span className={`font-medium ${data.cash_flow_summary.net_cash_flow >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                      {fmt(data.cash_flow_summary.net_cash_flow)}
+                    </span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">VAT net payable (FY)</span>
+                <span className="font-medium">{fmt(data.vat_payable)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {(data.asset_distribution?.length || data.liability_distribution?.length || incomeBreakdown.length) ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {(data.asset_distribution?.length ?? 0) > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Asset Distribution</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={data.asset_distribution} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75}>
+                      {data.asset_distribution!.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => fmt(Number(v))} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {(data.liability_distribution?.length ?? 0) > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Liability Distribution</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={data.liability_distribution} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75}>
+                      {data.liability_distribution!.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => fmt(Number(v))} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {incomeBreakdown.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Income Breakdown</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={incomeBreakdown} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75}>
+                      {incomeBreakdown.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => fmt(Number(v))} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Monthly Profit Trend</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={data.monthly_trend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => fmt(Number(v))} />
+                <Line type="monotone" dataKey="net_profit" name="Net profit" stroke="#22C55E" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {expenseBreakdown.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Expense Summary</h3>
+              <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie
-                    data={expenseBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
+                  <Pie data={expenseBreakdown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}>
                     {expenseBreakdown.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v) => [`Rs. ${Number(v).toLocaleString("en-IN")}`]} />
+                  <Tooltip formatter={(v) => fmt(Number(v))} />
                 </PieChart>
               </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-700">Recent Journal Entries</h3>
+              <Link href="/dashboard/accounting/journal-entries" className="text-xs text-[#22C55E] hover:underline">View all</Link>
+            </div>
+            <div className="overflow-x-auto max-h-64">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    {["Entry #", "Date", "Amount", "Status"].map((h) => (
+                      <th key={h} className="text-left px-4 py-2 text-xs font-medium text-gray-500">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {data.recent_journal_entries.map((je) => (
+                    <tr key={je.id} className="hover:bg-gray-50/50">
+                      <td className="px-4 py-2">
+                        <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[#22C55E] font-mono text-xs">
+                          {je.entry_number}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2 text-xs text-gray-500"><FormattedDate value={je.date} /></td>
+                      <td className="px-4 py-2 text-xs">{fmt(Number(je.total_debit))}</td>
+                      <td className="px-4 py-2 text-xs capitalize">{je.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-700">Upcoming Payments (7 days)</h3>
+            </div>
+            {data.upcoming_payments.length === 0 ? (
+              <p className="p-6 text-sm text-gray-400 text-center">No due payments in the next 7 days.</p>
+            ) : (
+              <ul className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+                {data.upcoming_payments.map((item) => (
+                  <li key={`${item.kind}-${item.reference}`} className="px-4 py-3 flex justify-between gap-2 text-sm">
+                    <div>
+                      <p className="font-medium text-gray-800">{item.party}</p>
+                      <p className="text-xs text-gray-500">{item.reference} · <FormattedDate value={item.due_date} /></p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{fmt(item.amount)}</p>
+                      <p className="text-xs text-gray-500 capitalize">{item.kind}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-700">Recent Journal Entries</h3>
-            <Link href="/dashboard/accounting/journal-entries" className="text-xs text-[#22C55E] hover:underline">
-              View all
-            </Link>
-          </div>
-          {recentJournalEntries.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-sm text-gray-500">No journal entries yet</p>
-              <Link href="/dashboard/accounting/journal-entries/new" className="text-xs text-[#22C55E] hover:underline mt-2 inline-block">
-                Create first entry
-              </Link>
+        {(data.recent_bank_transactions?.length ?? 0) > 0 && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-700">Recent Bank Transactions</h3>
+              <Link href="/dashboard/accounting/bank-accounts" className="text-xs text-[#22C55E] hover:underline">View banks</Link>
             </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {["Entry #", "Date", "Description", "Amount", "Status"].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {recentJournalEntries.map((je) => (
-                  <tr key={je.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-2.5">
-                      <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[#22C55E] font-mono text-xs hover:underline">
-                        {je.entry_number}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-500 text-xs">
-                      <FormattedDate value={je.date} />
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-700 text-xs truncate max-w-[140px]">{je.description}</td>
-                    <td className="px-4 py-2.5 text-gray-800 text-xs">Rs. {je.total_debit.toLocaleString("en-IN")}</td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                          je.status === "posted" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {je.status === "posted" ? "Posted" : je.status === "draft" ? "Draft" : "Reversed"}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto max-h-48">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    {["Date", "Bank", "Description", "Amount"].map((h) => (
+                      <th key={h} className="text-left px-4 py-2 text-xs font-medium text-gray-500">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {data.recent_bank_transactions!.map((tx) => (
+                    <tr key={tx.id}>
+                      <td className="px-4 py-2 text-xs"><FormattedDate value={tx.date} /></td>
+                      <td className="px-4 py-2 text-xs">{tx.bank_account__bank_name}</td>
+                      <td className="px-4 py-2 text-xs truncate max-w-[200px]">{tx.description}</td>
+                      <td className="px-4 py-2 text-xs font-medium">
+                        {tx.credit > 0 ? `+${fmt(tx.credit)}` : `-${fmt(tx.debit)}`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </AccountingPageShell>
   );

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DashHeader } from "@/components/dashboard/dash-header";
 import posApi, { type POSTransaction, POS_PAGE_SIZE } from "@/lib/api/pos";
 import toast from "react-hot-toast";
+import { POS_PAYMENT_METHODS, getPosPaymentMethodLabel } from "@/lib/pos/payment-methods";
 
 export default function POSTransactionsPage() {
   const router = useRouter();
@@ -122,7 +123,9 @@ export default function POSTransactionsPage() {
     const styles = {
       cash: "bg-blue-100 text-blue-700",
       card: "bg-purple-100 text-purple-700",
-      upi: "bg-indigo-100 text-indigo-700",
+      esewa: "bg-green-100 text-green-700",
+      khalti: "bg-violet-100 text-violet-700",
+      fonepay: "bg-indigo-100 text-indigo-700",
       credit: "bg-orange-100 text-orange-700"
     };
     return styles[method as keyof typeof styles] || "bg-gray-100 text-gray-700";
@@ -171,10 +174,11 @@ export default function POSTransactionsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Payments</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="upi">UPI/Digital</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
+                  {POS_PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -216,7 +220,7 @@ export default function POSTransactionsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPaymentBadge(transaction.payment_method)}`}>
-                          {transaction.payment_method.toUpperCase()}
+                          {getPosPaymentMethodLabel(transaction.payment_method)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-sm">

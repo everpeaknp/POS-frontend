@@ -263,7 +263,6 @@ export default function NewSupplierPage() {
                   <SelectContent>
                     <SelectItem value="NPR">NPR — Nepali Rupee</SelectItem>
                     <SelectItem value="USD">USD — US Dollar</SelectItem>
-                    <SelectItem value="INR">INR — Indian Rupee</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
