@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { invoiceAPI } from "@/lib/api/sales";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -144,12 +144,7 @@ export function RecordPaymentModal({ open, onClose, invoiceId, invoiceNumber, ba
               className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
               disabled={submitting}
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Recording...
-                </>
-              ) : (
+              {submitting ? "Recording..." : (
                 'Save Payment'
               )}
             </Button>

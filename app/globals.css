@@ -292,3 +292,13 @@ html[data-reduce-motion="true"] .khata-loader__top {
   animation-iteration-count: infinite !important;
   animation-play-state: running !important;
 }
+
+/* Buttons use text-only loading states — never show spinners inside buttons */
+button .khata-loader,
+button .khata-loader-stage,
+[data-slot="button"] .khata-loader,
+[data-slot="button"] .khata-loader-stage,
+button > svg.animate-spin,
+[data-slot="button"] > svg.animate-spin {
+  display: none !important;
+}

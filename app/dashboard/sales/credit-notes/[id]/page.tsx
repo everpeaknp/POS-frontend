@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, FileText, Calendar, User, Loader2, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Calendar, User, Trash2, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { creditNoteAPI, CreditNote } from "@/lib/api/sales";
@@ -114,12 +115,7 @@ export default function CreditNoteDetailPage() {
             disabled={deleting}
             className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
           >
-            {deleting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
+            {deleting ? "Deleting..." : (
               <>
                 <Trash2 className="h-4 w-4" />
                 Delete

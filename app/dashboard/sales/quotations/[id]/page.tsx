@@ -6,7 +6,8 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Edit, Printer, FileText, XCircle, CheckCircle, Clock, Loader2, ArrowLeft, ShoppingCart } from "lucide-react";
+import { Edit, Printer, FileText, XCircle, CheckCircle, Clock, ArrowLeft, ShoppingCart } from "lucide-react";
+
 import { useReactToPrint } from 'react-to-print';
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -257,7 +258,7 @@ export default function QuotationDetailPage() {
                   disabled={updating}
                   className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5 h-8"
                 >
-                  {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  <CheckCircle className="h-3.5 w-3.5" />
                   Mark as Sent
                 </Button>
               </>
@@ -270,7 +271,7 @@ export default function QuotationDetailPage() {
                 disabled={updating}
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8"
               >
-                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+                  <ShoppingCart className="h-3.5 w-3.5" />
                 Convert to Order
               </Button>
             )}

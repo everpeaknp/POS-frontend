@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Key, Shield, Smartphone, ChevronRight, Fingerprint, Loader2 } from "lucide-react";
+import { Key, Shield, Smartphone, ChevronRight, Fingerprint } from "lucide-react";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { userApi } from "@/lib/api/user";
@@ -132,7 +133,7 @@ export default function SecurityPage() {
                 </SettingsField>
                 <div className="md:col-span-2 pt-2">
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    
                     {isLoading ? "Updating..." : "Update password"}
                   </Button>
                 </div>

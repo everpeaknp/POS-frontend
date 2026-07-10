@@ -31,11 +31,11 @@ export default function PurchaseReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (range: PurchasePeriod) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await reportsAPI.purchaseReports({ date_range: period });
+      const result = await reportsAPI.purchaseReports({ date_range: range });
       setReportData(result);
     } catch (err: unknown) {
       const apiErr = err as { response?: { data?: { detail?: string } } };
@@ -45,10 +45,10 @@ export default function PurchaseReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, []);
 
   useEffect(() => {
-    fetchData();
+    void fetchData("month");
   }, [fetchData]);
 
   const stats = reportData
@@ -67,7 +67,7 @@ export default function PurchaseReportPage() {
         },
         {
           label: "Payment Rate",
-          value: `${reportData.summary.payment_rate_percentage.toFixed(1)}%`,
+          value: `${Number(reportData.summary.payment_rate_percentage ?? 0).toFixed(1)}%`,
         },
       ]
     : [
@@ -101,13 +101,13 @@ export default function PurchaseReportPage() {
       subtitle="Purchase history and analysis"
       loading={loading && !reportData}
       error={error}
-      onRetry={fetchData}
+      onRetry={() => void fetchData(period)}
       toolbar={
         <ReportFilter
           embedded
           period={period}
           onPeriodChange={(p) => setPeriod(p as PurchasePeriod)}
-          onGenerate={fetchData}
+          onGenerate={() => void fetchData(period)}
           showDateInputs={false}
           loading={loading}
         />

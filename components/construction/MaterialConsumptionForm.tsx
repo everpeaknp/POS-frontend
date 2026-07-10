@@ -1,6 +1,6 @@
 'use client';
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
+
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -253,7 +253,7 @@ export default function MaterialConsumptionForm({
         {/* Stock Availability */}
         {checkingStock && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <KhataSpinner variant="onPrimary" />
+            
             Checking stock availability...
           </div>
         )}
@@ -356,10 +356,7 @@ export default function MaterialConsumptionForm({
             type="submit"
             disabled={isSubmitting || !availableStock}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {isSubmitting && (
-              <KhataSpinner variant="onPrimary" />
-            )}
+          >
             {isSubmitting ? 'Logging...' : 'Log Consumption'}
           </button>
 

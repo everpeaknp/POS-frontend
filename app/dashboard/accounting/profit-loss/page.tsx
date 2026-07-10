@@ -3,13 +3,21 @@
 import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { accountsAPI } from "@/lib/api/accounting";
+import {
+  exportTableAsCsv,
+  exportTableAsPdf,
+  tenantToExportOrg,
+  type ExportRow,
+  type ExportTableData,
+} from "@/lib/utils/export";
 
 const PERIODS = ["This Month", "This Quarter", "This Year", "Custom"] as const;
 const fmt = (n: number) =>
@@ -140,6 +148,7 @@ function Divider() {
 
 export default function ProfitLossPage() {
   const { formatDate } = useDateSystem();
+  const { user } = useAuth();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>("This Month");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -179,38 +188,6 @@ export default function ProfitLossPage() {
     }
   }, [fromDate, toDate, period, fetchProfitLoss]);
 
-  const handleExportCSV = () => {
-    if (!plData) return;
-
-    const rows = [
-      ["Profit & Loss Statement"],
-      [
-        `Period: ${formatDate(plData.from_date)} to ${formatDate(plData.to_date)}`,
-      ],
-      [""],
-      ["INCOME"],
-      ...plData.income.accounts.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ["", "Total Income", plData.income.total.toFixed(2)],
-      [""],
-      ["EXPENSES"],
-      ...plData.expenses.accounts.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ["", "Total Expenses", plData.expenses.total.toFixed(2)],
-      [""],
-      ["", "NET PROFIT", plData.net_profit.toFixed(2)],
-      ["", "Net Margin", `${plData.net_margin.toFixed(2)}%`],
-    ];
-
-    const csvContent = rows.map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `profit-loss-${plData.from_date}-to-${plData.to_date}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("P&L exported successfully");
-  };
-
   const totalIncome = plData?.income.total || 0;
   const totalCogs = plData?.cogs?.total || 0;
   const grossProfit = plData?.gross_profit ?? totalIncome - totalCogs;
@@ -219,6 +196,99 @@ export default function ProfitLossPage() {
   const netMargin = plData?.net_margin || 0;
   const hasActivity =
     totalIncome > 0 || totalExpenses > 0 || totalCogs > 0;
+
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!plData || !hasActivity) return null;
+
+    const org = user?.tenant
+      ? tenantToExportOrg({
+          name: user.tenant.name,
+          workspace_name: user.tenant.workspace_name,
+          address: user.tenant.address,
+          email: user.tenant.email,
+        })
+      : undefined;
+
+    const rows: ExportRow[] = [
+      { cells: ["INCOME", "", ""], style: "section" },
+      ...plData.income.accounts.map((acc) => ({
+        cells: ["", `${acc.code} — ${acc.name}`, acc.amount.toFixed(2)],
+      })),
+      { cells: ["", "Total Income", totalIncome.toFixed(2)], style: "subtotal" },
+    ];
+
+    if (plData.cogs && plData.cogs.accounts.length > 0) {
+      rows.push(
+        { cells: ["COST OF GOODS SOLD", "", ""], style: "section" },
+        ...plData.cogs.accounts.map((acc) => ({
+          cells: ["", `${acc.code} — ${acc.name}`, acc.amount.toFixed(2)],
+        })),
+        { cells: ["", "Total COGS", totalCogs.toFixed(2)], style: "subtotal" },
+        { cells: ["", "Gross Profit", grossProfit.toFixed(2)], style: "subtotal" }
+      );
+    }
+
+    rows.push(
+      { cells: ["OPERATING EXPENSES", "", ""], style: "section" },
+      ...plData.expenses.accounts.map((acc) => ({
+        cells: ["", `${acc.code} — ${acc.name}`, acc.amount.toFixed(2)],
+      })),
+      { cells: ["", "Total Expenses", totalExpenses.toFixed(2)], style: "subtotal" },
+      {
+        cells: [
+          netProfit >= 0 ? "NET PROFIT" : "NET LOSS",
+          "",
+          Math.abs(netProfit).toFixed(2),
+        ],
+        style: "total",
+      },
+      { cells: ["", "Net Margin", `${netMargin.toFixed(1)}%`] }
+    );
+
+    return {
+      filename: `profit-loss-${plData.from_date}-to-${plData.to_date}`,
+      title: "Profit & Loss Statement",
+      subtitle: `${formatDate(plData.from_date)} to ${formatDate(plData.to_date)}`,
+      reportType: "Profit & Loss",
+      template: "financial",
+      headers: ["Category", "Account", "Amount"],
+      rightAlignColumns: [2],
+      org,
+      rows,
+    };
+  }, [
+    plData,
+    hasActivity,
+    totalIncome,
+    totalCogs,
+    grossProfit,
+    totalExpenses,
+    netProfit,
+    netMargin,
+    formatDate,
+    user?.tenant,
+  ]);
+
+  const handleExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export";
+      toast.error(message);
+    }
+  };
 
   if (loading && !plData) {
     return (
@@ -234,42 +304,68 @@ export default function ProfitLossPage() {
       <DashHeader title="Profit & Loss Statement" subtitle="Income and expense summary" />
       <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
-          <div className="flex flex-wrap items-center gap-3 justify-between">
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-              {PERIODS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPeriod(p)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            {period === "Custom" ? (
-              <div className="flex flex-wrap gap-2 items-center">
-                <DateInput value={fromDate} onChange={setFromDate} disabled={loading} />
-                <span className="text-sm text-gray-500">to</span>
-                <DateInput value={toDate} onChange={setToDate} disabled={loading} />
-                <Button onClick={fetchProfitLoss} disabled={loading} className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white">
-                  {loading ? "Generating..." : "Generate"}
-                </Button>
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-1 min-w-0">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg shrink-0 self-start sm:self-auto">
+                {PERIODS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">
-                {fromDate && toDate ? `${formatDate(fromDate)} – ${formatDate(toDate)}` : ""}
-              </p>
-            )}
-            <Button
-              variant="outline"
-              className="h-9 gap-1.5 text-gray-600 border-gray-200"
-              onClick={handleExportCSV}
-              disabled={!plData || !hasActivity}
-            >
-              <Download className="h-4 w-4" /> Export CSV
-            </Button>
+              {period === "Custom" ? (
+                <div className="flex flex-row flex-nowrap items-end gap-2 min-w-0">
+                  <DateInput
+                    value={fromDate}
+                    onChange={setFromDate}
+                    disabled={loading}
+                    className="w-auto min-w-[150px]"
+                  />
+                  <span className="text-sm text-gray-500 shrink-0 pb-2.5">to</span>
+                  <DateInput
+                    value={toDate}
+                    onChange={setToDate}
+                    disabled={loading}
+                    className="w-auto min-w-[150px]"
+                  />
+                  <Button
+                    onClick={fetchProfitLoss}
+                    disabled={loading}
+                    className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                  >
+                    {loading ? "Generating..." : "Generate"}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 pb-2">
+                  {fromDate && toDate ? `${formatDate(fromDate)} – ${formatDate(toDate)}` : ""}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 shrink-0 lg:ml-4">
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                onClick={() => handleExport("csv")}
+                disabled={!plData || !hasActivity}
+              >
+                <Download className="h-3.5 w-3.5" /> CSV
+              </Button>
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                onClick={() => handleExport("pdf")}
+                disabled={!plData || !hasActivity}
+              >
+                <FileText className="h-3.5 w-3.5" /> PDF
+              </Button>
+            </div>
           </div>
         </div>
 

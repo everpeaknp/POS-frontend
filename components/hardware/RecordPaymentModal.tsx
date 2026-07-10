@@ -9,7 +9,8 @@ import { customerAPI, paymentReceivedAPI, type Customer } from "@/lib/api/sales"
 import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { getErrorMessage } from "@/lib/utils/form-errors";
 import { formatNPR } from "@/lib/utils";
-import { Loader2, Save } from "lucide-react";
+import { Save } from "lucide-react";
+
 import toast from "react-hot-toast";
 
 const fieldClass =
@@ -223,11 +224,7 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
               disabled={loading}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {!loading && <Save className="h-4 w-4" />}
               {loading ? "Recording..." : "Record Payment"}
             </Button>
           </div>

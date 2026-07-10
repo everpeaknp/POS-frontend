@@ -1,16 +1,34 @@
 'use client';
 
 import { FormattedDate } from '@/components/shared/FormattedDate';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
+import { Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   ConstructionPageShell,
   constructionCardClass,
 } from '@/components/dashboard/ConstructionPageShell';
+import { PrintableSiteReport } from '@/components/print/PrintableSiteReport';
+import { PrintablePayrollSummary } from '@/components/print/PrintablePayrollSummary';
 import { constructionApi, Site, SiteReport, SitePayrollSummary } from '@/lib/api/construction';
+import { useDateSystem } from '@/lib/context/DateSystemContext';
+import { useCompanyInfo } from '@/lib/hooks/useCompanyInfo';
+import {
+  adMonthToBsPeriod,
+  bsPeriodToAdMonth,
+  getCurrentBsMonthIndex,
+  getCurrentBsYear,
+} from '@/lib/dates/attendance-calendar';
+import { BS_YEAR_MAX, BS_YEAR_MIN, NEPALI_MONTHS } from '@/lib/dates';
 import { formatNPR } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function ConstructionReportsPage() {
+  const { dateSystem } = useDateSystem();
+  const { companyInfo } = useCompanyInfo();
+  const siteReportPrintRef = useRef<HTMLDivElement>(null);
+  const payrollPrintRef = useRef<HTMLDivElement>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSite, setSelectedSite] = useState<string>('');
   const [report, setReport] = useState<SiteReport | null>(null);
@@ -19,11 +37,65 @@ export default function ConstructionReportsPage() {
   const [payrollSite, setPayrollSite] = useState('');
   const [payrollMonth, setPayrollMonth] = useState(() => new Date().getMonth() + 1);
   const [payrollYear, setPayrollYear] = useState(() => new Date().getFullYear());
+  const [bsYear, setBsYear] = useState(getCurrentBsYear);
+  const [bsMonthIndex, setBsMonthIndex] = useState(getCurrentBsMonthIndex);
   const [payroll, setPayroll] = useState<SitePayrollSummary | null>(null);
   const [loadingPayroll, setLoadingPayroll] = useState(false);
 
+  const handlePrintSiteReport = useReactToPrint({
+    contentRef: siteReportPrintRef,
+    documentTitle: `SiteReport_${report?.site_name || 'Site'}_${new Date().toISOString().split('T')[0]}`,
+  });
+
+  const handlePrintPayroll = useReactToPrint({
+    contentRef: payrollPrintRef,
+    documentTitle: `Payroll_${payroll?.site_name || 'Site'}_${payroll?.year || ''}_${payroll?.month || ''}`,
+  });
+
+  const payrollPeriodLabel = useMemo(() => {
+    if (!payroll) return '';
+    if (dateSystem === 'BS') {
+      return `${NEPALI_MONTHS[bsMonthIndex]} ${bsYear}`;
+    }
+    return `${new Date(2000, payroll.month - 1, 1).toLocaleString('default', { month: 'long' })} ${payroll.year}`;
+  }, [payroll, dateSystem, bsMonthIndex, bsYear]);
+
   useEffect(() => {
     fetchSites();
+  }, []);
+
+  useEffect(() => {
+    if (dateSystem === 'BS') {
+      const bs = adMonthToBsPeriod(
+        `${payrollYear}-${String(payrollMonth).padStart(2, '0')}`
+      );
+      setBsYear(bs.year);
+      setBsMonthIndex(bs.monthIndex);
+    } else {
+      const adMonth = bsPeriodToAdMonth(bsYear, bsMonthIndex);
+      setPayrollYear(Number(adMonth.slice(0, 4)));
+      setPayrollMonth(Number(adMonth.slice(5, 7)));
+    }
+  }, [dateSystem]);
+
+  const syncPayrollFromBs = (year: number, monthIndex: number) => {
+    setBsYear(year);
+    setBsMonthIndex(monthIndex);
+    const adMonth = bsPeriodToAdMonth(year, monthIndex);
+    setPayrollYear(Number(adMonth.slice(0, 4)));
+    setPayrollMonth(Number(adMonth.slice(5, 7)));
+  };
+
+  const bsYearOptions = useMemo(() => {
+    const years: number[] = [];
+    for (let y = BS_YEAR_MAX; y >= BS_YEAR_MIN; y -= 1) years.push(y);
+    return years;
+  }, []);
+
+  const adYearOptions = useMemo(() => {
+    const years: number[] = [];
+    for (let y = 2100; y >= 2020; y -= 1) years.push(y);
+    return years;
   }, []);
 
   const fetchSites = async () => {
@@ -148,28 +220,64 @@ export default function ConstructionReportsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
-            <select
-              value={payrollMonth}
-              onChange={(e) => setPayrollMonth(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>
-                  {new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })}
-                </option>
-              ))}
-            </select>
+            {dateSystem === 'BS' ? (
+              <select
+                value={NEPALI_MONTHS[bsMonthIndex]}
+                onChange={(e) => {
+                  const index = NEPALI_MONTHS.indexOf(
+                    e.target.value as (typeof NEPALI_MONTHS)[number]
+                  );
+                  if (index >= 0) syncPayrollFromBs(bsYear, index);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                {NEPALI_MONTHS.map((month) => (
+                  <option key={month} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                value={payrollMonth}
+                onChange={(e) => setPayrollMonth(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={m}>
+                    {new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-            <input
-              type="number"
-              min={2020}
-              max={2100}
-              value={payrollYear}
-              onChange={(e) => setPayrollYear(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
+            {dateSystem === 'BS' ? (
+              <select
+                value={bsYear}
+                onChange={(e) => syncPayrollFromBs(Number(e.target.value), bsMonthIndex)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card"
+              >
+                {bsYearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                value={payrollYear}
+                onChange={(e) => setPayrollYear(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card"
+              >
+                {adYearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div>
             <button
@@ -184,13 +292,42 @@ export default function ConstructionReportsPage() {
 
         {payroll && (
           <div className="mt-6 space-y-4">
-            <div className="flex flex-wrap justify-between gap-2">
+            <div className="flex flex-wrap justify-between gap-2 items-center">
               <p className="text-sm text-gray-600">
-                {payroll.site_name} · {payroll.month}/{payroll.year}
+                {payroll.site_name} ·{' '}
+                {dateSystem === 'BS' ? (
+                  <>
+                    <span className="font-medium">
+                      {NEPALI_MONTHS[bsMonthIndex]} {bsYear}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · {payroll.month}/{payroll.year}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {new Date(2000, payroll.month - 1, 1).toLocaleString('default', {
+                      month: 'long',
+                    })}{' '}
+                    {payroll.year}
+                  </>
+                )}
               </p>
-              <p className="text-lg font-bold text-gray-900">
-                Total: {formatNPR(payroll.total_payroll)}
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-lg font-bold text-gray-900">
+                  Total: {formatNPR(payroll.total_payroll)}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-8"
+                  onClick={() => handlePrintPayroll()}
+                  disabled={!companyInfo}
+                >
+                  <Printer className="h-3.5 w-3.5" /> Export PDF
+                </Button>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -225,7 +362,18 @@ export default function ConstructionReportsPage() {
       {report && (
         <div className="space-y-4">
           <div className={`${constructionCardClass} p-6 lg:p-8`}>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{report.site_name}</h2>
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <h2 className="text-xl font-bold text-gray-900">{report.site_name}</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-8"
+                onClick={() => handlePrintSiteReport()}
+                disabled={!companyInfo}
+              >
+                <Printer className="h-3.5 w-3.5" /> Export PDF
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Location</p>
@@ -344,6 +492,22 @@ export default function ConstructionReportsPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {companyInfo && report && (
+        <div className="hidden">
+          <PrintableSiteReport ref={siteReportPrintRef} report={report} companyInfo={companyInfo} />
+        </div>
+      )}
+      {companyInfo && payroll && (
+        <div className="hidden">
+          <PrintablePayrollSummary
+            ref={payrollPrintRef}
+            payroll={payroll}
+            companyInfo={companyInfo}
+            periodLabel={payrollPeriodLabel}
+          />
         </div>
       )}
     </ConstructionPageShell>

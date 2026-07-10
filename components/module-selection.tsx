@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Lock, Loader2 } from "lucide-react";
+import { Check, Lock } from "lucide-react";
+
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OrgWizardFooter } from "@/components/org-wizard-footer";
@@ -158,8 +159,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
 
   if (allowedModules === null) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E] mb-3" />
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
         <p className="text-sm">Loading available modules…</p>
       </div>
     );

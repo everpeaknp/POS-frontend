@@ -3,7 +3,6 @@
 import { PageLoading } from "@/components/shared/PageLoading";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -476,12 +475,7 @@ function OrgSettingsContent() {
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : (
+                {submitting ? "Saving..." : (
                   "Save Changes"
                 )}
               </Button>

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -291,8 +292,7 @@ export default function NewSupplierPage() {
               onClick={handleSubmit}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
               disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            >
               Save Supplier
             </Button>
           </div>

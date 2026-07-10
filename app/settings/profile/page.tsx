@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, ImageIcon, Loader2, User } from "lucide-react";
+import { CheckCircle2, ImageIcon, User } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -177,12 +178,7 @@ export default function ProfilePage() {
                     disabled={isLoading}
                     className="bg-[#22C55E] px-6 text-white hover:bg-[#16A34A]"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
+                    {isLoading ? "Saving..." : (
                       "Save changes"
                     )}
                   </Button>

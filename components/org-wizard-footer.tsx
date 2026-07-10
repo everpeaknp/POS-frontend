@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 interface OrgWizardFooterProps {
@@ -45,12 +46,7 @@ export function OrgWizardFooter({
           disabled={primaryDisabled || primaryLoading}
           className="h-11 flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
         >
-          {primaryLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Processing…
-            </>
-          ) : (
+          {primaryLoading ? "Processing…" : (
             <>
               {primaryLabel}
               {!primaryLoading && <ArrowRight className="h-4 w-4" />}

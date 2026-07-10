@@ -59,6 +59,7 @@ export const Globe: IconType = Hi.HiOutlineGlobeAlt;
 export const HardHat: IconType = Hi.HiOutlineWrenchScrewdriver;
 export const History: IconType = Hi.HiOutlineClock;
 export const Home: IconType = Hi.HiOutlineHome;
+export const IdCard: IconType = Hi.HiOutlineIdentification;
 export const ImageIcon: IconType = Hi.HiOutlinePhoto;
 export const Key: IconType = Hi.HiOutlineKey;
 export const Laptop: IconType = Hi.HiOutlineComputerDesktop;

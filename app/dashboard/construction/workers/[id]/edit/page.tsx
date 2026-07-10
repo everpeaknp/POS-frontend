@@ -39,8 +39,12 @@ export default function EditWorkerPage() {
 
   if (!loading && !worker) {
     return (
-      <ConstructionPageShell title="Edit Worker" subtitle="Worker not found" variant="form">
-        <div className={`${constructionCardClass} p-8 text-center`}>
+      <ConstructionPageShell
+        title="Edit Worker"
+        subtitle="Worker not found"
+        variant="fullscreen"
+      >
+        <div className={`${constructionCardClass} p-8 text-center w-full`}>
           <Link
             href="/dashboard/construction/workers"
             className="text-[#22C55E] hover:text-[#16A34A] font-medium"
@@ -56,11 +60,11 @@ export default function EditWorkerPage() {
     <ConstructionPageShell
       title="Edit Worker"
       subtitle={worker ? `Update details for ${worker.name}` : "Loading worker..."}
-      variant="form"
+      variant="fullscreen"
       loading={loading}
     >
       {worker && (
-        <div className={`${constructionCardClass} p-6 lg:p-8`}>
+        <div className={`${constructionCardClass} p-5 lg:p-6 w-full`}>
           <WorkerForm
             workerId={workerId}
             initialData={{

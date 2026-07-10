@@ -302,6 +302,8 @@ export const attendanceAPI = {
     worker?: string;
     site?: string;
     date?: string;
+    date__gte?: string;
+    date__lte?: string;
     status?: string;
     search?: string;
     ordering?: string;

@@ -9,18 +9,30 @@ import { Label } from "@/components/ui/label";
 import { DateInput } from "@/components/shared/DateInput";
 import { AccountingPageShell } from "@/components/dashboard/AccountingPageShell";
 import { StickyTable, StickyTableHead } from "@/components/accounting/StickyTable";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import {
   accountsAPI,
   type AgingReport,
   type JournalRegisterReport,
   type VatRegisterReport,
 } from "@/lib/api/accounting";
+import {
+  exportTableAsCsv,
+  exportTableAsPdf,
+  tenantToExportOrg,
+  type ExportRow,
+  type ExportTableData,
+} from "@/lib/utils/export";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+const fmtPlain = (n: number) => n.toFixed(2);
 
 type ReportTab = "receivable" | "payable" | "journal" | "vat_sales" | "vat_purchase";
 
 export default function AccountingReportsPage() {
+  const { formatDate } = useDateSystem();
+  const { user } = useAuth();
   const [tab, setTab] = useState<ReportTab>("receivable");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -58,15 +70,184 @@ export default function AccountingReportsPage() {
 
   const needsDates = tab === "journal" || tab === "vat_sales" || tab === "vat_purchase";
 
-  const exportCsv = (rows: string[][], filename: string) => {
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  const hasReportData =
+    (tab === "receivable" && agingAR) ||
+    (tab === "payable" && agingAP) ||
+    (tab === "journal" && journalReg) ||
+    (tab === "vat_sales" && vatSales) ||
+    (tab === "vat_purchase" && vatPurchase);
+
+  const dateSubtitle =
+    fromDate || toDate
+      ? [fromDate ? `From ${formatDate(fromDate)}` : null, toDate ? `To ${formatDate(toDate)}` : null]
+          .filter(Boolean)
+          .join(" · ")
+      : undefined;
+
+  const getExportData = useCallback((): ExportTableData | null => {
+    const org = user?.tenant
+      ? tenantToExportOrg({
+          name: user.tenant.name,
+          workspace_name: user.tenant.workspace_name,
+          address: user.tenant.address,
+          email: user.tenant.email,
+        })
+      : undefined;
+
+    const base = (partial: Omit<ExportTableData, "org" | "template" | "reportType">): ExportTableData => ({
+      ...partial,
+      reportType: "Financial Report",
+      template: "financial",
+      org,
+    });
+
+    if (tab === "receivable" && agingAR) {
+      const rows: ExportRow[] = [
+        { cells: ["Current (0–30)", fmtPlain(agingAR.current)], style: "subtotal" },
+        { cells: ["31–60 days", fmtPlain(agingAR.days_30_60)], style: "subtotal" },
+        { cells: ["61–90 days", fmtPlain(agingAR.days_60_90)], style: "subtotal" },
+        { cells: ["90+ days", fmtPlain(agingAR.days_90_plus)], style: "subtotal" },
+        { cells: ["", ""], style: "section" },
+        ...(agingAR.customers ?? []).map((c) => ({
+          cells: [c.customer_name, fmtPlain(c.total)],
+        })),
+        { cells: ["Total Outstanding", fmtPlain(agingAR.total_outstanding)], style: "total" },
+      ];
+
+      return base({
+        filename: `receivable-aging-${agingAR.as_of_date}`,
+        title: "Receivable Aging",
+        subtitle: `As of ${formatDate(agingAR.as_of_date)}`,
+        headers: ["Customer / Bucket", "Outstanding"],
+        rightAlignColumns: [1],
+        rows,
+      });
+    }
+
+    if (tab === "payable" && agingAP) {
+      const rows: ExportRow[] = [
+        { cells: ["Current (0–30)", fmtPlain(agingAP.current)], style: "subtotal" },
+        { cells: ["31–60 days", fmtPlain(agingAP.days_30_60)], style: "subtotal" },
+        { cells: ["61–90 days", fmtPlain(agingAP.days_60_90)], style: "subtotal" },
+        { cells: ["90+ days", fmtPlain(agingAP.days_90_plus)], style: "subtotal" },
+        { cells: ["", ""], style: "section" },
+        ...(agingAP.suppliers ?? []).map((s) => ({
+          cells: [s.supplier_name, fmtPlain(s.total)],
+        })),
+        { cells: ["Total Outstanding", fmtPlain(agingAP.total_outstanding)], style: "total" },
+      ];
+
+      return base({
+        filename: `payable-aging-${agingAP.as_of_date}`,
+        title: "Payable Aging",
+        subtitle: `As of ${formatDate(agingAP.as_of_date)}`,
+        headers: ["Supplier / Bucket", "Outstanding"],
+        rightAlignColumns: [1],
+        rows,
+      });
+    }
+
+    if (tab === "journal" && journalReg) {
+      return base({
+        filename: `journal-register-${journalReg.from_date}-to-${journalReg.to_date}`,
+        title: "Journal Register",
+        subtitle: dateSubtitle ?? `${formatDate(journalReg.from_date)} to ${formatDate(journalReg.to_date)}`,
+        headers: ["Date", "Entry #", "Account", "Debit", "Credit"],
+        rightAlignColumns: [3, 4],
+        rows: [
+          ...journalReg.lines.map((line) => [
+            formatDate(line.date),
+            line.entry_number,
+            `${line.account_code} ${line.account_name}`,
+            line.debit > 0 ? fmtPlain(line.debit) : "",
+            line.credit > 0 ? fmtPlain(line.credit) : "",
+          ]),
+          {
+            cells: ["", "", `${journalReg.entry_count} entries`, "", ""],
+            style: "total",
+          },
+        ],
+      });
+    }
+
+    if (tab === "vat_sales" && vatSales) {
+      return base({
+        filename: `sales-vat-register-${vatSales.from_date}-to-${vatSales.to_date}`,
+        title: "Sales VAT Register",
+        subtitle: dateSubtitle ?? `${formatDate(vatSales.from_date)} to ${formatDate(vatSales.to_date)}`,
+        headers: ["Date", "Reference", "Description", "Taxable (est.)", "VAT"],
+        rightAlignColumns: [3, 4],
+        rows: [
+          ...vatSales.rows.map((row) => [
+            formatDate(row.date),
+            row.reference,
+            row.description,
+            fmtPlain(row.taxable_estimate),
+            fmtPlain(row.vat_amount),
+          ]),
+          {
+            cells: ["", "", "Total VAT", "", fmtPlain(vatSales.total_vat)],
+            style: "total",
+          },
+        ],
+      });
+    }
+
+    if (tab === "vat_purchase" && vatPurchase) {
+      return base({
+        filename: `purchase-vat-register-${vatPurchase.from_date}-to-${vatPurchase.to_date}`,
+        title: "Purchase VAT Register",
+        subtitle: dateSubtitle ?? `${formatDate(vatPurchase.from_date)} to ${formatDate(vatPurchase.to_date)}`,
+        headers: ["Date", "Reference", "Description", "Taxable (est.)", "VAT"],
+        rightAlignColumns: [3, 4],
+        rows: [
+          ...vatPurchase.rows.map((row) => [
+            formatDate(row.date),
+            row.reference,
+            row.description,
+            fmtPlain(row.taxable_estimate),
+            fmtPlain(row.vat_amount),
+          ]),
+          {
+            cells: ["", "", "Total VAT", "", fmtPlain(vatPurchase.total_vat)],
+            style: "total",
+          },
+        ],
+      });
+    }
+
+    return null;
+  }, [
+    tab,
+    agingAR,
+    agingAP,
+    journalReg,
+    vatSales,
+    vatPurchase,
+    formatDate,
+    dateSubtitle,
+    user?.tenant,
+  ]);
+
+  const handleExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export";
+      toast.error(message);
+    }
   };
 
   return (
@@ -85,23 +266,51 @@ export default function AccountingReportsPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 shadow-sm flex flex-wrap gap-4 items-end">
-        {needsDates && (
-          <>
-            <div>
-              <Label className="text-xs">From</Label>
-              <DateInput value={fromDate} onChange={setFromDate} className="mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs">To</Label>
-              <DateInput value={toDate} onChange={setToDate} className="mt-1" />
-            </div>
-          </>
-        )}
-        <Button onClick={runReport} disabled={loading} className="bg-[#22C55E] hover:bg-[#16A34A]">
-          <FileText className="h-4 w-4 mr-1" />
-          {loading ? "Generating…" : "Generate"}
-        </Button>
+      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-wrap">
+            {needsDates && (
+              <>
+                <div className="w-full sm:w-auto sm:min-w-[150px]">
+                  <Label className="text-xs mb-1.5 block">From</Label>
+                  <DateInput value={fromDate} onChange={setFromDate} />
+                </div>
+                <div className="w-full sm:w-auto sm:min-w-[150px]">
+                  <Label className="text-xs mb-1.5 block">To</Label>
+                  <DateInput value={toDate} onChange={setToDate} />
+                </div>
+              </>
+            )}
+            <Button
+              onClick={runReport}
+              disabled={loading}
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white shrink-0"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              {loading ? "Generating…" : "Generate"}
+            </Button>
+          </div>
+          <div className="flex gap-2 shrink-0 sm:ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-gray-600 border-gray-200"
+              disabled={!hasReportData}
+              onClick={() => handleExport("csv")}
+            >
+              <Download className="h-3.5 w-3.5" /> CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-gray-600 border-gray-200"
+              disabled={!hasReportData}
+              onClick={() => handleExport("pdf")}
+            >
+              <FileText className="h-3.5 w-3.5" /> PDF
+            </Button>
+          </div>
+        </div>
       </div>
 
       {tab === "receivable" && agingAR && (
@@ -139,24 +348,24 @@ export default function AccountingReportsPage() {
               ))}
             </tbody>
           </StickyTable>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={() =>
-              exportCsv(
-                [["Customer", "Outstanding"], ...(agingAR.customers ?? []).map((c) => [c.customer_name, String(c.total)])],
-                "receivable-aging.csv",
-              )
-            }
-          >
-            <Download className="h-4 w-4 mr-1" /> Export CSV
-          </Button>
         </ReportCard>
       )}
 
       {tab === "payable" && agingAP && (
         <ReportCard title={`Payable aging · ${fmt(agingAP.total_outstanding)} total`}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-sm">
+            {[
+              ["Current (0–30)", agingAP.current],
+              ["31–60 days", agingAP.days_30_60],
+              ["61–90 days", agingAP.days_60_90],
+              ["90+ days", agingAP.days_90_plus],
+            ].map(([label, val]) => (
+              <div key={String(label)} className="bg-gray-50 rounded-lg p-3">
+                <p className="text-gray-500 text-xs">{label}</p>
+                <p className="font-semibold">{fmt(Number(val))}</p>
+              </div>
+            ))}
+          </div>
           <StickyTable>
             <StickyTableHead>
               <tr className="text-left text-gray-600">

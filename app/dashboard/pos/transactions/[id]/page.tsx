@@ -3,17 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import {
-  ArrowLeft,
-  Printer,
-  X,
-  Loader2,
-  Calendar,
-  User,
-  CreditCard,
-  Package,
-  Receipt,
-} from "lucide-react";
+import { ArrowLeft, Printer, X, Calendar, User, CreditCard, Package, Receipt } from "lucide-react";
+
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { PosPageShell, posCardClass, posTableWrapClass } from "@/components/dashboard/PosPageShell";
@@ -205,12 +196,7 @@ export default function TransactionDetailPage() {
               disabled={cancelling}
               className="gap-1.5 h-8 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
-              {cancelling ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Cancelling...
-                </>
-              ) : (
+              {cancelling ? "Cancelling..." : (
                 <>
                   <X className="h-3.5 w-3.5" />
                   Cancel

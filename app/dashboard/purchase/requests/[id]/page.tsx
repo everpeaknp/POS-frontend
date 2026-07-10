@@ -6,7 +6,8 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useReactToPrint } from "react-to-print";
-import { CheckCircle, XCircle, FileText, Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Printer, ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -237,7 +238,7 @@ export default function PurchaseRequestDetailPage() {
                 onClick={handleApprove}
                 disabled={updating}
               >
-                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  <CheckCircle className="h-3.5 w-3.5" />
                 Approve
               </Button>
               <Button
@@ -258,7 +259,7 @@ export default function PurchaseRequestDetailPage() {
               onClick={openConvertModal}
               disabled={updating}
             >
-              {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                  <FileText className="h-3.5 w-3.5" />
               Convert to Purchase Order
             </Button>
           )}
@@ -360,8 +361,7 @@ export default function PurchaseRequestDetailPage() {
                 onClick={handleReject}
                 disabled={updating}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
-                {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              >
                 Confirm Reject
               </Button>
               <Button variant="outline" onClick={() => setRejectModal(false)} className="flex-1" disabled={updating}>
@@ -400,8 +400,7 @@ export default function PurchaseRequestDetailPage() {
                 onClick={handleConvertToPO}
                 disabled={updating}
                 className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              >
                 Create PO
               </Button>
               <Button variant="outline" onClick={() => setConvertModal(false)} className="flex-1" disabled={updating}>

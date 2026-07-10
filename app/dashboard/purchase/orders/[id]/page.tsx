@@ -6,7 +6,8 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { Edit, Package, XCircle, CheckCircle, Clock, Loader2, ArrowLeft } from "lucide-react";
+import { Edit, Package, XCircle, CheckCircle, Clock, ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
@@ -219,7 +220,7 @@ export default function PurchaseOrderDetailPage() {
                 disabled={updating}
                 className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5 h-8"
               >
-                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  <CheckCircle className="h-3.5 w-3.5" />
                 Send Order
               </Button>
             </>
@@ -244,7 +245,7 @@ export default function PurchaseOrderDetailPage() {
               disabled={updating}
               className="gap-1.5 h-8 text-red-500 border-red-200 hover:bg-red-50"
             >
-              {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                  <XCircle className="h-3.5 w-3.5" />
               Cancel
             </Button>
           )}

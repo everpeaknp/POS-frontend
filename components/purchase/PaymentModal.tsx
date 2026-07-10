@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { purchaseInvoicesAPI } from "@/lib/api/purchase";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+
 
 interface Props {
   open: boolean;
@@ -138,8 +138,7 @@ export function PaymentModal({
               onClick={handleSave}
               disabled={submitting}
               className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            >
               Save Payment
             </Button>
             <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>

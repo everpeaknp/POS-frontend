@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
-import { Download, Scale } from "lucide-react";
+import { Download, FileText, Scale } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,15 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { accountsAPI } from "@/lib/api/accounting";
+import {
+  exportTableAsCsv,
+  exportTableAsPdf,
+  tenantToExportOrg,
+  type ExportRow,
+  type ExportTableData,
+} from "@/lib/utils/export";
 
 const fmt = (n: number) =>
   `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -52,6 +60,7 @@ function normalizeTrialBalance(data: TrialBalanceData): TrialBalanceData {
 
 export default function TrialBalancePage() {
   const { formatDate } = useDateSystem();
+  const { user } = useAuth();
   const [asOf, setAsOf] = useState("");
   const [generated, setGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -76,78 +85,147 @@ export default function TrialBalancePage() {
     }
   }, [asOf]);
 
-  const handleExportCSV = () => {
-    if (!trialBalanceData) return;
-
-    const headers = ["Code", "Account Name", "Type", "Debit", "Credit"];
-    const csvRows = [
-      headers.join(","),
-      ...trialBalanceData.accounts.map((acc) =>
-        [acc.code, `"${acc.name.replace(/"/g, '""')}"`, acc.type, acc.debit.toFixed(2), acc.credit.toFixed(2)].join(",")
-      ),
-    ];
-
-    csvRows.push(
-      ["", "", "Grand Total", trialBalanceData.total_debit.toFixed(2), trialBalanceData.total_credit.toFixed(2)].join(",")
-    );
-
-    const csvContent = csvRows.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `trial-balance-${trialBalanceData.as_of_date || new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("Trial balance exported successfully");
-  };
-
   const leafAccounts = trialBalanceData?.accounts || [];
   const grandDebit = trialBalanceData?.total_debit || 0;
   const grandCredit = trialBalanceData?.total_credit || 0;
   const balanced = trialBalanceData?.is_balanced ?? true;
+
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!trialBalanceData || leafAccounts.length === 0) return null;
+
+    const asOfLabel = trialBalanceData.as_of_date
+      ? formatDate(trialBalanceData.as_of_date)
+      : "Current Date";
+
+    const org = user?.tenant
+      ? tenantToExportOrg({
+          name: user.tenant.name,
+          workspace_name: user.tenant.workspace_name,
+          address: user.tenant.address,
+          email: user.tenant.email,
+        })
+      : undefined;
+
+    const rows: ExportRow[] = [];
+
+    for (const type of TYPES) {
+      const accounts = leafAccounts.filter((a) => a.type === type);
+      if (accounts.length === 0) continue;
+
+      const subtotalDebit = accounts.reduce((s, a) => s + a.debit, 0);
+      const subtotalCredit = accounts.reduce((s, a) => s + a.credit, 0);
+
+      rows.push({ cells: [type, "", "", "", ""], style: "section" });
+      for (const acc of accounts) {
+        rows.push({
+          cells: [
+            acc.code,
+            acc.name,
+            acc.type,
+            acc.debit > 0 ? acc.debit.toFixed(2) : "",
+            acc.credit > 0 ? acc.credit.toFixed(2) : "",
+          ],
+        });
+      }
+      rows.push({
+        cells: [
+          "",
+          `Total ${type}`,
+          "",
+          subtotalDebit > 0 ? subtotalDebit.toFixed(2) : "",
+          subtotalCredit > 0 ? subtotalCredit.toFixed(2) : "",
+        ],
+        style: "subtotal",
+      });
+    }
+
+    rows.push({
+      cells: ["", "Grand Total", "", grandDebit.toFixed(2), grandCredit.toFixed(2)],
+      style: "total",
+    });
+
+    return {
+      filename: `trial-balance-${trialBalanceData.as_of_date || new Date().toISOString().split("T")[0]}`,
+      title: "Trial Balance",
+      subtitle: `As of ${asOfLabel}${balanced ? "" : ` · Off by ${Math.abs(grandDebit - grandCredit).toFixed(2)}`}`,
+      reportType: "Trial Balance",
+      template: "financial",
+      headers: ["Code", "Account Name", "Type", "Debit", "Credit"],
+      rightAlignColumns: [3, 4],
+      org,
+      rows,
+    };
+  }, [trialBalanceData, leafAccounts, formatDate, grandDebit, grandCredit, balanced, user?.tenant]);
+
+  const handleExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export";
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Trial Balance" subtitle="Verify debit and credit totals" />
       <div className="flex-1 p-6 space-y-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end max-w-3xl">
-            <div className="sm:col-span-2">
-              <Label className="text-sm mb-1.5 block">As of Date</Label>
-              <DateInput
-                className="max-w-sm"
-                value={asOf}
-                onChange={(v) => {
-                  setAsOf(v);
-                  setGenerated(false);
-                }}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+              <div className="w-full sm:w-auto sm:min-w-[150px]">
+                <Label className="text-sm mb-1.5 block">As of Date</Label>
+                <DateInput
+                  value={asOf}
+                  onChange={(v) => {
+                    setAsOf(v);
+                    setGenerated(false);
+                  }}
+                  disabled={generating}
+                />
+              </div>
+              <Button
+                onClick={handleGenerate}
                 disabled={generating}
-              />
-              <p className="text-xs text-gray-400 mt-1.5">
-                Leave blank for all posted entries to date
-              </p>
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+              >
+                {generating ? "Generating..." : "Generate"}
+              </Button>
             </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9"
-            >
-              {generating ? "Generating..." : "Generate"}
-            </Button>
-            {generated && trialBalanceData && leafAccounts.length > 0 && (
+            <div className="flex gap-2 shrink-0 sm:ml-auto">
               <Button
                 variant="outline"
-                size="sm"
                 className="h-9 gap-1.5 text-gray-600 border-gray-200"
-                onClick={handleExportCSV}
+                disabled={!generated || leafAccounts.length === 0}
+                onClick={() => handleExport("csv")}
               >
                 <Download className="h-3.5 w-3.5" /> CSV
               </Button>
-            )}
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                disabled={!generated || leafAccounts.length === 0}
+                onClick={() => handleExport("pdf")}
+              >
+                <FileText className="h-3.5 w-3.5" /> PDF
+              </Button>
+            </div>
           </div>
+          <p className="text-xs text-gray-400 mt-1.5">
+            Leave blank for all posted entries to date
+          </p>
         </div>
 
         {generated && trialBalanceData && leafAccounts.length > 0 && (

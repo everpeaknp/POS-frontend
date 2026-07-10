@@ -1,11 +1,10 @@
 ﻿"use client";
 
 import { PageLoading } from "@/components/shared/PageLoading";
-import { useState, useEffect, useMemo } from "react";
-import { Download } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Download, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -13,7 +12,14 @@ import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { accountsAPI, type Account, type LedgerEntry } from "@/lib/api/accounting";
+import {
+  exportTableAsCsv,
+  exportTableAsPdf,
+  tenantToExportOrg,
+  type ExportTableData,
+} from "@/lib/utils/export";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -28,6 +34,7 @@ function normalizeLedgerEntries(data: LedgerEntry[]): LedgerEntry[] {
 
 export default function GeneralLedgerPage() {
   const { formatDate } = useDateSystem();
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountId, setAccountId] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -110,34 +117,89 @@ export default function GeneralLedgerPage() {
           : ledgerEntries[0].credit - ledgerEntries[0].debit)
       : 0;
 
-  const handleExportCSV = () => {
-    if (!account || ledgerEntries.length === 0) return;
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!account || ledgerEntries.length === 0) return null;
 
-    const headers = ["Date", "Reference", "Description", "Debit", "Credit", "Balance", "Source"];
-    const csvRows = [
-      headers.join(","),
-      ...ledgerEntries.map((entry) =>
-        [
-          entry.date,
-          entry.reference,
-          `"${entry.description.replace(/"/g, '""')}"`,
-          entry.debit.toFixed(2),
-          entry.credit.toFixed(2),
+    const dateRange = [
+      fromDate ? `From ${formatDate(fromDate)}` : null,
+      toDate ? `To ${formatDate(toDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    const org = user?.tenant
+      ? tenantToExportOrg({
+          name: user.tenant.name,
+          workspace_name: user.tenant.workspace_name,
+          address: user.tenant.address,
+          email: user.tenant.email,
+        })
+      : undefined;
+
+    return {
+      filename: `ledger-${account.code}-${new Date().toISOString().split("T")[0]}`,
+      title: `General Ledger — ${account.code} ${account.name}`,
+      subtitle: dateRange || undefined,
+      reportType: "General Ledger",
+      template: "financial",
+      headers: ["Date", "Reference", "Description", "Debit", "Credit", "Balance", "Source"],
+      rightAlignColumns: [3, 4, 5],
+      org,
+      rows: [
+        ...ledgerEntries.map((entry) => [
+          formatDate(entry.date),
+          entry.reference || "—",
+          entry.description,
+          entry.debit > 0 ? entry.debit.toFixed(2) : "",
+          entry.credit > 0 ? entry.credit.toFixed(2) : "",
           entry.balance.toFixed(2),
           entry.source,
-        ].join(",")
-      ),
-    ];
+        ]),
+        {
+          cells: [
+            "Period Totals",
+            "",
+            "",
+            totalDebits.toFixed(2),
+            totalCredits.toFixed(2),
+            closing.toFixed(2),
+            "",
+          ],
+          style: "total" as const,
+        },
+      ],
+    };
+  }, [
+    account,
+    ledgerEntries,
+    fromDate,
+    toDate,
+    formatDate,
+    totalDebits,
+    totalCredits,
+    closing,
+    user?.tenant,
+  ]);
 
-    const csvContent = csvRows.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ledger-${account.code}-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("Ledger exported successfully");
+  const handleExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export";
+      toast.error(message);
+    }
   };
 
   if (loading) {
@@ -154,71 +216,79 @@ export default function GeneralLedgerPage() {
       <DashHeader title="General Ledger" subtitle="Account transaction history" />
       <div className="flex-1 p-6 space-y-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div className="sm:col-span-2">
-              <Label className="text-sm mb-1.5 block">
-                Account <span className="text-red-500">*</span>
-              </Label>
-              {postableAccounts.length === 0 ? (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                  No active accounts. Add accounts in Chart of Accounts first.
-                </p>
-              ) : (
-                <Combobox
-                  options={accountOptions}
-                  value={accountId || undefined}
-                  onValueChange={(v) => {
-                    setAccountId(v);
+          <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-4 flex-1 min-w-0">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm mb-1.5 block">
+                  Account <span className="text-red-500">*</span>
+                </Label>
+                {postableAccounts.length === 0 ? (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                    No active accounts. Add accounts in Chart of Accounts first.
+                  </p>
+                ) : (
+                  <Combobox
+                    options={accountOptions}
+                    value={accountId || undefined}
+                    onValueChange={(v) => {
+                      setAccountId(v);
+                      setGenerated(false);
+                    }}
+                    placeholder="Search account..."
+                    searchPlaceholder="Code or name..."
+                    emptyText="No account found."
+                    disabled={generating}
+                  />
+                )}
+              </div>
+              <div className="w-full sm:w-auto sm:min-w-[150px]">
+                <Label className="text-sm mb-1.5 block">From Date</Label>
+                <DateInput
+                  value={fromDate}
+                  onChange={(v) => {
+                    setFromDate(v);
                     setGenerated(false);
                   }}
-                  placeholder="Search account..."
-                  searchPlaceholder="Code or name..."
-                  emptyText="No account found."
                   disabled={generating}
                 />
-              )}
+              </div>
+              <div className="w-full sm:w-auto sm:min-w-[150px]">
+                <Label className="text-sm mb-1.5 block">To Date</Label>
+                <DateInput
+                  value={toDate}
+                  onChange={(v) => {
+                    setToDate(v);
+                    setGenerated(false);
+                  }}
+                  disabled={generating}
+                />
+              </div>
+              <Button
+                onClick={handleGenerate}
+                disabled={!accountId || generating || postableAccounts.length === 0}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+              >
+                {generating ? "Generating..." : "Generate"}
+              </Button>
             </div>
-            <div>
-              <Label className="text-sm mb-1.5 block">From Date</Label>
-              <DateInput
-                value={fromDate}
-                onChange={(v) => {
-                  setFromDate(v);
-                  setGenerated(false);
-                }}
-                disabled={generating}
-              />
-            </div>
-            <div>
-              <Label className="text-sm mb-1.5 block">To Date</Label>
-              <DateInput
-                value={toDate}
-                onChange={(v) => {
-                  setToDate(v);
-                  setGenerated(false);
-                }}
-                disabled={generating}
-              />
-            </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <Button
-              onClick={handleGenerate}
-              disabled={!accountId || generating || postableAccounts.length === 0}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-            >
-              {generating ? "Generating..." : "Generate"}
-            </Button>
-            {generated && ledgerEntries.length > 0 && (
+            <div className="flex gap-2 shrink-0 xl:ml-4">
               <Button
                 variant="outline"
-                size="sm"
                 className="h-9 gap-1.5 text-gray-600 border-gray-200"
-                onClick={handleExportCSV}
+                disabled={!generated || ledgerEntries.length === 0}
+                onClick={() => handleExport("csv")}
               >
                 <Download className="h-3.5 w-3.5" /> CSV
               </Button>
-            )}
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                disabled={!generated || ledgerEntries.length === 0}
+                onClick={() => handleExport("pdf")}
+              >
+                <FileText className="h-3.5 w-3.5" /> PDF
+              </Button>
+            </div>
           </div>
         </div>
 

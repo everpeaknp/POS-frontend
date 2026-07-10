@@ -15,11 +15,8 @@ export default function NewWorkerPage() {
       title="New Worker"
       subtitle="Add a new construction worker to your workforce"
       variant="fullscreen"
-      showBack
-      backHref="/dashboard/construction/workers"
-      backLabel="Back to Workers"
     >
-      <div className={`${constructionCardClass} p-6 lg:p-8 w-full min-h-full`}>
+      <div className={`${constructionCardClass} p-5 lg:p-6 w-full`}>
         <WorkerForm
           onSuccess={() => router.push("/dashboard/construction/workers")}
           onCancel={() => router.back()}

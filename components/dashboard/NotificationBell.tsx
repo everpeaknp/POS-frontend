@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Check, Loader2 } from "lucide-react";
+import { Bell, Check } from "lucide-react";
+
 import { notificationsAPI, type AppNotification } from "@/lib/api/notifications";
 import { useNotificationPreferences } from "@/lib/context/NotificationPreferencesContext";
 import { showBrowserNotification } from "@/lib/notifications/browser";
@@ -152,8 +153,7 @@ export function NotificationBell() {
 
           <div className="overflow-y-auto flex-1">
             {loading && items.length === 0 ? (
-              <div className="p-6 flex justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              <div className="p-6 flex justify-center">
               </div>
             ) : items.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground text-center">No notifications yet</p>

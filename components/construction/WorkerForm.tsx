@@ -1,7 +1,5 @@
 'use client';
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +35,6 @@ interface WorkerFormProps {
 
 export default function WorkerForm({ workerId, initialData, onSuccess, onCancel }: WorkerFormProps) {
   const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
 
   const isEdit = !!workerId;
@@ -45,7 +42,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<WorkerFormData>({
     resolver: zodResolver(workerSchema),
     defaultValues: {
@@ -73,8 +70,6 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
 
   const onSubmit = async (data: WorkerFormData) => {
     try {
-      setLoading(true);
-      
       const payload = {
         name: data.name,
         phone: data.phone || '',
@@ -96,12 +91,11 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
       }
       
       onSuccess?.();
-    } catch (error: any) {
-      console.error('Failed to create worker:', error);
-      const message = error.response?.data?.detail || 'Failed to add worker';
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      console.error(`Failed to ${isEdit ? 'update' : 'create'} worker:`, error);
+      const message = err.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'add'} worker`;
       toast.error(message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -277,13 +271,17 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         )}
         <button
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
-          {loading && (
-            <KhataSpinner variant="onPrimary" />
-          )}
-          {loading ? (isEdit ? 'Updating Worker...' : 'Adding Worker...') : (isEdit ? 'Update Worker' : 'Add Worker')}
+
+          {isSubmitting
+            ? isEdit
+              ? 'Updating...'
+              : 'Adding...'
+            : isEdit
+              ? 'Update Worker'
+              : 'Add Worker'}
         </button>
       </div>
     </form>

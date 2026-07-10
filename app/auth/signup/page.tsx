@@ -1,5 +1,5 @@
 "use client";
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
+
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -300,12 +300,7 @@ export default function SignupPage() {
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BD)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = B)}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <KhataSpinner variant="onPrimary" className="mr-2" />
-                      Creating Account...
-                    </>
-                  ) : (
+                  {isSubmitting ? "Creating Account..." : (
                     <>
                       Create Account <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                     </>

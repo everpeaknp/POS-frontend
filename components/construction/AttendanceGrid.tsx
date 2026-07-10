@@ -1,15 +1,16 @@
 'use client';
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { constructionApi, Site, Worker } from '@/lib/api/construction';
-import { formatNPR } from '@/lib/utils';
 import { DateInput } from '@/components/shared/DateInput';
+import { constructionTableWrapClass } from '@/components/dashboard/ConstructionPageShell';
 
 const attendanceSchema = z.object({
   site: z.string().min(1, 'Site is required'),
@@ -25,11 +26,34 @@ interface AttendanceRecord {
   check_out?: string;
 }
 
+const STATUS_OPTIONS = [
+  { value: 'present', label: 'Present' },
+  { value: 'absent', label: 'Absent' },
+  { value: 'half_day', label: 'Half day' },
+  { value: 'overtime', label: 'Overtime' },
+] as const;
+
+function sameId(a: string | number | null | undefined, b: string | number | null | undefined) {
+  if (a === null || a === undefined || a === '') return false;
+  if (b === null || b === undefined || b === '') return false;
+  return String(a) === String(b);
+}
+
+function formatTimeForInput(value?: string | null): string {
+  if (!value) return '';
+  return value.slice(0, 5);
+}
+
 export default function AttendanceGrid() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialDate = searchParams.get('date') ?? new Date().toISOString().split('T')[0];
+  const initialSite = searchParams.get('site') ?? '';
+
   const [sites, setSites] = useState<Site[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<Map<string, AttendanceRecord>>(new Map());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -37,34 +61,53 @@ export default function AttendanceGrid() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
-      date: new Date().toISOString().split('T')[0],
+      site: initialSite,
+      date: initialDate,
     },
   });
 
   const selectedSite = watch('site');
   const selectedDate = watch('date');
 
-  // Fetch sites on mount
   useEffect(() => {
     const fetchSites = async () => {
       try {
-        const sitesData = await constructionApi.sites.list();
-        setSites(Array.isArray(sitesData) ? sitesData : []);
+        const sitesData = await constructionApi.sites.list({ status: 'active' });
+        const sitesList = Array.isArray(sitesData) ? sitesData : [];
+        setSites(sitesList);
+        if (!initialSite && sitesList.length > 0) {
+          setValue('site', String(sitesList[0].id));
+        }
       } catch (error) {
         console.error('Failed to load sites:', error);
         toast.error('Failed to load sites');
       }
     };
     fetchSites();
+  }, [initialSite, setValue]);
+
+  const buildDefaultRecords = useCallback((workersList: Worker[]) => {
+    const initialRecords = new Map<string, AttendanceRecord>();
+    workersList.forEach((worker: Worker) => {
+      const workerId = String(worker.id);
+      initialRecords.set(workerId, {
+        worker: workerId,
+        status: 'present',
+      });
+    });
+    return initialRecords;
   }, []);
 
-  // Fetch workers and existing attendance when site or date changes
   useEffect(() => {
-    if (!selectedSite || !selectedDate) return;
+    if (!selectedSite || !selectedDate) {
+      setLoading(false);
+      return;
+    }
 
     const loadGrid = async () => {
       try {
@@ -74,24 +117,30 @@ export default function AttendanceGrid() {
           constructionApi.attendance.list({ site: selectedSite, date: selectedDate }),
         ]);
 
-        const siteWorkers = workersData.filter(
-          (w: Worker) => !w.assigned_site || w.assigned_site === selectedSite,
+        const workersList = Array.isArray(workersData) ? workersData : [];
+        const attendanceList = Array.isArray(attendanceData) ? attendanceData : [];
+
+        const siteWorkers = workersList.filter(
+          (w: Worker) => !w.assigned_site || sameId(w.assigned_site, selectedSite),
         );
         setWorkers(siteWorkers);
 
         const existingByWorker = new Map(
-          attendanceData.map((a) => [a.worker, a]),
+          attendanceList.map((a) => [String(a.worker), a]),
         );
 
-        const initialRecords = new Map<string, AttendanceRecord>();
+        const initialRecords = buildDefaultRecords(siteWorkers);
         siteWorkers.forEach((worker: Worker) => {
-          const existing = existingByWorker.get(worker.id);
-          initialRecords.set(worker.id, {
-            worker: worker.id,
-            status: existing?.status ?? 'absent',
-            check_in: existing?.check_in,
-            check_out: existing?.check_out,
-          });
+          const workerId = String(worker.id);
+          const existing = existingByWorker.get(workerId);
+          if (existing) {
+            initialRecords.set(workerId, {
+              worker: workerId,
+              status: existing.status,
+              check_in: formatTimeForInput(existing.check_in),
+              check_out: formatTimeForInput(existing.check_out),
+            });
+          }
         });
         setAttendanceRecords(initialRecords);
       } catch (error) {
@@ -103,62 +152,50 @@ export default function AttendanceGrid() {
     };
 
     loadGrid();
-  }, [selectedSite, selectedDate]);
+  }, [selectedSite, selectedDate, buildDefaultRecords]);
 
   const updateAttendanceStatus = (workerId: string, status: AttendanceRecord['status']) => {
-    setAttendanceRecords(prev => {
+    const id = String(workerId);
+    setAttendanceRecords((prev) => {
       const newRecords = new Map(prev);
-      const record = newRecords.get(workerId) || { worker: workerId, status: 'absent' };
-      newRecords.set(workerId, { ...record, status });
+      const record = newRecords.get(id) || { worker: id, status: 'absent' as const };
+      newRecords.set(id, { ...record, status });
       return newRecords;
     });
   };
 
   const updateCheckTime = (workerId: string, field: 'check_in' | 'check_out', value: string) => {
-    setAttendanceRecords(prev => {
+    const id = String(workerId);
+    setAttendanceRecords((prev) => {
       const newRecords = new Map(prev);
-      const record = newRecords.get(workerId) || { worker: workerId, status: 'absent' };
-      newRecords.set(workerId, { ...record, [field]: value });
+      const record = newRecords.get(id) || { worker: id, status: 'absent' as const };
+      newRecords.set(id, { ...record, [field]: value });
       return newRecords;
     });
   };
 
-  const calculateWage = (worker: Worker, status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'present':
-        return worker.daily_wage;
-      case 'half_day':
-        return worker.daily_wage / 2;
-      case 'overtime':
-        return worker.daily_wage * 1.5;
-      case 'absent':
-      default:
-        return 0;
-    }
-  };
-
-  const getTotalWages = () => {
-    let total = 0;
-    attendanceRecords.forEach((record, workerId) => {
-      const worker = workers.find(w => w.id === workerId);
-      if (worker) {
-        total += calculateWage(worker, record.status);
-      }
+  const handleMarkAll = (status: AttendanceRecord['status']) => {
+    setAttendanceRecords((prev) => {
+      const newRecords = new Map(prev);
+      workers.forEach((worker) => {
+        const workerId = String(worker.id);
+        const record = newRecords.get(workerId) || { worker: workerId, status: 'absent' as const };
+        newRecords.set(workerId, { ...record, status });
+      });
+      return newRecords;
     });
-    return total;
   };
 
   const onSubmit = async (data: AttendanceFormData) => {
     try {
       setSubmitting(true);
 
-      // Prepare bulk attendance data
       const attendances = Array.from(attendanceRecords.values());
 
       const payload = {
         site: data.site,
         date: data.date,
-        attendances: attendances.map(record => ({
+        attendances: attendances.map((record) => ({
           worker: record.worker,
           status: record.status,
           check_in: record.check_in || undefined,
@@ -172,13 +209,23 @@ export default function AttendanceGrid() {
       const errorCount = result?.errors?.length ?? 0;
 
       if (errorCount > 0) {
-        toast.error(`Saved ${created + updated} records; ${errorCount} failed`);
+        const firstError = result?.errors?.[0];
+        const detail =
+          firstError?.errors && typeof firstError.errors === 'object'
+            ? JSON.stringify(firstError.errors)
+            : undefined;
+        toast.error(
+          detail
+            ? `Saved ${created + updated} records; ${errorCount} failed: ${detail}`
+            : `Saved ${created + updated} records; ${errorCount} failed`,
+        );
       } else {
         toast.success(
           updated > 0
             ? `Attendance updated for ${updated + created} workers`
             : `Attendance marked for ${created} workers`,
         );
+        router.push('/dashboard/construction/attendance');
       }
     } catch (error: any) {
       console.error('Failed to mark attendance:', error);
@@ -189,227 +236,162 @@ export default function AttendanceGrid() {
     }
   };
 
-  const getStatusColor = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'present':
-        return 'bg-[#22C55E] text-white border-[#22C55E]';
-      case 'half_day':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'overtime':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'absent':
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-sm text-gray-500">Loading workers...</div>
+    );
+  }
 
   return (
-    <div className="space-y-6 w-full">
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Daily Attendance Grid</h2>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Site <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('site')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-              >
-                <option value="">Select Site</option>
-                {sites.map(site => (
-                  <option key={site.id} value={site.id}>
-                    {site.name} - {site.location}
-                  </option>
-                ))}
-              </select>
-              {errors.site && (
-                <p className="mt-1 text-sm text-red-600">{errors.site.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date <span className="text-red-500">*</span>
-              </label>
-              <Controller
-                name="date"
-                control={control}
-                render={({ field }) => (
-                  <DateInput value={field.value || ''} onChange={field.onChange} />
-                )}
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Workers Grid */}
-          {selectedSite && (
-            <>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <KhataSpinner size="lg" />
-                </div>
-              ) : workers.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  No active workers assigned to this site
-                </div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto w-full">
-                    <table className="min-w-full divide-y divide-gray-200 w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Worker Name
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Category
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Daily Wage
-                          </th>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Check In
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Check Out
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Wage Amount
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {workers.map(worker => {
-                          const record = attendanceRecords.get(worker.id);
-                          const status = record?.status || 'absent';
-                          const wageAmount = calculateWage(worker, status);
-
-                          return (
-                            <tr key={worker.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {worker.name}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {worker.category}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                {formatNPR(worker.daily_wage)}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <div className="flex gap-1 justify-center">
-                                  {(['present', 'absent', 'half_day', 'overtime'] as const).map(s => (
-                                    <button
-                                      key={s}
-                                      type="button"
-                                      onClick={() => updateAttendanceStatus(worker.id, s)}
-                                      className={`px-2 py-1 text-xs font-medium rounded border transition-colors ${
-                                        status === s
-                                          ? getStatusColor(s)
-                                          : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                                      }`}
-                                    >
-                                      {s === 'half_day' ? 'Half' : s === 'overtime' ? 'OT' : s.charAt(0).toUpperCase()}
-                                    </button>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <input
-                                  type="time"
-                                  value={record?.check_in || ''}
-                                  onChange={e => updateCheckTime(worker.id, 'check_in', e.target.value)}
-                                  disabled={status === 'absent'}
-                                  className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#22C55E] disabled:bg-gray-100"
-                                />
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <input
-                                  type="time"
-                                  value={record?.check_out || ''}
-                                  onChange={e => updateCheckTime(worker.id, 'check_out', e.target.value)}
-                                  disabled={status === 'absent'}
-                                  className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#22C55E] disabled:bg-gray-100"
-                                />
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-900">
-                                {formatNPR(wageAmount)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot className="bg-gray-50">
-                        <tr>
-                          <td colSpan={6} className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                            Total Labor Cost:
-                          </td>
-                          <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                            {formatNPR(getTotalWages())}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="flex justify-end gap-3 pt-4 border-t">
-                    <button
-                      type="submit"
-                      disabled={submitting || workers.length === 0}
-                      className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                    >
-                      {submitting && (
-                        <KhataSpinner variant="onPrimary" />
-                      )}
-                      {submitting ? 'Saving...' : 'Save Attendance'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </form>
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Site <span className="text-red-500">*</span>
+        </label>
+        <select
+          {...register('site')}
+          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+        >
+          <option value="">Select site</option>
+          {sites.map((site) => (
+            <option key={site.id} value={site.id}>
+              {site.name} — {site.location}
+            </option>
+          ))}
+        </select>
+        {errors.site && <p className="mt-1 text-sm text-red-600">{errors.site.message}</p>}
       </div>
 
-      {/* Legend */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Status Legend</h3>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded border bg-[#22C55E] text-white border-[#22C55E]">
-              Present
-            </span>
-            <span className="text-sm text-gray-600">Full wage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded border bg-yellow-100 text-yellow-800 border-yellow-300">
-              Half Day
-            </span>
-            <span className="text-sm text-gray-600">50% wage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded border bg-blue-100 text-blue-800 border-blue-300">
-              Overtime
-            </span>
-            <span className="text-sm text-gray-600">150% wage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded border bg-gray-100 text-gray-800 border-gray-300">
-              Absent
-            </span>
-            <span className="text-sm text-gray-600">No wage</span>
-          </div>
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Date <span className="text-red-500">*</span>
+        </label>
+        <Controller
+          name="date"
+          control={control}
+          render={({ field }) => (
+            <DateInput value={field.value || ''} onChange={field.onChange} />
+          )}
+        />
+        {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>}
       </div>
     </div>
+
+    {selectedSite && (
+      <>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkAll('present')}
+            disabled={submitting || workers.length === 0}
+          >
+            Mark all present
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkAll('absent')}
+            disabled={submitting || workers.length === 0}
+          >
+            Mark all absent
+          </Button>
+        </div>
+
+        {workers.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">
+            No active workers assigned to this site
+          </div>
+        ) : (
+          <div className={constructionTableWrapClass}>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {['Worker', 'Category', 'Status', 'Check-in', 'Check-out'].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {workers.map((worker) => {
+                  const workerId = String(worker.id);
+                  const record = attendanceRecords.get(workerId);
+                  const status = record?.status || 'absent';
+
+                  return (
+                    <tr key={workerId} className="hover:bg-gray-50/50">
+                      <td className="px-4 py-3 font-medium text-gray-900">{worker.name}</td>
+                      <td className="px-4 py-3 text-gray-600 capitalize">{worker.category}</td>
+                      <td className="px-4 py-3">
+                        <Select
+                          value={status}
+                          onValueChange={(v) =>
+                            v && updateAttendanceStatus(workerId, v as AttendanceRecord['status'])
+                          }
+                          disabled={submitting}
+                        >
+                          <SelectTrigger className="h-8 w-32 text-xs border-gray-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s.value} value={s.value}>
+                                {s.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="time"
+                          value={record?.check_in || ''}
+                          onChange={(e) => updateCheckTime(workerId, 'check_in', e.target.value)}
+                          disabled={submitting || status === 'absent'}
+                          className="h-8 px-2 border border-gray-200 rounded text-xs disabled:bg-gray-100"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="time"
+                          value={record?.check_out || ''}
+                          onChange={(e) => updateCheckTime(workerId, 'check_out', e.target.value)}
+                          disabled={submitting || status === 'absent'}
+                          className="h-8 px-2 border border-gray-200 rounded text-xs disabled:bg-gray-100"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-4 border-t border-gray-100">
+          <Button
+            type="submit"
+            className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+            disabled={submitting || workers.length === 0}
+          >
+            {submitting ? 'Saving...' : 'Save Attendance'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+        </div>
+      </>
+    )}
+  </form>
   );
 }

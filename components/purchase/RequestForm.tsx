@@ -499,10 +499,7 @@ export default function RequestForm({
           type="submit"
           disabled={isSubmitting}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
-          {isSubmitting && (
-            <KhataSpinner variant="onPrimary" />
-          )}
+        >
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Request' : 'Create Request'}
         </button>
         

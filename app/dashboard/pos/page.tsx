@@ -5,7 +5,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, Loader2, X } from "lucide-react";
+import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -688,8 +689,8 @@ export default function POSPage() {
                     disabled={scanningBarcode}
                   />
                   {scanningBarcode && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-4 w-4 animate-spin text-[#22C55E]" />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+                      Searching...
                     </div>
                   )}
                 </div>
@@ -698,11 +699,7 @@ export default function POSPage() {
                   className="bg-[#22C55E] hover:bg-[#16A34A]"
                   disabled={scanningBarcode || !barcodeQuery.trim()}
                 >
-                  {scanningBarcode ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
+                  <Search className="h-4 w-4" />
                 </Button>
               </form>
               {barcodeQuery && (
@@ -1072,12 +1069,7 @@ export default function POSPage() {
                 disabled={processing || cart.length === 0 || !openSession}
                 className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white h-12 text-lg font-semibold"
               >
-                {processing ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
+                {processing ? "Processing..." : (
                   "Complete Sale"
                 )}
               </Button>

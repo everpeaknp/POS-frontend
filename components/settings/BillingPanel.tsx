@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  CreditCard,
-  Check,
-  Loader2,
-  History,
-  AlertCircle,
-  Shield,
-  Zap,
-  FileDown,
-} from "lucide-react";
+import { CreditCard, Check, History, AlertCircle, Shield, Zap, FileDown } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { billingApi, submitEsewaForm, isPlanActivation, type BillingOverview } from "@/lib/api/billing";
@@ -230,7 +222,6 @@ export function BillingPanel({
                 >
                   {checkoutPlan === plan.code ? (
                     <span className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
                       {isFree ? "Switching..." : "Redirecting..."}
                     </span>
                   ) : plan.is_current ? (
@@ -306,12 +297,8 @@ export function BillingPanel({
                           disabled={downloadingInvoiceId === payment.id}
                           onClick={() => handleDownloadInvoice(payment.id)}
                         >
-                          {downloadingInvoiceId === payment.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <FileDown className="h-3.5 w-3.5" />
-                          )}
-                          PDF
+                          {downloadingInvoiceId !== payment.id && <FileDown className="h-3.5 w-3.5" />}
+                          {downloadingInvoiceId === payment.id ? "..." : "PDF"}
                         </Button>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>

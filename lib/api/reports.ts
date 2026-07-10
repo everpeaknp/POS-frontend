@@ -493,7 +493,7 @@ export const reportsAPI = {
   purchaseReports: async (params?: {
     date_range?: 'week' | 'month' | 'quarter' | 'year';
   }) => {
-    const response = await apiClient.get('/reports/purchase-reports/', { params });
+    const response = await apiClient.get<PurchaseReportsData>('/reports/purchase-reports/', { params });
     return response.data;
   },
 

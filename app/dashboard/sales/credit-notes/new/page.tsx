@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
@@ -345,12 +346,7 @@ export default function NewCreditNotePage() {
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Creating...
-                  </>
-                ) : (
+                {submitting ? "Creating..." : (
                   "Create Credit Note"
                 )}
               </Button>

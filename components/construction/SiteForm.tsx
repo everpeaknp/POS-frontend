@@ -371,10 +371,7 @@ export default function SiteForm({
           type="submit"
           disabled={isSubmitting}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
-          {isSubmitting && (
-            <KhataSpinner variant="onPrimary" />
-          )}
+        >
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Site' : 'Create Site'}
         </button>
         

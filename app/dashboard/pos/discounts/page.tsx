@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Edit, Trash2, Loader2, Tags } from "lucide-react";
+import { Plus, Edit, Trash2, Tags } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -442,12 +443,7 @@ export default function POSDiscountsPage() {
                   disabled={submitting}
                   className="bg-[#22C55E] hover:bg-[#16A34A]"
                 >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : (
+                  {submitting ? "Saving..." : (
                     editingId ? "Update Discount" : "Create Discount"
                   )}
                 </Button>

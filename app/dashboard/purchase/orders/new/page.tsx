@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -377,16 +378,14 @@ export default function NewPurchaseOrderPage() {
               onClick={() => handleSubmit('Draft')}
               className="border-[#22C55E] text-[#22C55E] hover:bg-green-50"
               disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            >
               Save as Draft
             </Button>
             <Button 
               onClick={() => handleSubmit('Sent')}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
               disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            >
               Send to Supplier
             </Button>
           </div>
@@ -471,12 +470,7 @@ export default function NewPurchaseOrderPage() {
               disabled={creatingSupplier}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              {creatingSupplier ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
+              {creatingSupplier ? "Creating..." : (
                 "Create Supplier"
               )}
             </Button>

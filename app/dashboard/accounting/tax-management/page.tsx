@@ -4,15 +4,15 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus, Receipt, FileText } from "lucide-react";
+import { Plus, Receipt, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
   AccountingPageShell,
-  accountingCardClass,
   accountingStatCardClass,
   accountingTableWrapClass,
 } from "@/components/dashboard/AccountingPageShell";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { taxRulesAPI, vatReturnsAPI } from "@/lib/api/accounting";
 import { FormattedDate } from "@/components/shared/FormattedDate";
@@ -20,6 +20,11 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 const fmt = (n: number) =>
   `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const TABS = ["Tax Rules", "VAT Returns"] as const;
+
+type ConfirmAction =
+  | { kind: "deactivate-tax"; id: string }
+  | { kind: "file-vat"; id: string }
+  | { kind: "mark-paid"; id: string };
 
 const VAT_STATUS: Record<string, string> = {
   draft: "bg-gray-100 text-gray-600",
@@ -60,6 +65,8 @@ function TaxManagementContent() {
   const [vatReturns, setVatReturns] = useState<VATReturnRow[]>([]);
   const [loadingRules, setLoadingRules] = useState(true);
   const [loadingReturns, setLoadingReturns] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const fetchTaxRules = useCallback(async () => {
     try {
@@ -108,152 +115,80 @@ function TaxManagementContent() {
     setTab(initialTab);
   }, [initialTab]);
 
-  const handleDeactivateTaxRule = async (id: string) => {
-    toast((t) => (
-      <div className="flex flex-col gap-4 min-w-[320px] p-2">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">Deactivate this tax rule?</p>
-            <p className="text-sm text-gray-600 mt-1">It will no longer be available for use.</p>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await taxRulesAPI.patch(id, { status: "inactive" });
-                toast.success("Tax rule deactivated successfully");
-                fetchTaxRules();
-              } catch (error: unknown) {
-                console.error("Failed to deactivate tax rule:", error);
-                toast.error("Failed to deactivate tax rule");
-              }
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors"
-          >
-            Deactivate
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: Infinity,
-      position: "top-center" });
+  const handleDeactivateTaxRule = (id: string) => {
+    setConfirmAction({ kind: "deactivate-tax", id });
   };
 
-  const handleFileVATReturn = async (id: string) => {
-    toast((t) => (
-      <div className="flex flex-col gap-4 min-w-[320px] p-2">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">File this VAT return?</p>
-            <p className="text-sm text-gray-600 mt-1">This marks it as submitted to IRD.</p>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await vatReturnsAPI.file(id);
-                toast.success("VAT return filed successfully");
-                fetchVATReturns();
-              } catch (error: unknown) {
-                console.error("Failed to file VAT return:", error);
-                toast.error("Failed to file VAT return");
-              }
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            File Return
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: Infinity,
-      position: "top-center" });
+  const handleFileVATReturn = (id: string) => {
+    setConfirmAction({ kind: "file-vat", id });
   };
 
-  const handleMarkPaid = async (id: string) => {
-    toast((t) => (
-      <div className="flex flex-col gap-4 min-w-[320px] p-2">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">Mark this return as paid?</p>
-            <p className="text-sm text-gray-600 mt-1">This confirms the payment has been completed.</p>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await vatReturnsAPI.markPaid(id);
-                toast.success("VAT return marked as paid successfully");
-                fetchVATReturns();
-              } catch (error: unknown) {
-                console.error("Failed to mark VAT return as paid:", error);
-                toast.error("Failed to mark VAT return as paid");
-              }
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] transition-colors"
-          >
-            Mark as Paid
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: Infinity,
-      position: "top-center" });
+  const handleMarkPaid = (id: string) => {
+    setConfirmAction({ kind: "mark-paid", id });
   };
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+
+    setConfirming(true);
+    try {
+      if (confirmAction.kind === "deactivate-tax") {
+        await taxRulesAPI.patch(confirmAction.id, { status: "inactive" });
+        toast.success("Tax rule deactivated successfully");
+        fetchTaxRules();
+      } else if (confirmAction.kind === "file-vat") {
+        await vatReturnsAPI.file(confirmAction.id);
+        toast.success("VAT return filed successfully");
+        fetchVATReturns();
+      } else {
+        await vatReturnsAPI.markPaid(confirmAction.id);
+        toast.success("VAT return marked as paid successfully");
+        fetchVATReturns();
+      }
+      setConfirmAction(null);
+    } catch (error: unknown) {
+      console.error("Confirmation action failed:", error);
+      if (confirmAction.kind === "deactivate-tax") {
+        toast.error("Failed to deactivate tax rule");
+      } else if (confirmAction.kind === "file-vat") {
+        toast.error("Failed to file VAT return");
+      } else {
+        toast.error("Failed to mark VAT return as paid");
+      }
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const confirmDialogProps =
+    confirmAction?.kind === "deactivate-tax"
+      ? {
+          title: "Deactivate this tax rule?",
+          description: "It will no longer be available for use.",
+          confirmLabel: "Deactivate",
+          icon: <AlertTriangle className="h-5 w-5" />,
+          iconWrapperClassName: "bg-orange-100 text-orange-600",
+          confirmClassName: "bg-orange-600 hover:bg-orange-700 text-white",
+        }
+      : confirmAction?.kind === "file-vat"
+        ? {
+            title: "File this VAT return?",
+            description: "This marks it as submitted to IRD.",
+            confirmLabel: "File Return",
+            icon: <FileText className="h-5 w-5" />,
+            iconWrapperClassName: "bg-[#22C55E]/15 text-[#22C55E]",
+            confirmClassName: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+          }
+        : confirmAction?.kind === "mark-paid"
+          ? {
+              title: "Mark this return as paid?",
+              description: "This confirms the payment has been completed.",
+              confirmLabel: "Mark as Paid",
+              icon: <CheckCircle2 className="h-5 w-5" />,
+              iconWrapperClassName: "bg-[#22C55E]/15 text-[#22C55E]",
+              confirmClassName: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+            }
+          : null;
 
 
   const shellAction =
@@ -275,7 +210,6 @@ function TaxManagementContent() {
     <AccountingPageShell
       title="Tax Management"
       subtitle="Tax rules and VAT returns"
-      showBack
       action={shellAction}
     >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -475,6 +409,20 @@ function TaxManagementContent() {
             )}
           </div>
         )}
+      {confirmDialogProps && (
+        <ConfirmDialog
+          open
+          title={confirmDialogProps.title}
+          description={confirmDialogProps.description}
+          confirmLabel={confirmDialogProps.confirmLabel}
+          icon={confirmDialogProps.icon}
+          iconWrapperClassName={confirmDialogProps.iconWrapperClassName}
+          confirmClassName={confirmDialogProps.confirmClassName}
+          confirming={confirming}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={handleConfirmAction}
+        />
+      )}
     </AccountingPageShell>
   );
 }
@@ -486,7 +434,6 @@ export default function TaxManagementPage() {
         <AccountingPageShell
           title="Tax Management"
           subtitle="Tax rules and VAT returns"
-          showBack
           loading
           loadingMessage="Loading…"
         />

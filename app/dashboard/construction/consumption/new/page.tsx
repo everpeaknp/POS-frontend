@@ -16,7 +16,7 @@ export default function NewMaterialConsumptionPage() {
       subtitle="Record materials used at construction sites. Stock will be automatically deducted."
       variant="fullscreen"
     >
-      <div className={`${constructionCardClass} p-6 lg:p-8 w-full min-h-full`}>
+      <div className={`${constructionCardClass} p-5 lg:p-6 w-full`}>
         <ConsumptionForm
           onSuccess={() => router.push("/dashboard/construction/material-consumption")}
           onCancel={() => router.back()}

@@ -1,35 +1,158 @@
-'use client';
+"use client";
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
-
-import { FormattedDate } from "@/components/shared/FormattedDate";
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { useReactToPrint } from "react-to-print";
 import {
-  ConstructionPageShell,
-  constructionCardClass,
-} from '@/components/dashboard/ConstructionPageShell';
-import { constructionApi, Equipment } from '@/lib/api/construction';
-import { formatNPR } from '@/lib/utils';
-import toast from 'react-hot-toast';
+  ArrowLeft,
+  Edit,
+  Trash2,
+  AlertTriangle,
+  Building2,
+  Calendar,
+  FileText,
+  Wallet,
+  Clock,
+  Wrench,
+  Printer,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import { FormattedDate } from "@/components/shared/FormattedDate";
+import { SkeletonTable } from "@/components/shared/Skeleton";
+import { PrintableEquipment } from "@/components/print/PrintableEquipment";
+import { constructionCardClass } from "@/components/dashboard/ConstructionPageShell";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useCompanyInfo } from "@/lib/hooks/useCompanyInfo";
+import { constructionApi, type Equipment } from "@/lib/api/construction";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  iconClass,
+  valueClass = "text-gray-900",
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  iconClass: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className={`text-lg font-bold truncate ${valueClass}`}>{value}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+        </div>
+        <div className={`w-10 h-10 rounded-lg shrink-0 flex items-center justify-center ${iconClass}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
+      <div className="mt-1 text-sm font-medium text-gray-900">{children}</div>
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  icon: Icon,
+  children,
+  className = "",
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`${constructionCardClass} p-6 ${className}`}>
+      <div className="flex items-center gap-2 mb-5">
+        <Icon className="h-5 w-5 text-[#22C55E]" />
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TextBlock({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg bg-gray-50 border border-gray-100 p-4">
+      <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+function formatStatusLabel(status: string) {
+  return status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function getOwnershipBadge(type: Equipment["ownership_type"]) {
+  return type === "owned" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700";
+}
+
+function getStatusBadge(status: Equipment["status"]) {
+  const colors: Record<Equipment["status"], string> = {
+    available: "bg-green-100 text-green-700",
+    in_use: "bg-yellow-100 text-yellow-700",
+    maintenance: "bg-orange-100 text-orange-700",
+    retired: "bg-gray-100 text-gray-500",
+  };
+  return colors[status] || "bg-gray-100 text-gray-600";
+}
+
+function getStatusIconClass(status: Equipment["status"]) {
+  const colors: Record<Equipment["status"], string> = {
+    available: "bg-green-50 text-green-600",
+    in_use: "bg-yellow-50 text-yellow-600",
+    maintenance: "bg-orange-50 text-orange-600",
+    retired: "bg-gray-100 text-gray-500",
+  };
+  return colors[status] || "bg-gray-100 text-gray-600";
+}
+
+function getPrimaryCost(equipment: Equipment) {
+  if (equipment.ownership_type === "rented" && equipment.rental_cost_per_day) {
+    return { label: "Rental / Day", value: formatNPR(equipment.rental_cost_per_day) };
+  }
+  if (equipment.purchase_cost) {
+    return { label: "Purchase Cost", value: formatNPR(equipment.purchase_cost) };
+  }
+  return { label: "Cost", value: "—" };
+}
 
 export default function EquipmentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const equipmentId = params.id as string;
+  const { formatDateTime } = useDateSystem();
 
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+  const { companyInfo } = useCompanyInfo();
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Equipment_${equipment?.name || equipmentId}_${new Date().toISOString().split("T")[0]}`,
+  });
 
   useEffect(() => {
-    if (equipmentId) {
-      fetchEquipment();
-    }
+    if (equipmentId) fetchEquipment();
   }, [equipmentId]);
 
   const fetchEquipment = async () => {
@@ -37,231 +160,425 @@ export default function EquipmentDetailPage() {
       setLoading(true);
       const equipmentData = await constructionApi.equipment.get(equipmentId);
       setEquipment(equipmentData);
-    } catch (error: any) {
-      console.error('Failed to fetch equipment:', error);
-      toast.error('Failed to load equipment details');
-      router.push('/dashboard/construction/equipment');
+    } catch (error: unknown) {
+      console.error("Failed to fetch equipment:", error);
+      toast.error("Failed to load equipment details");
+      router.push("/dashboard/construction/equipment");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    try {
+  const handleDelete = () => {
+    if (!equipment) return;
+
+    const confirmDelete = () => {
       setDeleting(true);
-      await constructionApi.equipment.delete(equipmentId);
-      toast.success('Equipment deleted successfully');
-      router.push('/dashboard/construction/equipment');
-    } catch (error: any) {
-      console.error('Failed to delete equipment:', error);
-      toast.error(error.response?.data?.detail || 'Failed to delete equipment');
-      setDeleting(false);
-      setDeleteModalOpen(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      'available': 'bg-[#22C55E] text-white',
-      'in_use': 'bg-yellow-500 text-white',
-      'maintenance': 'bg-orange-500 text-white',
-      'retired': 'bg-gray-500 text-white',
+      toast
+        .promise(constructionApi.equipment.delete(equipmentId), {
+          loading: "Deleting equipment...",
+          success: () => {
+            router.push("/dashboard/construction/equipment");
+            return `Equipment "${equipment.name}" deleted successfully`;
+          },
+          error: (err) =>
+            err.response?.data?.detail || err.response?.data?.message || "Failed to delete equipment",
+        })
+        .finally(() => setDeleting(false));
     };
-    return colors[status] || 'bg-gray-500 text-white';
-  };
 
-  const getOwnershipColor = (type: string) => {
-    return type === 'owned' 
-      ? 'bg-[#22C55E] text-white' 
-      : 'bg-blue-500 text-white';
-  };
-
-  const getStatusDisplay = (status: string) => {
-    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-4 min-w-[320px] p-2">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 text-base">Delete {equipment.name}?</p>
+              <p className="text-sm text-gray-600 mt-1">
+                This will permanently remove the equipment and all associated data.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                confirmDelete();
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: "top-center",
+        style: {
+          marginTop: "40vh",
+          background: "white",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          borderRadius: "12px",
+          padding: "16px",
+        },
+      }
+    );
   };
 
   if (loading) {
     return (
-      <ConstructionPageShell title="Equipment Details" subtitle="Loading equipment information…" loading />
+      <div className="flex flex-col h-full min-h-0">
+        <DashHeader title="Loading..." subtitle="Equipment" />
+        <div className="flex-1 p-6">
+          <SkeletonTable rows={6} />
+        </div>
+      </div>
     );
   }
 
   if (!equipment) {
     return (
-      <ConstructionPageShell title="Equipment Not Found" subtitle="This equipment could not be loaded">
-        <div className={`${constructionCardClass} p-12 text-center`}>
+      <div className="flex flex-col h-full min-h-0">
+        <DashHeader title="Not Found" subtitle="Equipment" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
           <p className="text-gray-500">Equipment not found</p>
-          <Link
-            href="/dashboard/construction/equipment"
-            className="mt-4 inline-block text-[#22C55E] hover:text-[#16A34A]"
-          >
-            Back to Equipment
+          <Link href="/dashboard/construction/equipment">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Equipment
+            </Button>
           </Link>
         </div>
-      </ConstructionPageShell>
+      </div>
     );
   }
 
+  const primaryCost = getPrimaryCost(equipment);
+  const initials = equipment.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const quickLinks = [
+    { href: "/dashboard/construction/equipment", label: "All Equipment", icon: Wrench },
+    { href: "/dashboard/construction/daily-logs", label: "Daily Logs", icon: FileText },
+    ...(equipment.assigned_site
+      ? [
+          {
+            href: `/dashboard/construction/sites/${equipment.assigned_site}`,
+            label: "Assigned Site",
+            icon: Building2,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <ConstructionPageShell
-      title={equipment.name}
-      subtitle={equipment.equipment_type}
-      action={
-        <div className="flex gap-2">
-          <Link href={`/dashboard/construction/equipment/${equipmentId}/edit`}>
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white">
-              Edit Equipment
+    <div className="flex flex-col h-full min-h-0">
+      <DashHeader title={equipment.name} subtitle={equipment.equipment_type} />
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full space-y-6">
+          {/* Action bar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/dashboard/construction/equipment">
+              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </Button>
+            </Link>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(equipment.status)}`}
+            >
+              {formatStatusLabel(equipment.status)}
+            </span>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getOwnershipBadge(equipment.ownership_type)}`}
+            >
+              {equipment.ownership_type}
+            </span>
+            <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-8"
+              onClick={() => handlePrint()}
+              disabled={!companyInfo}
+            >
+              <Printer className="h-3.5 w-3.5" /> Export PDF
             </Button>
-          </Link>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="h-9"
-            onClick={() => setDeleteModalOpen(true)}
-          >
-            Delete
-          </Button>
-        </div>
-      }
-    >
-      <Link
-        href="/dashboard/construction/equipment"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 -mt-2"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Back to Equipment
-      </Link>
+            <Link href={`/dashboard/construction/equipment/${equipmentId}/edit`}>
+              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                <Edit className="h-3.5 w-3.5" /> Edit
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className={`${constructionCardClass} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Equipment Details</h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">Equipment Name</p>
-              <p className="font-medium text-gray-900">{equipment.name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Type</p>
-              <p className="font-medium text-gray-900">{equipment.equipment_type}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Ownership</p>
-              <span className={`inline-block px-3 py-1 rounded text-xs font-medium ${getOwnershipColor(equipment.ownership_type)}`}>
-                {equipment.ownership_type.toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <span className={`inline-block px-3 py-1 rounded text-xs font-medium ${getStatusColor(equipment.status)}`}>
-                {getStatusDisplay(equipment.status)}
-              </span>
-            </div>
-            {equipment.registration_number && (
-              <div>
-                <p className="text-sm text-gray-500">Registration Number</p>
-                <p className="font-medium text-gray-900">{equipment.registration_number}</p>
+          {/* Hero */}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+                {initials}
               </div>
-            )}
-            {equipment.purchase_date && (
-              <div>
-                <p className="text-sm text-gray-500">Purchase Date</p>
-                <p className="font-medium text-gray-900">
-                  <FormattedDate value={equipment.purchase_date} />
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl font-bold text-gray-900">{equipment.name}</h2>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+                  <Wrench className="h-3.5 w-3.5 shrink-0" />
+                  {equipment.equipment_type}
                 </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
+                  {equipment.registration_number && (
+                    <span>Reg: {equipment.registration_number}</span>
+                  )}
+                  {equipment.assigned_site_name && (
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {equipment.assigned_site_name}
+                    </span>
+                  )}
+                  {equipment.purchase_date && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Purchased <FormattedDate value={equipment.purchase_date} />
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-          </div>
-
-          <div className={`${constructionCardClass} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h2>
-          <div className="space-y-3">
-            {equipment.ownership_type === 'owned' && equipment.purchase_cost && (
-              <div>
-                <p className="text-sm text-gray-500">Purchase Cost</p>
-                <p className="text-xl font-bold text-[#22C55E]">{formatNPR(equipment.purchase_cost)}</p>
+              <div className="text-right shrink-0">
+                <p className="text-xs text-gray-500">{primaryCost.label}</p>
+                <p className="text-2xl font-bold text-[#22C55E]">{primaryCost.value}</p>
+                {equipment.ownership_type === "rented" && (
+                  <p className="text-xs text-gray-400 mt-0.5">per day</p>
+                )}
               </div>
-            )}
-            {equipment.ownership_type === 'rented' && equipment.rental_cost_per_day && (
-              <div>
-                <p className="text-sm text-gray-500">Rental Cost Per Day</p>
-                <p className="text-xl font-bold text-[#22C55E]">{formatNPR(equipment.rental_cost_per_day)}</p>
-              </div>
-            )}
-            {equipment.assigned_site_name && (
-              <div>
-                <p className="text-sm text-gray-500">Assigned Site</p>
-                <p className="font-medium text-gray-900">{equipment.assigned_site_name}</p>
-              </div>
-            )}
-            {equipment.notes && (
-              <div>
-                <p className="text-sm text-gray-500">Notes</p>
-                <p className="font-medium text-gray-900">{equipment.notes}</p>
-              </div>
-            )}
-          </div>
-          </div>
-        </div>
-
-        <div className={`${constructionCardClass} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Record Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Created At</p>
-              <p className="font-medium text-gray-900">{new Date(equipment.created_at).toLocaleString()}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Last Updated</p>
-              <p className="font-medium text-gray-900">{new Date(equipment.updated_at).toLocaleString()}</p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Ownership"
+              value={equipment.ownership_type.charAt(0).toUpperCase() + equipment.ownership_type.slice(1)}
+              icon={Wallet}
+              iconClass={
+                equipment.ownership_type === "owned"
+                  ? "bg-green-50 text-green-600"
+                  : "bg-blue-50 text-blue-600"
+              }
+              valueClass={equipment.ownership_type === "owned" ? "text-green-600" : "text-blue-600"}
+            />
+            <StatCard
+              label="Status"
+              value={formatStatusLabel(equipment.status)}
+              icon={Wrench}
+              iconClass={getStatusIconClass(equipment.status)}
+              valueClass={
+                equipment.status === "available"
+                  ? "text-green-600"
+                  : equipment.status === "retired"
+                    ? "text-gray-500"
+                    : "text-gray-900"
+              }
+            />
+            <StatCard
+              label={equipment.ownership_type === "rented" ? "Daily Rental" : "Purchase Cost"}
+              value={
+                equipment.ownership_type === "rented"
+                  ? equipment.rental_cost_per_day
+                    ? formatNPR(equipment.rental_cost_per_day)
+                    : "—"
+                  : equipment.purchase_cost
+                    ? formatNPR(equipment.purchase_cost)
+                    : "—"
+              }
+              icon={Wallet}
+              iconClass="bg-purple-50 text-purple-600"
+              valueClass="text-[#22C55E]"
+            />
+            <StatCard
+              label="Assigned Site"
+              value={equipment.assigned_site_name || "Unassigned"}
+              icon={Building2}
+              iconClass="bg-orange-50 text-orange-600"
+            />
+          </div>
+
+          {/* Main content */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 space-y-6">
+              <SectionCard title="Equipment Details" icon={Wrench}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <DetailItem label="Equipment Name">{equipment.name}</DetailItem>
+                  <DetailItem label="Type">{equipment.equipment_type}</DetailItem>
+                  <DetailItem label="Ownership">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getOwnershipBadge(equipment.ownership_type)}`}
+                    >
+                      {equipment.ownership_type}
+                    </span>
+                  </DetailItem>
+                  <DetailItem label="Status">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(equipment.status)}`}
+                    >
+                      {formatStatusLabel(equipment.status)}
+                    </span>
+                  </DetailItem>
+                  <DetailItem label="Registration Number">
+                    {equipment.registration_number || "—"}
+                  </DetailItem>
+                  <DetailItem label="Purchase Date">
+                    {equipment.purchase_date ? (
+                      <FormattedDate value={equipment.purchase_date} />
+                    ) : (
+                      "—"
+                    )}
+                  </DetailItem>
+                </div>
+              </SectionCard>
+
+              {equipment.notes && (
+                <SectionCard title="Notes" icon={FileText}>
+                  <TextBlock>{equipment.notes}</TextBlock>
+                </SectionCard>
+              )}
+
+              {equipment.status === "maintenance" && (
+                <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-900">Under maintenance</p>
+                    <p className="text-xs text-orange-700 mt-1">
+                      This equipment is currently unavailable for site assignment or usage.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {equipment.status === "retired" && (
+                <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <AlertTriangle className="h-5 w-5 text-gray-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Retired equipment</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      This equipment is no longer in active use.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <SectionCard title="Financial Information" icon={Wallet}>
+                <div className="space-y-4">
+                  {equipment.ownership_type === "owned" ? (
+                    <DetailItem label="Purchase Cost">
+                      {equipment.purchase_cost ? (
+                        <span className="text-[#22C55E]">{formatNPR(equipment.purchase_cost)}</span>
+                      ) : (
+                        "—"
+                      )}
+                    </DetailItem>
+                  ) : (
+                    <DetailItem label="Rental Cost / Day">
+                      {equipment.rental_cost_per_day ? (
+                        <span className="text-[#22C55E]">
+                          {formatNPR(equipment.rental_cost_per_day)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </DetailItem>
+                  )}
+                  {equipment.purchase_date && (
+                    <DetailItem label="Purchase Date">
+                      <FormattedDate value={equipment.purchase_date} />
+                    </DetailItem>
+                  )}
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Assignment" icon={Building2}>
+                <div className="space-y-4">
+                  <DetailItem label="Assigned Site">
+                    {equipment.assigned_site && equipment.assigned_site_name ? (
+                      <Link
+                        href={`/dashboard/construction/sites/${equipment.assigned_site}`}
+                        className="text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                      >
+                        {equipment.assigned_site_name}
+                      </Link>
+                    ) : (
+                      <span className="text-gray-500">Not assigned to any site</span>
+                    )}
+                  </DetailItem>
+                  <DetailItem label="Current Status">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(equipment.status)}`}
+                    >
+                      {formatStatusLabel(equipment.status)}
+                    </span>
+                  </DetailItem>
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Activity" icon={Clock}>
+                <div className="space-y-4">
+                  <DetailItem label="Created">{formatDateTime(equipment.created_at)}</DetailItem>
+                  <DetailItem label="Last Updated">{formatDateTime(equipment.updated_at)}</DetailItem>
+                </div>
+              </SectionCard>
+            </div>
+          </div>
+
+          {/* Quick links */}
+          <div className={`${constructionCardClass} p-5`}>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+              Quick Links
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {quickLinks.map((link) => (
+                <Link key={link.href} href={link.href}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                    <link.icon className="h-3.5 w-3.5" />
+                    {link.label}
+                  </Button>
+                </Link>
+              ))}
+              <Link href={`/dashboard/construction/equipment/${equipmentId}/edit`}>
+                <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                  <Edit className="h-3.5 w-3.5" />
+                  Edit Equipment
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Equipment</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
-              </div>
-            </div>
-            
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to delete <span className="font-semibold">{equipment.name}</span>? 
-              This will permanently remove the equipment and all associated data.
-            </p>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteModalOpen(false)}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {deleting && (
-                  <KhataSpinner variant="onPrimary" />
-                )}
-                {deleting ? 'Deleting...' : 'Delete Equipment'}
-              </button>
-            </div>
-          </div>
+      {companyInfo && equipment && (
+        <div className="hidden">
+          <PrintableEquipment ref={printRef} equipment={equipment} companyInfo={companyInfo} />
         </div>
       )}
-    </ConstructionPageShell>
+    </div>
   );
 }

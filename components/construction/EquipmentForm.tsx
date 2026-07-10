@@ -22,14 +22,23 @@ const equipmentSchema = z.object({
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
 interface EquipmentFormProps {
+  equipmentId?: string;
+  initialData?: Partial<EquipmentFormData>;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProps) {
+export default function EquipmentForm({
+  equipmentId,
+  initialData,
+  onSuccess,
+  onCancel,
+}: EquipmentFormProps) {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
+
+  const isEdit = !!equipmentId;
 
   const {
     register,
@@ -39,8 +48,9 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
   } = useForm<EquipmentFormData>({
     resolver: zodResolver(equipmentSchema),
     defaultValues: {
-      ownership_type: 'owned',
-      status: 'available',
+      ownership_type: "owned",
+      status: "available",
+      ...initialData,
     },
   });
 
@@ -78,12 +88,19 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
         notes: data.notes || '',
       };
 
-      await constructionApi.equipment.create(payload);
-      toast.success('Equipment added successfully');
+      if (isEdit && equipmentId) {
+        await constructionApi.equipment.update(equipmentId, payload);
+        toast.success("Equipment updated successfully");
+      } else {
+        await constructionApi.equipment.create(payload);
+        toast.success("Equipment added successfully");
+      }
+
       onSuccess?.();
-    } catch (error: any) {
-      console.error('Failed to create equipment:', error);
-      const message = error.response?.data?.detail || 'Failed to add equipment';
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      console.error(`Failed to ${isEdit ? "update" : "create"} equipment:`, error);
+      const message = err.response?.data?.detail || `Failed to ${isEdit ? "update" : "add"} equipment`;
       toast.error(message);
     } finally {
       setLoading(false);
@@ -255,7 +272,13 @@ export default function EquipmentForm({ onSuccess, onCancel }: EquipmentFormProp
           disabled={loading}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Adding...' : 'Add Equipment'}
+          {loading
+            ? isEdit
+              ? "Updating..."
+              : "Adding..."
+            : isEdit
+              ? "Update Equipment"
+              : "Add Equipment"}
         </button>
       </div>
     </form>

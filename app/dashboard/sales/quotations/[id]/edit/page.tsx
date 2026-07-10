@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -254,12 +255,7 @@ export default function EditQuotationPage() {
               disabled={submitting}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
+              {submitting ? "Updating..." : (
                 'Update Quotation'
               )}
             </Button>

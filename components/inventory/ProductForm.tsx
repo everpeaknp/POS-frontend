@@ -5,7 +5,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus } from "lucide-react";
+
 import FormField from '@/components/shared/FormField';
 import { inventoryApi } from '@/lib/api/inventory';
 import { mapDjangoErrorsToForm, getErrorMessage, isValidationError } from '@/lib/utils/form-errors';
@@ -285,8 +286,7 @@ export default function ProductForm({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+      <div className="flex items-center justify-center p-12">
       </div>
     );
   }
@@ -537,12 +537,7 @@ export default function ProductForm({
           disabled={isSubmitting || hasMissingData}
           className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : isEdit ? (
+          {isSubmitting ? "Saving..." : isEdit ? (
             'Update Product'
           ) : (
             'Create Product'
@@ -602,12 +597,7 @@ export default function ProductForm({
               disabled={creatingCategory}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              {creatingCategory ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
+              {creatingCategory ? "Creating..." : (
                 'Create Category'
               )}
             </Button>
@@ -669,12 +659,7 @@ export default function ProductForm({
               disabled={creatingUnit}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              {creatingUnit ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
+              {creatingUnit ? "Creating..." : (
                 'Create Unit'
               )}
             </Button>

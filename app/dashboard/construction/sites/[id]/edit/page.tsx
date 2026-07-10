@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import SiteForm from "@/components/construction/SiteForm";
 import {
   ConstructionPageShell,
@@ -39,15 +38,16 @@ export default function EditSitePage() {
 
   if (!loading && !site) {
     return (
-      <ConstructionPageShell title="Edit Site" subtitle="Site not found" variant="form">
-        <div className={`${constructionCardClass} p-8 text-center`}>
+      <ConstructionPageShell
+        title="Edit Site"
+        subtitle="Site not found"
+        variant="fullscreen"
+        showBack
+        backHref="/dashboard/construction/sites"
+        backLabel="Back to Sites"
+      >
+        <div className={`${constructionCardClass} p-8 text-center w-full min-h-full`}>
           <p className="text-gray-500 mb-4">This site could not be loaded.</p>
-          <Link
-            href="/dashboard/construction/sites"
-            className="text-[#22C55E] hover:text-[#16A34A] font-medium"
-          >
-            Back to Sites
-          </Link>
         </div>
       </ConstructionPageShell>
     );
@@ -57,11 +57,14 @@ export default function EditSitePage() {
     <ConstructionPageShell
       title="Edit Site"
       subtitle={site ? `Update details for ${site.name}` : "Loading site..."}
-      variant="form"
+      variant="fullscreen"
+      showBack
+      backHref={`/dashboard/construction/sites/${siteId}`}
+      backLabel="Back to Site"
       loading={loading}
     >
       {site && (
-        <div className={`${constructionCardClass} p-6 lg:p-8`}>
+        <div className={`${constructionCardClass} p-6 lg:p-8 w-full min-h-full`}>
           <SiteForm
             siteId={siteId}
             initialData={{

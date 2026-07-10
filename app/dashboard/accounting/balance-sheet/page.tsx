@@ -1,17 +1,24 @@
 "use client";
 
 import { PageLoading } from "@/components/shared/PageLoading";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { accountsAPI } from "@/lib/api/accounting";
+import {
+  exportTableAsCsv,
+  exportTableAsPdf,
+  tenantToExportOrg,
+  type ExportRow,
+  type ExportTableData,
+} from "@/lib/utils/export";
 
 const fmt = (n: number) =>
   `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -233,6 +240,7 @@ function LiabilitiesEquitySection({ data }: { data: BalanceSheetData }) {
 
 export default function BalanceSheetPage() {
   const { formatDate } = useDateSystem();
+  const { user } = useAuth();
   const [asOf, setAsOf] = useState("");
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -257,43 +265,6 @@ export default function BalanceSheetPage() {
     }
   };
 
-  const handleExportCSV = () => {
-    if (!bsData) return;
-
-    const rows = [
-      ["Balance Sheet"],
-      [`As of: ${bsData.as_of_date ? formatDate(bsData.as_of_date) : "Current Date"}`],
-      [""],
-      ["ASSETS"],
-      ...bsData.assets.current.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ...bsData.assets.fixed.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ...bsData.assets.other.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ["", "TOTAL ASSETS", bsData.assets.total.toFixed(2)],
-      [""],
-      ["LIABILITIES"],
-      ...bsData.liabilities.current.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ...bsData.liabilities.long_term.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ...bsData.liabilities.other.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ["", "TOTAL LIABILITIES", bsData.liabilities.total.toFixed(2)],
-      [""],
-      ["EQUITY"],
-      ...bsData.equity.accounts.map((acc) => [acc.code, acc.name, acc.amount.toFixed(2)]),
-      ["", "TOTAL EQUITY", bsData.equity.total.toFixed(2)],
-      [""],
-      ["", "TOTAL LIABILITIES + EQUITY", bsData.total_liabilities_equity.toFixed(2)],
-    ];
-
-    const csvContent = rows.map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `balance-sheet-${bsData.as_of_date || new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("Balance sheet exported successfully");
-  };
-
   const totalAssets = bsData?.assets.total || 0;
   const totalLiabEquity = bsData?.total_liabilities_equity || 0;
   const balanced = bsData?.is_balanced ?? true;
@@ -301,6 +272,123 @@ export default function BalanceSheetPage() {
     (bsData?.assets.total || 0) !== 0 ||
     (bsData?.liabilities.total || 0) !== 0 ||
     (bsData?.equity.accounts.length || 0) > 0;
+
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!bsData || !hasActivity) return null;
+
+    const asOfLabel = bsData.as_of_date ? formatDate(bsData.as_of_date) : "Today";
+    const org = user?.tenant
+      ? tenantToExportOrg({
+          name: user.tenant.name,
+          workspace_name: user.tenant.workspace_name,
+          address: user.tenant.address,
+          email: user.tenant.email,
+        })
+      : undefined;
+
+    const rows: ExportRow[] = [];
+
+    const addAccounts = (
+      title: string,
+      accounts: BSAccount[],
+      subtotal: number,
+      subtotalLabel: string
+    ) => {
+      if (accounts.length === 0) return;
+      rows.push({ cells: [title, "", ""], style: "section" });
+      for (const acc of accounts) {
+        rows.push({
+          cells: ["", `${acc.code} — ${acc.name}`, acc.amount.toFixed(2)],
+        });
+      }
+      rows.push({
+        cells: ["", subtotalLabel, subtotal.toFixed(2)],
+        style: "subtotal",
+      });
+    };
+
+    rows.push({ cells: ["ASSETS", "", ""], style: "section" });
+    addAccounts("Current Assets", bsData.assets.current, bsData.assets.total_current, "Total Current Assets");
+    addAccounts("Fixed Assets", bsData.assets.fixed, bsData.assets.total_fixed, "Total Fixed Assets");
+    addAccounts("Other Assets", bsData.assets.other, bsData.assets.total_other, "Total Other Assets");
+    rows.push({
+      cells: ["", "Total Assets", bsData.assets.total.toFixed(2)],
+      style: "total",
+    });
+
+    rows.push({ cells: ["LIABILITIES", "", ""], style: "section" });
+    addAccounts(
+      "Current Liabilities",
+      bsData.liabilities.current,
+      bsData.liabilities.total_current,
+      "Total Current Liabilities"
+    );
+    addAccounts(
+      "Long-term Liabilities",
+      bsData.liabilities.long_term,
+      bsData.liabilities.total_long_term,
+      "Total Long-term Liabilities"
+    );
+    addAccounts(
+      "Other Liabilities",
+      bsData.liabilities.other,
+      bsData.liabilities.total_other,
+      "Total Other Liabilities"
+    );
+    rows.push({
+      cells: ["", "Total Liabilities", bsData.liabilities.total.toFixed(2)],
+      style: "subtotal",
+    });
+
+    rows.push({ cells: ["EQUITY", "", ""], style: "section" });
+    for (const acc of bsData.equity.accounts) {
+      rows.push({
+        cells: ["", acc.code ? `${acc.code} — ${acc.name}` : acc.name, acc.amount.toFixed(2)],
+      });
+    }
+    rows.push({
+      cells: ["", "Total Equity", bsData.equity.total.toFixed(2)],
+      style: "subtotal",
+    });
+
+    rows.push({
+      cells: ["", "Total Liabilities + Equity", bsData.total_liabilities_equity.toFixed(2)],
+      style: "total",
+    });
+
+    return {
+      filename: `balance-sheet-${bsData.as_of_date || new Date().toISOString().split("T")[0]}`,
+      title: "Balance Sheet",
+      subtitle: `As of ${asOfLabel}${balanced ? "" : ` · Off by ${Math.abs(totalAssets - totalLiabEquity).toFixed(2)}`}`,
+      reportType: "Balance Sheet",
+      template: "financial",
+      headers: ["Section", "Account", "Amount"],
+      rightAlignColumns: [2],
+      org,
+      rows,
+    };
+  }, [bsData, hasActivity, formatDate, balanced, totalAssets, totalLiabEquity, user?.tenant]);
+
+  const handleExport = (format: "csv" | "pdf") => {
+    const data = getExportData();
+    if (!data) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      if (format === "csv") {
+        exportTableAsCsv(data);
+        toast.success("CSV exported");
+      } else {
+        exportTableAsPdf(data);
+        toast.success("Print dialog opened — choose Save as PDF as the destination");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export";
+      toast.error(message);
+    }
+  };
 
   if (loading && !bsData) {
     return (
@@ -316,41 +404,47 @@ export default function BalanceSheetPage() {
       <DashHeader title="Balance Sheet" subtitle="Assets, liabilities and equity" />
       <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
-          <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Generate Report</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
-            <div className="sm:col-span-2 lg:col-span-2">
-              <Label className="text-sm mb-1.5 block">As of Date</Label>
-              <DateInput
-                value={asOf}
-                onChange={(v) => {
-                  setAsOf(v);
-                  setGenerated(false);
-                }}
-                disabled={loading}
-              />
-              <p className="text-xs text-gray-400 mt-1">Leave blank for today</p>
-            </div>
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+              <div className="w-full sm:w-auto sm:min-w-[150px]">
+                <Label className="text-sm mb-1.5 block">As of Date</Label>
+                <DateInput
+                  value={asOf}
+                  onChange={(v) => {
+                    setAsOf(v);
+                    setGenerated(false);
+                  }}
+                  disabled={loading}
+                />
+              </div>
               <Button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="w-full h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
               >
                 {loading ? "Generating..." : "Generate"}
               </Button>
             </div>
-            {generated && bsData && hasActivity && (
-              <div>
-                <Button
-                  variant="outline"
-                  className="w-full h-9 gap-1.5 text-gray-600 border-gray-200"
-                  onClick={handleExportCSV}
-                >
-                  <Download className="h-4 w-4" /> Export CSV
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2 shrink-0 sm:ml-auto">
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                disabled={!generated || !hasActivity}
+                onClick={() => handleExport("csv")}
+              >
+                <Download className="h-3.5 w-3.5" /> CSV
+              </Button>
+              <Button
+                variant="outline"
+                className="h-9 gap-1.5 text-gray-600 border-gray-200"
+                disabled={!generated || !hasActivity}
+                onClick={() => handleExport("pdf")}
+              >
+                <FileText className="h-3.5 w-3.5" /> PDF
+              </Button>
+            </div>
           </div>
+          <p className="text-xs text-gray-400 mt-1.5">Leave blank for today</p>
         </div>
 
         {generated && bsData && (

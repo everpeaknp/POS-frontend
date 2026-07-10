@@ -123,6 +123,7 @@ const map = {
   Code2: "HiOutlineCodeBracket",
   FolderTree: "HiOutlineFolder",
   History: "HiOutlineClock",
+  IdCard: "HiOutlineIdentification",
   Landmark: "HiOutlineBuildingLibrary",
   Layers: "HiOutlineSquare3Stack3D",
   MessageSquare: "HiOutlineChatBubbleLeftRight",

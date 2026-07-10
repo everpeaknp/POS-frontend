@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -215,12 +216,10 @@ export default function NewPurchaseInvoicePage() {
               <ArrowLeft className="h-4 w-4" /> Cancel
             </Button>
             <div className="flex-1" />
-            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit("received")} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit("received")} disabled={submitting}>
               Save as Received
             </Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
               Save & Mark Paid
             </Button>
           </div>

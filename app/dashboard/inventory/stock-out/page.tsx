@@ -1,5 +1,5 @@
 "use client";
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
+
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -241,12 +241,7 @@ export default function StockOutPage() {
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <KhataSpinner variant="onPrimary" />
-                      Issuing...
-                    </>
-                  ) : (
+                  {isSubmitting ? "Issuing..." : (
                     <>
                       <Minus className="h-4 w-4" />
                       Issue Stock

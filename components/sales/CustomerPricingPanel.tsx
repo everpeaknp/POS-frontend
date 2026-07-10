@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -231,8 +232,7 @@ export function CustomerPricingPanel({ customerId }: CustomerPricingPanelProps) 
                 onClick={handleCreate}
                 disabled={submitting}
                 className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              >
                 Save
               </Button>
               <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1" disabled={submitting}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
+
 
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -24,14 +24,25 @@ const dailyLogSchema = z.object({
 type DailyLogFormData = z.infer<typeof dailyLogSchema>;
 
 interface DailyLogFormProps {
+  logId?: string;
+  initialData?: Partial<DailyLogFormData>;
+  hoursUntilImmutable?: number;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps) {
+export default function DailyLogForm({
+  logId,
+  initialData,
+  hoursUntilImmutable,
+  onSuccess,
+  onCancel,
+}: DailyLogFormProps) {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
+
+  const isEdit = !!logId;
 
   const {
     register,
@@ -41,8 +52,9 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
   } = useForm<DailyLogFormData>({
     resolver: zodResolver(dailyLogSchema),
     defaultValues: {
-      date: new Date().toISOString().split('T')[0], // Default to today
-      other_expenses: '0',
+      date: new Date().toISOString().split("T")[0],
+      other_expenses: "0",
+      ...initialData,
     },
   });
 
@@ -77,33 +89,39 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
         other_expenses_description: data.other_expenses_description || '',
       };
 
-      await constructionApi.dailyLogs.create(payload);
-      toast.success('Daily log created successfully');
+      if (isEdit && logId) {
+        await constructionApi.dailyLogs.update(logId, payload);
+        toast.success("Daily log updated successfully");
+      } else {
+        await constructionApi.dailyLogs.create(payload);
+        toast.success("Daily log created successfully");
+      }
+
       onSuccess?.();
-    } catch (error: any) {
-      console.error('Failed to create daily log:', error);
-      
-      // Handle validation errors
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        // Check for field-specific errors
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: Record<string, unknown> } };
+      console.error(`Failed to ${isEdit ? "update" : "create"} daily log:`, error);
+
+      if (err.response?.data) {
+        const errorData = err.response.data;
+
         if (errorData.date) {
           const dateError = Array.isArray(errorData.date) ? errorData.date[0] : errorData.date;
-          toast.error(dateError);
+          toast.error(String(dateError));
         } else if (errorData.detail) {
-          toast.error(errorData.detail);
+          toast.error(String(errorData.detail));
         } else if (errorData.non_field_errors) {
-          const nonFieldError = Array.isArray(errorData.non_field_errors) 
-            ? errorData.non_field_errors[0] 
+          const nonFieldError = Array.isArray(errorData.non_field_errors)
+            ? errorData.non_field_errors[0]
             : errorData.non_field_errors;
-          toast.error(nonFieldError);
+          toast.error(String(nonFieldError));
         } else {
-          // Generic error message
-          toast.error('Failed to create daily log. Please check your input.');
+          toast.error(
+            `Failed to ${isEdit ? "update" : "create"} daily log. Please check your input.`
+          );
         }
       } else {
-        toast.error('Failed to create daily log. Please try again.');
+        toast.error(`Failed to ${isEdit ? "update" : "create"} daily log. Please try again.`);
       }
     } finally {
       setLoading(false);
@@ -121,6 +139,27 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {isEdit && hoursUntilImmutable !== undefined && hoursUntilImmutable < 24 && (
+        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-sm font-medium text-orange-800">
+              This log will become immutable in {hoursUntilImmutable.toFixed(1)} hours
+            </p>
+          </div>
+          <p className="text-xs text-orange-700 mt-1 ml-7">
+            Daily logs cannot be edited after 24 hours from creation
+          </p>
+        </div>
+      )}
+
       <div>
         <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Log Details</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -252,11 +291,8 @@ export default function DailyLogForm({ onSuccess, onCancel }: DailyLogFormProps)
           type="submit"
           disabled={loading}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
-          {loading && (
-            <KhataSpinner variant="onPrimary" />
-          )}
-          {loading ? 'Creating...' : 'Create Daily Log'}
+        >
+          {loading ? (isEdit ? "Updating..." : "Creating...") : isEdit ? "Update Daily Log" : "Create Daily Log"}
         </button>
       </div>
     </form>

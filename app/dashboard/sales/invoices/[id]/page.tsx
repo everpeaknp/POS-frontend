@@ -5,7 +5,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect, useRef } from "react";
 import { RecordPaymentModal } from "@/components/sales/RecordPaymentModal";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, FileText, Calendar, DollarSign, User, Loader2, Trash2, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Calendar, DollarSign, User, Trash2, Printer } from "lucide-react";
+
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -160,12 +161,7 @@ export default function InvoiceDetailPage() {
             disabled={deleting}
             className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
           >
-            {deleting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
+            {deleting ? "Deleting..." : (
               <>
                 <Trash2 className="h-4 w-4" />
                 Delete

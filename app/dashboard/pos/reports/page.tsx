@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
-import { Calendar, DollarSign, ShoppingCart, TrendingUp, Loader2 } from "lucide-react";
+import { Calendar, DollarSign, ShoppingCart, TrendingUp } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -146,12 +147,7 @@ export default function POSReportsPage() {
                 disabled={generating}
                 className="w-full bg-[#22C55E] hover:bg-[#16A34A]"
               >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Generating...
-                  </>
-                ) : (
+                {generating ? "Generating..." : (
                   <>
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Generate Report

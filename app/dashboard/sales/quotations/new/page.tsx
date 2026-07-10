@@ -4,7 +4,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/shared/DateInput";
@@ -306,12 +307,7 @@ export default function NewQuotationPage() {
                         className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
                         disabled={creatingCustomer}
                       >
-                        {creatingCustomer ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Creating...
-                          </>
-                        ) : (
+                        {creatingCustomer ? "Creating..." : (
                           'Create Customer'
                         )}
                       </Button>
@@ -378,12 +374,7 @@ export default function NewQuotationPage() {
               disabled={submitting}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creating...
-                </>
-              ) : (
+              {submitting ? "Creating..." : (
                 'Create Quotation'
               )}
             </Button>

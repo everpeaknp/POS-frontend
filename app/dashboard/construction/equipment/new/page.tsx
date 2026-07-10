@@ -16,7 +16,7 @@ export default function NewEquipmentPage() {
       subtitle="Add new construction equipment to your inventory"
       variant="fullscreen"
     >
-      <div className={`${constructionCardClass} p-6 lg:p-8 w-full min-h-full`}>
+      <div className={`${constructionCardClass} p-5 lg:p-6 w-full`}>
         <EquipmentForm
           onSuccess={() => router.push("/dashboard/construction/equipment")}
           onCancel={() => router.back()}

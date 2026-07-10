@@ -1,5 +1,4 @@
 "use client";
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
 
 import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect, useMemo } from "react";
@@ -345,12 +344,7 @@ export default function NewAccountPage() {
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting || seeding}
               >
-                {submitting ? (
-                  <>
-                    <KhataSpinner variant="onPrimary" className="mr-2" />
-                    Saving...
-                  </>
-                ) : (
+                {submitting ? "Saving..." : (
                   "Save Account"
                 )}
               </Button>

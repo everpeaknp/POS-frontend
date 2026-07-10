@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, CreditCard, Loader2, Trash2 } from "lucide-react";
+import { Plus, CreditCard, Trash2 } from "lucide-react";
+
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -159,11 +160,7 @@ export default function BankAccountsPage() {
                 onClick={() => handleDelete(bank.id, bank.account_name)}
                 disabled={deletingId === bank.id}
               >
-                {deletingId === bank.id ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
-                )}
+                {deletingId === bank.id ? "Deleting..." : <Trash2 className="h-3.5 w-3.5" />}
               </Button>
             </div>
           </div>

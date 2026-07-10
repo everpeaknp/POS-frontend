@@ -1,329 +1,334 @@
-'use client';
+"use client";
 
-import { KhataSpinner } from "@/components/shared/KhataSpinner";
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Plus, HardHat } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Plus, Search, MoreVertical, HardHat } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  ConstructionPageShell,
-  constructionCardClass,
-  constructionTableWrapClass,
-  constructionFilterPillActive,
-  constructionFilterPillInactive,
-} from '@/components/dashboard/ConstructionPageShell';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { constructionApi, Worker } from '@/lib/api/construction';
-import { formatNPR } from '@/lib/utils';
-import toast from 'react-hot-toast';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import { StatusBadge } from "@/components/sales/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonTable } from "@/components/shared/Skeleton";
+import { useApi } from "@/lib/hooks/useApi";
+import { constructionApi, type Worker } from "@/lib/api/construction";
+import { formatNPR } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+function getCategoryDisplay(category: string) {
+  const categoryMap: Record<string, string> = {
+    mason: "Mason",
+    laborer: "Laborer",
+    carpenter: "Carpenter",
+    electrician: "Electrician",
+    plumber: "Plumber",
+    engineer: "Engineer",
+    supervisor: "Supervisor",
+    helper: "Helper",
+    painter: "Painter",
+    welder: "Welder",
+    driver: "Driver",
+    operator: "Equipment Operator",
+    other: "Other",
+  };
+  return categoryMap[category] || category;
+}
+
+function getCategoryColor(category: string) {
+  const colors: Record<string, string> = {
+    mason: "bg-blue-100 text-blue-800",
+    carpenter: "bg-yellow-100 text-yellow-800",
+    electrician: "bg-purple-100 text-purple-800",
+    plumber: "bg-green-100 text-green-800",
+    painter: "bg-pink-100 text-pink-800",
+    helper: "bg-gray-100 text-gray-800",
+    welder: "bg-orange-100 text-orange-800",
+    driver: "bg-indigo-100 text-indigo-800",
+    operator: "bg-cyan-100 text-cyan-800",
+  };
+  return colors[category] || "bg-gray-100 text-gray-800";
+}
 
 export default function WorkersPage() {
   const router = useRouter();
-  const [workers, setWorkers] = useState<Worker[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('all');
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [workerToDelete, setWorkerToDelete] = useState<Worker | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
 
-  useEffect(() => {
-    fetchWorkers();
-  }, [filter]);
+  const { data: workersData, loading, refetch } = useApi(
+    () =>
+      constructionApi.workers.list({
+        search: search || undefined,
+        status: status === "All" ? undefined : (status as Worker["status"]),
+      }),
+    { immediate: true, deps: [search, status] }
+  );
 
-  const fetchWorkers = async () => {
-    try {
-      setLoading(true);
-      const params = filter !== 'all' ? { status: filter } : {};
-      const workersData = await constructionApi.workers.list(params);
-      setWorkers(Array.isArray(workersData) ? workersData : []);
-    } catch (error: any) {
-      console.error('Failed to fetch workers:', error);
-      toast.error('Failed to load workers');
-    } finally {
-      setLoading(false);
-    }
+  const handleView = (id: string) => {
+    router.push(`/dashboard/construction/workers/${id}`);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, worker: Worker) => {
-    e.stopPropagation();
-    setWorkerToDelete(worker);
-    setDeleteModalOpen(true);
+  const handleEdit = (id: string) => {
+    router.push(`/dashboard/construction/workers/${id}/edit`);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!workerToDelete) return;
-
-    try {
-      setDeleting(true);
-      await constructionApi.workers.delete(workerToDelete.id);
-      toast.success('Worker deactivated successfully');
-      setWorkers(workers.filter(w => w.id !== workerToDelete.id));
-      setDeleteModalOpen(false);
-      setWorkerToDelete(null);
-    } catch (error: any) {
-      console.error('Failed to delete worker:', error);
-      toast.error(error.response?.data?.detail || 'Failed to delete worker');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleEditClick = (e: React.MouseEvent, workerId: string) => {
-    e.stopPropagation();
-    router.push(`/dashboard/construction/workers/${workerId}/edit`);
-  };
-
-  const getCategoryDisplay = (category: string) => {
-    const categoryMap: Record<string, string> = {
-      'mason': 'Mason',
-      'laborer': 'Laborer',
-      'carpenter': 'Carpenter',
-      'electrician': 'Electrician',
-      'plumber': 'Plumber',
-      'engineer': 'Engineer',
-      'supervisor': 'Supervisor',
-      'helper': 'Helper',
-      'painter': 'Painter',
-      'welder': 'Welder',
-      'driver': 'Driver',
-      'operator': 'Equipment Operator',
-      'other': 'Other',
+  const handleDeactivate = async (id: string, workerName: string) => {
+    const confirmDeactivate = () => {
+      toast.promise(constructionApi.workers.delete(id), {
+        loading: "Deactivating worker...",
+        success: () => {
+          refetch();
+          return `Worker "${workerName}" deactivated successfully`;
+        },
+        error: (err) =>
+          err.response?.data?.detail || err.response?.data?.message || "Failed to deactivate worker",
+      });
     };
-    return categoryMap[category] || category;
-  };
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      'mason': 'bg-blue-100 text-blue-800',
-      'carpenter': 'bg-yellow-100 text-yellow-800',
-      'electrician': 'bg-purple-100 text-purple-800',
-      'plumber': 'bg-green-100 text-green-800',
-      'painter': 'bg-pink-100 text-pink-800',
-      'helper': 'bg-gray-100 text-gray-800',
-      'welder': 'bg-orange-100 text-orange-800',
-      'driver': 'bg-indigo-100 text-indigo-800',
-      'operator': 'bg-cyan-100 text-cyan-800',
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusColor = (status: string) => {
-    return status === 'active' 
-      ? 'bg-green-100 text-green-800' 
-      : 'bg-red-100 text-red-800';
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-4 min-w-[320px] p-2">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 text-base">Deactivate {workerName}?</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Attendance history will be preserved. This worker will no longer appear in active lists.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                confirmDeactivate();
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Deactivate
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: "top-center",
+        style: {
+          marginTop: "40vh",
+          background: "white",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          borderRadius: "12px",
+          padding: "16px",
+        },
+      }
+    );
   };
 
   if (loading) {
     return (
-      <ConstructionPageShell
-        title="Construction Workers"
-        subtitle="Manage your construction workforce"
-        loading
-        loadingMessage="Loading workers…"
-      />
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Workers" subtitle="Loading..." />
+        <div className="flex-1 p-6">
+          <SkeletonTable rows={10} />
+        </div>
+      </div>
     );
   }
 
-  if (workers.length === 0 && filter === 'all') {
+  const workers = workersData || [];
+
+  if (workers.length === 0 && !search && status === "All") {
     return (
-      <ConstructionPageShell
-        title="Construction Workers"
-        subtitle="Manage your construction workforce"
-      >
-        <EmptyState
+      <div className="flex flex-col min-h-full">
+        <DashHeader title="Workers" subtitle="Manage your construction workforce" />
+        <div className="flex-1 p-6">
+          <EmptyState
             icon={HardHat}
             title="No workers yet"
-            description="Add your first worker to start managing your construction workforce."
-            actionLabel="New Worker"
+            description="Add your first worker to start managing your construction workforce"
+            actionLabel="Add Worker"
             actionHref="/dashboard/construction/workers/new"
           />
-      </ConstructionPageShell>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <ConstructionPageShell
-      title="Construction Workers"
-      subtitle="Manage your construction workforce"
-      toolbar={
-        <div className="flex flex-wrap gap-2">
-          {['all', 'active', 'inactive'].map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                filter === status
-                  ? constructionFilterPillActive
-                  : constructionFilterPillInactive
-              }`}
-            >
-              {status === 'all' ? 'All Workers' : status}
-            </button>
-          ))}
-        </div>
-      }
-      action={
-        <Link href="/dashboard/construction/workers/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Worker
-          </Button>
-        </Link>
-      }
-    >
-      {workers.length === 0 ? (
-        <div className={`${constructionCardClass} p-12 text-center`}>
-          <p className="text-gray-500">No workers found matching your filters</p>
-        </div>
-      ) : (
-        <div className={constructionTableWrapClass}>
-          <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Worker
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Daily Wage
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Phone
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned Site
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {workers.map((worker) => (
-                <tr
-                  key={worker.id}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => router.push(`/dashboard/construction/workers/${worker.id}`)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#22C55E] flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
-                          {worker.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{worker.name}</div>
-                        {worker.id_number && (
-                          <div className="text-sm text-gray-500">ID: {worker.id_number}</div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getCategoryColor(worker.category)}`}>
-                      {getCategoryDisplay(worker.category)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">{formatNPR(worker.daily_wage)}</div>
-                    <div className="text-xs text-gray-500">per day</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{worker.phone || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{worker.assigned_site_name || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(worker.status)}`}>
-                      {worker.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={(e) => handleEditClick(e, worker.id)}
-                        className="p-2 text-[#22C55E] hover:bg-green-50 rounded-md transition-colors"
-                        title="Edit worker"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteClick(e, worker)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        title="Deactivate worker"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
+  const filtered = workers.filter((worker) => {
+    const query = search.toLowerCase();
+    const matchesSearch =
+      search === "" ||
+      worker.name.toLowerCase().includes(query) ||
+      (worker.phone && worker.phone.includes(search)) ||
+      (worker.id_number && worker.id_number.toLowerCase().includes(query));
+    return matchesSearch && (status === "All" || worker.status === status);
+  });
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Deactivate Worker</h3>
-                <p className="text-sm text-gray-500">Attendance history will be preserved</p>
-              </div>
+  return (
+    <div className="flex flex-col min-h-full">
+      <DashHeader title="Workers" subtitle={`${filtered.length} workers`} />
+      <div className="flex-1 p-6 space-y-4">
+        <div className="flex flex-wrap items-center gap-3 justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search workers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white"
+              />
             </div>
-            
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to deactivate <span className="font-semibold">{workerToDelete?.name}</span>?
-              They will no longer appear in attendance, but past records are kept.
-            </p>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setDeleteModalOpen(false);
-                  setWorkerToDelete(null);
-                }}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {deleting && (
-                  <KhataSpinner variant="onPrimary" />
-                )}
-                {deleting ? 'Deactivating...' : 'Deactivate Worker'}
-              </button>
-            </div>
+            <Select value={status} onValueChange={(v) => setStatus(v ?? "All")}>
+              <SelectTrigger className="h-9 w-32 text-sm border-gray-200 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {["All", "active", "inactive"].map((s) => (
+                  <SelectItem key={s} value={s} className="capitalize">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          <Link href="/dashboard/construction/workers/new">
+            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Plus className="h-4 w-4" /> Add Worker
+            </Button>
+          </Link>
         </div>
-      )}
-    </ConstructionPageShell>
+
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">No workers found matching your filters</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {[
+                    "Worker",
+                    "Category",
+                    "Daily Wage",
+                    "Phone",
+                    "Assigned Site",
+                    "Status",
+                    "Actions",
+                  ].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((worker) => (
+                  <tr key={worker.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                          {worker.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </div>
+                        <div>
+                          <Link
+                            href={`/dashboard/construction/workers/${worker.id}`}
+                            className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                          >
+                            {worker.name}
+                          </Link>
+                          {worker.id_number && (
+                            <p className="text-xs text-gray-500">ID: {worker.id_number}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(worker.category)}`}
+                      >
+                        {getCategoryDisplay(worker.category)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {formatNPR(worker.daily_wage)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{worker.phone || "-"}</td>
+                    <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">
+                      {worker.assigned_site_name || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={worker.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100 focus:outline-none">
+                          <MoreVertical className="h-4 w-4 text-gray-400" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-36">
+                          <DropdownMenuItem
+                            onClick={() => handleView(worker.id)}
+                            className="cursor-pointer"
+                          >
+                            View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(worker.id)}
+                            className="cursor-pointer"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          {worker.status === "active" && (
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600 cursor-pointer"
+                              onClick={() => handleDeactivate(worker.id, worker.name)}
+                            >
+                              Deactivate
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

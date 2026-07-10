@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Check, Loader2, Lock } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -160,9 +160,7 @@ export function OrganizationModulePicker({
         </div>
 
         <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-          {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#22C55E]" />
-          ) : isRequired ? (
+          {isLoading ? null : isRequired ? (
             <div
               className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white"
               aria-label={`${module.name} enabled`}

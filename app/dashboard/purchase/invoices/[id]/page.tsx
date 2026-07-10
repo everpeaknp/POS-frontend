@@ -5,7 +5,8 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Printer, CreditCard, ArrowLeft, Loader2 } from "lucide-react";
+import { Printer, CreditCard, ArrowLeft } from "lucide-react";
+
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -317,8 +318,7 @@ export default function PurchaseInvoiceDetailPage() {
                 onClick={handleRecordPayment}
                 disabled={submitting}
                 className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              >
                 Save Payment
               </Button>
               <Button variant="outline" onClick={() => setPayModal(false)} className="flex-1" disabled={submitting}>
