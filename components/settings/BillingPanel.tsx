@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 function formatPlanPrice(price: number) {
-  return price === 0 ? "Free" : formatCurrency(price);
+  return formatCurrency(price);
 }
 
 function PaymentStatusBadge({ status }: { status: string }) {
@@ -31,8 +31,13 @@ function PaymentStatusBadge({ status }: { status: string }) {
 
 export function BillingPanel({
   onLoadingChange,
+  showPaymentHistory = true,
+  compact = false,
 }: {
   onLoadingChange?: (loading: boolean) => void;
+  showPaymentHistory?: boolean;
+  /** Tighter layout for dialogs — no section chrome, no card scroll. */
+  compact?: boolean;
 }) {
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,9 +138,9 @@ export function BillingPanel({
   } = overview;
 
   return (
-    <div className="space-y-6">
+    <div className={compact ? "space-y-0" : "space-y-6"}>
       {!esewa_enabled && (
-        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
           <CreditCard className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-blue-900">eSewa not configured</p>
@@ -147,19 +152,29 @@ export function BillingPanel({
       )}
 
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Your account plan</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Subscribe on your account, then use paid modules when you create or join organizations. Paid plans use eSewa.
-        </p>
+        {!compact && (
+          <>
+            <h2 className="text-lg font-semibold text-gray-900">Your account plan</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Subscribe on your account, then use paid modules when you create or join organizations. Paid plans use eSewa.
+            </p>
+          </>
+        )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-5">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 items-stretch ${
+            compact ? "gap-3 mt-0" : "gap-5 mt-5"
+          }`}
+        >
           {plans.map((plan) => {
             const isPopular = Boolean(plan.is_popular) && !plan.is_current;
             const isFree = plan.price === 0;
             return (
               <div
                 key={plan.code}
-                className={`relative flex flex-col rounded-2xl border bg-white p-6 shadow-sm ${
+                className={`relative flex flex-col overflow-visible rounded-2xl border bg-white shadow-sm ${
+                  compact ? "p-4" : "p-6"
+                } ${
                   plan.is_current
                     ? "border-[#22C55E] ring-2 ring-[#22C55E]/20"
                     : isPopular
@@ -178,24 +193,22 @@ export function BillingPanel({
                   </div>
                 )}
 
-                <p className="font-bold text-gray-900 text-lg pt-1">{plan.name}</p>
-                <div className="text-xs text-gray-500 mt-0.5 space-y-0.5">
-                  <p>
-                    {plan.max_users != null ? `Up to ${plan.max_users} users` : "Unlimited users"}
-                  </p>
-                  <p>
-                    {plan.max_orgs != null
-                      ? `Up to ${plan.max_orgs} ${plan.max_orgs === 1 ? "organization" : "organizations"}`
-                      : "Unlimited organizations"}
-                  </p>
+                <p className={`font-bold text-gray-900 pt-1 ${compact ? "text-base" : "text-lg"}`}>
+                  {plan.name}
+                </p>
+
+                <div className={compact ? "mt-3 mb-3" : "mt-4 mb-5"}>
+                  <span className={`font-bold text-gray-900 ${compact ? "text-2xl" : "text-3xl"}`}>
+                    {formatPlanPrice(plan.price)}
+                  </span>
+                  <span className="text-sm text-gray-500 ml-1">/month</span>
                 </div>
 
-                <div className="mt-4 mb-5">
-                  <span className="text-3xl font-bold text-gray-900">{formatPlanPrice(plan.price)}</span>
-                  {!isFree && <span className="text-sm text-gray-500 ml-1">/month</span>}
-                </div>
-
-                <ul className="space-y-2.5 flex-1 mb-6">
+                <ul
+                  className={`flex-1 ${
+                    compact ? "mb-4 space-y-2" : "mb-6 space-y-2.5"
+                  }`}
+                >
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
                       <Check className="h-3.5 w-3.5 text-[#22C55E] shrink-0 mt-0.5" />
@@ -238,6 +251,7 @@ export function BillingPanel({
         </div>
       </div>
 
+      {showPaymentHistory && (
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <History className="h-4 w-4 text-gray-500" />
@@ -311,6 +325,7 @@ export function BillingPanel({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

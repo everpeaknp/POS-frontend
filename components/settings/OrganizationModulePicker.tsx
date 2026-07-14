@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BillingDialog } from "@/components/settings/BillingDialog";
 import {
   getModuleCatalogSections,
   isModuleActive,
@@ -34,6 +34,7 @@ export function OrganizationModulePicker({
   onUpdated,
 }: OrganizationModulePickerProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [billingOpen, setBillingOpen] = useState(false);
 
   const lockedCount = useMemo(
     () =>
@@ -48,6 +49,8 @@ export function OrganizationModulePicker({
     () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id)).length,
     [activeModules]
   );
+
+  const openBilling = () => setBillingOpen(true);
 
   const toggleModule = async (moduleId: string) => {
     if (!canEdit) {
@@ -65,7 +68,7 @@ export function OrganizationModulePicker({
     }
 
     if (!isAllowed && !enabled) {
-      toast.error(`Upgrade from ${planName} in Settings → Billing to enable this module`);
+      openBilling();
       return;
     }
 
@@ -108,14 +111,20 @@ export function OrganizationModulePicker({
     return (
       <div
         key={module.id}
-        onClick={() => canToggle && toggleModule(module.id)}
+        onClick={() => {
+          if (showLock) {
+            openBilling();
+            return;
+          }
+          if (canToggle) toggleModule(module.id);
+        }}
         className={`group relative flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-all ${
           showLock
-            ? "border-gray-100 dark:border-border bg-gray-50/90 dark:bg-muted/30 cursor-not-allowed"
+            ? "border-amber-200/70 bg-amber-50/40 dark:bg-amber-500/5 cursor-pointer hover:border-amber-300"
             : isSelected
               ? "border-[#22C55E]/40 bg-[#22C55E]/[0.06] dark:bg-green-500/10"
               : "border-gray-100 dark:border-border bg-white dark:bg-card hover:border-gray-200 dark:hover:border-border/80"
-        } ${canToggle ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
+        } ${canToggle || showLock ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
       >
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
@@ -168,7 +177,14 @@ export function OrganizationModulePicker({
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
             </div>
           ) : showLock ? (
-            <Lock className="h-4 w-4 text-amber-600" aria-hidden />
+            <button
+              type="button"
+              onClick={openBilling}
+              className="text-amber-600"
+              aria-label={`Upgrade to unlock ${module.name}`}
+            >
+              <Lock className="h-4 w-4" />
+            </button>
           ) : (
             <Checkbox
               checked={isSelected}
@@ -185,13 +201,15 @@ export function OrganizationModulePicker({
   return (
     <div className="space-y-8">
       {lockedCount > 0 && (
-        <div className="rounded-lg border border-amber-200/80 bg-amber-50/80 dark:bg-amber-500/5 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+        <button
+          type="button"
+          onClick={openBilling}
+          className="w-full rounded-lg border border-amber-200/80 bg-amber-50/80 dark:bg-amber-500/5 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 text-left hover:bg-amber-100/80 transition-colors"
+        >
           <strong className="font-semibold">{planName} plan:</strong> {lockedCount} module
           {lockedCount === 1 ? "" : "s"} require an upgrade.{" "}
-          <Link href="/dashboard/settings/billing" className="font-medium text-[#16A34A] underline">
-            View billing plans
-          </Link>
-        </div>
+          <span className="font-medium text-[#16A34A] underline">View billing plans</span>
+        </button>
       )}
 
       {getModuleCatalogSections().map((section) => (
@@ -215,6 +233,14 @@ export function OrganizationModulePicker({
         {selectedCount} of {ORG_MODULE_CATALOG.length} modules enabled · Disabled modules are hidden
         from the sidebar
       </p>
+
+      <BillingDialog
+        open={billingOpen}
+        onOpenChange={setBillingOpen}
+        billingHref="/dashboard/settings/billing"
+        title="Upgrade to unlock modules"
+        description={`Your ${planName} plan locks some modules. Upgrade your account subscription to enable them.`}
+      />
     </div>
   );
 }

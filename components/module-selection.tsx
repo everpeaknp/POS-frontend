@@ -6,6 +6,7 @@ import { Check, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OrgWizardFooter } from "@/components/org-wizard-footer";
+import { BillingDialog } from "@/components/settings/BillingDialog";
 import { billingApi } from "@/lib/api/billing";
 import {
   filterModuleIds,
@@ -38,6 +39,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
   const [allowedModules, setAllowedModules] = useState<string[] | null>(null);
   const [planName, setPlanName] = useState("Free");
   const [selectedModules, setSelectedModules] = useState<string[]>(getDefaultSelectedModuleIds());
+  const [billingOpen, setBillingOpen] = useState(false);
 
   useEffect(() => {
     billingApi
@@ -57,9 +59,11 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
       });
   }, []);
 
+  const openBilling = () => setBillingOpen(true);
+
   const toggleModule = (moduleId: string) => {
     if (allowedModules && !isModuleAllowed(moduleId, allowedModules)) {
-      toast.error(`Upgrade from ${planName} to enable this module`);
+      openBilling();
       return;
     }
 
@@ -93,15 +97,21 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
     const isLocked = allowedModules ? !isModuleAllowed(module.id, allowedModules) : false;
     const isRequired = isRequiredModule(module.id) || module.required;
     const IconComponent = module.icon;
-    const interactive = !isLocked && !isRequired;
+    const interactive = !isRequired;
 
     return (
       <div
         key={module.id}
-        onClick={() => interactive && toggleModule(module.id)}
+        onClick={() => {
+          if (isLocked) {
+            openBilling();
+            return;
+          }
+          if (interactive) toggleModule(module.id);
+        }}
         className={`group flex items-start gap-3 rounded-xl border px-4 py-3.5 transition-all ${
           isLocked
-            ? "border-gray-100 bg-gray-50/80 opacity-70 cursor-not-allowed"
+            ? "border-amber-200/70 bg-amber-50/40 opacity-90 cursor-pointer hover:border-amber-300 hover:shadow-sm"
             : isSelected
               ? "border-[#22C55E]/50 bg-[#22C55E]/[0.06] cursor-pointer"
               : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer"
@@ -141,7 +151,16 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
         </div>
 
         <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
-          {isLocked ? null : isRequired ? (
+          {isLocked ? (
+            <button
+              type="button"
+              onClick={openBilling}
+              className="flex h-5 w-5 items-center justify-center text-amber-600"
+              aria-label={`Upgrade to unlock ${module.name}`}
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+          ) : isRequired ? (
             <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white">
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
             </div>
@@ -159,7 +178,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
 
   if (allowedModules === null) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
         <p className="text-sm">Loading available modules…</p>
       </div>
     );
@@ -177,9 +196,14 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
           </p>
         </div>
         {lockedCount > 0 && (
-          <div className="rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900 max-w-md">
-            {lockedCount} module{lockedCount === 1 ? "" : "s"} require a paid plan
-          </div>
+          <button
+            type="button"
+            onClick={openBilling}
+            className="rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900 max-w-md text-left hover:bg-amber-100/80 transition-colors"
+          >
+            {lockedCount} module{lockedCount === 1 ? "" : "s"} require a paid plan —{" "}
+            <span className="font-semibold text-[#16A34A]">View billing plans</span>
+          </button>
         )}
       </div>
 
@@ -207,6 +231,14 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
         onPrimary={handleNext}
         primaryLabel="Next: Review"
         primaryDisabled={selectedModules.length === 0}
+      />
+
+      <BillingDialog
+        open={billingOpen}
+        onOpenChange={setBillingOpen}
+        billingHref="/settings/billing"
+        title="Upgrade to unlock modules"
+        description={`Your ${planName} plan locks some modules. Upgrade to enable them for new organizations.`}
       />
     </div>
   );
