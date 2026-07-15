@@ -32,6 +32,7 @@ interface OrgFormData {
   // Accounting Details
   accountingStartDate: string;
   vatRegistered: boolean;
+  panVatNumber: string;
   // Workspace Setup
   workspaceName: string;
   // Contact Information (optional)
@@ -59,6 +60,7 @@ const defaultForm: OrgFormData = {
   logo: null,
   accountingStartDate: new Date().toISOString().split('T')[0], // Today's date
   vatRegistered: false,
+  panVatNumber: "",
   workspaceName: "",
   ownerName: "",
   email: "",
@@ -97,6 +99,7 @@ interface OrgFormProps {
     address?: string;
     accounting_start_date?: string;
     vat_registered?: boolean;
+    pan_vat_number?: string;
     workspace_name?: string;
     owner_name?: string;
     email?: string;
@@ -121,6 +124,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
         address: initialData.address || "",
         accountingStartDate: initialData.accounting_start_date || new Date().toISOString().split('T')[0],
         vatRegistered: initialData.vat_registered || false,
+        panVatNumber: initialData.pan_vat_number || "",
         workspaceName: initialData.workspace_name || initialData.name || "",
         ownerName: initialData.owner_name || "",
         email: initialData.email || "",
@@ -199,7 +203,8 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
     form.address.trim() !== "" &&
     form.accountingStartDate !== "" &&
     form.workspaceName.trim() !== "" &&
-    form.agreeToTerms;
+    form.agreeToTerms &&
+    (!form.vatRegistered || form.panVatNumber.trim() !== "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,6 +216,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       address: form.address,
       accounting_start_date: form.accountingStartDate,
       vat_registered: form.vatRegistered,
+      pan_vat_number: form.vatRegistered ? form.panVatNumber.trim() : undefined,
       workspace_name: form.workspaceName,
       owner_name: form.ownerName || undefined,
       email: form.email || undefined,
@@ -340,7 +346,7 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
                 </button>
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, vatRegistered: false })}
+                  onClick={() => setForm({ ...form, vatRegistered: false, panVatNumber: "" })}
                   className={`h-11 rounded-lg border font-medium text-sm transition-all ${
                     !form.vatRegistered
                       ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
@@ -351,6 +357,22 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
                 </button>
               </div>
             </FieldGroup>
+
+            {form.vatRegistered && (
+              <FieldGroup
+                label="VAT Number"
+                required
+                hint="Your IRD VAT / PAN registration number"
+              >
+                <Input
+                  placeholder="e.g. 601234567"
+                  value={form.panVatNumber}
+                  onChange={(e) => setForm({ ...form, panVatNumber: e.target.value })}
+                  required
+                  className={inputCls}
+                />
+              </FieldGroup>
+            )}
           </FormSection>
 
           <FormSection title="Workspace setup">

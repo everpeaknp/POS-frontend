@@ -153,33 +153,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (credentials: LoginCredentials, redirectTo = '/erp') => {
-    try {
-      const { access, refresh, session_id } = await authApi.login(credentials);
-      await persistSession(access, refresh, session_id, redirectTo);
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    }
+    const { access, refresh, session_id } = await authApi.login(credentials);
+    await persistSession(access, refresh, session_id, redirectTo);
   };
 
   const loginWithGoogle = async (credential: string, redirectTo = '/erp') => {
-    try {
-      const { access, refresh, session_id } = await authApi.loginWithGoogle(credential);
-      await persistSession(access, refresh, session_id, redirectTo);
-    } catch (error) {
-      console.error('Google login failed:', error);
-      throw error;
-    }
+    const { access, refresh, session_id } = await authApi.loginWithGoogle(credential);
+    await persistSession(access, refresh, session_id, redirectTo);
   };
 
   const register = async (data: RegisterData) => {
-    try {
-      await authApi.register(data);
-      // Don't auto-login - let user go to login page
-    } catch (error) {
-      console.error('Registration failed:', error);
-      throw error;
-    }
+    await authApi.register(data);
   };
 
   const logout = () => {

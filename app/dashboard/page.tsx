@@ -59,11 +59,12 @@ export default function DashboardPage() {
     loadDashboard();
   }, [loadDashboard]);
 
-  const visibleModules = (data?.modules ?? []).filter((module) => canView(module.id));
+  // Hide Reports & Analytics from the home overview (stats/tiles stay in /dashboard/reports)
+  const visibleModules = (data?.modules ?? []).filter(
+    (module) => canView(module.id) && module.id !== "reports"
+  );
 
-  const salesModule = visibleModules.find((module) => module.id === "sales");
-
-  const periodToggle = salesModule?.chart ? (
+  const periodToggle = (
     <div className="flex items-center bg-gray-100 dark:bg-muted rounded-lg p-1 gap-0.5">
       {(["today", "week", "month", "year"] as DashboardPeriod[]).map((p) => (
         <button
@@ -78,12 +79,13 @@ export default function DashboardPage() {
         </button>
       ))}
     </div>
-  ) : null;
+  );
 
   return (
     <DashboardPageShell
       title="Dashboard"
       subtitle={subtitle}
+      headerActions={periodToggle}
       loading={loading || !data}
     >
       {data && (
@@ -133,7 +135,6 @@ export default function DashboardPage() {
                     catalog={catalogById.get(module.id)}
                     isDark={isDark}
                     showChart={module.id === "sales"}
-                    headerExtra={module.id === "sales" ? periodToggle : undefined}
                   />
                 ))}
               </div>

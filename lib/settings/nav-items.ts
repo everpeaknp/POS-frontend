@@ -4,9 +4,7 @@ import {
   Key,
   Bell,
   Palette,
-  Shield,
   CreditCard,
-  Globe,
 } from "lucide-react";
 
 export type SettingsNavItem = {
@@ -32,7 +30,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     id: "security",
     label: "Security",
     title: "Password & Security",
-    description: "Secure your account with MFA and credential management.",
+    description: "Secure your account with MFA, credentials, and active sessions.",
     href: "/settings/security",
     icon: Key,
   },
@@ -53,28 +51,12 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: Palette,
   },
   {
-    id: "privacy",
-    label: "Privacy",
-    title: "Privacy & Permissions",
-    description: "Review data sharing and third-party application access.",
-    href: "/settings/privacy",
-    icon: Shield,
-  },
-  {
     id: "billing",
     label: "Billing",
     title: "Billing & Subscription",
     description: "Organization plan, eSewa payments, and payment history.",
     href: "/settings/billing",
     icon: CreditCard,
-  },
-  {
-    id: "sessions",
-    label: "Sessions",
-    title: "Active Sessions",
-    description: "View and manage your active devices and login history.",
-    href: "/settings/sessions",
-    icon: Globe,
   },
 ];
 

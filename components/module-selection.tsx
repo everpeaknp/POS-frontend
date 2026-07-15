@@ -25,6 +25,7 @@ interface ModuleSelectionProps {
     address: string;
     accounting_start_date: string;
     vat_registered: boolean;
+    pan_vat_number?: string;
     workspace_name: string;
     owner_name?: string;
     email?: string;

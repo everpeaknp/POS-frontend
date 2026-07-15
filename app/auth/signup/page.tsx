@@ -42,6 +42,7 @@ export default function SignupPage() {
   const { register: registerUser, user, login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const inviteToken = searchParams.get("invite") || "";
   const inviteEmail = searchParams.get("email") || "";
@@ -78,10 +79,41 @@ export default function SignupPage() {
     }
   }, [user, router, inviteRedirect]);
 
+  const getSignupErrorMessage = (err: any): string => {
+    const data = err.response?.data;
+    const first = (value: unknown): string | null => {
+      if (Array.isArray(value) && value[0]) return String(value[0]);
+      if (typeof value === "string" && value) return value;
+      return null;
+    };
+
+    if (err.response?.status === 400 && data) {
+      const preferred = ["detail", "non_field_errors", "email", "password", "phone", "first_name", "last_name"];
+      for (const key of preferred) {
+        const msg = first(data[key]);
+        if (msg) return msg;
+      }
+      for (const key of Object.keys(data)) {
+        const msg = first(data[key]);
+        if (msg) return msg;
+      }
+      return "Registration failed. Please check your input.";
+    }
+    if (err.response?.status === 500) {
+      return "Server error. Please try again later.";
+    }
+    if (err.code === "ERR_NETWORK" || !err.response) {
+      return "Network error. Please check your connection and try again.";
+    }
+    return first(data?.detail) || "Registration failed. Please try again.";
+  };
+
   const onSubmit = async (data: SignupFormData) => {
+    setFormError("");
+
     try {
       if (inviteEmail && data.email.trim().toLowerCase() !== inviteEmail.trim().toLowerCase()) {
-        toast.error(`Please register with the invited email: ${inviteEmail}`);
+        setFormError(`Please register with the invited email: ${inviteEmail}`);
         return;
       }
 
@@ -101,33 +133,7 @@ export default function SignupPage() {
         inviteRedirect || "/erp"
       );
     } catch (error: any) {
-      // Handle different error scenarios
-      if (error.response?.status === 400) {
-        const errorData = error.response?.data;
-        
-        // Display all field errors
-        if (errorData) {
-          Object.keys(errorData).forEach((field) => {
-            const fieldErrors = errorData[field];
-            if (Array.isArray(fieldErrors)) {
-              fieldErrors.forEach((err) => toast.error(`${field}: ${err}`));
-            } else if (typeof fieldErrors === 'string') {
-              toast.error(`${field}: ${fieldErrors}`);
-            }
-          });
-        }
-        
-        // Fallback generic message
-        if (!errorData || Object.keys(errorData).length === 0) {
-          toast.error("Registration failed. Please check your input.");
-        }
-      } else if (error.response?.status === 500) {
-        toast.error("Server error. Please try again later.");
-      } else if (error.code === 'ERR_NETWORK' || !error.response) {
-        toast.error("Network error. Please check your connection and try again.");
-      } else {
-        toast.error(error.response?.data?.detail || "Registration failed. Please try again.");
-      }
+      setFormError(getSignupErrorMessage(error));
     }
   };
 
@@ -165,7 +171,11 @@ export default function SignupPage() {
                 <div className="hidden lg:block"><KhataLogo size="sm" /></div>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                onChange={() => { if (formError) setFormError(""); }}
+                className="flex flex-col gap-4"
+              >
                 {/* First Name and Last Name */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
@@ -176,7 +186,9 @@ export default function SignupPage() {
                       {...register("first_name")}
                       id="first_name"
                       placeholder="John"
-                      className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                      className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                        formError ? "border-red-300" : "border-gray-200"
+                      }`}
                     />
                     {errors.first_name && (
                       <p className="text-xs text-red-500">{errors.first_name.message}</p>
@@ -191,7 +203,9 @@ export default function SignupPage() {
                       {...register("last_name")}
                       id="last_name"
                       placeholder="Doe"
-                      className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                      className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                        formError ? "border-red-300" : "border-gray-200"
+                      }`}
                     />
                     {errors.last_name && (
                       <p className="text-xs text-red-500">{errors.last_name.message}</p>
@@ -209,7 +223,9 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="yourmail@domain.com"
-                    className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      formError ? "border-red-300" : "border-gray-200"
+                    }`}
                   />
                   {errors.email && (
                     <p className="text-xs text-red-500">{errors.email.message}</p>
@@ -226,7 +242,9 @@ export default function SignupPage() {
                     id="phone"
                     type="tel"
                     placeholder="+977 9800000000"
-                    className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      formError ? "border-red-300" : "border-gray-200"
+                    }`}
                   />
                   {errors.phone && (
                     <p className="text-xs text-red-500">{errors.phone.message}</p>
@@ -244,7 +262,9 @@ export default function SignupPage() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
-                      className="h-11 pr-10 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                        formError ? "border-red-300" : "border-gray-200"
+                      }`}
                     />
                     <button
                       type="button"
@@ -271,8 +291,15 @@ export default function SignupPage() {
                       id="confirmPassword"
                       type={showConfirm ? "text" : "password"}
                       placeholder="Confirm your password"
+                      aria-describedby={formError ? "signup-form-error" : undefined}
                       className={`h-11 pr-16 bg-gray-50 transition-colors ${
-                        passwordMismatch ? "border-red-400" : passwordMatch ? "border-green-400" : "border-gray-200"
+                        formError
+                          ? "border-red-300"
+                          : passwordMismatch
+                            ? "border-red-400"
+                            : passwordMatch
+                              ? "border-green-400"
+                              : "border-gray-200"
                       }`}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -290,12 +317,24 @@ export default function SignupPage() {
                   {errors.confirmPassword && (
                     <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>
                   )}
+                  {/* Fixed-height slot so API errors never grow the card */}
+                  <p
+                    id="signup-form-error"
+                    role="alert"
+                    aria-live="polite"
+                    title={formError || undefined}
+                    className={`h-5 truncate text-xs leading-5 ${
+                      formError ? "text-red-600" : "text-transparent"
+                    }`}
+                  >
+                    {formError || "\u00A0"}
+                  </p>
                 </div>
 
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 text-white font-semibold mt-1 group rounded-lg"
+                  className="w-full h-11 text-white font-semibold group rounded-lg"
                   style={{ backgroundColor: B }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BD)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = B)}

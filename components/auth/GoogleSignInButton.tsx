@@ -33,6 +33,10 @@ declare global {
 }
 
 const GIS_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+/** Matches Sign In / Create Account: h-11 (44px) and rounded-lg */
+const BTN_HEIGHT = 44;
+const GOOGLE_LARGE_HEIGHT = 40;
+const BTN_SCALE = BTN_HEIGHT / GOOGLE_LARGE_HEIGHT;
 
 function loadGoogleScript(): Promise<void> {
   if (typeof window === "undefined") {
@@ -73,10 +77,12 @@ export function GoogleSignInButton({
   redirectTo,
 }: GoogleSignInButtonProps) {
   const { loginWithGoogle } = useAuth();
+  const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [config, setConfig] = useState<GoogleOAuthConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [buttonReady, setButtonReady] = useState(false);
+  const [btnWidth, setBtnWidth] = useState(0);
 
   const handleCredential = useCallback(
     async (response: { credential: string }) => {
@@ -91,7 +97,6 @@ export function GoogleSignInButton({
     [loginWithGoogle, redirectTo]
   );
 
-  // Load OAuth config from backend
   useEffect(() => {
     let cancelled = false;
 
@@ -118,9 +123,24 @@ export function GoogleSignInButton({
     };
   }, []);
 
-  // Mount Google button once config is loaded and the container ref exists
+  // Keep Google button width in sync with the Sign In / Create Account button
   useEffect(() => {
-    if (!config?.client_id) {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateWidth = () => {
+      const w = Math.floor(el.getBoundingClientRect().width);
+      if (w > 0) setBtnWidth(w);
+    };
+
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [config]);
+
+  useEffect(() => {
+    if (!config?.client_id || btnWidth < 1) {
       return;
     }
 
@@ -139,12 +159,14 @@ export function GoogleSignInButton({
         });
 
         buttonRef.current.innerHTML = "";
+        // Render slightly narrower so uniform scale fills the full form width at h-11
+        const renderWidth = Math.max(1, Math.floor(btnWidth / BTN_SCALE));
         window.google.accounts.id.renderButton(buttonRef.current, {
           type: "standard",
           theme: "outline",
           size: "large",
           text: label,
-          width: 360,
+          width: renderWidth,
           shape: "rectangular",
         });
 
@@ -163,14 +185,14 @@ export function GoogleSignInButton({
     return () => {
       cancelled = true;
     };
-  }, [config, handleCredential, label]);
+  }, [config, handleCredential, label, btnWidth]);
 
   if (loading || !config) {
     return null;
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div ref={containerRef} className="mt-5 flex w-full flex-col items-stretch gap-5">
       {buttonReady && (
         <div className="relative w-full">
           <div className="absolute inset-0 flex items-center">
@@ -182,10 +204,20 @@ export function GoogleSignInButton({
         </div>
       )}
       <div
-        ref={buttonRef}
-        className={`flex justify-center w-full min-h-[44px] ${buttonReady ? "" : "sr-only"}`}
+        className={`w-full overflow-hidden rounded-lg ${buttonReady ? "" : "sr-only"}`}
+        style={{ height: BTN_HEIGHT }}
         aria-hidden={!buttonReady}
-      />
+      >
+        <div
+          ref={buttonRef}
+          className="origin-top-left [&>div]:!rounded-lg"
+          style={{
+            width: Math.max(1, Math.floor(btnWidth / BTN_SCALE)),
+            height: GOOGLE_LARGE_HEIGHT,
+            transform: `scale(${BTN_SCALE})`,
+          }}
+        />
+      </div>
     </div>
   );
 }

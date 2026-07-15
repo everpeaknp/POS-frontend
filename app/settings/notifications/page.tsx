@@ -346,7 +346,7 @@ export default function NotificationsPage() {
             )}
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                href="/settings/sessions"
+                href="/settings/security"
                 className="text-sm text-[#22C55E] hover:underline"
               >
                 Manage active sessions

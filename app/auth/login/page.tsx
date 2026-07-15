@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (inviteEmail) setEmail(inviteEmail);
@@ -39,8 +40,38 @@ export default function LoginPage() {
     }
   }, [user, inviteRedirect, router]);
 
+  const getLoginErrorMessage = (err: any): string => {
+    const data = err.response?.data;
+    const first = (value: unknown): string | null => {
+      if (Array.isArray(value) && value[0]) return String(value[0]);
+      if (typeof value === "string" && value) return value;
+      return null;
+    };
+
+    if (err.response?.status === 401) {
+      return "Invalid email or password. Please try again.";
+    }
+    if (err.response?.status === 400) {
+      return (
+        first(data?.detail) ||
+        first(data?.non_field_errors) ||
+        first(data?.email) ||
+        first(data?.password) ||
+        "Invalid credentials. Please check your input."
+      );
+    }
+    if (err.response?.status === 500) {
+      return "Server error. Please try again later.";
+    }
+    if (err.code === "ERR_NETWORK" || !err.response) {
+      return "Network error. Please check your connection and try again.";
+    }
+    return first(data?.detail) || "Login failed. Please try again.";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     setLoading(true);
 
     try {
@@ -49,25 +80,7 @@ export default function LoginPage() {
         inviteToken ? "Signed in! Joining your organization..." : "Login successful! Redirecting..."
       );
     } catch (err: any) {
-      // Handle different error scenarios
-      if (err.response?.status === 401) {
-        toast.error("Invalid email or password. Please try again.");
-      } else if (err.response?.status === 400) {
-        const errorData = err.response?.data;
-        if (errorData?.email) {
-          toast.error(`Email: ${errorData.email[0]}`);
-        } else if (errorData?.password) {
-          toast.error(`Password: ${errorData.password[0]}`);
-        } else {
-          toast.error(errorData?.detail || "Invalid credentials. Please check your input.");
-        }
-      } else if (err.response?.status === 500) {
-        toast.error("Server error. Please try again later.");
-      } else if (err.code === 'ERR_NETWORK' || !err.response) {
-        toast.error("Network error. Please check your connection and try again.");
-      } else {
-        toast.error(err.response?.data?.detail || "Login failed. Please try again.");
-      }
+      setFormError(getLoginErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -120,23 +133,42 @@ export default function LoginPage() {
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></Label>
                   <Input id="email" type="email" placeholder="Enter your email" value={email}
-                    onChange={(e) => setEmail(e.target.value)} required
-                    className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20" />
+                    onChange={(e) => { setEmail(e.target.value); setFormError(""); }} required
+                    aria-invalid={!!formError}
+                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      formError ? "border-red-300" : "border-gray-200"
+                    }`} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} placeholder="Enter password"
-                      value={password} onChange={(e) => setPassword(e.target.value)} required
-                      className="h-11 pr-10 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20" />
+                      value={password} onChange={(e) => { setPassword(e.target.value); setFormError(""); }} required
+                      aria-invalid={!!formError}
+                      aria-describedby={formError ? "login-form-error" : undefined}
+                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                        formError ? "border-red-300" : "border-gray-200"
+                      }`} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       aria-label="Toggle password">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="flex justify-end">
-                    <Link href="/auth/forgot-password" className="text-xs font-medium hover:underline" style={{ color: B }}>Forgot Password?</Link>
+                  {/* Fixed-height slot so the error never grows the card */}
+                  <div className="flex h-5 items-center justify-between gap-2">
+                    <p
+                      id="login-form-error"
+                      role="alert"
+                      aria-live="polite"
+                      title={formError || undefined}
+                      className={`min-w-0 flex-1 truncate text-xs ${
+                        formError ? "text-red-600" : "text-transparent"
+                      }`}
+                    >
+                      {formError || "\u00A0"}
+                    </p>
+                    <Link href="/auth/forgot-password" className="shrink-0 text-xs font-medium hover:underline" style={{ color: B }}>Forgot Password?</Link>
                   </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full h-11 text-white font-semibold group rounded-lg"

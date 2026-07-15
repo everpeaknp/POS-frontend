@@ -25,6 +25,7 @@ interface OrgReviewProps {
     address: string;
     accounting_start_date: string;
     vat_registered: boolean;
+    pan_vat_number?: string;
     workspace_name: string;
     owner_name?: string;
     email?: string;
@@ -110,15 +111,14 @@ export function OrgReview({
         active_modules: selectedModules,
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Show success first so plan-limit checks after refreshUser cannot redirect away
+      onCreationSuccess(tenant.name);
 
       try {
         await refreshUser();
       } catch (error) {
         console.error("[OrgReview] Failed to refresh user:", error);
       }
-
-      onCreationSuccess(tenant.name);
     } catch (err: unknown) {
       onCreationError();
       setLoading(false);
@@ -185,6 +185,13 @@ export function OrgReview({
               label="VAT registered"
               value={organizationData.vat_registered ? "Yes" : "No"}
             />
+            {organizationData.vat_registered && organizationData.pan_vat_number && (
+              <DetailRow
+                icon={Briefcase}
+                label="VAT number"
+                value={organizationData.pan_vat_number}
+              />
+            )}
           </div>
         </div>
 

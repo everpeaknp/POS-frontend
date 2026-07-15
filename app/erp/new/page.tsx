@@ -34,10 +34,16 @@ export default function NewOrgPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
+    // After a successful create, limits often flip to can_create_org=false
+    // (e.g. Free plan max 1 org). Do not bounce away from the success screen.
+    if (isSuccess || isLoading) return;
+
+    let cancelled = false;
 
     billingApi
       .getAccountLimits()
       .then((limits) => {
+        if (cancelled) return;
         if (!limits.can_create_org) {
           const max = limits.max_orgs ?? 0;
           toast.error(
@@ -48,8 +54,14 @@ export default function NewOrgPage() {
         }
         setLimitsLoading(false);
       })
-      .catch(() => setLimitsLoading(false));
-  }, [authLoading, user, router]);
+      .catch(() => {
+        if (!cancelled) setLimitsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, router, isSuccess, isLoading]);
 
   const handleStep1Complete = (data: any) => {
     setOrganizationData(data);
@@ -90,7 +102,11 @@ export default function NewOrgPage() {
   return (
     <OrgWizardShell step={step}>
       {step === 1 && (
-        <OrgForm onNext={handleStep1Complete} showBackButton={false} />
+        <OrgForm
+          initialData={organizationData ?? undefined}
+          onNext={handleStep1Complete}
+          showBackButton={false}
+        />
       )}
 
       {step === 2 && organizationData && (
