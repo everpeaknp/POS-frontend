@@ -192,6 +192,7 @@ const navItems: NavItem[] = [
       { label: "Organization Settings", href: "/dashboard/settings/org" },
       { label: "Modules", href: "/dashboard/settings/modules" },
       { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite" },
+      { label: "Help Desk", href: "/dashboard/settings/help" },
       { label: "Audit Logs", href: "/dashboard/settings/audit" },
     ],
   },
@@ -211,12 +212,15 @@ function SidebarItem({ item, openKey, onToggle }: {
   // Direct link (Dashboard)
   if (item.href && !item.children) {
     return (
-      <Link href={item.href}
+      <Link
+        href={item.href}
+        data-tour={`nav-${item.label.toLowerCase()}`}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
           isParentActive
             ? "bg-[#22C55E] text-white"
             : "text-gray-400 hover:text-white hover:bg-white/10"
-        }`}>
+        }`}
+      >
         <item.icon size={17} className="shrink-0" />
         {item.label}
       </Link>
@@ -224,10 +228,12 @@ function SidebarItem({ item, openKey, onToggle }: {
   }
 
   return (
-    <div>
+    <div data-tour={`nav-${item.label.toLowerCase()}`}>
       {/* Parent button */}
       <button
+        type="button"
         onClick={() => onToggle(item.label)}
+        data-tour={`nav-${item.label.toLowerCase()}-toggle`}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
           isParentActive && !isOpen
             ? "bg-[#22C55E] text-white"
@@ -326,8 +332,11 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
+    <div className="flex flex-col h-full" data-tour="sidebar-content">
+      <div
+        data-tour="sidebar-org"
+        className="px-5 py-5 border-b border-white/10 flex items-center justify-between"
+      >
         {user?.tenant ? (
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
@@ -354,7 +363,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-green">
+      <nav
+        data-tour="sidebar-nav"
+        className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-green"
+      >
         {filteredNavItems.map((item) => (
           <SidebarItem key={item.label} item={item} openKey={openKey} onToggle={handleToggle} />
         ))}
@@ -399,7 +411,10 @@ export function Sidebar() {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-[#1E2A3B] h-screen sticky top-0 overflow-hidden">
+      <aside
+        data-tour="sidebar"
+        className="hidden lg:flex flex-col w-60 shrink-0 bg-[#1E2A3B] h-screen sticky top-0 overflow-hidden"
+      >
         <SidebarContent />
       </aside>
     </>

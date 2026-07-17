@@ -110,9 +110,19 @@ interface OrgFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   showBackButton?: boolean;
+  /** Custom back handler (defaults to router.back()) */
+  onBack?: () => void;
 }
 
-export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitting, showBackButton = true }: OrgFormProps) {
+export function OrgForm({
+  initialData,
+  onSubmit,
+  onNext,
+  submitLabel,
+  isSubmitting,
+  showBackButton = true,
+  onBack,
+}: OrgFormProps) {
   const router = useRouter();
   const { refreshUser } = useAuth();
   
@@ -509,13 +519,13 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
       </div>
 
       {/* Submit Button */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center mt-8 pt-6 border-t border-gray-100">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-gray-100">
         {showBackButton && (
           <Button
             type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            className="h-11 border-gray-200 text-gray-700 hover:bg-gray-50 gap-1.5 sm:min-w-[120px]"
+            variant="secondary"
+            onClick={() => (onBack ? onBack() : router.back())}
+            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
             disabled={loading}
           >
             <ArrowLeft className="h-4 w-4" /> Back
@@ -525,11 +535,11 @@ export function OrgForm({ initialData, onSubmit, onNext, submitLabel, isSubmitti
         <Button
           type="submit"
           disabled={!isValid || loading || isSubmitting}
-          className="h-11 flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
+          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-green-500/20"
         >
           {loading || isSubmitting
             ? submitLabel || "Processing..."
-            : submitLabel || (onNext ? "Next: Select Modules" : "Create Organization")}{" "}
+            : submitLabel || (onNext ? "Continue" : "Create Organization")}{" "}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

@@ -158,7 +158,7 @@ export function OrgReview({
               Edit
             </Button>
           </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/50 px-4">
+          <div className="rounded-2xl border border-gray-200 bg-[#fffdfa] dark:bg-card px-4 shadow-sm">
             <DetailRow icon={Building2} label="Name" value={organizationData.name} />
             <DetailRow
               icon={Globe}
@@ -243,7 +243,7 @@ export function OrgReview({
       <OrgWizardFooter
         onBack={onBack}
         onPrimary={handleSubmit}
-        primaryLabel="Create Organization"
+        primaryLabel="Finish setup"
         primaryDisabled={loading}
         primaryLoading={loading}
       />

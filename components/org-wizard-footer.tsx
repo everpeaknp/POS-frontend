@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 
 interface OrgWizardFooterProps {
@@ -25,14 +24,14 @@ export function OrgWizardFooter({
 }: OrgWizardFooterProps) {
   return (
     <div className="mt-8 pt-6 border-t border-gray-100 dark:border-border">
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         {showBack && onBack ? (
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onBack}
             disabled={primaryLoading}
-            className="h-11 border-gray-200 text-gray-700 hover:bg-gray-50 gap-1.5 sm:min-w-[120px]"
+            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
           >
             <ArrowLeft className="h-4 w-4" />
             {backLabel}
@@ -44,12 +43,14 @@ export function OrgWizardFooter({
           type="button"
           onClick={onPrimary}
           disabled={primaryDisabled || primaryLoading}
-          className="h-11 flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold disabled:opacity-40 gap-1.5 rounded-lg shadow-sm shadow-green-200/50"
+          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-green-500/20"
         >
-          {primaryLoading ? "Processing…" : (
+          {primaryLoading ? (
+            "Processing…"
+          ) : (
             <>
               {primaryLabel}
-              {!primaryLoading && <ArrowRight className="h-4 w-4" />}
+              <ArrowRight className="h-4 w-4" />
             </>
           )}
         </Button>

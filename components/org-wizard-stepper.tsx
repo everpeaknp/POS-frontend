@@ -2,6 +2,10 @@
 
 import { Check } from "lucide-react";
 
+/**
+ * Compact horizontal stepper — kept for any legacy imports.
+ * Primary wizard UI lives in `OrgWizardShell`.
+ */
 const STEPS = [
   { id: 1, label: "Details" },
   { id: 2, label: "Modules" },
@@ -33,7 +37,11 @@ export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
                       : "bg-white border-2 border-gray-200 text-gray-400"
                   }`}
                 >
-                  {isComplete ? <Check className="h-4 w-4" strokeWidth={2.5} /> : step.id}
+                  {isComplete ? (
+                    <Check className="h-4 w-4" strokeWidth={2.5} />
+                  ) : (
+                    step.id
+                  )}
                 </div>
                 <span
                   className={`text-xs font-medium ${
@@ -68,17 +76,5 @@ export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
   );
 }
 
-export const ORG_WIZARD_STEPS = {
-  1: {
-    title: "Set up your organization",
-    description: "Enter your business details to create a new Khata workspace.",
-  },
-  2: {
-    title: "Choose your modules",
-    description: "Pick the features you need now. You can change modules later from Settings.",
-  },
-  3: {
-    title: "Review and create",
-    description: "Double-check your details and selected modules before creating the organization.",
-  },
-} as const;
+/** Re-export step copy from shell so older imports keep working */
+export { ORG_WIZARD_STEPS } from "@/components/org-wizard-shell";

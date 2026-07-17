@@ -11,7 +11,6 @@ import { OrgReview } from "@/components/org-review";
 import { OrgCreationLoading } from "@/components/org-creation-loading";
 import { OrgCreationSuccess } from "@/components/org-creation-success";
 import { billingApi } from "@/lib/api/billing";
-import { ErpHeader } from "@/components/erp/erp-header";
 import { PageLoading } from "@/components/shared/PageLoading";
 
 export default function NewOrgPage() {
@@ -75,8 +74,7 @@ export default function NewOrgPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
-        <ErpHeader />
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
         <PageLoading message="Loading…" className="flex-1 min-h-[50vh]" />
       </div>
     );
@@ -88,8 +86,7 @@ export default function NewOrgPage() {
 
   if (limitsLoading) {
     return (
-      <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
-        <ErpHeader />
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
         <PageLoading message="Checking plan limits…" className="flex-1 min-h-[50vh]" />
       </div>
     );
@@ -100,12 +97,24 @@ export default function NewOrgPage() {
   }
 
   return (
-    <OrgWizardShell step={step}>
+    <OrgWizardShell
+      step={step}
+      headerEnd={
+        <button
+          type="button"
+          onClick={() => router.push("/erp")}
+          className="text-sm font-semibold text-gray-500 hover:text-gray-800 dark:hover:text-foreground transition-colors"
+        >
+          Cancel
+        </button>
+      }
+    >
       {step === 1 && (
         <OrgForm
           initialData={organizationData ?? undefined}
           onNext={handleStep1Complete}
-          showBackButton={false}
+          showBackButton
+          onBack={() => router.push("/erp")}
         />
       )}
 

@@ -110,17 +110,17 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
           }
           if (interactive) toggleModule(module.id);
         }}
-        className={`group flex items-start gap-3 rounded-xl border px-4 py-3.5 transition-all ${
+        className={`group flex items-start gap-3 rounded-2xl border px-4 py-4 transition-all ${
           isLocked
             ? "border-amber-200/70 bg-amber-50/40 opacity-90 cursor-pointer hover:border-amber-300 hover:shadow-sm"
             : isSelected
-              ? "border-[#22C55E]/50 bg-[#22C55E]/[0.06] cursor-pointer"
-              : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer"
+              ? "border-2 border-[#22C55E] bg-green-50/80 cursor-pointer shadow-sm shadow-green-500/10"
+              : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
         }`}
       >
         <div
-          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-            isSelected ? "bg-[#22C55E]/15 text-[#22C55E]" : "bg-gray-100 text-gray-500"
+          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            isSelected ? "bg-[#22C55E]/15 text-[#16A34A]" : "bg-gray-100 text-gray-500"
           }`}
         >
           <IconComponent className="h-[18px] w-[18px]" />
@@ -220,7 +220,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
                 {section.modules.length}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
               {section.modules.map((module) => renderModuleCard(module))}
             </div>
           </section>
@@ -230,7 +230,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
       <OrgWizardFooter
         onBack={onBack}
         onPrimary={handleNext}
-        primaryLabel="Next: Review"
+        primaryLabel="Continue"
         primaryDisabled={selectedModules.length === 0}
       />
 

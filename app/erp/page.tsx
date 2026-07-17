@@ -328,7 +328,9 @@ function ErpPageContent() {
         </div>
       </main>
 
-      {activeTab === "organizations" && (accountLimits?.can_create_org ?? true) && (
+      {activeTab === "organizations" &&
+        !hasNoTenants &&
+        (accountLimits?.can_create_org ?? true) && (
         <button
           type="button"
           onClick={handleCreateOrganization}

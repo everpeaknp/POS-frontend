@@ -1,0 +1,70 @@
+/* Compact spacing for OrgForm inside onboarding only */
+
+.onboarding-compact-form form {
+  gap: 0;
+}
+
+.onboarding-compact-form .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+.onboarding-compact-form .gap-8 {
+  gap: 1rem;
+}
+
+.onboarding-compact-form .gap-10 {
+  gap: 1.25rem;
+}
+
+.onboarding-compact-form .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.5rem;
+}
+
+.onboarding-compact-form .mt-8 {
+  margin-top: 1rem;
+}
+
+.onboarding-compact-form .mb-6 {
+  margin-bottom: 0.75rem;
+}
+
+.onboarding-compact-form h3 {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-compact-form label {
+  font-size: 0.75rem;
+}
+
+.onboarding-compact-form .h-11 {
+  height: 2.25rem;
+}
+
+.onboarding-compact-form .aspect-square {
+  aspect-ratio: auto;
+  height: 6rem;
+  width: 6rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.onboarding-compact-form .w-20.h-20 {
+  height: 3rem;
+  width: 3rem;
+}
+
+.onboarding-compact-form .p-5 {
+  padding: 0.75rem;
+}
+
+/* Avoid escaped Tailwind responsive class names (breaks CSS parsers) */
+@media (min-width: 1024px) {
+  .onboarding-compact-form [class*="gap-10"] {
+    gap: 1.25rem;
+  }
+
+  .onboarding-compact-form [class*="sticky"] {
+    position: static;
+  }
+}
