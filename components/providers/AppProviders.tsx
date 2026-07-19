@@ -6,6 +6,9 @@ import { AppearanceProvider } from "@/lib/context/AppearanceContext";
 import { NotificationPreferencesProvider } from "@/lib/context/NotificationPreferencesContext";
 import { OnboardingProvider } from "@/lib/context/OnboardingContext";
 import { OnboardingHost } from "@/components/onboarding/OnboardingHost";
+import { DesktopOfflineBootstrap } from "@/components/desktop/DesktopOfflineBootstrap";
+import { DesktopSecurityBootstrap } from "@/components/desktop/DesktopSecurityBootstrap";
+import { DesktopRootChrome } from "@/components/desktop/DesktopRootChrome";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -14,8 +17,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <NotificationPreferencesProvider>
           <DateSystemProvider>
             <OnboardingProvider>
-              {children}
-              <OnboardingHost />
+              <DesktopRootChrome>
+                {children}
+                <OnboardingHost />
+                <DesktopOfflineBootstrap />
+                <DesktopSecurityBootstrap />
+              </DesktopRootChrome>
             </OnboardingProvider>
           </DateSystemProvider>
         </NotificationPreferencesProvider>

@@ -86,3 +86,15 @@
   opacity: 0.25;
   cursor: not-allowed;
 }
+
+/* Dark panel shell — keeps portal calendar aligned with app theme */
+.dark .khata-nc-panel {
+  background: var(--popover);
+  border-color: var(--border);
+  color: var(--popover-foreground);
+}
+
+.dark .khata-nc-panel .khata-today-bar {
+  border-top-color: var(--nc-border, var(--border));
+  background: transparent;
+}

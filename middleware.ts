@@ -38,9 +38,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing auth routes with token, redirect to ERP workspace
+  // If accessing auth routes with a session cookie, send to ERP.
+  // Skip when a redirect= query is present (post-logout / explicit auth return)
+  // to avoid bounce loops with client auth hydration.
   if (isPublicRoute && token && pathname.startsWith('/auth/')) {
-    return NextResponse.redirect(new URL('/erp', request.url));
+    const hasExplicitRedirect = request.nextUrl.searchParams.has('redirect');
+    if (!hasExplicitRedirect) {
+      return NextResponse.redirect(new URL('/erp', request.url));
+    }
   }
 
   // Module-based route protection

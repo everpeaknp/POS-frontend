@@ -104,7 +104,7 @@ export function UserMenuDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-popover rounded-xl shadow-lg border border-border py-1 z-50">
+        <div className="absolute right-0 mt-2 w-56 bg-popover text-popover-foreground rounded-xl shadow-lg border border-border py-1 z-[200]">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{user?.email}</p>
@@ -121,7 +121,7 @@ export function UserMenuDropdown({
               onClick={() => navigate("/erp")}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
               ERP
             </button>
             <button
@@ -129,7 +129,7 @@ export function UserMenuDropdown({
               onClick={() => navigate("/settings/profile")}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User className="h-4 w-4 text-muted-foreground shrink-0" />
               My Profile
             </button>
             <button
@@ -137,7 +137,7 @@ export function UserMenuDropdown({
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4 shrink-0" />
               Logout
             </button>
           </div>

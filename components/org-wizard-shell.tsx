@@ -7,6 +7,8 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
+import { useIsElectron } from "@/lib/desktop/use-is-electron";
+import { cn } from "@/lib/utils";
 
 export const ORG_WIZARD_STEPS = {
   1: {
@@ -66,17 +68,30 @@ export function OrgWizardShell({
   const meta = ORG_WIZARD_STEPS[step];
   const total = SIDEBAR_STEPS.length;
   const progressPct = (step / total) * 100;
+  const desktop = useIsElectron();
 
-  const shell = (
+  return (
     <div
-      className={`${
-        variant === "overlay"
-          ? "min-h-full"
-          : "min-h-screen"
-      } flex items-stretch sm:items-center justify-center p-0 sm:p-5 lg:p-8 bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:from-background dark:via-background dark:to-background`}
+      className={cn(
+        "flex items-stretch sm:items-center justify-center p-0 sm:p-5 lg:p-8",
+        "bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:from-background dark:via-background dark:to-background",
+        desktop
+          ? "h-full min-h-0 overflow-hidden"
+          : variant === "overlay"
+            ? "min-h-full"
+            : "min-h-screen"
+      )}
     >
-      <div className="w-full max-w-[1100px] my-0 sm:my-auto bg-white dark:bg-card sm:rounded-[28px] shadow-[0_18px_45px_rgba(22,163,74,0.12)] overflow-hidden grid grid-cols-1 lg:grid-cols-[300px_1fr] min-h-[100dvh] sm:min-h-[680px] border border-green-100/60 dark:border-border">
-        {/* Sidebar — desktop */}
+      <div
+        className={cn(
+          "w-full max-w-[1100px] bg-white dark:bg-card sm:rounded-[28px]",
+          "shadow-[0_18px_45px_rgba(22,163,74,0.12)] overflow-hidden",
+          "grid grid-cols-1 lg:grid-cols-[300px_1fr] border border-green-100/60 dark:border-border",
+          desktop
+            ? "h-full max-h-full min-h-0 my-0"
+            : "min-h-[100dvh] sm:min-h-[680px] my-0 sm:my-auto"
+        )}
+      >
         <aside className="relative hidden lg:flex flex-col bg-gradient-to-b from-[#14532d] via-[#166534] to-[#22C55E] text-white px-8 py-9 overflow-hidden">
           <div
             className="pointer-events-none absolute -right-24 -bottom-16 h-[230px] w-[230px] rounded-full bg-white/10"
@@ -174,10 +189,8 @@ export function OrgWizardShell({
           </div>
         </aside>
 
-        {/* Main */}
-        <main className="flex flex-col min-w-0 bg-white dark:bg-card">
-          {/* Mobile brand + steps */}
-          <div className="lg:hidden px-5 pt-5 pb-3 border-b border-gray-100 dark:border-border space-y-4">
+        <main className="flex flex-col min-w-0 min-h-0 bg-white dark:bg-card overflow-hidden">
+          <div className="lg:hidden px-5 pt-5 pb-3 border-b border-gray-100 dark:border-border space-y-4 shrink-0">
             <div className="flex items-center justify-between gap-3">
               <KhataLogo size="sm" />
               {headerEnd}
@@ -217,8 +230,7 @@ export function OrgWizardShell({
             </ol>
           </div>
 
-          {/* Progress topline */}
-          <div className="flex items-center justify-between gap-5 px-5 sm:px-8 lg:px-10 pt-5 sm:pt-8 pb-4">
+          <div className="flex items-center justify-between gap-5 px-5 sm:px-8 lg:px-10 pt-5 sm:pt-8 pb-4 shrink-0">
             <div className="flex-1 min-w-0">
               <p className="text-[13px] text-gray-500 dark:text-muted-foreground mb-2 font-medium">
                 Step {step} of {total}
@@ -235,8 +247,7 @@ export function OrgWizardShell({
             ) : null}
           </div>
 
-          {/* Step heading + body */}
-          <div className="flex-1 flex flex-col px-5 sm:px-8 lg:px-10 pb-6 sm:pb-9 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin-sidebar px-5 sm:px-8 lg:px-10 pb-6 sm:pb-9 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#15803d] mb-2">
               {eyebrow ?? meta.eyebrow}
             </p>
@@ -247,16 +258,10 @@ export function OrgWizardShell({
               {description ?? meta.description}
             </p>
 
-            <div className="flex-1">{children}</div>
+            <div className="pb-2">{children}</div>
           </div>
         </main>
       </div>
     </div>
   );
-
-  if (variant === "overlay") {
-    return shell;
-  }
-
-  return shell;
 }

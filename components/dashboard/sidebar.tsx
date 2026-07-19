@@ -6,10 +6,13 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, ShoppingCart, Package, BookOpen,
   Monitor, Users, BarChart2, Settings, ChevronDown, X, Menu, HardHat, Plus, Wrench,
+  PanelLeft, PanelLeftClose,
 } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
+import { useDesktopWorkspaceOptional } from "@/lib/context/DesktopWorkspaceContext";
+import { cn } from "@/lib/utils";
 
 interface SubItem {
   label: string;
@@ -198,108 +201,144 @@ const navItems: NavItem[] = [
   },
 ];
 
-function SidebarItem({ item, openKey, onToggle }: {
+function SidebarItem({
+  item,
+  openKey,
+  onToggle,
+  compact = false,
+}: {
   item: NavItem;
   openKey: string | null;
   onToggle: (label: string) => void;
+  compact?: boolean;
 }) {
   const pathname = usePathname();
   const isOpen = openKey === item.label;
 
   const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
+  const overviewHref =
+    item.href ||
+    item.children?.find((c) => c.exact)?.href ||
+    item.children?.[0]?.href;
 
-  // Direct link (Dashboard)
-  if (item.href && !item.children) {
+  // Direct link (Dashboard) — or compact parent → jump to overview
+  if ((item.href && !item.children) || (compact && overviewHref)) {
+    const href = item.href && !item.children ? item.href : overviewHref!;
+    const active = item.href && !item.children ? isParentActive : isChildActive;
     return (
       <Link
-        href={item.href}
+        href={href}
+        title={item.label}
         data-tour={`nav-${item.label.toLowerCase()}`}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-          isParentActive
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+          compact && "justify-center px-2",
+          active
             ? "bg-[#22C55E] text-white"
             : "text-gray-400 hover:text-white hover:bg-white/10"
-        }`}
+        )}
       >
         <item.icon size={17} className="shrink-0" />
-        {item.label}
+        {!compact && item.label}
       </Link>
     );
   }
 
   return (
     <div data-tour={`nav-${item.label.toLowerCase()}`}>
-      {/* Parent button */}
       <button
         type="button"
         onClick={() => onToggle(item.label)}
+        title={item.label}
         data-tour={`nav-${item.label.toLowerCase()}-toggle`}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+        className={cn(
+          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+          compact && "justify-center px-2",
           isParentActive && !isOpen
             ? "bg-[#22C55E] text-white"
             : isOpen
-            ? "bg-white/10 text-white"
-            : "text-gray-400 hover:text-white hover:bg-white/10"
-        }`}
+              ? "bg-white/10 text-white"
+              : "text-gray-400 hover:text-white hover:bg-white/10"
+        )}
       >
         <item.icon size={17} className="shrink-0" />
-        <span className="flex-1 text-left">{item.label}</span>
-        <ChevronDown
-          size={14}
-          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        />
+        {!compact && (
+          <>
+            <span className="flex-1 text-left">{item.label}</span>
+            <ChevronDown
+              size={14}
+              className={cn(
+                "shrink-0 transition-transform duration-200",
+                isOpen && "rotate-180"
+              )}
+            />
+          </>
+        )}
       </button>
 
-      {/* Submenu */}
-      <div
-        className="overflow-hidden transition-all duration-200 ease-in-out"
-        style={{ maxHeight: isOpen ? "500px" : "0px" }}
-      >
-        <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-white/10 space-y-0.5">
-          {item.children?.map((child) => {
-            const active = matchesNavChild(pathname, child);
-            return (
-              <div key={child.href} className="group flex items-center gap-1">
-                <Link href={child.href}
-                  className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-all ${
-                    active
-                      ? "text-[#22C55E] border-l-2 border-[#22C55E] -ml-[1px] pl-[9px] bg-white/5"
-                      : "text-gray-500 hover:text-white hover:bg-white/5"
-                  }`}>
-                  {child.label}
-                </Link>
-                {child.createHref && (
+      {!compact && (
+        <div
+          className="overflow-hidden transition-all duration-200 ease-in-out"
+          style={{ maxHeight: isOpen ? "500px" : "0px" }}
+        >
+          <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-white/10 space-y-0.5">
+            {item.children?.map((child) => {
+              const active = matchesNavChild(pathname, child);
+              return (
+                <div key={child.href} className="group flex items-center gap-1">
                   <Link
-                    href={child.createHref}
-                    className="p-1 rounded hover:bg-[#22C55E] text-white hover:text-white transition-all"
-                    title={`Create new ${child.label}`}
+                    href={child.href}
+                    className={cn(
+                      "flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-all",
+                      active
+                        ? "text-[#22C55E] border-l-2 border-[#22C55E] -ml-[1px] pl-[9px] bg-white/5"
+                        : "text-gray-500 hover:text-white hover:bg-white/5"
+                    )}
                   >
-                    <Plus size={14} />
+                    {child.label}
                   </Link>
-                )}
-              </div>
-            );
-          })}
+                  {child.createHref && (
+                    <Link
+                      href={child.createHref}
+                      className="p-1 rounded hover:bg-[#22C55E] text-white hover:text-white transition-all"
+                      title={`Create new ${child.label}`}
+                    >
+                      <Plus size={14} />
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-function SidebarContent({ onClose }: { onClose?: () => void }) {
+const WEB_SIDEBAR_COLLAPSED_KEY = "khata-sidebar-collapsed";
+
+function SidebarContent({
+  onClose,
+  compact = false,
+  onToggleCollapse,
+}: {
+  onClose?: () => void;
+  compact?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const pathname = usePathname();
   const { user } = useAuth();
   const permissions = usePermissions();
 
-  // Filter nav items based on user permissions
   const filteredNavItems = navItems.filter((item) => {
-    // Tenant module must be active before role checks (admins don't bypass disabled modules)
     if (item.requiredModule && !permissions.canView(item.requiredModule)) {
       return false;
     }
 
     if (item.requiredRoles && user) {
-      if (user.role === 'admin' || user.role === 'super_admin') {
+      if (user.role === "admin" || user.role === "super_admin") {
         return true;
       }
       if (!item.requiredRoles.includes(user.role)) {
@@ -310,14 +349,12 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     return true;
   });
 
-  // Find which parent should be open by default based on current path
   const defaultOpen = filteredNavItems.find((item) =>
     item.children?.some((c) => matchesNavChild(pathname, c))
   )?.label ?? null;
 
   const [openKey, setOpenKey] = useState<string | null>(defaultOpen);
 
-  // Update open key when pathname changes
   useEffect(() => {
     const match = filteredNavItems.find((item) =>
       item.children?.some((c) => matchesNavChild(pathname, c))
@@ -335,88 +372,175 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full" data-tour="sidebar-content">
       <div
         data-tour="sidebar-org"
-        className="px-5 py-5 border-b border-white/10 flex items-center justify-between"
+        className={cn(
+          "border-b border-white/10 flex items-center justify-between gap-2",
+          compact ? "px-2 py-4" : "px-5 py-5"
+        )}
       >
         {user?.tenant ? (
-          <div className="flex items-center gap-3 min-w-0">
+          <div className={cn("flex items-center gap-3 min-w-0", compact && "justify-center flex-1")}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
               {user.tenant.name.charAt(0).toUpperCase()}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-white font-semibold text-sm leading-tight truncate">
-                {user.tenant.name}
-              </span>
-              {user.role && (
-                <span className="text-gray-400 text-xs leading-tight truncate capitalize">
-                  {user.role === "super_admin" ? "Super Admin" : user.role}
+            {!compact && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-white font-semibold text-sm leading-tight truncate">
+                  {user.tenant.name}
                 </span>
-              )}
-            </div>
+                {user.role && (
+                  <span className="text-gray-400 text-xs leading-tight truncate capitalize">
+                    {user.role === "super_admin" ? "Super Admin" : user.role}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         ) : (
-          <KhataLogo size="md" />
+          <div className={cn(compact && "flex-1 flex justify-center")}>
+            {!compact ? <KhataLogo size="md" /> : (
+              <div className="w-8 h-8 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+                K
+              </div>
+            )}
+          </div>
         )}
-        {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors lg:hidden" aria-label="Close">
-            <X className="h-5 w-5" />
-          </button>
-        )}
+
+        <div className="flex items-center gap-1 shrink-0">
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+              title={compact ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {compact ? (
+                <PanelLeft className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </button>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <nav
         data-tour="sidebar-nav"
-        className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-green"
+        className={cn(
+          "flex-1 py-3 space-y-0.5 overflow-y-auto scrollbar-thin-sidebar",
+          compact ? "px-2" : "px-3"
+        )}
       >
         {filteredNavItems.map((item) => (
-          <SidebarItem key={item.label} item={item} openKey={openKey} onToggle={handleToggle} />
+          <SidebarItem
+            key={item.label}
+            item={item}
+            openKey={openKey}
+            onToggle={handleToggle}
+            compact={compact}
+          />
         ))}
       </nav>
 
-      <div className="px-5 py-4 border-t border-white/10 space-y-1.5">
-        {user?.tenant && (
-          <p className="text-[11px] font-mono break-all text-gray-500 leading-relaxed">
-            https://{user.tenant.slug}.khata.app
+      {!compact && (
+        <div className="px-5 py-4 border-t border-white/10 space-y-1.5">
+          {user?.tenant && (
+            <p className="text-[11px] font-mono break-all text-gray-500 leading-relaxed">
+              https://{user.tenant.slug}.khata.app
+            </p>
+          )}
+          <p className="text-xs text-gray-600">
+            © {new Date().getFullYear()} Khata Business OS
           </p>
-        )}
-        <p className="text-xs text-gray-600">
-          © {new Date().getFullYear()} Khata Business OS
-        </p>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export function Sidebar() {
+export function Sidebar({
+  forceDesktop = false,
+  compact: compactProp = false,
+}: {
+  /** Electron desktop shell: always show desktop aside, hide mobile chrome */
+  forceDesktop?: boolean;
+  compact?: boolean;
+}) {
+  const ws = useDesktopWorkspaceOptional();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [webCollapsed, setWebCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (forceDesktop || typeof window === "undefined") return;
+    setWebCollapsed(localStorage.getItem(WEB_SIDEBAR_COLLAPSED_KEY) === "1");
+  }, [forceDesktop]);
+
+  const compact = forceDesktop ? compactProp : webCollapsed;
+
+  const toggleCollapse = () => {
+    if (forceDesktop && ws?.enabled) {
+      ws.toggleSidebarCollapsed();
+      return;
+    }
+    setWebCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(WEB_SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // ignore quota / private mode
+      }
+      return next;
+    });
+  };
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg"
-        aria-label="Open menu"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+      {!forceDesktop && (
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      )}
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
+      {!forceDesktop && mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
           <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
             <SidebarContent onClose={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
 
-      {/* Desktop sidebar */}
       <aside
         data-tour="sidebar"
-        className="hidden lg:flex flex-col w-60 shrink-0 bg-[#1E2A3B] h-screen sticky top-0 overflow-hidden"
+        data-compact={compact ? "true" : "false"}
+        className={cn(
+          "flex-col h-full shrink-0 bg-[#1E2A3B] overflow-hidden transition-[width] duration-200",
+          forceDesktop
+            ? "flex w-full"
+            : cn("hidden lg:flex", compact ? "w-[72px]" : "w-64")
+        )}
       >
-        <SidebarContent />
+        <SidebarContent compact={compact} onToggleCollapse={toggleCollapse} />
       </aside>
     </>
   );
 }
+

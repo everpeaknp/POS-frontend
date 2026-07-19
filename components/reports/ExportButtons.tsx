@@ -33,7 +33,13 @@ export function ExportButtons({ getExportData, disabled }: ExportButtonsProps) {
         toast.success("CSV exported");
       } else {
         exportTableAsPdf(data);
-        toast.success("Print dialog opened — choose Save as PDF as the destination");
+        const desktop =
+          typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent);
+        toast.success(
+          desktop
+            ? "Preview opened — use Print when ready"
+            : "Print dialog opened — choose Save as PDF as the destination"
+        );
       }
     } catch (error) {
       const message =

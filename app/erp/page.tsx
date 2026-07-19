@@ -16,7 +16,6 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ErpHeader } from "@/components/erp/erp-header";
-import { OrgTabs } from "@/components/org-tabs";
 import { OrgCard } from "@/components/org-card";
 import { EmptyState } from "@/components/empty-state";
 import { tenantApi, invitationApi, Invitation } from "@/lib/api/tenant";
@@ -28,7 +27,7 @@ import toast from "react-hot-toast";
 function ErpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, switchOrganization } = useAuth();
+  const { user, loading: authLoading, switchOrganization } = useAuth();
   const [activeTab, setActiveTab] = useState("organizations");
   const [searchQuery, setSearchQuery] = useState("");
   const [tenants, setTenants] = useState<Awaited<ReturnType<typeof tenantApi.getAll>>>([]);
@@ -70,6 +69,9 @@ function ErpPageContent() {
   }, []);
 
   useEffect(() => {
+    // Wait for AuthContext — redirecting while loading causes
+    // middleware (cookie→/erp) ↔ this push (/auth/login) loops in Electron.
+    if (authLoading) return;
     if (!user) {
       router.push("/auth/login");
       return;
@@ -78,7 +80,7 @@ function ErpPageContent() {
     fetchTenants();
     fetchInvitations();
     billingApi.getAccountLimits().then(setAccountLimits).catch(() => {});
-  }, [user, router, fetchTenants, fetchInvitations]);
+  }, [user, authLoading, router, fetchTenants, fetchInvitations]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -132,7 +134,7 @@ function ErpPageContent() {
     }
   };
 
-  if (!user || loading) {
+  if (authLoading || !user || loading) {
     return <PageLoading fullScreen message="Loading organizations…" />;
   }
 
@@ -170,12 +172,10 @@ function ErpPageContent() {
     };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] dark:bg-background flex flex-col">
-      <ErpHeader />
-
-      <OrgTabs
+    <div className="min-h-screen h-full bg-[#F3F4F6] dark:bg-background flex flex-col">
+      <ErpHeader
         activeTab={activeTab}
-        onChange={handleTabChange}
+        onTabChange={handleTabChange}
         pendingInvitationsCount={pendingInvitations.length}
       />
 

@@ -1,0 +1,87 @@
+/* Desktop shell polish — only applied when DesktopShell mounts (Electron). */
+
+.desktop-shell {
+  overscroll-behavior: none;
+}
+
+/* ERP routes under Electron chrome — fill height so wizards can scroll inside */
+html.khata-desktop .erp-layout {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html:not(.khata-desktop) .erp-layout {
+  min-height: 100vh;
+}
+
+.desktop-titlebar,
+.desktop-tabbar,
+.desktop-statusbar {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Title-bar triggers only (theme / bell / avatar). Never recolor .bg-popover contents —
+   `color: unset` was inheriting white from .desktop-titlebar (blank white menus). */
+.desktop-titlebar-actions > .relative > button,
+.desktop-titlebar-actions > button {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.desktop-titlebar-actions > .relative > button:hover,
+.desktop-titlebar-actions > button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.desktop-titlebar-actions > .relative > button > svg,
+.desktop-titlebar-actions > button > svg {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* Break white text inheritance from .desktop-titlebar onto light popovers */
+.desktop-titlebar-actions .bg-popover {
+  color: var(--popover-foreground);
+}
+
+.desktop-tabbar {
+  background: #182232;
+}
+
+/* Smooth GPU-friendly transitions */
+.desktop-shell [data-desktop-sidebar] {
+  will-change: width;
+}
+
+/* Compact sidebar: hide text labels, keep icons */
+[data-desktop-sidebar][data-collapsed="true"] .desktop-sidebar-label,
+[data-desktop-sidebar][data-collapsed="true"] [data-tour="sidebar-org"] .flex-col,
+[data-desktop-sidebar][data-collapsed="true"] .border-t p {
+  display: none !important;
+}
+
+[data-desktop-sidebar][data-collapsed="true"] aside,
+[data-desktop-sidebar][data-collapsed="true"] [data-tour="sidebar"] {
+  width: 72px !important;
+}
+
+[data-desktop-sidebar][data-collapsed="true"] [data-tour="sidebar-org"] {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+[data-desktop-sidebar][data-collapsed="true"] nav a,
+[data-desktop-sidebar][data-collapsed="true"] nav button {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

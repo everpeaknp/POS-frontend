@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
+import { getDesktopPlatform, isElectron } from "@/lib/desktop";
 
+/**
+ * Global toasts. On Electron/Windows, offset clear of the title bar + caption buttons
+ * (native overlay always paints above the page — z-index cannot win).
+ */
 export function ThemeAwareToaster() {
   const [isDark, setIsDark] = useState(false);
+  const [desktop, setDesktop] = useState(false);
+  const [isWin, setIsWin] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -16,9 +23,30 @@ export function ThemeAwareToaster() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    setDesktop(isElectron());
+    setIsWin(getDesktopPlatform() === "win32");
+  }, []);
+
+  const containerStyle: React.CSSProperties = desktop
+    ? {
+        // Below title bar (env height fallback 40) + gap
+        top: "calc(env(titlebar-area-height, 40px) + 12px)",
+        // Clear native min/max/close strip on Windows (~138px)
+        right: isWin
+          ? "max(138px, calc(100vw - env(titlebar-area-width, 100vw) - env(titlebar-area-x, 0px) + 12px))"
+          : 16,
+        zIndex: 99999,
+      }
+    : {
+        top: 16,
+        right: 16,
+      };
+
   return (
     <Toaster
       position="top-right"
+      containerStyle={containerStyle}
       toastOptions={{
         duration: 4000,
         style: {

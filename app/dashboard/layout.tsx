@@ -5,12 +5,17 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { PageLoading } from "@/components/shared/PageLoading";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useIsElectron } from "@/lib/desktop/use-is-electron";
+import { DesktopWorkspaceProvider } from "@/lib/context/DesktopWorkspaceContext";
+import { DesktopShell } from "@/components/desktop/DesktopShell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, refreshUser } = useAuth();
   const [accessChecked, setAccessChecked] = useState(false);
+  // false until mount — matches SSR, then enables desktop shell
+  const desktopMode = useIsElectron();
 
   // Re-fetch profile so a just-disabled membership cannot keep an open dashboard session
   useEffect(() => {
@@ -50,14 +55,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <PageLoading fullScreen message="Loading dashboard…" />;
   }
 
-  return (
-    <div className="flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div key={pathname} className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green">
-          {children}
+  // —— Web layout (unchanged) ——
+  if (!desktopMode) {
+    return (
+      <div className="flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div
+            key={pathname}
+            className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green"
+          >
+            {children}
+          </div>
         </div>
       </div>
+    );
+  }
+
+  // —— Electron desktop workspace (height from DesktopRootChrome) ——
+  return (
+    <div className="h-full min-h-0">
+      <DesktopWorkspaceProvider>
+        <DesktopShell>
+          <div key={pathname} className="flex flex-1 min-h-0 flex-col">
+            {children}
+          </div>
+        </DesktopShell>
+      </DesktopWorkspaceProvider>
     </div>
   );
 }

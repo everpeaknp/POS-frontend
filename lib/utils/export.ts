@@ -348,12 +348,11 @@ function printViaNewWindow(html: string) {
   return true;
 }
 
+import { printHtmlDocument } from "@/lib/print/html-print";
+
 export function exportTableAsPdf(data: ExportTableData) {
   const html = buildExportHtml(data);
-
-  if (!printViaNewWindow(html)) {
-    printViaIframe(html);
-  }
+  printHtmlDocument(html, { filename: data.filename || data.title || "report" });
 }
 
 export function tenantToExportOrg(tenant: {

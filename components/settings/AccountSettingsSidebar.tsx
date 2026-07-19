@@ -3,14 +3,24 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { ArrowLeft, Menu, PanelLeft, PanelLeftClose, X } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
 import { billingApi } from "@/lib/api/billing";
-import { getMediaUrl } from "@/lib/utils";
+import { cn, getMediaUrl } from "@/lib/utils";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
 
-function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
+const SETTINGS_SIDEBAR_COLLAPSED_KEY = "khata-settings-sidebar-collapsed";
+
+function AccountSidebarContent({
+  onClose,
+  compact = false,
+  onToggleCollapse,
+}: {
+  onClose?: () => void;
+  compact?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [planName, setPlanName] = useState<string | null>(null);
@@ -19,7 +29,9 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
     : "";
   const initials = user
-    ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() || user.username?.[0]?.toUpperCase() || "U"
+    ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() ||
+      user.username?.[0]?.toUpperCase() ||
+      "U"
     : "U";
 
   useEffect(() => {
@@ -47,9 +59,19 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
+      <div
+        className={cn(
+          "border-b border-white/10 flex items-center justify-between gap-2",
+          compact ? "px-2 py-4" : "px-5 py-5"
+        )}
+      >
         {user ? (
-          <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={cn(
+              "flex items-center gap-3 min-w-0",
+              compact && "justify-center flex-1"
+            )}
+          >
             <div className="w-9 h-9 rounded-lg bg-[#22C55E] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -57,68 +79,135 @@ function AccountSidebarContent({ onClose }: { onClose?: () => void }) {
                 initials
               )}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-white font-semibold text-sm leading-tight truncate">
-                {displayName}
-              </span>
-              <span className="text-gray-400 text-xs leading-tight truncate">
-                {planName ? `${planName} plan` : "…"}
-              </span>
-            </div>
+            {!compact && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-white font-semibold text-sm leading-tight truncate">
+                  {displayName}
+                </span>
+                <span className="text-gray-400 text-xs leading-tight truncate">
+                  {planName ? `${planName} plan` : "…"}
+                </span>
+              </div>
+            )}
           </div>
         ) : (
-          <KhataLogo size="md" />
+          <div className={cn(compact && "flex-1 flex justify-center")}>
+            {!compact ? (
+              <KhataLogo size="md" />
+            ) : (
+              <div className="w-9 h-9 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+                K
+              </div>
+            )}
+          </div>
         )}
-        {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors lg:hidden" aria-label="Close">
-            <X className="h-5 w-5" />
-          </button>
-        )}
+
+        <div className="flex items-center gap-1 shrink-0">
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+              title={compact ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {compact ? (
+                <PanelLeft className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </button>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-green">
+      <nav
+        className={cn(
+          "flex-1 py-3 space-y-0.5 overflow-y-auto scrollbar-thin-sidebar",
+          compact ? "px-2" : "px-3"
+        )}
+      >
         {SETTINGS_NAV_ITEMS.map((item) => {
           const active = isSettingsNavActive(pathname, item);
           return (
             <Link
               key={item.id}
               href={item.href}
+              title={item.label}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                compact && "justify-center px-2",
                 active
                   ? "bg-[#22C55E] text-white"
                   : "text-gray-400 hover:text-white hover:bg-white/10"
-              }`}
+              )}
             >
               <item.icon size={17} className="shrink-0" />
-              {item.label}
+              {!compact && item.label}
             </Link>
           );
         })}
 
         <Link
           href="/erp"
+          title="Back"
           onClick={onClose}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
+            compact && "justify-center px-2"
+          )}
         >
           <ArrowLeft size={17} className="shrink-0" />
-          Back
+          {!compact && "Back"}
         </Link>
       </nav>
 
-      <div className="px-5 py-4 border-t border-white/10">
-        <p className="text-xs text-gray-600">© 2025 Khata Business OS</p>
-      </div>
+      {!compact && (
+        <div className="px-5 py-4 border-t border-white/10">
+          <p className="text-xs text-gray-600">
+            © {new Date().getFullYear()} Khata Business OS
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 export function AccountSettingsSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem(SETTINGS_SIDEBAR_COLLAPSED_KEY) === "1");
+  }, []);
+
+  const toggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SETTINGS_SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   return (
     <>
       <button
+        type="button"
         onClick={() => setMobileOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg"
         aria-label="Open menu"
@@ -128,15 +217,27 @@ export function AccountSettingsSidebar() {
 
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
           <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
             <AccountSidebarContent onClose={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
 
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-[#1E2A3B] h-screen sticky top-0 overflow-hidden">
-        <AccountSidebarContent />
+      <aside
+        data-compact={collapsed ? "true" : "false"}
+        className={cn(
+          "hidden lg:flex flex-col shrink-0 bg-[#1E2A3B] h-full sticky top-0 overflow-hidden transition-[width] duration-200",
+          collapsed ? "w-[72px]" : "w-60"
+        )}
+      >
+        <AccountSidebarContent
+          compact={collapsed}
+          onToggleCollapse={toggleCollapse}
+        />
       </aside>
     </>
   );

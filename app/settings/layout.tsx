@@ -6,11 +6,13 @@ import { AccountSettingsSidebar } from "@/components/settings/AccountSettingsSid
 import { PageLoading } from "@/components/shared/PageLoading";
 import { useAuth } from "@/lib/context/AuthContext";
 import { userApi } from "@/lib/api/user";
+import { useIsElectron } from "@/lib/desktop/use-is-electron";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const desktop = useIsElectron();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -22,9 +24,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!user) return;
     if (!localStorage.getItem("session_id")) {
-      userApi.ensureSession().then(({ session_id }) => {
-        localStorage.setItem("session_id", session_id);
-      }).catch(() => {});
+      userApi
+        .ensureSession()
+        .then(({ session_id }) => {
+          localStorage.setItem("session_id", session_id);
+        })
+        .catch(() => {});
     }
   }, [user]);
 
@@ -33,10 +38,17 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className="flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
+    <div
+      className={`flex bg-[#F3F4F6] dark:bg-background overflow-hidden ${
+        desktop ? "h-full min-h-0" : "h-screen"
+      }`}
+    >
       <AccountSettingsSidebar />
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div key={pathname} className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+        <div
+          key={pathname}
+          className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green"
+        >
           {children}
         </div>
       </div>

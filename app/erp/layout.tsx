@@ -5,8 +5,9 @@ export const metadata: Metadata = {
 };
 
 export default function ErpLayout({ children }: { children: React.ReactNode }) {
+  // Web: min-h-screen. Desktop (.khata-desktop): fill chrome + allow child scroll.
   return (
-    <div className="min-h-screen bg-[#F3F4F6] dark:bg-background">
+    <div className="erp-layout flex flex-col bg-[#F3F4F6] dark:bg-background">
       {children}
     </div>
   );

@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useAppearance } from "@/lib/context/AppearanceContext";
 import { formatIsoDateLocal, parseIsoDateLocal, todayIsoDate } from "@/lib/dates";
 import "./DateInput.css";
 
@@ -234,6 +235,8 @@ function BsDateInput({
   min,
   max,
 }: DateInputProps) {
+  const { isDark } = useAppearance();
+  const calendarMode = isDark ? "dark" : "light";
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
@@ -404,7 +407,12 @@ function BsDateInput({
     <div
       ref={panelRef}
       style={panelStyle}
-      className="khata-nc-panel rounded-lg border border-gray-200 bg-white shadow-lg"
+      className={cn(
+        "khata-nc-panel rounded-lg border shadow-lg",
+        isDark
+          ? "border-border bg-popover text-popover-foreground"
+          : "border-gray-200 bg-white"
+      )}
       role="dialog"
       aria-modal="true"
     >
@@ -418,13 +426,18 @@ function BsDateInput({
           onChange(formatIsoDateLocal(ad));
           setOpen(false);
         }}
-        mode="light"
+        mode={calendarMode}
         showNepali={false}
         showSelectedBar={false}
       />
 
       {todayBar && (
-        <div className="nc-theme-light nc-sel-bar khata-today-bar">
+        <div
+          className={cn(
+            "nc-sel-bar khata-today-bar",
+            isDark ? "nc-theme-dark" : "nc-theme-light"
+          )}
+        >
           <div>
             <div className="nc-sel-bs">{todayBar.bs}</div>
             <div className="nc-sel-ad">{todayBar.ad}</div>
@@ -461,7 +474,8 @@ function BsDateInput({
         aria-haspopup="dialog"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "flex h-9 w-full items-center gap-2 rounded-lg border border-gray-200 bg-background px-2.5 text-left text-sm transition-colors outline-none",
+          "flex h-9 w-full items-center gap-2 rounded-lg border bg-background px-2.5 text-left text-sm transition-colors outline-none",
+          "border-gray-200 dark:border-border",
           "hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           open && "border-ring ring-3 ring-ring/50"
         )}

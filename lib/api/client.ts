@@ -148,9 +148,16 @@ apiClient.interceptors.response.use(
         
         clearAuthStorage();
         
-        // Redirect to login
+        // Hard-redirect only when not already on an auth screen.
+        // Reloading /auth/login on every 401 causes an infinite refresh loop
+        // (especially in Electron when stale tokens / public 401s fire on mount).
         if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
+          const path = window.location.pathname || '';
+          const onAuthScreen =
+            path.startsWith('/auth/') || path.startsWith('/invite');
+          if (!onAuthScreen) {
+            window.location.href = '/auth/login';
+          }
         }
         
         return Promise.reject(refreshError);
