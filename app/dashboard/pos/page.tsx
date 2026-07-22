@@ -2,29 +2,41 @@
 
 import { PageLoading } from "@/components/shared/PageLoading";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X } from "lucide-react";
+import Image from "next/image";
+import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X, Pause, Play, Split, Settings } from "lucide-react";
 
+import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction, type POSSession } from "@/lib/api/pos";
-import { POS_VAT_RATE } from "@/lib/api/pos-helpers";
+import { PrintablePosReceipt } from "@/components/print/PrintablePosReceipt";
+import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction, type POSSession, type POSSettings, type POSHeldOrder, type POSPayment } from "@/lib/api/pos";
+import { POS_VAT_RATE_DEFAULT } from "@/lib/api/pos-helpers";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
+import { tenantApi } from "@/lib/api/tenant";
+import { tenantToCompanyInfo, type CompanyPrintInfo } from "@/lib/print/company-info";
 import toast from "react-hot-toast";
-import { POS_PAYMENT_METHODS, type PosPaymentMethod } from "@/lib/pos/payment-methods";
+import { POS_PAYMENT_METHODS, type PosPaymentMethod, getPosPaymentMethodLabel } from "@/lib/pos/payment-methods";
 
 interface CartItem extends POSTransactionLine {
   product_name: string;
   product_sku: string;
   stock_quantity: number;
   unit_name?: string;
+  image?: string | null;
+}
+
+interface SplitPaymentEntry {
+  method: PosPaymentMethod;
+  amount: string;
+  reference: string;
 }
 
 export default function POSPage() {
@@ -42,7 +54,7 @@ export default function POSPage() {
   
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [customerName, setCustomerName] = useState("");
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>("cash");
   const [amountPaid, setAmountPaid] = useState<string>("");
@@ -55,6 +67,39 @@ export default function POSPage() {
   const [todayTransactions, setTodayTransactions] = useState<POSTransaction[]>([]);
   const [openSession, setOpenSession] = useState<POSSession | null>(null);
 
+  // New feature state
+  const [posSettings, setPosSettings] = useState<POSSettings | null>(null);
+  const [companyInfo, setCompanyInfo] = useState<CompanyPrintInfo | null>(null);
+  const [heldOrders, setHeldOrders] = useState<POSHeldOrder[]>([]);
+  const [showHeldOrders, setShowHeldOrders] = useState(false);
+  const [useSplitPayment, setUseSplitPayment] = useState(false);
+  const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([
+    { method: "cash", amount: "", reference: "" },
+  ]);
+  const [lastTransaction, setLastTransaction] = useState<POSTransaction | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Loyalty program states
+  const [loyaltyProgram, setLoyaltyProgram] = useState<any | null>(null);
+  const [customerLoyalty, setCustomerLoyalty] = useState<any | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState<number>(0);
+
+  // Real-time synchronization BroadcastChannel for customer display
+  const customerDisplayChannel = useRef<BroadcastChannel | null>(null);
+  
+  useEffect(() => {
+    customerDisplayChannel.current = new BroadcastChannel("pos-customer-display");
+    return () => {
+      customerDisplayChannel.current?.close();
+    };
+  }, []);
+
+  // Dynamic tax rate from settings
+  const taxRate = posSettings ? posSettings.tax_rate / 100 : POS_VAT_RATE_DEFAULT;
+  const taxLabel = posSettings?.tax_label || "VAT";
+  const taxPercent = posSettings?.tax_rate ?? 13;
+
   const fetchTodayTransactions = async () => {
     try {
       const data = await posApi.getTodayTransactions();
@@ -64,25 +109,46 @@ export default function POSPage() {
     }
   };
 
+  // Load held orders for current session
+  const fetchHeldOrders = useCallback(async (sessionId?: string) => {
+    try {
+      const orders = await posApi.getHeldOrders(sessionId);
+      setHeldOrders(orders);
+    } catch {
+      // non-blocking
+    }
+  }, []);
+
   // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [customersRes, warehousesRes, discountsRes, sessionRes] = await Promise.all([
+        const [customersRes, warehousesRes, discountsRes, sessionRes, settingsRes, tenantRes, loyaltyProgramRes] = await Promise.all([
           customerAPI.list({ status: 'active', page_size: 500 }),
           inventoryApi.warehouses.list({ page_size: 500 }),
           posApi.getActiveDiscounts(),
           posApi.getOpenSession(),
+          posApi.getSettings().catch(() => null),
+          tenantApi.getCurrent().catch(() => null),
+          posApi.getLoyaltyProgram().catch(() => null),
         ]);
         setCustomers(customersRes.data.results);
         setWarehouses(warehousesRes.data.results);
         setDiscounts(discountsRes);
         setOpenSession(sessionRes);
+        if (settingsRes) setPosSettings(settingsRes);
+        if (tenantRes) setCompanyInfo(tenantToCompanyInfo(tenantRes));
+        if (loyaltyProgramRes) setLoyaltyProgram(loyaltyProgramRes);
 
         if (sessionRes?.warehouse) {
           setSelectedWarehouse(String(sessionRes.warehouse));
         } else if (warehousesRes.data.results.length > 0) {
           setSelectedWarehouse(String(warehousesRes.data.results[0].id));
+        }
+
+        // Load held orders for the open session
+        if (sessionRes) {
+          fetchHeldOrders(sessionRes.id);
         }
       } catch (error: any) {
         toast.error("Failed to load data");
@@ -215,6 +281,25 @@ export default function POSPage() {
     
     setCart(updated);
   }, [selectedDiscount]);
+
+  // Load selected customer loyalty points
+  useEffect(() => {
+    if (selectedCustomer) {
+      const fetchCustomerLoyalty = async () => {
+        try {
+          const data = await posApi.getCustomerLoyalty(selectedCustomer);
+          setCustomerLoyalty(data);
+        } catch {
+          setCustomerLoyalty(null);
+        }
+      };
+      fetchCustomerLoyalty();
+    } else {
+      setCustomerLoyalty(null);
+      setPointsToRedeem(0);
+      setLoyaltyDiscount(0);
+    }
+  }, [selectedCustomer]);
 
   // Handle barcode scan from form submission
   const handleBarcodeScan = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -477,10 +562,19 @@ export default function POSPage() {
   const subtotal = roundToTwo(cart.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0));
   const itemLevelDiscount = roundToTwo(cart.reduce((sum, item) => sum + item.discount_amount, 0));
   const billLevelDiscount = roundToTwo(calculateBillDiscount());
-  const totalDiscount = roundToTwo(itemLevelDiscount + billLevelDiscount);
-  const taxAmount = roundToTwo((subtotal - totalDiscount) * POS_VAT_RATE);
-  const total = roundToTwo(subtotal - totalDiscount + taxAmount);
-  const changeGiven = amountPaid ? roundToTwo(Math.max(0, parseFloat(amountPaid) - total)) : 0;
+  const totalDiscount = roundToTwo(itemLevelDiscount + billLevelDiscount + loyaltyDiscount);
+  const taxAmount = roundToTwo(Math.max(0, (subtotal - totalDiscount) * taxRate));
+  const total = roundToTwo(Math.max(0, subtotal - totalDiscount + taxAmount));
+
+  // Change calculation: split vs single
+  const splitTotal = useSplitPayment
+    ? roundToTwo(splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0))
+    : 0;
+  const changeGiven = useSplitPayment
+    ? roundToTwo(Math.max(0, splitTotal - total))
+    : amountPaid
+      ? roundToTwo(Math.max(0, parseFloat(amountPaid) - total))
+      : 0;
 
   // Clear cart
   const clearCart = () => {
@@ -532,6 +626,129 @@ export default function POSPage() {
     });
   };
 
+  // ---- Hold/Park Order ----
+  const handleHoldOrder = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty — nothing to hold");
+      return;
+    }
+    if (!openSession) {
+      toast.error("Open a POS session first");
+      return;
+    }
+    try {
+      await posApi.createHeldOrder({
+        session: openSession.id,
+        customer: selectedCustomer || null,
+        customer_name: customerName || undefined,
+        items: cart.map((item) => ({
+          product: item.product,
+          product_name: item.product_name,
+          product_sku: item.product_sku,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_amount: item.discount_amount,
+          line_total: item.line_total || 0,
+          stock_quantity: item.stock_quantity,
+          unit_name: item.unit_name,
+        })),
+        notes: notes || undefined,
+      });
+      toast.success("Order parked");
+      setCart([]);
+      setNotes("");
+      fetchHeldOrders(openSession.id);
+    } catch {
+      toast.error("Failed to park order");
+    }
+  };
+
+  const handleResumeOrder = async (order: POSHeldOrder) => {
+    try {
+      await posApi.resumeHeldOrder(order.id);
+      // Populate cart from held order items
+      setCart(
+        order.items.map((item) => ({
+          product: item.product,
+          product_name: item.product_name,
+          product_sku: item.product_sku,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_amount: item.discount_amount,
+          line_total: item.line_total,
+          stock_quantity: item.stock_quantity,
+          unit_name: item.unit_name,
+        }))
+      );
+      if (order.customer) setSelectedCustomer(String(order.customer));
+      if (order.customer_name) setCustomerName(order.customer_name);
+      if (order.notes) setNotes(order.notes);
+      setShowHeldOrders(false);
+      toast.success("Order resumed");
+      if (openSession) fetchHeldOrders(openSession.id);
+    } catch {
+      toast.error("Failed to resume order");
+    }
+  };
+
+  const handleRedeemPoints = async () => {
+    if (!selectedCustomer || !customerLoyalty) return;
+    if (pointsToRedeem <= 0) {
+      toast.error("Please enter a valid points amount to redeem.");
+      return;
+    }
+    if (pointsToRedeem > customerLoyalty.points_balance) {
+      toast.error(`Cannot redeem more than available balance of ${customerLoyalty.points_balance} points.`);
+      return;
+    }
+    if (loyaltyProgram && pointsToRedeem < loyaltyProgram.min_redemption_points) {
+      toast.error(`Minimum redemption is ${loyaltyProgram.min_redemption_points} points.`);
+      return;
+    }
+
+    try {
+      const res = await posApi.redeemLoyaltyPoints(selectedCustomer, {
+        points: pointsToRedeem,
+        transaction_number: `REDEM-${Date.now().toString().slice(-6)}`,
+      });
+      
+      setLoyaltyDiscount((prev) => prev + res.discount_amount);
+      toast.success(`✓ Redeemed ${pointsToRedeem} points for Rs. ${res.discount_amount} discount!`);
+      
+      setCustomerLoyalty((prev: any) => prev ? {
+        ...prev,
+        points_balance: res.remaining_balance
+      } : null);
+      
+      setPointsToRedeem(0);
+    } catch (error: any) {
+      const err = error.response?.data?.error || "Failed to redeem points";
+      toast.error(err);
+    }
+  };
+
+  // ---- Split payment helpers ----
+  const addSplitRow = () => {
+    setSplitPayments([...splitPayments, { method: "cash", amount: "", reference: "" }]);
+  };
+
+  const removeSplitRow = (index: number) => {
+    if (splitPayments.length <= 1) return;
+    setSplitPayments(splitPayments.filter((_, i) => i !== index));
+  };
+
+  const updateSplitRow = (index: number, field: keyof SplitPaymentEntry, value: string) => {
+    const updated = [...splitPayments];
+    updated[index] = { ...updated[index], [field]: value };
+    setSplitPayments(updated);
+  };
+
+  // Auto-print hook
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Receipt_${new Date().toISOString().split("T")[0]}`,
+  });
+
   // Process transaction
   const handleCheckout = async () => {
     if (cart.length === 0) {
@@ -549,39 +766,59 @@ export default function POSPage() {
       toast.error("Please select a warehouse");
       return;
     }
-    
-    if (paymentMethod === "credit" && !selectedCustomer) {
-      toast.error("Please select a customer for credit sales");
-      return;
-    }
 
-    const customer = customers.find((c) => c.id === selectedCustomer);
-    if (paymentMethod === "credit" && customer) {
-      const available =
-        customer.available_credit ??
-        Math.max(0, (customer.credit_limit || 0) - (customer.current_balance || 0));
-      if (total > available) {
-        toast.error(`Credit limit exceeded. Available: Rs. ${available.toFixed(2)}`);
+    // ---- Split payment validation ----
+    if (useSplitPayment) {
+      const hasEmpty = splitPayments.some((p) => !p.amount || parseFloat(p.amount) <= 0);
+      if (hasEmpty) {
+        toast.error("All split payment amounts must be > 0");
+        return;
+      }
+      if (splitTotal < total) {
+        toast.error(`Split payment total (Rs. ${splitTotal.toFixed(2)}) must be ≥ total (Rs. ${total.toFixed(2)})`);
+        return;
+      }
+      const hasCredit = splitPayments.some((p) => p.method === "credit");
+      if (hasCredit && !selectedCustomer) {
+        toast.error("Select a customer for credit split payments");
+        return;
+      }
+    } else {
+      if (paymentMethod === "credit" && !selectedCustomer) {
+        toast.error("Please select a customer for credit sales");
+        return;
+      }
+
+      const customer = customers.find((c) => c.id === selectedCustomer);
+      if (paymentMethod === "credit" && customer) {
+        const available =
+          customer.available_credit ??
+          Math.max(0, (customer.credit_limit || 0) - (customer.current_balance || 0));
+        if (total > available) {
+          toast.error(`Credit limit exceeded. Available: Rs. ${available.toFixed(2)}`);
+          return;
+        }
+      }
+      
+      const paidAmount = roundToTwo(parseFloat(amountPaid) || 0);
+      if (paidAmount < total) {
+        toast.error(`Amount paid (Rs. ${paidAmount.toFixed(2)}) must be ≥ total (Rs. ${total.toFixed(2)})`);
         return;
       }
     }
     
-    const paidAmount = roundToTwo(parseFloat(amountPaid) || 0);
-    if (paidAmount < total) {
-      toast.error(`Amount paid (Rs. ${paidAmount.toFixed(2)}) must be ≥ total (Rs. ${total.toFixed(2)})`);
-      return;
-    }
-    
     setProcessing(true);
     try {
-      const transactionData = {
+      const paidAmount = useSplitPayment ? splitTotal : roundToTwo(parseFloat(amountPaid) || 0);
+
+      const transactionData: any = {
         customer: selectedCustomer || null,
         customer_name: customerName || undefined,
         subtotal: roundToTwo(subtotal),
         discount_amount: roundToTwo(totalDiscount),
         tax_amount: roundToTwo(taxAmount),
         total: roundToTwo(total),
-        payment_method: paymentMethod,
+        payment_method: useSplitPayment ? splitPayments[0].method : paymentMethod,
         amount_paid: paidAmount,
         change_given: roundToTwo(changeGiven),
         warehouse: selectedWarehouse,
@@ -592,11 +829,21 @@ export default function POSPage() {
           unit_price: roundToTwo(item.unit_price),
           discount_amount: roundToTwo(item.discount_amount || 0),
           line_total: roundToTwo(item.line_total || 0)
-        }))
+        })),
       };
+
+      // Include split payment entries
+      if (useSplitPayment) {
+        transactionData.payments = splitPayments.map((p) => ({
+          payment_method: p.method,
+          amount: roundToTwo(parseFloat(p.amount) || 0),
+          reference: p.reference || "",
+        }));
+      }
       
       const response = await posApi.createTransaction(transactionData);
       toast.success(`✓ Transaction ${response.transaction_number} completed!`);
+      setLastTransaction(response);
       
       // Reset form
       setCart([]);
@@ -606,8 +853,17 @@ export default function POSPage() {
       setAmountPaid("");
       setNotes("");
       setPaymentMethod("cash");
+      setUseSplitPayment(false);
+      setSplitPayments([{ method: "cash", amount: "", reference: "" }]);
       fetchTodayTransactions();
       
+      // Auto-print if enabled
+      if (posSettings?.auto_print_receipt && companyInfo) {
+        setTimeout(() => {
+          handlePrint();
+        }, 500);
+      }
+
       // Auto-focus barcode for next customer
       setTimeout(() => {
         barcodeInputRef.current?.focus();
@@ -622,6 +878,7 @@ export default function POSPage() {
         error.response?.data?.detail ||
         error.response?.data?.message ||
         error.response?.data?.error ||
+        (typeof error.response?.data === 'object' ? JSON.stringify(error.response.data) : null) ||
         "Failed to process transaction";
       toast.error(errorMsg);
       console.error("Transaction error:", error);
@@ -657,9 +914,81 @@ export default function POSPage() {
       )}
 
       {openSession && (
-        <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-          Session <span className="font-mono font-semibold">{openSession.session_number}</span> is open
-          {openSession.warehouse_name ? ` · ${openSession.warehouse_name}` : ""}
+        <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800 flex items-center justify-between flex-wrap gap-2">
+          <span>
+            Session <span className="font-mono font-semibold">{openSession.session_number}</span> is open
+            {openSession.warehouse_name ? ` · ${openSession.warehouse_name}` : ""}
+          </span>
+          <div className="flex items-center gap-2">
+            {heldOrders.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                onClick={() => setShowHeldOrders(!showHeldOrders)}
+              >
+                <Play className="h-3 w-3" />
+                Held Orders ({heldOrders.length})
+              </Button>
+            )}
+            <Link href="/dashboard/pos/settings">
+              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+                <Settings className="h-3 w-3" />
+                Settings
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Held orders panel */}
+      {showHeldOrders && heldOrders.length > 0 && (
+        <div className="mx-6 mt-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-1">
+            <Pause className="h-3.5 w-3.5" />
+            Parked Orders
+          </h4>
+          <div className="space-y-2">
+            {heldOrders.map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-100"
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {order.items.length} items
+                    {order.customer_name ? ` · ${order.customer_name}` : ""}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Held {new Date(order.held_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    {order.notes ? ` — ${order.notes}` : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50"
+                    onClick={() => handleResumeOrder(order)}
+                  >
+                    <Play className="h-3 w-3" />
+                    Resume
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs text-red-500 hover:text-red-700"
+                    onClick={async () => {
+                      await posApi.deleteHeldOrder(order.id);
+                      if (openSession) fetchHeldOrders(openSession.id);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -748,18 +1077,31 @@ export default function POSPage() {
                             : 'hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className={`font-medium text-sm ${isOutOfStock ? 'text-gray-400' : ''}`}>
-                              {product.name}
-                              {isOutOfStock && <span className="ml-2 text-xs text-red-500 font-semibold">OUT OF STOCK</span>}
+                        <div className="flex items-center gap-3">
+                          {product.image && (
+                            <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden bg-gray-100">
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                width={40}
+                                height={40}
+                                className="object-cover w-full h-full"
+                              />
                             </div>
-                            <div className={`text-xs ${isOutOfStock ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {product.sku} • Stock: {product.stock_quantity}
+                          )}
+                          <div className="flex-1 flex justify-between items-start">
+                            <div>
+                              <div className={`font-medium text-sm ${isOutOfStock ? 'text-gray-400' : ''}`}>
+                                {product.name}
+                                {isOutOfStock && <span className="ml-2 text-xs text-red-500 font-semibold">OUT OF STOCK</span>}
+                              </div>
+                              <div className={`text-xs ${isOutOfStock ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {product.sku} • Stock: {product.stock_quantity}
+                              </div>
                             </div>
-                          </div>
-                          <div className={`text-sm font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-[#22C55E]'}`}>
-                            Rs. {product.selling_price.toLocaleString()}
+                            <div className={`text-sm font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-[#22C55E]'}`}>
+                              Rs. {product.selling_price.toLocaleString()}
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -839,17 +1181,30 @@ export default function POSPage() {
                   <ShoppingCart className="h-5 w-5 text-[#22C55E]" />
                   <h3 className="font-semibold">Cart ({cart.length} items)</h3>
                 </div>
-                {cart.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={clearCart}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Clear
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {cart.length > 0 && openSession && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleHoldOrder}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-1"
+                    >
+                      <Pause className="h-3.5 w-3.5" />
+                      Hold
+                    </Button>
+                  )}
+                  {cart.length > 0 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={clearCart}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
               
               {cart.length === 0 ? (
@@ -941,7 +1296,7 @@ export default function POSPage() {
               <div className="space-y-3">
                 <div>
                   <Label className="text-sm">Warehouse *</Label>
-                  <Select value={selectedWarehouse || undefined} onValueChange={(value) => setSelectedWarehouse(value)}>
+                  <Select value={selectedWarehouse || ""} onValueChange={(value) => setSelectedWarehouse(value || "")}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select warehouse" />
                     </SelectTrigger>
@@ -954,36 +1309,113 @@ export default function POSPage() {
                 </div>
                 
                 <div>
-                  <Label className="text-sm">Payment Method *</Label>
-                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PosPaymentMethod)}>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Payment Method *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setUseSplitPayment(!useSplitPayment)}
+                      className={`text-xs flex items-center gap-1 px-2 py-0.5 rounded-full transition-colors ${
+                        useSplitPayment
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Split className="h-3 w-3" />
+                      Split
+                    </button>
+                  </div>
+
+                  {useSplitPayment ? (
+                    <div className="mt-2 space-y-2">
+                      {splitPayments.map((entry, idx) => (
+                        <div key={idx} className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            {idx === 0 && <Label className="text-xs text-gray-500">Method</Label>}
+                            <Select
+                              value={entry.method}
+                              onValueChange={(v) => updateSplitRow(idx, "method", v || "cash")}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {POS_PAYMENT_METHODS.map((m) => (
+                                  <SelectItem key={m.value} value={m.value}>
+                                    {m.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="w-24">
+                            {idx === 0 && <Label className="text-xs text-gray-500">Amount</Label>}
+                            <Input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              value={entry.amount}
+                              onChange={(e) => updateSplitRow(idx, "amount", e.target.value)}
+                              placeholder="0.00"
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          {splitPayments.length > 1 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-400 hover:text-red-600"
+                              onClick={() => removeSplitRow(idx)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full h-7 text-xs gap-1"
+                        onClick={addSplitRow}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add Payment
+                      </Button>
+                      <div className="text-xs text-right text-gray-500">
+                        Split Total: Rs. {splitTotal.toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod((v || "cash") as PosPaymentMethod)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {POS_PAYMENT_METHODS.map((method) => (
+                          <SelectItem key={method.value} value={method.value}>
+                            {method.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                
+                <div>
+                  <Label className="text-sm">Customer {paymentMethod === "credit" ? "*" : "(Optional)"}</Label>
+                  <Select value={selectedCustomer || "walk-in"} onValueChange={(value) => setSelectedCustomer((value || "walk-in") === "walk-in" ? "" : (value || ""))}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue />
+                      <SelectValue placeholder="Walk-in Customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {POS_PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
+                      <SelectItem value="walk-in">Walk-in Customer</SelectItem>
+                      {customers.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
-                {paymentMethod === "credit" ? (
-                  <div>
-                    <Label className="text-sm">Customer *</Label>
-                    <Select value={selectedCustomer || undefined} onValueChange={(value) => setSelectedCustomer(value || "")}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select customer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
+
+                {!selectedCustomer && (
                   <div>
                     <Label className="text-sm">Customer Name (Optional)</Label>
                     <Input
@@ -992,6 +1424,41 @@ export default function POSPage() {
                       placeholder="Walk-in customer"
                       className="mt-1"
                     />
+                  </div>
+                )}
+
+                {selectedCustomer && customerLoyalty && loyaltyProgram && (
+                  <div className="p-3 bg-green-50/50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 rounded-lg space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-green-800 dark:text-green-400">Loyalty Points Balance:</span>
+                      <span className="font-bold text-green-700 dark:text-green-400">{customerLoyalty.points_balance} pts</span>
+                    </div>
+                    {loyaltyProgram.is_active && customerLoyalty.points_balance >= loyaltyProgram.min_redemption_points && (
+                      <div className="space-y-1.5 border-t border-green-100/50 dark:border-green-500/10 pt-2">
+                        <p className="text-[10px] text-gray-500">
+                          Redeem rate: 1 pt = Rs. {loyaltyProgram.rupees_per_point} (Min: {loyaltyProgram.min_redemption_points} pts)
+                        </p>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            min={loyaltyProgram.min_redemption_points}
+                            max={customerLoyalty.points_balance}
+                            value={pointsToRedeem || ""}
+                            onChange={(e) => setPointsToRedeem(Math.max(0, parseInt(e.target.value) || 0))}
+                            placeholder="Points"
+                            className="h-7 text-xs flex-1 bg-white"
+                          />
+                          <Button
+                            size="sm"
+                            type="button"
+                            onClick={handleRedeemPoints}
+                            className="bg-green-600 hover:bg-green-700 text-white h-7 px-2.5 text-xs"
+                          >
+                            Redeem
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 
@@ -1027,6 +1494,12 @@ export default function POSPage() {
                   <span className="font-medium text-green-600">- Rs. {billLevelDiscount.toFixed(2)}</span>
                 </div>
               )}
+              {loyaltyDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Loyalty Discount</span>
+                  <span className="font-medium text-green-600">- Rs. {loyaltyDiscount.toFixed(2)}</span>
+                </div>
+              )}
               {totalDiscount > 0 && (
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-gray-700">Total Discount</span>
@@ -1034,7 +1507,7 @@ export default function POSPage() {
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Tax (13%)</span>
+                <span className="text-gray-600">{taxLabel} ({taxPercent}%)</span>
                 <span className="font-medium">Rs. {taxAmount.toFixed(2)}</span>
               </div>
               <div className="border-t pt-3 flex justify-between">
@@ -1042,18 +1515,20 @@ export default function POSPage() {
                 <span className="text-xl font-bold text-[#22C55E]">Rs. {total.toFixed(2)}</span>
               </div>
               
-              <div>
-                <Label className="text-sm">Amount Paid *</Label>
-                <Input
-                  type="number"
-                  value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
-                  placeholder="0.00"
-                  className="mt-1 text-lg font-semibold"
-                  min={0}
-                  step={0.01}
-                />
-              </div>
+              {!useSplitPayment && (
+                <div>
+                  <Label className="text-sm">Amount Paid *</Label>
+                  <Input
+                    type="number"
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
+                    placeholder="0.00"
+                    className="mt-1 text-lg font-semibold"
+                    min={0}
+                    step={0.01}
+                  />
+                </div>
+              )}
               
               {changeGiven > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -1076,6 +1551,20 @@ export default function POSPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Hidden printable receipt for auto-print */}
+      <div className="hidden">
+        {lastTransaction && companyInfo && (
+          <PrintablePosReceipt
+            ref={printRef}
+            transaction={lastTransaction}
+            companyInfo={companyInfo}
+            taxLabel={posSettings?.tax_label}
+            taxRate={posSettings?.tax_rate}
+            footerText={posSettings?.receipt_footer}
+          />
+        )}
       </div>
     </div>
   );

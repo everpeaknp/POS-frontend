@@ -13,8 +13,9 @@ import { useApi } from "@/lib/hooks/useApi";
 import { customerAPI, salesOrderAPI, invoiceAPI, customerCreditAPI, creditNoteAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
 import { CustomerPricingPanel } from "@/components/sales/CustomerPricingPanel";
+import posApi from "@/lib/api/pos";
 
-const tabs = ["Overview", "Orders", "Invoices", "Credit Notes", "Ledger", "Pricing"];
+const tabs = ["Overview", "Orders", "Invoices", "Credit Notes", "Ledger", "Pricing", "Loyalty"];
 
 export default function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,11 @@ export default function CustomerProfilePage() {
   const { data: creditNotesData, loading: creditNotesLoading } = useApi(
     () => creditNoteAPI.list({ customer: id }),
     { immediate: activeTab === "Credit Notes", deps: [id, activeTab] }
+  );
+
+  const { data: loyaltyData, loading: loyaltyLoading } = useApi(
+    () => posApi.getCustomerLoyalty(id),
+    { immediate: activeTab === "Loyalty", deps: [id, activeTab] }
   );
 
   if (customerLoading) {
@@ -351,6 +357,83 @@ export default function CustomerProfilePage() {
 
             {activeTab === "Pricing" && (
               <CustomerPricingPanel customerId={id} />
+            )}
+
+            {activeTab === "Loyalty" && (
+              loyaltyLoading ? (
+                <SkeletonTable rows={3} />
+              ) : !loyaltyData ? (
+                <div className="text-center py-6 text-gray-500">No loyalty points record found for this customer.</div>
+              ) : (
+                <div className="space-y-6 animate-in fade-in duration-200">
+                  {/* Loyalty summary stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-green-50/60 dark:bg-green-500/10 rounded-xl p-4 border border-green-100/50 dark:border-green-500/20">
+                      <p className="text-2xl font-bold text-green-700 dark:text-green-400">{loyaltyData.points_balance}</p>
+                      <p className="text-xs text-green-600 dark:text-green-400/80 mt-0.5">Current Points Balance</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-muted/30 rounded-xl p-4 border border-gray-100 dark:border-border">
+                      <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{loyaltyData.total_earned}</p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">Total Points Earned</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-muted/30 rounded-xl p-4 border border-gray-100 dark:border-border">
+                      <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{loyaltyData.total_redeemed}</p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">Total Points Redeemed</p>
+                    </div>
+                  </div>
+
+                  {/* Points History */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-foreground mb-3">Loyalty Points History</h3>
+                    <div className="border border-gray-100 dark:border-border rounded-xl overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-muted text-gray-600 dark:text-muted-foreground border-b border-gray-100 dark:border-border">
+                          <tr>
+                            {["Date", "Type", "Points", "Reference", "Description"].map((h) => (
+                              <th key={h} className="text-left text-xs font-medium py-2.5 px-4">
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 dark:divide-border">
+                          {loyaltyData.history && loyaltyData.history.length > 0 ? (
+                            loyaltyData.history.map((tx: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-muted/20">
+                                <td className="py-2.5 px-4 text-gray-500 dark:text-muted-foreground">
+                                  {new Date(tx.date).toLocaleDateString("en-GB")}
+                                </td>
+                                <td className="py-2.5 px-4 font-medium capitalize">
+                                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
+                                    tx.type === "earn" ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+                                  }`}>
+                                    {tx.type}
+                                  </span>
+                                </td>
+                                <td className={`py-2.5 px-4 font-semibold ${
+                                  tx.points > 0 ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                                }`}>
+                                  {tx.points > 0 ? `+${tx.points}` : tx.points}
+                                </td>
+                                <td className="py-2.5 px-4 font-mono text-xs text-[#22C55E]">
+                                  {tx.reference || "—"}
+                                </td>
+                                <td className="py-2.5 px-4 text-gray-700 dark:text-foreground">{tx.description}</td>
+                              </tr>
+                            ))
+                          ) : (
+                             <tr>
+                               <td colSpan={5} className="py-6 text-center text-gray-400">
+                                 No history available
+                               </td>
+                             </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )
             )}
             </div>
           </div>

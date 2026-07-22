@@ -6,5 +6,8 @@ export function unwrapList<T>(data: { results?: T[] } | T[] | null | undefined):
   return Array.isArray(data) ? data : data.results ?? [];
 }
 
-/** Nepal VAT rate used by POS checkout (must match backend pos.utils.POS_VAT_RATE). */
-export const POS_VAT_RATE = 0.13;
+/**
+ * Default Nepal VAT rate — used as fallback when POS settings haven't loaded yet.
+ * The POS checkout page should fetch the actual rate from the settings API.
+ */
+export const POS_VAT_RATE_DEFAULT = 0.13;

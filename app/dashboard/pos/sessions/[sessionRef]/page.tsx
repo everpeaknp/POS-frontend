@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Clock, User, Warehouse, Banknote } from "lucide-react";
+import {
+  ArrowLeft, Clock, User, Warehouse, Banknote,
+  ArrowDownCircle, ArrowUpCircle, Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PosPageShell, posCardClass } from "@/components/dashboard/PosPageShell";
 import { PosStatusBadge } from "@/components/pos/PosStatusBadge";
 import { NotFoundView } from "@/components/shared/NotFoundView";
-import posApi, { POSSession } from "@/lib/api/pos";
+import posApi, { POSSession, POSCashMovement } from "@/lib/api/pos";
 import { isValidPosSessionRef } from "@/lib/pos/session-ref";
 import { formatNPR } from "@/lib/utils";
 import { sumDigitalWalletSales } from "@/lib/pos/payment-methods";
@@ -27,35 +32,87 @@ export default function PosSessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
+  // Cash movement dialog state
+  const [showCashDialog, setShowCashDialog] = useState<"in" | "out" | null>(null);
+  const [cashAmount, setCashAmount] = useState("");
+  const [cashReason, setCashReason] = useState("");
+  const [submittingCash, setSubmittingCash] = useState(false);
+
+  const fetchSession = async () => {
     if (!sessionRef) {
       setLoading(false);
       setNotFound(true);
       return;
     }
-
-    const fetchSession = async () => {
-      try {
-        setLoading(true);
-        setNotFound(false);
-        const data = await posApi.getSession(sessionRef);
-        setSession(data);
-      } catch (error: unknown) {
-        console.error("Failed to fetch session:", error);
-        const err = error as { response?: { status?: number; data?: { detail?: string } } };
-        if (err.response?.status === 404) {
-          setNotFound(true);
-          setSession(null);
-        } else {
-          toast.error(err.response?.data?.detail || "Failed to load session details");
-        }
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      setNotFound(false);
+      const data = await posApi.getSession(sessionRef);
+      setSession(data);
+    } catch (error: unknown) {
+      console.error("Failed to fetch session:", error);
+      const err = error as { response?: { status?: number; data?: { detail?: string } } };
+      if (err.response?.status === 404) {
+        setNotFound(true);
+        setSession(null);
+      } else {
+        toast.error(err.response?.data?.detail || "Failed to load session details");
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSession();
   }, [sessionRef]);
+
+  const handleCashMovement = async () => {
+    if (!session || !showCashDialog) return;
+    const amount = parseFloat(cashAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    if (!cashReason.trim()) {
+      toast.error("Enter a reason");
+      return;
+    }
+
+    setSubmittingCash(true);
+    try {
+      await posApi.createCashMovement({
+        session: session.id,
+        movement_type: showCashDialog,
+        amount,
+        reason: cashReason.trim(),
+      });
+      toast.success(`Cash ${showCashDialog === "in" ? "In" : "Out"} recorded`);
+      setShowCashDialog(null);
+      setCashAmount("");
+      setCashReason("");
+      fetchSession(); // Refresh to show updated movements
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { session?: string; detail?: string } } };
+      toast.error(
+        err.response?.data?.session ||
+        err.response?.data?.detail ||
+        "Failed to record cash movement"
+      );
+    } finally {
+      setSubmittingCash(false);
+    }
+  };
+
+  const handleDeleteMovement = async (id: string) => {
+    try {
+      await posApi.deleteCashMovement(id);
+      toast.success("Cash movement deleted");
+      fetchSession();
+    } catch {
+      toast.error("Failed to delete movement");
+    }
+  };
 
   if (loading) {
     return (
@@ -79,6 +136,9 @@ export default function PosSessionDetailPage() {
 
   const digitalSales = session.card_sales + sumDigitalWalletSales(session);
   const closeHref = `/dashboard/pos/sessions/${sessionRef}/close`;
+  const movements: POSCashMovement[] = session.cash_movements ?? [];
+  const totalCashIn = Number(session.total_cash_in ?? 0);
+  const totalCashOut = Number(session.total_cash_out ?? 0);
 
   return (
     <PosPageShell
@@ -97,13 +157,97 @@ export default function PosSessionDetailPage() {
           <PosStatusBadge status={session.status} />
           <div className="flex-1" />
           {session.status === "open" && (
-            <Link href={closeHref}>
-              <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white h-8">
-                Close Session
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-8 text-green-700 border-green-200 hover:bg-green-50"
+                onClick={() => setShowCashDialog("in")}
+              >
+                <ArrowDownCircle className="h-3.5 w-3.5" />
+                Cash In
               </Button>
-            </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-8 text-red-600 border-red-200 hover:bg-red-50"
+                onClick={() => setShowCashDialog("out")}
+              >
+                <ArrowUpCircle className="h-3.5 w-3.5" />
+                Cash Out
+              </Button>
+              <Link href={closeHref}>
+                <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white h-8">
+                  Close Session
+                </Button>
+              </Link>
+            </>
           )}
         </div>
+
+        {/* Cash In/Out Dialog */}
+        {showCashDialog && (
+          <div className={`${posCardClass} p-5 border-2 ${showCashDialog === "in" ? "border-green-200" : "border-red-200"}`}>
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              {showCashDialog === "in" ? (
+                <>
+                  <ArrowDownCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-green-700">Cash In</span>
+                </>
+              ) : (
+                <>
+                  <ArrowUpCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-red-700">Cash Out</span>
+                </>
+              )}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Amount *</Label>
+                <Input
+                  type="number"
+                  min={0.01}
+                  step={0.01}
+                  value={cashAmount}
+                  onChange={(e) => setCashAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1"
+                  autoFocus
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Reason *</Label>
+                <Input
+                  value={cashReason}
+                  onChange={(e) => setCashReason(e.target.value)}
+                  placeholder={showCashDialog === "in" ? "e.g. Change from bank" : "e.g. Petty cash expense"}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3 justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setShowCashDialog(null);
+                  setCashAmount("");
+                  setCashReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleCashMovement}
+                disabled={submittingCash}
+                className={showCashDialog === "in" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
+              >
+                {submittingCash ? "Saving..." : `Record Cash ${showCashDialog === "in" ? "In" : "Out"}`}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -189,6 +333,24 @@ export default function PosSessionDetailPage() {
                 <span className="text-gray-500 dark:text-muted-foreground">Cash Sales</span>
                 <span className="font-medium text-green-600">{formatNPR(session.cash_sales)}</span>
               </div>
+              {totalCashIn > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-muted-foreground flex items-center gap-1">
+                    <ArrowDownCircle className="h-3 w-3 text-green-500" />
+                    Cash In
+                  </span>
+                  <span className="font-medium text-green-600">+{formatNPR(totalCashIn)}</span>
+                </div>
+              )}
+              {totalCashOut > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-muted-foreground flex items-center gap-1">
+                    <ArrowUpCircle className="h-3 w-3 text-red-500" />
+                    Cash Out
+                  </span>
+                  <span className="font-medium text-red-600">-{formatNPR(totalCashOut)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-muted-foreground">Card Sales</span>
                 <span className="font-medium">{formatNPR(session.card_sales)}</span>
@@ -233,6 +395,74 @@ export default function PosSessionDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Cash Movements Log */}
+        {movements.length > 0 && (
+          <div className={`${posCardClass} p-6`}>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground mb-4 flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-[#22C55E]" />
+              Cash Movements ({movements.length})
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-border">
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Reason</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">By</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Time</th>
+                    {session.status === "open" && (
+                      <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase w-10"></th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-border">
+                  {movements.map((m) => (
+                    <tr key={m.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                      <td className="py-2 px-3">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                            m.movement_type === "in"
+                              ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                          }`}
+                        >
+                          {m.movement_type === "in" ? (
+                            <ArrowDownCircle className="h-3 w-3" />
+                          ) : (
+                            <ArrowUpCircle className="h-3 w-3" />
+                          )}
+                          {m.movement_type === "in" ? "Cash In" : "Cash Out"}
+                        </span>
+                      </td>
+                      <td className={`py-2 px-3 text-right font-medium ${m.movement_type === "in" ? "text-green-600" : "text-red-600"}`}>
+                        {m.movement_type === "in" ? "+" : "-"}{formatNPR(m.amount)}
+                      </td>
+                      <td className="py-2 px-3 text-gray-700 dark:text-foreground">{m.reason}</td>
+                      <td className="py-2 px-3 text-gray-500 dark:text-muted-foreground">{m.performed_by_name || "—"}</td>
+                      <td className="py-2 px-3 text-gray-500 dark:text-muted-foreground text-xs">
+                        {new Date(m.performed_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      {session.status === "open" && (
+                        <td className="py-2 px-3 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-red-400 hover:text-red-600"
+                            onClick={() => handleDeleteMovement(m.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className={`${posCardClass} p-6`}>
           <div className="flex items-center justify-between mb-2">
