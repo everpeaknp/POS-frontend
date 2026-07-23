@@ -145,9 +145,11 @@ export function AppIconRail({
   // No workplace switcher in the rail on dashboard, settings, or ERP
   const showOrgs = !onDashboard && !onSettings && !onErp;
   const showNotifications = onDashboard;
-  const showPageHelp = onDashboard && Boolean(pageTour);
   const horizontal =
     forceHorizontal || preferences.navbar_position === "top";
+  // Left mode: help lives in DashHeader (secondary top bar). Top mode: help stays in this rail.
+  const showPageHelp =
+    (onDashboard || onSettings) && Boolean(pageTour) && horizontal;
 
   const loadTenants = useCallback(async () => {
     try {

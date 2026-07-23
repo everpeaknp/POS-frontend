@@ -151,7 +151,12 @@ export function BillingPanel({
         </div>
       )}
 
-      <div>
+      <div
+        data-page-tour="section"
+        data-page-tour-id="account-plan"
+        data-page-tour-title="Your account plan"
+        data-page-tour-body="Compare Free, Starter, Business, and Enterprise. Upgrade or switch plans from these cards."
+      >
         {!compact && (
           <>
             <h2 className="text-lg font-semibold text-gray-900">Your account plan</h2>
@@ -252,7 +257,13 @@ export function BillingPanel({
       </div>
 
       {showPaymentHistory && (
-      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+      <div
+        className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden"
+        data-page-tour="section"
+        data-page-tour-id="payment-history"
+        data-page-tour-title="Payment history"
+        data-page-tour-body="Past payments for your Khata account — date, plan, amount, status, and invoice download."
+      >
         <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <History className="h-4 w-4 text-gray-500" />
           <div>

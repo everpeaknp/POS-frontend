@@ -38,6 +38,7 @@ export function SettingsPageShell({
           "flex min-h-0 w-full flex-col flex-1 p-6",
           loading && "pointer-events-none opacity-0"
         )}
+        data-page-tour-root
         aria-hidden={loading}
       >
         {action ? <div className="mb-6 flex justify-end">{action}</div> : null}

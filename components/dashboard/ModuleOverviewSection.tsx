@@ -52,7 +52,13 @@ export function ModuleOverviewSection({
   const Icon = catalog?.icon;
 
   return (
-    <section className={`${dashboardCardClass} overflow-hidden`}>
+    <section
+      data-page-tour="section"
+      data-page-tour-id={`module-${module.id}`}
+      data-page-tour-title={module.title}
+      data-page-tour-body={`Overview for ${module.title} — key metrics, recent activity, and a shortcut into the module.`}
+      className={`${dashboardCardClass} overflow-hidden`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-border">
         <div className="flex items-center gap-3 min-w-0">
           {Icon ? (

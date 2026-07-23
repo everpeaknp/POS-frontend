@@ -209,8 +209,11 @@ function SidebarContent({
   useEffect(() => {
     if (!searchFocusNonce || compact) return;
     const id = requestAnimationFrame(() => {
-      searchInputRef.current?.focus();
-      searchInputRef.current?.select();
+      const el = searchInputRef.current;
+      if (!el) return;
+      el.readOnly = false;
+      el.focus();
+      el.select();
     });
     return () => cancelAnimationFrame(id);
   }, [searchFocusNonce, compact]);
@@ -262,7 +265,13 @@ function SidebarContent({
             />
             <input
               ref={searchInputRef}
+              type="search"
+              name="khata-dashboard-menu-filter"
               value={navQuery}
+              readOnly
+              onFocus={(e) => {
+                e.currentTarget.readOnly = false;
+              }}
               onChange={(e) => setNavQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -275,6 +284,13 @@ function SidebarContent({
               }}
               placeholder="Search"
               aria-label="Search menu (Ctrl+K)"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
               className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (

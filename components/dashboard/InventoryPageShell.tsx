@@ -56,7 +56,7 @@ export function InventoryPageShell({
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
       <DashHeader title={title} subtitle={subtitle} />
-      <div className={contentClass}>
+      <div data-page-tour-root className={contentClass}>
         {showBack && backHref && (
           <Link
             href={backHref}
@@ -68,7 +68,10 @@ export function InventoryPageShell({
         )}
 
         {(toolbar || action) && variant !== "redirect" && (
-          <div className={`${inventoryCardClass} p-4 lg:p-5`}>
+          <div
+            data-page-tour="toolbar"
+            className={`${inventoryCardClass} p-4 lg:p-5`}
+          >
             <div
               className={`flex flex-wrap items-center gap-3 w-full ${
                 toolbar ? "justify-between" : "justify-end"
@@ -77,7 +80,11 @@ export function InventoryPageShell({
               {toolbar ? (
                 <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">{toolbar}</div>
               ) : null}
-              {action ? <div className="shrink-0">{action}</div> : null}
+              {action ? (
+                <div data-page-tour="primary-action" className="shrink-0">
+                  {action}
+                </div>
+              ) : null}
             </div>
           </div>
         )}

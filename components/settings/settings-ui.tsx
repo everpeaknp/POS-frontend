@@ -19,6 +19,7 @@ export function SettingsCard({
 }) {
   return (
     <section
+      data-page-tour="section"
       className={cn(
         "rounded-xl border shadow-sm overflow-hidden",
         variant === "danger"
@@ -45,8 +46,24 @@ export function SettingsCardHeader({
   variant?: "default" | "danger";
   action?: React.ReactNode;
 }) {
+  const bindTourMeta = (node: HTMLDivElement | null) => {
+    const section = node?.closest("section[data-page-tour='section']");
+    if (!section) return;
+    const id = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    section.setAttribute("data-page-tour-id", id || "section");
+    section.setAttribute("data-page-tour-title", title);
+    section.setAttribute(
+      "data-page-tour-body",
+      description || `Review and update settings in ${title}.`
+    );
+  };
+
   return (
     <div
+      ref={bindTourMeta}
       className={cn(
         "px-6 py-4 border-b flex items-center justify-between gap-4",
         variant === "danger" ? "border-red-100 dark:border-red-900/40" : "border-border"

@@ -26,7 +26,7 @@ import {
 } from "@/components/settings/settings-ui";
 
 export default function SecurityPage() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -161,15 +161,29 @@ export default function SecurityPage() {
               <form
                 onSubmit={handlePasswordChange}
                 className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl"
+                autoComplete="on"
               >
+                {/* Gives password managers a username target so they don't fill the sidebar search */}
+                <input
+                  type="text"
+                  name="username"
+                  autoComplete="username"
+                  value={user?.email || user?.username || ""}
+                  readOnly
+                  tabIndex={-1}
+                  aria-hidden
+                  className="sr-only"
+                />
                 <div className="md:col-span-2">
                   <SettingsField label="Current password">
                     <input
                       type="password"
+                      name="current-password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="••••••••"
                       className={settingsInputClass}
+                      autoComplete="current-password"
                       required
                     />
                   </SettingsField>
@@ -177,20 +191,24 @@ export default function SecurityPage() {
                 <SettingsField label="New password" hint="Minimum 8 characters">
                   <input
                     type="password"
+                    name="new-password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
                     className={settingsInputClass}
+                    autoComplete="new-password"
                     required
                   />
                 </SettingsField>
                 <SettingsField label="Confirm new password">
                   <input
                     type="password"
+                    name="confirm-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className={settingsInputClass}
+                    autoComplete="new-password"
                     required
                   />
                 </SettingsField>

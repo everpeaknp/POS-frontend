@@ -33,7 +33,7 @@ export function DashboardPageShell({
   return (
     <div className="flex flex-col h-full min-h-0">
       <DashHeader title={title} subtitle={subtitle} actions={headerActions} />
-      <div data-page-tour="content" className="flex-1 p-6 space-y-6">
+      <div data-page-tour-root className="flex-1 p-6 space-y-6">
         {action && (
           <div data-page-tour="primary-action" className="flex justify-end -mt-2">
             {action}
@@ -49,6 +49,24 @@ export const dashboardCardClass =
   "bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm";
 
 export const dashboardTableWrapClass = `${dashboardCardClass} overflow-hidden`;
+
+/** Prefer this wrapper for list tables so page help can target them */
+export function DashboardTableWrap({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      data-page-tour="table"
+      className={className ? `${dashboardTableWrapClass} ${className}` : dashboardTableWrapClass}
+    >
+      {children}
+    </div>
+  );
+}
 
 export const dashboardStatCardClass = `${dashboardCardClass} p-4`;
 

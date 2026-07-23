@@ -51,11 +51,19 @@ function AccountSidebarContent({
     }
   }, []);
 
+  // Drop menu filter when navigating (also clears password-manager autofill into search)
+  useEffect(() => {
+    setNavQuery("");
+  }, [pathname]);
+
   useEffect(() => {
     if (!searchFocusNonce || compact) return;
     const id = requestAnimationFrame(() => {
-      searchInputRef.current?.focus();
-      searchInputRef.current?.select();
+      const el = searchInputRef.current;
+      if (!el) return;
+      el.readOnly = false;
+      el.focus();
+      el.select();
     });
     return () => cancelAnimationFrame(id);
   }, [searchFocusNonce, compact]);
@@ -89,7 +97,7 @@ function AccountSidebarContent({
   const showBack = !q || "back".includes(q);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-tour="settings-sidebar">
       <div
         className={cn(
           "border-b border-white/10 flex items-center justify-between gap-2",
@@ -155,7 +163,13 @@ function AccountSidebarContent({
             />
             <input
               ref={searchInputRef}
+              type="search"
+              name="khata-settings-menu-filter"
               value={navQuery}
+              readOnly
+              onFocus={(e) => {
+                e.currentTarget.readOnly = false;
+              }}
               onChange={(e) => setNavQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -168,6 +182,13 @@ function AccountSidebarContent({
               }}
               placeholder="Search"
               aria-label="Search menu (Ctrl+K)"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
               className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (

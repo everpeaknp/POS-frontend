@@ -32,10 +32,11 @@ export function DesktopTitleBar() {
   const isWin = platform === "win32";
   const showCustomControls = Boolean(api) && !isMac && !isWin;
   const inDashboard = pathname.startsWith("/dashboard");
+  const inSettings = pathname.startsWith("/settings");
   const title = titleForPath(ws?.activeHref || pathname);
   const org = user?.tenant?.name;
   const showWorkspaceSearch = Boolean(ws?.enabled && inDashboard);
-  const showPageHelp = inDashboard && Boolean(pageTour);
+  const showPageHelp = (inDashboard || inSettings) && Boolean(pageTour);
 
   const refreshMax = useCallback(async () => {
     if (!api) return;

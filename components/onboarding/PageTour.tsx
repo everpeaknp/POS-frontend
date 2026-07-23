@@ -28,7 +28,10 @@ function isDisplayed(el: Element): boolean {
 }
 
 function isInSidebar(el: Element): boolean {
-  return Boolean(el.closest('[data-tour="sidebar"]'));
+  return Boolean(
+    el.closest('[data-tour="sidebar"]') ||
+      el.closest('[data-tour="settings-sidebar"]')
+  );
 }
 
 function isEmptyChrome(el: Element): boolean {
@@ -116,9 +119,11 @@ function pickPlacement(rect: Rect, preferred?: TourStep["placement"]): Placement
 }
 
 function contentBounds(rect: Rect | null): { minLeft: number; minTop: number } {
-  const sidebar = document.querySelector(
-    '[data-tour="sidebar"]'
-  ) as HTMLElement | null;
+  const sidebar =
+    (document.querySelector('[data-tour="sidebar"]') as HTMLElement | null) ||
+    (document.querySelector(
+      '[data-tour="settings-sidebar"]'
+    ) as HTMLElement | null);
   const rail = document.querySelector(
     '[data-tour="app-icon-rail"]'
   ) as HTMLElement | null;
@@ -315,9 +320,11 @@ export function PageTour() {
       return false;
     }
     el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
-    // Cap large content regions so the spotlight stays on the visible top, not the whole page
+    // Cap very tall sections so the tip stays near the top of the highlight
     const maxHeight =
-      step.id === "page_content" || step.id === "page_modules" ? 320 : undefined;
+      step.id === "page_modules" || step.id.startsWith("page_section_")
+        ? 360
+        : undefined;
     setRect(rectFromEl(el, { maxHeight }));
     return true;
   }, [step]);

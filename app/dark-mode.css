@@ -140,10 +140,11 @@ html.dark .border-blue-100 {
   border-color: color-mix(in oklch, #3b82f6 30%, var(--border)) !important;
 }
 
-/* Dividers */
-html.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]),
-html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
-html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+/* Dividers — Tailwind v4 uses > :not(:last-child); v3 used sibling ~ */
+html.dark :is(.divide-gray-50, .divide-gray-100, .divide-gray-200) > :not(:last-child),
+html.dark :is(.divide-gray-50, .divide-gray-100, .divide-gray-200) > :not([hidden]) ~ :not([hidden]),
+html.dark :is(.divide-slate-50, .divide-slate-100, .divide-slate-200) > :not(:last-child),
+html.dark :is(.divide-slate-50, .divide-slate-100, .divide-slate-200) > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--border) !important;
 }
 

@@ -5,6 +5,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MoreVertical, Trash2, X, Search, Mail, Shield, Users, UserPlus, CircleCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ManagePermissionsModal } from "@/components/settings/ManagePermissionsModal";
 import {
   buildFullRolePermissions,
@@ -71,8 +73,6 @@ const roleColors: Record<string, string> = {
 const cardClass =
   "bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm";
 const tableWrapClass = `${cardClass} overflow-hidden`;
-const inputClass =
-  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -91,7 +91,9 @@ export default function UsersPage() {
   const [menu, setMenu] = useState<number | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<'users' | 'invitations'>('users');
+  const [activeTab, setActiveTab] = useState<"users" | "invitations">("users");
+  const [roleFilter, setRoleFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [showActiveConfirm, setShowActiveConfirm] = useState(false);
@@ -550,12 +552,35 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    const q = searchTerm.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      user.username.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q) ||
+      `${user.first_name} ${user.last_name}`.toLowerCase().includes(q);
+    const matchesRole =
+      roleFilter === "All" ||
+      (roleFilter === "super_admin"
+        ? user.role === "super_admin" || user.is_super_admin
+        : user.role === roleFilter);
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Active" ? user.is_active : !user.is_active);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const filteredInvitations = invitations.filter((inv) => {
+    if (inv.status !== "pending") return false;
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      inv.invited_email?.toLowerCase().includes(q) ||
+      inv.invited_user_name?.toLowerCase().includes(q) ||
+      inv.invited_by_name?.toLowerCase().includes(q) ||
+      inv.role?.toLowerCase().includes(q)
+    );
+  });
 
   const handleViewPermissions = async (user: User) => {
     if (!canSetPermissions) {
@@ -657,102 +682,92 @@ export default function UsersPage() {
             </p>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 bg-gray-100 dark:bg-muted p-1 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setActiveTab("users")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeTab === "users"
-                  ? "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm"
-                  : "text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:hover:text-foreground"
-              }`}
-            >
-              Team Members ({users.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("invitations")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeTab === "invitations"
-                  ? "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm"
-                  : "text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:hover:text-foreground"
-              }`}
-            >
-              Pending Invitations ({pendingInvites})
-            </button>
-          </div>
-        </div>
-
-        <div
-          className={`${cardClass} p-4 ${
-            userLimits && canManageUsers && !userLimits.can_invite
-              ? "border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10"
-              : ""
-          }`}
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-            {activeTab === "users" && (
-              <div className="relative w-full lg:flex-1 lg:min-w-[220px] lg:max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            )}
-
-            {userLimits && canManageUsers && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 lg:shrink-0">
-                <span className="text-xs text-gray-500 dark:text-muted-foreground">
-                  {userLimits.max_users != null ? (
-                    <>
-                      {userLimits.current_users} member
-                      {userLimits.current_users !== 1 ? "s" : ""}
-                      {userLimits.pending_invites > 0 &&
-                        ` · ${userLimits.pending_invites} pending`}
-                      {" · "}
-                      <span
-                        className={
-                          !userLimits.can_invite
-                            ? "font-medium text-amber-700 dark:text-amber-400"
-                            : ""
-                        }
-                      >
-                        {userLimits.seats_used} of {userLimits.max_users} seats used
-                      </span>
-                    </>
-                  ) : (
-                    <>Unlimited users</>
-                  )}
-                </span>
-                {!userLimits.can_invite && (
-                  <Link
-                    href="/settings/billing"
-                    className="text-xs font-semibold text-[#16A34A] hover:underline"
-                  >
-                    Upgrade plan
-                  </Link>
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 lg:ml-auto shrink-0">
-              {canInvite && (
-                <Button
-                  size="sm"
-                  onClick={handleInvite}
-                  disabled={userLimits != null && !userLimits.can_invite}
-                  className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 disabled:opacity-60"
-                >
-                  <Mail className="h-4 w-4" /> Invite User
-                </Button>
-              )}
+        <div className="flex flex-wrap items-center gap-3 justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={
+                  activeTab === "users"
+                    ? "Search users..."
+                    : "Search invitations..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
+              />
             </div>
+            <Select
+              value={activeTab}
+              onValueChange={(v) =>
+                setActiveTab((v as "users" | "invitations") || "users")
+              }
+            >
+              <SelectTrigger className="h-9 w-48 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="users">
+                  Team Members ({users.length})
+                </SelectItem>
+                <SelectItem value="invitations">
+                  Pending Invites ({pendingInvites})
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {activeTab === "users" && (
+              <>
+                <Select
+                  value={roleFilter}
+                  onValueChange={(v) => setRoleFilter(v ?? "All")}
+                >
+                  <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Roles</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    {roleOptions.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => setStatusFilter(v ?? "All")}
+                >
+                  <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Status</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+            {userLimits && canManageUsers && !userLimits.can_invite && (
+              <Link
+                href="/settings/billing"
+                className="text-xs font-semibold text-[#16A34A] hover:underline px-1"
+              >
+                Upgrade plan
+              </Link>
+            )}
           </div>
+          {canInvite && (
+            <Button
+              size="sm"
+              onClick={handleInvite}
+              disabled={userLimits != null && !userLimits.can_invite}
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 disabled:opacity-60"
+            >
+              <Mail className="h-4 w-4" /> Invite User
+            </Button>
+          )}
         </div>
 
         {activeTab === "users" && (
@@ -786,8 +801,8 @@ export default function UsersPage() {
                     <tbody className="divide-y divide-gray-50 dark:divide-border">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
-                            No users found matching your search
+                          <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
+                            No users match your search or filters
                           </td>
                         </tr>
                       ) : (
@@ -923,7 +938,7 @@ export default function UsersPage() {
 
         {activeTab === "invitations" && (
           <>
-            {invitations.filter((inv) => inv.status === "pending").length === 0 ? (
+            {pendingInvites === 0 && !searchTerm ? (
               <EmptyState
                 icon={Mail}
                 title="No pending invitations"
@@ -948,9 +963,17 @@ export default function UsersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-border">
-                      {invitations
-                        .filter((inv) => inv.status === "pending")
-                        .map((inv) => (
+                      {filteredInvitations.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="px-4 py-10 text-center text-sm text-gray-500 dark:text-muted-foreground"
+                          >
+                            No invitations match your search
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredInvitations.map((inv) => (
                           <tr key={inv.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="font-medium text-gray-900 dark:text-foreground">
@@ -996,7 +1019,8 @@ export default function UsersPage() {
                               )}
                             </td>
                           </tr>
-                        ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
