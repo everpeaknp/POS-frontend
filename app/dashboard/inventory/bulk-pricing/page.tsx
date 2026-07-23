@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus, Search, Tags, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   InventoryPageShell,
   inventoryCardClass,
-  inventoryInputClass,
   inventoryTableWrapClass,
 } from "@/components/dashboard/InventoryPageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -24,8 +24,8 @@ export default function BulkPricingPage() {
     { immediate: true }
   );
 
-  const bulkPrices = Array.isArray(data?.data) 
-    ? data.data 
+  const bulkPrices = Array.isArray(data?.data)
+    ? data.data
     : (data?.data?.results || []);
 
   const filteredPrices = bulkPrices.filter((price: any) =>
@@ -33,19 +33,64 @@ export default function BulkPricingPage() {
     price.product_sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = async (id: string, productName: string) => {
-    if (!confirm(`Delete bulk pricing for ${productName}?`)) return;
+  const handleDelete = (id: string, productName: string) => {
+    const confirmDelete = async () => {
+      try {
+        toast.loading("Deleting...");
+        await apiClient.delete(`/inventory/bulk-pricing/${id}/`);
+        toast.dismiss();
+        toast.success("Bulk pricing deleted");
+        refetch();
+      } catch (error: any) {
+        toast.dismiss();
+        toast.error(error.response?.data?.detail || "Failed to delete");
+      }
+    };
 
-    try {
-      toast.loading("Deleting...");
-      await apiClient.delete(`/inventory/bulk-pricing/${id}/`);
-      toast.dismiss();
-      toast.success("Bulk pricing deleted");
-      refetch();
-    } catch (error: any) {
-      toast.dismiss();
-      toast.error(error.response?.data?.detail || "Failed to delete");
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-4 min-w-[320px] p-2">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-900 text-base">Delete bulk pricing?</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Pricing for &quot;{productName}&quot; will be permanently deleted. This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              confirmDelete();
+            }}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: "top-center",
+      style: {
+        marginTop: "40vh",
+        background: "white",
+        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        borderRadius: "12px",
+        padding: "16px",
+      },
+    });
   };
 
   if (!loading && bulkPrices.length === 0 && !searchTerm) {
@@ -55,12 +100,12 @@ export default function BulkPricingPage() {
         subtitle="Manage tiered pricing for products"
       >
         <EmptyState
-            icon={Tags}
-            title="No bulk pricing configured"
-            description="Set up tiered pricing for products"
-            actionLabel="Add Bulk Pricing"
-            actionHref="/dashboard/inventory/bulk-pricing/new"
-          />
+          icon={Tags}
+          title="No bulk pricing configured"
+          description="Set up tiered pricing for products"
+          actionLabel="Add Bulk Pricing"
+          actionHref="/dashboard/inventory/bulk-pricing/new"
+        />
       </InventoryPageShell>
     );
   }
@@ -70,26 +115,24 @@ export default function BulkPricingPage() {
       title="Bulk Pricing"
       subtitle="Manage tiered pricing for products"
       loading={loading}
-      toolbar={
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={inventoryInputClass}
+            className="pl-9 h-9 text-sm border-gray-200"
           />
         </div>
-      }
-      action={
         <Link href="/dashboard/inventory/bulk-pricing/new">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Bulk Pricing
           </Button>
         </Link>
-      }
-    >
+      </div>
+
       {filteredPrices.length === 0 ? (
         <div className={`${inventoryCardClass} p-12 text-center`}>
           <p className="text-gray-500">No bulk pricing found matching your search</p>
@@ -112,14 +155,14 @@ export default function BulkPricingPage() {
                   <td className="px-4 py-3 font-medium text-gray-700">{price.product_name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-600">{price.product_sku}</td>
                   <td className="px-4 py-3 text-gray-600">{price.min_quantity}</td>
-                  <td className="px-4 py-3 text-gray-600">{price.max_quantity || '∞'}</td>
+                  <td className="px-4 py-3 text-gray-600">{price.max_quantity || "∞"}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(price.unit_price)}</td>
                   <td className="px-4 py-3 text-gray-600">{price.discount_percent}%</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      price.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                      price.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
                     }`}>
-                      {price.is_active ? 'Active' : 'Inactive'}
+                      {price.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-4 py-3">

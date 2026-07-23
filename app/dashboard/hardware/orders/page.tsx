@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Search, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
   hardwareCardClass,
-  hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -66,12 +67,12 @@ export default function HardwareOrdersPage() {
         subtitle="Sales orders with credit support and bulk pricing"
       >
         <EmptyState
-            icon={ShoppingCart}
-            title="No orders yet"
-            description="Create your first hardware order to start selling with credit and bulk pricing"
-            actionLabel="New Order"
-            actionHref="/dashboard/hardware/orders/new"
-          />
+          icon={ShoppingCart}
+          title="No orders yet"
+          description="Create your first hardware order to start selling with credit and bulk pricing"
+          actionLabel="New Order"
+          actionHref="/dashboard/hardware/orders/new"
+        />
       </HardwarePageShell>
     );
   }
@@ -81,69 +82,62 @@ export default function HardwareOrdersPage() {
       title="Hardware Orders"
       subtitle="Sales orders with credit support and bulk pricing"
       loading={loading}
-      toolbar={
-        <>
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
               placeholder="Search by order number or customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={hardwareInputClass}
+              className="pl-9 h-9 text-sm border-gray-200"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {STATUS_FILTERS.map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  statusFilter === status
-                    ? "bg-[#22C55E] text-white"
-                    : "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80"
-                }`}
-              >
-                {status === "all" ? "All" : status}
-              </button>
-            ))}
-          </div>
-        </>
-      }
-      action={
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "all")}>
+            <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status === "all" ? "All Statuses" : status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Link href="/dashboard/hardware/orders/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Order
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+            <Plus className="h-4 w-4" /> New Order
           </Button>
         </Link>
-      }
-    >
+      </div>
+
       {filteredOrders.length === 0 ? (
         <div className={`${hardwareCardClass} p-12 text-center`}>
           <p className="text-gray-500 dark:text-muted-foreground">No orders found matching your filters</p>
         </div>
       ) : (
-      <div className={hardwareTableWrapClass}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
-              <tr>
-                {["Order #", "Customer", "Date", "Total", "Status", ""].map((h) => (
-                  <th
-                    key={h || "actions"}
-                    className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
-                      h === "" ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {h === "" ? "Actions" : h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredOrders.map((order) => (
+        <div className={hardwareTableWrapClass}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
+                <tr>
+                  {["Order #", "Customer", "Date", "Total", "Status", ""].map((h) => (
+                    <th
+                      key={h || "actions"}
+                      className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
+                        h === "" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {h === "" ? "Actions" : h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-border">
+                {filteredOrders.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
@@ -184,10 +178,10 @@ export default function HardwareOrdersPage() {
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
       )}
     </HardwarePageShell>
   );

@@ -12,7 +12,45 @@ export const AlertCircle: IconType = Hi.HiOutlineExclamationCircle;
 export const AlertTriangle: IconType = Hi.HiOutlineExclamationTriangle;
 export const ArrowLeft: IconType = Hi.HiOutlineArrowLeft;
 export const ArrowLeftRight: IconType = Hi.HiOutlineArrowsRightLeft;
+export const ArrowLeftToLine: IconType = ({ size = 24, className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M3 19V5" />
+    <path d="m13 6-6 6 6 6" />
+    <path d="M7 12h14" />
+  </svg>
+);
 export const ArrowRight: IconType = Hi.HiOutlineArrowRight;
+export const ArrowRightFromLine: IconType = ({ size = 24, className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M3 5v14" />
+    <path d="M21 12H7" />
+    <path d="m15 18 6-6-6-6" />
+  </svg>
+);
 export const ArrowUpDown: IconType = Hi.HiOutlineArrowsUpDown;
 export const Banknote: IconType = Hi.HiOutlineBanknotes;
 export const BarChart2: IconType = Hi.HiOutlineChartBar;
@@ -39,6 +77,8 @@ export const ChevronUp: IconType = Hi.HiOutlineChevronUp;
 export const ChevronUpIcon: IconType = Hi.HiOutlineChevronUp;
 export const ChevronsUpDown: IconType = Hi.HiOutlineChevronUpDown;
 export const CircleCheck: IconType = Hi.HiOutlineCheckCircle;
+export const CircleHelp: IconType = Hi.HiOutlineQuestionMarkCircle;
+export const HelpCircle: IconType = Hi.HiOutlineQuestionMarkCircle;
 export const ClipboardCheck: IconType = Hi.HiOutlineClipboardDocumentCheck;
 export const ClipboardList: IconType = Hi.HiOutlineClipboardDocumentList;
 export const Clock: IconType = Hi.HiOutlineClock;
@@ -91,6 +131,24 @@ export const PackageMinus: IconType = Hi.HiOutlineCube;
 export const Palette: IconType = Hi.HiOutlineSwatch;
 export const PanelLeft: IconType = Hi.HiOutlineViewColumns;
 export const PanelLeftClose: IconType = Hi.HiOutlineBars3BottomLeft;
+export const PanelTop: IconType = ({ size = 24, className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M3 9h18" />
+  </svg>
+);
 export const Pencil: IconType = Hi.HiOutlinePencil;
 export const Phone: IconType = Hi.HiOutlinePhone;
 export const Pin: IconType = Hi.HiOutlineBookmark;

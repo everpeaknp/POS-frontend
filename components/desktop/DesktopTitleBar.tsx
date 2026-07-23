@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Minus, Maximize2, Minimize2, X, Search } from "lucide-react";
+import { Minus, Maximize2, Minimize2, X, Search, CircleHelp } from "lucide-react";
 import { getDesktopApi, getDesktopPlatform } from "@/lib/desktop";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
 import { useDesktopWorkspaceOptional } from "@/lib/context/DesktopWorkspaceContext";
@@ -11,6 +11,8 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserMenuDropdown } from "@/components/shared/UserMenuDropdown";
 import { useAuth } from "@/lib/context/AuthContext";
+import { usePageTourOptional } from "@/lib/context/PageTourContext";
+import { cn } from "@/lib/utils";
 
 /**
  * Full-width desktop title bar (global — used by DesktopRootChrome).
@@ -22,6 +24,7 @@ export function DesktopTitleBar() {
   const { user } = useAuth();
   const pathname = usePathname() || "/";
   const desktop = useIsElectron();
+  const pageTour = usePageTourOptional();
   const [maximized, setMaximized] = useState(false);
 
   const platform = getDesktopPlatform();
@@ -32,6 +35,7 @@ export function DesktopTitleBar() {
   const title = titleForPath(ws?.activeHref || pathname);
   const org = user?.tenant?.name;
   const showWorkspaceSearch = Boolean(ws?.enabled && inDashboard);
+  const showPageHelp = inDashboard && Boolean(pageTour);
 
   const refreshMax = useCallback(async () => {
     if (!api) return;
@@ -97,6 +101,25 @@ export function DesktopTitleBar() {
         )}
 
         <div className="desktop-titlebar-actions flex items-center pl-0.5">
+          {showPageHelp && (
+            <button
+              type="button"
+              title="Page help"
+              aria-label="Page help"
+              className={cn(
+                "h-7 w-7 rounded-md grid place-items-center transition-colors",
+                pageTour?.active
+                  ? "text-[#22C55E] bg-white/10"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              )}
+              onClick={() => {
+                if (pageTour?.active) pageTour.endPageTour();
+                else pageTour?.startPageTour();
+              }}
+            >
+              <CircleHelp className="h-3.5 w-3.5" />
+            </button>
+          )}
           <ThemeToggle />
           <NotificationBell />
           <UserMenuDropdown showUserDetails={false} />

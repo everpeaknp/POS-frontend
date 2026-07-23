@@ -1,51 +1,73 @@
 "use client";
 
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { UserMenuDropdown } from "@/components/shared/UserMenuDropdown";
+import { useAppearance } from "@/lib/context/AppearanceContext";
+import { useRegisterTopbar } from "@/lib/context/TopbarContentContext";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
 
 interface DashHeaderProps {
   title: React.ReactNode;
   subtitle?: string;
   actions?: React.ReactNode;
+  showNotifications?: boolean;
 }
 
 /**
  * Page header for dashboard modules.
- * On Electron, bell/user live in DesktopTitleBar — keep this bar for title + page actions only.
+ * Top mode (web): title/actions merge into AppIconRail — no second bar.
+ * Left mode / Electron: standalone header bar.
  */
-export function DashHeader({ title, subtitle, actions }: DashHeaderProps) {
+export function DashHeader({
+  title,
+  subtitle,
+  actions,
+  showNotifications = true,
+}: DashHeaderProps) {
   const desktop = useIsElectron();
+  const { preferences } = useAppearance();
+  const mergeIntoAppBar =
+    !desktop && preferences.navbar_position === "top";
+
+  useRegisterTopbar({ title, subtitle, actions }, mergeIntoAppBar);
+
+  if (mergeIntoAppBar) {
+    return null;
+  }
 
   return (
     <header
       data-tour="topbar"
-      className={`bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm gap-4 ${
-        desktop ? "py-3 min-h-[52px]" : "py-4"
-      }`}
+      className="bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm gap-4 h-14 min-h-14 max-h-14 overflow-hidden shrink-0"
     >
-      <div data-tour="topbar-title" className="min-w-0">
-        <h1 className="text-lg font-medium text-foreground tracking-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          {title}
+      <div
+        data-tour="topbar-title"
+        data-page-tour="title"
+        className="min-w-0 flex-1"
+      >
+        <h1 className="text-base font-medium text-foreground tracking-tight flex items-baseline gap-x-2 whitespace-nowrap">
+          <span className="truncate">{title}</span>
+          {subtitle && (
+            <span className="text-xs font-normal text-muted-foreground truncate">
+              {subtitle}
+            </span>
+          )}
         </h1>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
 
-      <div data-tour="topbar-actions" className="flex items-center gap-2 shrink-0">
-        {actions ? <div data-tour="topbar-page-actions">{actions}</div> : null}
-        {!desktop && (
-          <>
-            <div data-tour="topbar-theme">
-              <ThemeToggle />
-            </div>
-            <div data-tour="topbar-notifications">
-              <NotificationBell />
-            </div>
-            <div data-tour="topbar-user">
-              <UserMenuDropdown />
-            </div>
-          </>
+      <div data-tour="topbar-actions" className="flex items-center gap-2 shrink-0 h-9">
+        {actions ? (
+          <div
+            data-tour="topbar-page-actions"
+            data-page-tour="header-actions"
+            className="flex items-center h-9"
+          >
+            {actions}
+          </div>
+        ) : null}
+        {desktop && showNotifications && (
+          <div data-tour="topbar-notifications">
+            <NotificationBell />
+          </div>
         )}
       </div>
     </header>

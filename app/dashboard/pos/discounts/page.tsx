@@ -4,10 +4,10 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Edit, Trash2, Tags } from "lucide-react";
+import { Plus, Edit, Trash2, Tags, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,8 @@ import posApi, { type POSDiscount } from "@/lib/api/pos";
 import { inventoryApi, type Category, type Product } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
 
+type StatusFilter = "all" | "active" | "inactive";
+
 export default function POSDiscountsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,6 +26,8 @@ export default function POSDiscountsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -235,6 +239,20 @@ export default function POSDiscountsPage() {
     }
   };
 
+  const filteredDiscounts = discounts.filter((discount) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      discount.name?.toLowerCase().includes(q) ||
+      discount.code?.toLowerCase().includes(q) ||
+      discount.apply_to?.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+    if (statusFilter === "active") return discount.is_active;
+    if (statusFilter === "inactive") return !discount.is_active;
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
@@ -264,8 +282,44 @@ export default function POSDiscountsPage() {
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="POS Discounts" subtitle="Manage discount configurations" />
-      
-      <div className="flex-1 p-6 space-y-6">
+
+      <div className="flex-1 p-6 space-y-4">
+        <div className="flex gap-3 items-center justify-between">
+          <div className="flex gap-3 items-center flex-1 min-w-0">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by name or code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 text-sm border-gray-200"
+              />
+            </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter((v as StatusFilter) || "all")}
+            >
+              <SelectTrigger className="w-[140px] h-9 border-gray-200 shrink-0">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {!showForm && (
+            <Button
+              size="sm"
+              onClick={() => setShowForm(true)}
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" /> Add Discount
+            </Button>
+          )}
+        </div>
+
         {/* Add/Edit Form */}
         {showForm && (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
@@ -453,21 +507,7 @@ export default function POSDiscountsPage() {
         )}
 
         {/* List */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold">Discounts ({discounts.length})</h3>
-            {!showForm && (
-              <Button
-                size="sm"
-                onClick={() => setShowForm(true)}
-                className="bg-[#22C55E] hover:bg-[#16A34A]"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Discount
-              </Button>
-            )}
-          </div>
-          
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
@@ -482,28 +522,28 @@ export default function POSDiscountsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {discounts.length === 0 ? (
+                {filteredDiscounts.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                      No discounts found
+                      No discounts found matching your filters
                     </td>
                   </tr>
                 ) : (
-                  discounts.map((discount) => (
+                  filteredDiscounts.map((discount) => (
                     <tr key={discount.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-sm">{discount.name}</td>
                       <td className="px-4 py-3 text-sm font-mono">{discount.code}</td>
                       <td className="px-4 py-3 text-sm capitalize">{discount.discount_type}</td>
                       <td className="px-4 py-3 text-sm font-semibold text-[#22C55E]">
-                        {discount.discount_type === "percentage" 
-                          ? `${discount.discount_value}%` 
+                        {discount.discount_type === "percentage"
+                          ? `${discount.discount_value}%`
                           : `Rs. ${discount.discount_value}`}
                       </td>
                       <td className="px-4 py-3 text-sm capitalize">{discount.apply_to}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          discount.is_active 
-                            ? "bg-green-100 text-green-700" 
+                          discount.is_active
+                            ? "bg-green-100 text-green-700"
                             : "bg-gray-100 text-gray-700"
                         }`}>
                           {discount.is_active ? "Active" : "Inactive"}

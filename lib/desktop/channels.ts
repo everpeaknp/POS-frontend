@@ -1,5 +1,5 @@
 /**
- * Keep channel names in sync with desktop/src/ipc/channels.ts
+ * Keep channel names in sync with electron/src/ipc/channels.ts
  */
 export const DESKTOP_IPC = {
   WINDOW_MINIMIZE: "desktop:window:minimize",

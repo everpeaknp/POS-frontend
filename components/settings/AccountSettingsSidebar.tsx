@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Menu, PanelLeft, PanelLeftClose, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  Search,
+  X,
+} from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAppearance } from "@/lib/context/AppearanceContext";
 import { billingApi } from "@/lib/api/billing";
 import { cn, getMediaUrl } from "@/lib/utils";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
@@ -15,15 +23,18 @@ const SETTINGS_SIDEBAR_COLLAPSED_KEY = "khata-settings-sidebar-collapsed";
 function AccountSidebarContent({
   onClose,
   compact = false,
-  onToggleCollapse,
+  searchFocusNonce = 0,
 }: {
   onClose?: () => void;
   compact?: boolean;
-  onToggleCollapse?: () => void;
+  searchFocusNonce?: number;
 }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [planName, setPlanName] = useState<string | null>(null);
+  const [navQuery, setNavQuery] = useState("");
+  const [modKey, setModKey] = useState("Ctrl");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const displayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
@@ -33,6 +44,21 @@ function AccountSidebarContent({
       user.username?.[0]?.toUpperCase() ||
       "U"
     : "U";
+
+  useEffect(() => {
+    if (/Mac|iPhone|iPad|iPod/.test(navigator.platform)) {
+      setModKey("⌘");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!searchFocusNonce || compact) return;
+    const id = requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [searchFocusNonce, compact]);
 
   useEffect(() => {
     if (!user) {
@@ -56,13 +82,18 @@ function AccountSidebarContent({
   }, [user?.id]);
 
   const avatarUrl = user?.avatar ? getMediaUrl(user.avatar) : null;
+  const q = navQuery.trim().toLowerCase();
+  const filteredNavItems = q
+    ? SETTINGS_NAV_ITEMS.filter((item) => item.label.toLowerCase().includes(q))
+    : SETTINGS_NAV_ITEMS;
+  const showBack = !q || "back".includes(q);
 
   return (
     <div className="flex flex-col h-full">
       <div
         className={cn(
           "border-b border-white/10 flex items-center justify-between gap-2",
-          compact ? "px-2 py-4" : "px-5 py-5"
+          compact ? "px-2 py-4" : "px-4 py-4"
         )}
       >
         {user ? (
@@ -102,34 +133,68 @@ function AccountSidebarContent({
           </div>
         )}
 
-        <div className="flex items-center gap-1 shrink-0">
-          {onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-              aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
-              title={compact ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {compact ? (
-                <PanelLeft className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </button>
-          )}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5 shrink-0"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
+
+      {!compact && (
+        <div data-tour="sidebar-search" className="px-3 pt-3 pb-1">
+          <div className="relative flex items-center">
+            <Search
+              size={15}
+              strokeWidth={2}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            />
+            <input
+              ref={searchInputRef}
+              value={navQuery}
+              onChange={(e) => setNavQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  if (navQuery) {
+                    setNavQuery("");
+                  } else {
+                    searchInputRef.current?.blur();
+                  }
+                }
+              }}
+              placeholder="Search"
+              aria-label="Search menu (Ctrl+K)"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
+            />
+            {navQuery ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setNavQuery("");
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-gray-500 hover:text-white transition-colors"
+                aria-label="Clear search"
+              >
+                <X size={13} />
+              </button>
+            ) : (
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                  {modKey}
+                </kbd>
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                  K
+                </kbd>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <nav
         className={cn(
@@ -137,40 +202,50 @@ function AccountSidebarContent({
           compact ? "px-2" : "px-3"
         )}
       >
-        {SETTINGS_NAV_ITEMS.map((item) => {
-          const active = isSettingsNavActive(pathname, item);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                compact && "justify-center px-2",
-                active
-                  ? "bg-[#22C55E] text-white"
-                  : "text-gray-400 hover:text-white hover:bg-white/10"
-              )}
-            >
-              <item.icon size={17} className="shrink-0" />
-              {!compact && item.label}
-            </Link>
-          );
-        })}
+        {filteredNavItems.length === 0 && !showBack ? (
+          <p className="px-3 py-4 text-xs text-gray-500 text-center">
+            No menu items found
+          </p>
+        ) : (
+          <>
+            {filteredNavItems.map((item) => {
+              const active = isSettingsNavActive(pathname, item);
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  title={item.label}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    compact && "justify-center px-2",
+                    active
+                      ? "bg-[#22C55E] text-white"
+                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  <item.icon size={17} className="shrink-0" />
+                  {!compact && item.label}
+                </Link>
+              );
+            })}
 
-        <Link
-          href="/erp"
-          title="Back"
-          onClick={onClose}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
-            compact && "justify-center px-2"
-          )}
-        >
-          <ArrowLeft size={17} className="shrink-0" />
-          {!compact && "Back"}
-        </Link>
+            {showBack && (
+              <Link
+                href="/erp"
+                title="Back"
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
+                  compact && "justify-center px-2"
+                )}
+              >
+                <ArrowLeft size={17} className="shrink-0" />
+                {!compact && "Back"}
+              </Link>
+            )}
+          </>
+        )}
       </nav>
 
       {!compact && (
@@ -185,8 +260,11 @@ function AccountSidebarContent({
 }
 
 export function AccountSettingsSidebar() {
+  const { preferences } = useAppearance();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [searchFocusNonce, setSearchFocusNonce] = useState(0);
+  const railOnTop = preferences.navbar_position === "top";
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(SETTINGS_SIDEBAR_COLLAPSED_KEY) === "1");
@@ -204,12 +282,46 @@ export function AccountSettingsSidebar() {
     });
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.shiftKey) return;
+      if (e.key.toLowerCase() !== "k") return;
+      e.preventDefault();
+
+      const isMobileViewport =
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 1023px)").matches;
+
+      if (isMobileViewport) {
+        setMobileOpen(true);
+      } else if (collapsed) {
+        setCollapsed(false);
+        try {
+          localStorage.setItem(SETTINGS_SIDEBAR_COLLAPSED_KEY, "0");
+        } catch {
+          // ignore
+        }
+      }
+
+      setSearchFocusNonce((n) => n + 1);
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [collapsed]);
+
+  const mobileFocusNonce = mobileOpen ? searchFocusNonce : 0;
+  const desktopFocusNonce = mobileOpen ? 0 : searchFocusNonce;
+
   return (
     <>
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg"
+        className={cn(
+          "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg",
+          railOnTop ? "left-4" : "left-16"
+        )}
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
@@ -222,7 +334,10 @@ export function AccountSettingsSidebar() {
             onClick={() => setMobileOpen(false)}
           />
           <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
-            <AccountSidebarContent onClose={() => setMobileOpen(false)} />
+            <AccountSidebarContent
+              onClose={() => setMobileOpen(false)}
+              searchFocusNonce={mobileFocusNonce}
+            />
           </div>
         </div>
       )}
@@ -230,14 +345,27 @@ export function AccountSettingsSidebar() {
       <aside
         data-compact={collapsed ? "true" : "false"}
         className={cn(
-          "hidden lg:flex flex-col shrink-0 bg-[#1E2A3B] h-full sticky top-0 overflow-hidden transition-[width] duration-200",
+          "relative hidden lg:flex flex-col shrink-0 bg-[#1E2A3B] h-full sticky top-0 overflow-hidden transition-[width] duration-200",
           collapsed ? "w-[72px]" : "w-60"
         )}
       >
         <AccountSidebarContent
           compact={collapsed}
-          onToggleCollapse={toggleCollapse}
+          searchFocusNonce={desktopFocusNonce}
         />
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-white/15 bg-[#243447] text-gray-300 hover:bg-[#2d4058] hover:text-white grid place-items-center transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.5} />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+          )}
+        </button>
       </aside>
     </>
   );

@@ -213,7 +213,7 @@ export default function PurchaseRequestDetailPage() {
         title={req.request_number}
         subtitle={`Purchase Request · ${req.date}`}
       />
-      <div className="flex-1 p-6 space-y-4 max-w-4xl">
+      <div className="flex-1 p-6 space-y-4 w-full">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={req.status} />
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColors[req.priority]}`}>
@@ -361,7 +361,7 @@ export default function PurchaseRequestDetailPage() {
                 onClick={handleReject}
                 disabled={updating}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
+              >
                 Confirm Reject
               </Button>
               <Button variant="outline" onClick={() => setRejectModal(false)} className="flex-1" disabled={updating}>
@@ -400,7 +400,7 @@ export default function PurchaseRequestDetailPage() {
                 onClick={handleConvertToPO}
                 disabled={updating}
                 className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
+              >
                 Create PO
               </Button>
               <Button variant="outline" onClick={() => setConvertModal(false)} className="flex-1" disabled={updating}>

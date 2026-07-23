@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { HRPageShell, hrCardClass, hrTableWrapClass, hrStatCardClass, hrInputClass } from "@/components/dashboard/HRPageShell";
+import { HRPageShell, hrCardClass, hrTableWrapClass, hrStatCardClass } from "@/components/dashboard/HRPageShell";
 import { LeaveStatusBadge } from "@/components/hr/LeaveStatusBadge";
 import { LeaveBalanceCard } from "@/components/hr/LeaveBalanceCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -289,19 +289,20 @@ export default function LeavePage() {
           : `${stats.total} requests · ${leaveTypes.length} leave types`
       }
       loading={loading}
-      toolbar={
-        <>
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+    >
+      <div className="flex gap-3 items-center justify-between flex-wrap">
+        <div className="flex gap-3 items-center flex-1 min-w-0 flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search by employee..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={hrInputClass}
+              className="pl-9 h-9 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
             />
           </div>
           <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 dark:border-border bg-white dark:bg-card">
+            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 dark:border-border bg-white dark:bg-card shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -312,16 +313,14 @@ export default function LeavePage() {
               ))}
             </SelectContent>
           </Select>
-        </>
-      }
-      action={
-        <Link href="/dashboard/hr/leave/requests/new">
+        </div>
+        <Link href="/dashboard/hr/leave/requests/new" className="shrink-0">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Apply Leave
           </Button>
         </Link>
-      }
-    >
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className={hrStatCardClass}>
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1">

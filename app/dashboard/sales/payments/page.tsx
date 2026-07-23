@@ -3,8 +3,10 @@
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, Search, Filter, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
@@ -14,6 +16,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function PaymentsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
 
@@ -71,41 +74,43 @@ export default function PaymentsPage() {
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Payments Received" subtitle="Track customer payments" />
-      <div className="flex-1 p-6 space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search payments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-            />
+
+      <div className="flex-1 p-6 space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by payment, customer, or reference..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-10 border-gray-200"
+              />
+            </div>
+            <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v || "")}>
+              <SelectTrigger className="w-[180px] h-10 border-gray-200 shrink-0">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="All Methods" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Methods</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="bank">Bank Transfer</SelectItem>
+                <SelectItem value="esewa">eSewa</SelectItem>
+                <SelectItem value="khalti">Khalti</SelectItem>
+                <SelectItem value="fonepay">FonePay</SelectItem>
+                <SelectItem value="cheque">Cheque</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v || '')}>
-            <SelectTrigger className="w-[180px] h-10 border-gray-200">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="All Methods" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Methods</SelectItem>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="bank">Bank Transfer</SelectItem>
-              <SelectItem value="esewa">eSewa</SelectItem>
-              <SelectItem value="khalti">Khalti</SelectItem>
-              <SelectItem value="fonepay">FonePay</SelectItem>
-              <SelectItem value="cheque">Cheque</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Link href="/dashboard/sales/payments/new">
-            <Button size="sm" className="h-10 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-              <Plus className="h-4 w-4" /> Record Payment
-            </Button>
-          </Link>
+          <Button
+            onClick={() => router.push("/dashboard/sales/payments/new")}
+            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            Record Payment
+          </Button>
         </div>
 
         {filteredPayments.length === 0 ? (
@@ -152,13 +157,13 @@ export default function PaymentsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                      {payment.invoice_number || '—'}
+                      {payment.invoice_number || "—"}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                      {payment.reference_number || '—'}
+                      {payment.reference_number || "—"}
                     </td>
                     <td className="px-4 py-3 text-gray-600 text-xs">
-                      {payment.received_by_name || '—'}
+                      {payment.received_by_name || "—"}
                     </td>
                   </tr>
                 ))}

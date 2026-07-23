@@ -96,4 +96,6 @@ export interface AppearancePreferences {
   date_calendar_system: 'AD' | 'BS';
   compact_mode: boolean;
   smooth_animations: boolean;
+  /** Main dashboard navigation: left sidebar or top bar */
+  navbar_position: 'left' | 'top';
 }

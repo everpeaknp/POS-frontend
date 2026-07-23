@@ -165,8 +165,15 @@ declare global {
 export function isElectron(): boolean {
   if (typeof window === "undefined") return false;
   if (window.khataDesktop?.isElectron) return true;
-  // Fallback: preload may be late/missing; Electron UA still marks desktop shell
-  return typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent);
+  // UA may have Electron stripped by the desktop shell; keep a few fallbacks.
+  if (typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent)) {
+    return true;
+  }
+  // Desktop chrome sets data attribute on <html> from DesktopRootChrome
+  if (typeof document !== "undefined" && document.documentElement.dataset.khataDesktop === "1") {
+    return true;
+  }
+  return false;
 }
 
 /** Detect OS inside Electron without requiring preload */

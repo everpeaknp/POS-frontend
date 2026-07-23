@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
-  hardwareCardClass,
-  hardwareInputClass,
   hardwareStatCardClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
@@ -15,11 +15,14 @@ import { HARDWARE_LIST_PARAMS, unwrapList, availableCredit } from "@/lib/api/har
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
+type CreditFilter = "all" | "balance" | "over_limit" | "clear";
+
 export default function HardwareCreditPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<CreditFilter>("all");
 
   useEffect(() => {
     fetchCustomers();
@@ -38,9 +41,27 @@ export default function HardwareCreditPage() {
     }
   };
 
-  const filteredData = customers.filter((item) =>
-    item.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    return customers.filter((item) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !q ||
+        item.name?.toLowerCase().includes(q) ||
+        item.phone?.toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      const balance = item.current_balance || 0;
+      const overLimit =
+        Boolean(item.is_over_limit) ||
+        ((item.credit_limit || 0) > 0 && balance > (item.credit_limit || 0));
+
+      if (statusFilter === "over_limit") return overLimit;
+      if (statusFilter === "balance") return balance > 0 && !overLimit;
+      if (statusFilter === "clear") return balance <= 0 && !overLimit;
+      return true;
+    });
+  }, [customers, searchTerm, statusFilter]);
 
   const totalOutstanding = customers.reduce((sum, item) => sum + (item.current_balance || 0), 0);
   const totalCreditLimit = customers.reduce((sum, item) => sum + (item.credit_limit || 0), 0);
@@ -73,17 +94,30 @@ export default function HardwareCreditPage() {
         </div>
       </div>
 
-      <div className={`${hardwareCardClass} p-4`}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
+      <div className="flex gap-3 items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
             placeholder="Search customers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={hardwareInputClass}
+            className="pl-9 h-9 text-sm border-gray-200"
           />
         </div>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter((v as CreditFilter) || "all")}
+        >
+          <SelectTrigger className="w-[180px] h-9 border-gray-200 shrink-0">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="balance">Has Balance</SelectItem>
+            <SelectItem value="over_limit">Over Limit</SelectItem>
+            <SelectItem value="clear">Clear</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className={hardwareTableWrapClass}>

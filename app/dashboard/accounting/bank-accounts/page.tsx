@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, CreditCard, Trash2 } from "lucide-react";
+import { Plus, CreditCard, Trash2, Search } from "lucide-react";
 
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AccountingPageShell,
   accountingCardClass,
@@ -21,12 +23,15 @@ function maskAccount(num: string) {
   return "XXXX XXXX " + num.slice(-4);
 }
 
+type StatusFilter = "all" | "active" | "inactive" | "closed";
 
 export default function BankAccountsPage() {
   const { formatDate } = useDateSystem();
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 
@@ -41,13 +46,30 @@ export default function BankAccountsPage() {
       const data = await bankAccountsAPI.list();
       setAccounts(data);
     } catch (error: any) {
-      console.error('Failed to load bank accounts:', error);
-      setError('Failed to load bank accounts. Please try again.');
-      toast.error('Failed to load bank accounts');
+      console.error("Failed to load bank accounts:", error);
+      setError("Failed to load bank accounts. Please try again.");
+      toast.error("Failed to load bank accounts");
     } finally {
       setLoading(false);
     }
   };
+
+  const filteredAccounts = useMemo(() => {
+    return accounts.filter((bank) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !q ||
+        bank.bank_name?.toLowerCase().includes(q) ||
+        bank.account_name?.toLowerCase().includes(q) ||
+        bank.account_number?.toLowerCase().includes(q) ||
+        bank.branch?.toLowerCase().includes(q) ||
+        bank.type?.toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+      if (statusFilter !== "all") return bank.status === statusFilter;
+      return true;
+    });
+  }, [accounts, searchTerm, statusFilter]);
 
   const handleDelete = async (id: string, accountName: string) => {
     setConfirmDelete({ id, name: accountName });
@@ -59,12 +81,15 @@ export default function BankAccountsPage() {
     try {
       setDeletingId(confirmDelete.id);
       await bankAccountsAPI.delete(confirmDelete.id);
-      toast.success('Bank account removed or closed successfully');
-      setAccounts(accounts.filter(acc => acc.id !== confirmDelete.id));
+      toast.success("Bank account removed or closed successfully");
+      setAccounts(accounts.filter((acc) => acc.id !== confirmDelete.id));
       setConfirmDelete(null);
     } catch (error: any) {
-      console.error('Failed to delete bank account:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to delete bank account';
+      console.error("Failed to delete bank account:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to delete bank account";
       toast.error(errorMessage);
     } finally {
       setDeletingId(null);
@@ -73,17 +98,14 @@ export default function BankAccountsPage() {
 
   if (!loading && !error && accounts.length === 0) {
     return (
-      <AccountingPageShell
-        title="Bank Accounts"
-        subtitle="Manage your bank accounts"
-      >
+      <AccountingPageShell title="Bank Accounts" subtitle="Manage your bank accounts">
         <EmptyState
-            icon={CreditCard}
-            title="No Bank Accounts"
-            description="Get started by adding your first bank account"
-            actionLabel="Add Bank Account"
-            actionHref="/dashboard/accounting/bank-accounts/new"
-          />
+          icon={CreditCard}
+          title="No Bank Accounts"
+          description="Get started by adding your first bank account"
+          actionLabel="Add Bank Account"
+          actionHref="/dashboard/accounting/bank-accounts/new"
+        />
       </AccountingPageShell>
     );
   }
@@ -91,91 +113,133 @@ export default function BankAccountsPage() {
   return (
     <AccountingPageShell
       title="Bank Accounts"
-      subtitle={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
+      subtitle={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
       loading={loading}
       error={error}
       onRetry={fetchBankAccounts}
-      action={
-        <Link href="/dashboard/accounting/bank-accounts/new">
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by bank, account, or branch..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200"
+            />
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter((v as StatusFilter) || "all")}
+          >
+            <SelectTrigger className="w-[140px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Link href="/dashboard/accounting/bank-accounts/new" className="shrink-0">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Bank Account
           </Button>
         </Link>
-      }
-    >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {accounts.map((bank) => (
-          <div key={bank.id} className={`${accountingCardClass} p-5 space-y-4 hover:border-[#22C55E]/30 transition-colors`}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-[#22C55E]" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm">{bank.bank_name}</p>
-                  <p className="text-xs text-gray-500">{bank.account_name}</p>
-                </div>
-              </div>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                bank.status === "active" 
-                  ? "bg-green-100 text-green-700" 
-                  : bank.status === "closed"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-gray-100 text-gray-500"
-              }`}>
-                {bank.status}
-              </span>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-400 font-mono">{maskAccount(bank.account_number)}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{bank.type} Account</p>
-              {bank.branch && <p className="text-xs text-gray-400 mt-0.5">{bank.branch}</p>}
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Current Balance</p>
-              <p className="text-2xl font-bold text-gray-900 mt-0.5">{fmt(bank.balance)}</p>
-            </div>
-
-            <div className="text-xs text-gray-400">
-              Last reconciled: {formatDate(bank.last_reconciled, "Never")}
-            </div>
-
-            <div className="flex gap-2 pt-1 border-t border-gray-100">
-              <Link href={`/dashboard/accounting/bank-accounts/${bank.id}`} className="flex-1">
-                <Button variant="outline" size="sm" className="w-full h-8 text-xs border-gray-200 text-gray-600">
-                  Statement
-                </Button>
-              </Link>
-              <Link href={`/dashboard/accounting/bank-accounts/${bank.id}/edit`}>
-                <Button variant="outline" size="sm" className="h-8 text-xs border-gray-200 text-gray-600 px-3">
-                  Edit
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs px-2 border-gray-200 text-gray-600"
-                onClick={() => handleDelete(bank.id, bank.account_name)}
-                disabled={deletingId === bank.id}
-              >
-                {deletingId === bank.id ? "Deleting..." : <Trash2 className="h-3.5 w-3.5" />}
-              </Button>
-            </div>
-          </div>
-        ))}
       </div>
+
+      {filteredAccounts.length === 0 ? (
+        <div className={`${accountingCardClass} p-12 text-center`}>
+          <p className="text-gray-500">No bank accounts found matching your filters</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAccounts.map((bank) => (
+            <div
+              key={bank.id}
+              className={`${accountingCardClass} p-5 space-y-4 hover:border-[#22C55E]/30 transition-colors`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-[#22C55E]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{bank.bank_name}</p>
+                    <p className="text-xs text-gray-500">{bank.account_name}</p>
+                  </div>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    bank.status === "active"
+                      ? "bg-green-100 text-green-700"
+                      : bank.status === "closed"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {bank.status}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-400 font-mono">{maskAccount(bank.account_number)}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{bank.type} Account</p>
+                {bank.branch && <p className="text-xs text-gray-400 mt-0.5">{bank.branch}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500">Current Balance</p>
+                <p className="text-2xl font-bold text-gray-900 mt-0.5">{fmt(bank.balance)}</p>
+              </div>
+
+              <div className="text-xs text-gray-400">
+                Last reconciled: {formatDate(bank.last_reconciled, "Never")}
+              </div>
+
+              <div className="flex gap-2 pt-1 border-t border-gray-100">
+                <Link href={`/dashboard/accounting/bank-accounts/${bank.id}`} className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs border-gray-200 text-gray-600"
+                  >
+                    Statement
+                  </Button>
+                </Link>
+                <Link href={`/dashboard/accounting/bank-accounts/${bank.id}/edit`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs border-gray-200 text-gray-600 px-3"
+                  >
+                    Edit
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs px-2 border-gray-200 text-gray-600"
+                  onClick={() => handleDelete(bank.id, bank.account_name)}
+                  disabled={deletingId === bank.id}
+                >
+                  {deletingId === bank.id ? "Deleting..." : <Trash2 className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {confirmDelete && (
         <>
-          <div 
-            className="fixed inset-0 bg-black/20 z-40"
-            onClick={() => setConfirmDelete(null)}
-          />
-          <div 
+          <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setConfirmDelete(null)} />
+          <div
             className="fixed left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-xl p-6 w-full max-w-md"
-            style={{ top: '40vh' }}
+            style={{ top: "40vh" }}
           >
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
@@ -184,7 +248,9 @@ export default function BankAccountsPage() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Delete Bank Account</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Are you sure you want to delete <span className="font-medium">{confirmDelete.name}</span>? This action cannot be undone.
+                  Are you sure you want to delete{" "}
+                  <span className="font-medium">{confirmDelete.name}</span>? This action cannot be
+                  undone.
                 </p>
                 <div className="flex gap-3 justify-end">
                   <Button
@@ -202,7 +268,7 @@ export default function BankAccountsPage() {
                     className="bg-red-600 hover:bg-red-700 text-white"
                     disabled={deletingId !== null}
                   >
-                    {deletingId ? 'Deleting...' : 'Delete'}
+                    {deletingId ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
               </div>

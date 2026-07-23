@@ -23,7 +23,9 @@ export function SettingsPageShell({
 }: SettingsPageShellProps) {
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      {!loading && <DashHeader title={title} subtitle={subtitle} />}
+      {!loading && (
+        <DashHeader title={title} subtitle={subtitle} showNotifications={false} />
+      )}
 
       {loading ? (
         <div className="absolute inset-0 z-20 flex min-h-0 w-full bg-[#F3F4F6] dark:bg-background">

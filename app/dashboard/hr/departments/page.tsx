@@ -31,18 +31,6 @@ const DEPARTMENT_COLOR_CLASSES = [
 
 type ViewMode = "grid" | "list";
 
-function AddDepartmentFab() {
-  return (
-    <Link
-      href="/dashboard/hr/departments/new"
-      className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
-      aria-label="Add department"
-    >
-      <Plus className="h-6 w-6" />
-    </Link>
-  );
-}
-
 function DepartmentActions({
   onView,
   onEdit,
@@ -185,85 +173,88 @@ export default function DepartmentsPage() {
 
   if (!loading && departments.length === 0 && !hasActiveFilters) {
     return (
-      <>
-        <HRPageShell title="Departments" subtitle="Manage your departments">
-          <EmptyState
-            icon={Users}
-            title="No departments yet"
-            description="Create your first department to organize your employees"
-          />
-        </HRPageShell>
-        <AddDepartmentFab />
-      </>
+      <HRPageShell title="Departments" subtitle="Manage your departments">
+        <EmptyState
+          icon={Users}
+          title="No departments yet"
+          description="Create your first department to organize your employees"
+          actionLabel="Add Department"
+          actionHref="/dashboard/hr/departments/new"
+        />
+      </HRPageShell>
     );
   }
 
   return (
-    <>
-      <HRPageShell
-        title="Departments"
-        subtitle={loading ? "Loading..." : `${filtered.length} departments`}
-        loading={loading}
-        toolbar={
-          <>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search departments..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white"
-              />
-            </div>
-            <Select value={headFilter} onValueChange={(v) => setHeadFilter(v ?? "All")}>
-              <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {["All", "With Head", "No Head"].map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option === "All" ? "All Heads" : option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={staffFilter} onValueChange={(v) => setStaffFilter(v ?? "All")}>
-              <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {["All", "Empty", "Has Employees"].map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option === "All" ? "All Sizes" : option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 ${viewMode === "grid" ? "bg-gray-100 text-gray-900" : "text-gray-500"}`}
-                onClick={() => setViewMode("grid")}
-                aria-label="Grid view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 ${viewMode === "list" ? "bg-gray-100 text-gray-900" : "text-gray-500"}`}
-                onClick={() => setViewMode("list")}
-                aria-label="List view"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </>
-        }
-      >
+    <HRPageShell
+      title="Departments"
+      subtitle={loading ? "Loading..." : `${filtered.length} departments`}
+      loading={loading}
+    >
+      <div className="flex gap-3 items-center justify-between flex-wrap">
+        <div className="flex gap-3 items-center flex-1 min-w-0 flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search departments..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200 bg-white"
+            />
+          </div>
+          <Select value={headFilter} onValueChange={(v) => setHeadFilter(v ?? "All")}>
+            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["All", "With Head", "No Head"].map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option === "All" ? "All Heads" : option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={staffFilter} onValueChange={(v) => setStaffFilter(v ?? "All")}>
+            <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["All", "Empty", "Has Employees"].map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option === "All" ? "All Sizes" : option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={`h-8 w-8 p-0 ${viewMode === "grid" ? "bg-gray-100 text-gray-900" : "text-gray-500"}`}
+              onClick={() => setViewMode("grid")}
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={`h-8 w-8 p-0 ${viewMode === "list" ? "bg-gray-100 text-gray-900" : "text-gray-500"}`}
+              onClick={() => setViewMode("list")}
+              aria-label="List view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <Link href="/dashboard/hr/departments/new" className="shrink-0">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Plus className="h-4 w-4" /> Add Department
+          </Button>
+        </Link>
+      </div>
         {filtered.length === 0 ? (
           <div className={`${hrCardClass} p-12 text-center`}>
             <p className="text-gray-600 dark:text-muted-foreground">
@@ -373,8 +364,6 @@ export default function DepartmentsPage() {
             </table>
           </div>
         )}
-      </HRPageShell>
-      <AddDepartmentFab />
-    </>
+    </HRPageShell>
   );
 }

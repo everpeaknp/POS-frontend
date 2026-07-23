@@ -33,8 +33,12 @@ export function DashboardPageShell({
   return (
     <div className="flex flex-col h-full min-h-0">
       <DashHeader title={title} subtitle={subtitle} actions={headerActions} />
-      <div className="flex-1 p-6 space-y-6">
-        {action && <div className="flex justify-end -mt-2">{action}</div>}
+      <div data-page-tour="content" className="flex-1 p-6 space-y-6">
+        {action && (
+          <div data-page-tour="primary-action" className="flex justify-end -mt-2">
+            {action}
+          </div>
+        )}
         {children}
       </div>
     </div>

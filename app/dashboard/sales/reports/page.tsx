@@ -321,7 +321,6 @@ export default function SalesReportsPage() {
     <SalesPageShell
       title="Sales Reports"
       subtitle="Analytics and insights across orders, customers, and tax"
-      showBack
       loading={loading && !hasAnyData}
       error={error}
       onRetry={loadReportData}

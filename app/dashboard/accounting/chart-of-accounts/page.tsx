@@ -16,6 +16,7 @@ import {
   FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
@@ -182,43 +183,38 @@ export default function ChartOfAccountsPage() {
         </div>
 
         {/* Toolbar */}
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by code, name, or sub-type..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm border-border bg-muted/40 focus:bg-card"
-                />
-              </div>
-              <div className="overflow-x-auto -mx-1 px-1">
-                <div className="flex gap-1 bg-muted p-1 rounded-lg w-max min-w-0">
-                  {TYPES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setTypeFilter(t)}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
-                        typeFilter === t
-                          ? "bg-card text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="flex gap-3 items-center justify-between">
+          <div className="flex gap-3 items-center flex-1 min-w-0">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by code, name, or sub-type..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-9 text-sm border-gray-200"
+              />
             </div>
-            <Link href="/dashboard/accounting/chart-of-accounts/new" className="shrink-0">
-              <Button className="h-9 w-full sm:w-auto bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-                <Plus className="h-4 w-4" /> Add Account
-              </Button>
-            </Link>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter((v as (typeof TYPES)[number]) || "All")}
+            >
+              <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                {TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t === "All" ? "All Types" : t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          <Link href="/dashboard/accounting/chart-of-accounts/new" className="shrink-0">
+            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          </Link>
         </div>
 
         {/* Account list */}

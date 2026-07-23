@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { customerAPI } from "@/lib/api/sales";
 import { formatCurrency } from "@/lib/utils";
 
+type CreditFilter = "all" | "balance" | "over_limit" | "clear";
+
 export default function CustomerCreditPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<CreditFilter>("all");
 
   const { data, loading } = useApi(
     () => customerAPI.list(),
@@ -19,23 +24,44 @@ export default function CustomerCreditPage() {
 
   const customers = data?.data?.results || [];
 
-  const filteredCustomers = customers.filter((customer: any) =>
-    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((customer: any) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !q ||
+        customer.name?.toLowerCase().includes(q) ||
+        customer.phone?.toLowerCase().includes(q);
 
-  // Calculate totals
-  const totalOutstanding = filteredCustomers.reduce((sum: number, c: any) => sum + (c.current_balance || 0), 0);
-  const totalCreditLimit = filteredCustomers.reduce((sum: number, c: any) => sum + (c.credit_limit || 0), 0);
-  const customersOverLimit = filteredCustomers.filter((c: any) => c.is_over_limit).length;
-  const customersWithBalance = filteredCustomers.filter((c: any) => c.current_balance > 0).length;
+      if (!matchesSearch) return false;
+
+      if (statusFilter === "over_limit") return Boolean(customer.is_over_limit);
+      if (statusFilter === "balance") {
+        return (customer.current_balance || 0) > 0 && !customer.is_over_limit;
+      }
+      if (statusFilter === "clear") {
+        return (customer.current_balance || 0) <= 0 && !customer.is_over_limit;
+      }
+      return true;
+    });
+  }, [customers, searchTerm, statusFilter]);
+
+  const totalOutstanding = customers.reduce(
+    (sum: number, c: any) => sum + (c.current_balance || 0),
+    0
+  );
+  const totalCreditLimit = customers.reduce(
+    (sum: number, c: any) => sum + (c.credit_limit || 0),
+    0
+  );
+  const customersOverLimit = customers.filter((c: any) => c.is_over_limit).length;
+  const customersWithBalance = customers.filter(
+    (c: any) => c.current_balance > 0
+  ).length;
 
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Customer Credit" subtitle="Monitor customer credit and outstanding balances" />
-      <div className="flex-1 p-6 space-y-4">
-        
-        {/* Summary Cards */}
+      <div className="flex-1 p-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between">
@@ -86,19 +112,32 @@ export default function CustomerCreditPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by customer or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-10 border-gray-200"
+            />
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter((v as CreditFilter) || "all")}
+          >
+            <SelectTrigger className="w-[180px] h-10 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="balance">Has Balance</SelectItem>
+              <SelectItem value="over_limit">Over Limit</SelectItem>
+              <SelectItem value="clear">Clear</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Customers table */}
         {loading ? (
           <SkeletonTable rows={5} />
         ) : filteredCustomers.length === 0 ? (
@@ -109,7 +148,11 @@ export default function CustomerCreditPage() {
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No customers found</h3>
-            <p className="text-gray-500">Create customers to track credit</p>
+            <p className="text-gray-500">
+              {searchTerm || statusFilter !== "all"
+                ? "Try a different search or filter"
+                : "Create customers to track credit"}
+            </p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -125,10 +168,10 @@ export default function CustomerCreditPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredCustomers.map((customer: any) => {
-                  const utilization = customer.credit_limit > 0 
+                  const utilization = customer.credit_limit > 0
                     ? ((customer.current_balance / customer.credit_limit) * 100).toFixed(1)
                     : 0;
-                  
+
                   return (
                     <tr key={customer.id} className="hover:bg-gray-50/50">
                       <td className="px-4 py-3">
@@ -154,9 +197,9 @@ export default function CustomerCreditPage() {
                           <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden max-w-[80px]">
                             <div
                               className={`h-full ${
-                                parseFloat(utilization as string) > 90 ? 'bg-red-500' :
-                                parseFloat(utilization as string) > 70 ? 'bg-yellow-500' :
-                                'bg-green-500'
+                                parseFloat(utilization as string) > 90 ? "bg-red-500" :
+                                parseFloat(utilization as string) > 70 ? "bg-yellow-500" :
+                                "bg-green-500"
                               }`}
                               style={{ width: `${Math.min(parseFloat(utilization as string), 100)}%` }}
                             />

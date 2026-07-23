@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "reac
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAppearance } from "@/lib/context/AppearanceContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { buildProductTourSteps, type TourStep } from "@/lib/onboarding/tour-steps";
@@ -28,15 +29,25 @@ function isDisplayed(el: Element): boolean {
   return rect.width > 1 && rect.height > 1;
 }
 
+function isSidebarScopedSelector(selector: string): boolean {
+  return (
+    selector.includes("sidebar") ||
+    /data-tour=["']nav-/.test(selector) ||
+    /\[data-tour=["']nav-/.test(selector)
+  );
+}
+
 function queryFirst(selectors: string[]): Element | null {
   for (const selector of selectors) {
     try {
       const nodes = Array.from(document.querySelectorAll(selector));
-      // Prefer targets inside the visible desktop sidebar when applicable
-      const preferred = nodes.find(
-        (n) => isDisplayed(n) && n.closest('[data-tour="sidebar"]')
-      );
-      if (preferred) return preferred;
+      // Prefer targets inside the module sidebar only for sidebar/nav selectors
+      if (isSidebarScopedSelector(selector)) {
+        const preferred = nodes.find(
+          (n) => isDisplayed(n) && n.closest('[data-tour="sidebar"]')
+        );
+        if (preferred) return preferred;
+      }
       const any = nodes.find((n) => isDisplayed(n));
       if (any) return any;
     } catch {
@@ -79,29 +90,60 @@ function pickPlacement(rect: Rect, preferred?: TourStep["placement"]): Placement
     right: window.innerWidth - (rect.left + rect.width),
   };
 
-  if (preferred && preferred !== "auto" && space[preferred] > 180) {
+  if (preferred && preferred !== "auto" && space[preferred] > 140) {
     return preferred;
   }
 
-  const order: Placement[] = ["right", "bottom", "left", "top"];
+  // Prefer bottom for wide/top-bar targets, right for tall/left-rail targets
+  const order: Placement[] =
+    rect.width > rect.height * 1.5
+      ? ["bottom", "top", "left", "right"]
+      : ["right", "bottom", "left", "top"];
+
   return order.sort((a, b) => space[b] - space[a])[0];
 }
 
-function contentLeftBound(): number {
+function contentBounds(rect: Rect | null): { minLeft: number; minTop: number } {
   const sidebar = document.querySelector(
     '[data-tour="sidebar"]'
   ) as HTMLElement | null;
+  const rail = document.querySelector(
+    '[data-tour="app-icon-rail"]'
+  ) as HTMLElement | null;
+
+  let minLeft = 12;
+  let minTop = 12;
+
   if (sidebar && isDisplayed(sidebar)) {
     const r = sidebar.getBoundingClientRect();
-    return Math.ceil(r.right) + 12;
+    // When highlighting something to the right of the sidebar, keep the card clear of it
+    if (!rect || rect.left >= r.right - 8) {
+      minLeft = Math.max(minLeft, Math.ceil(r.right) + 12);
+    }
   }
-  return 12;
+
+  if (rail && isDisplayed(rail) && rail.getAttribute("data-position") === "top") {
+    const r = rail.getBoundingClientRect();
+    // When highlighting under the top bar, keep the card below it
+    if (!rect || rect.top >= r.bottom - 8) {
+      minTop = Math.max(minTop, Math.ceil(r.bottom) + 12);
+    }
+  }
+
+  if (rail && isDisplayed(rail) && rail.getAttribute("data-position") === "left") {
+    const r = rail.getBoundingClientRect();
+    if (!rect || rect.left >= r.right - 8) {
+      minLeft = Math.max(minLeft, Math.ceil(r.right) + 12);
+    }
+  }
+
+  return { minLeft, minTop };
 }
 
 function positionCard(rect: Rect, placement: Placement) {
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const minLeft = contentLeftBound();
+  const { minLeft, minTop } = contentBounds(rect);
   const maxLeft = window.innerWidth - CARD_W - 12;
   let top = 0;
   let left = 0;
@@ -130,7 +172,7 @@ function positionCard(rect: Rect, placement: Placement) {
   }
 
   left = Math.min(Math.max(minLeft, left), maxLeft);
-  top = Math.min(Math.max(12, top), window.innerHeight - 230);
+  top = Math.min(Math.max(minTop, top), window.innerHeight - 230);
 
   // Arrow aims at the target center, clamped onto the card edge
   const aimX = Math.min(Math.max(rect.left + 24, cx), rect.left + rect.width - 24);
@@ -219,8 +261,12 @@ export function ProductTour() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { preferences } = useAppearance();
   const { canView, loading: permissionsLoading } = usePermissions();
   const { completeTour, skipTour } = useOnboarding();
+
+  const navbarPosition =
+    preferences.navbar_position === "top" ? "top" : "left";
 
   const activeModulesKey = user?.tenant?.active_modules?.join(",") ?? "";
   const steps = useMemo(
@@ -228,10 +274,11 @@ export function ProductTour() {
       buildProductTourSteps({
         canView,
         role: user?.role ?? null,
+        navbarPosition,
       }),
-    // Rebuild when org modules, role, or permission load state change
+    // Rebuild when org modules, role, navbar, or permission load state change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeModulesKey, user?.role, permissionsLoading]
+    [activeModulesKey, user?.role, permissionsLoading, navbarPosition]
   );
 
   const [index, setIndex] = useState(0);
@@ -241,6 +288,11 @@ export function ProductTour() {
   useEffect(() => {
     setIndex((i) => Math.min(i, Math.max(0, steps.length - 1)));
   }, [steps.length]);
+
+  // Reset to first step if layout switches mid-tour (left ↔ top)
+  useEffect(() => {
+    setIndex(0);
+  }, [navbarPosition]);
 
   const step: TourStep | undefined = steps[index];
 
@@ -282,10 +334,17 @@ export function ProductTour() {
       }
       if (attempts < maxAttempts) {
         window.setTimeout(tryMeasure, 80);
-      } else {
-        // Last resort: still show card near left (sidebar side), not dead center
-        setReady(true);
+        return;
       }
+
+      // Optional targets (e.g. org strip with no orgs) — skip ahead
+      if (step.optional && index < steps.length - 1) {
+        setIndex((i) => i + 1);
+        return;
+      }
+
+      // Last resort: still show card near layout chrome, not dead center
+      setReady(true);
     };
 
     const start = window.setTimeout(() => {
@@ -296,7 +355,7 @@ export function ProductTour() {
       cancelled = true;
       window.clearTimeout(start);
     };
-  }, [step, pathname, router, measure, index]);
+  }, [step, pathname, router, measure, index, steps.length]);
 
   useLayoutEffect(() => {
     if (!ready || !rect) return;
@@ -320,11 +379,12 @@ export function ProductTour() {
       };
     }
     if (!rect) {
-      // Fallback beside sidebar instead of screen center
+      const fallbackLeft = navbarPosition === "top" ? 280 : 268;
+      const fallbackTop = navbarPosition === "top" ? 96 : 96;
       return {
-        placement: "right" as Placement,
-        top: 96,
-        left: 268,
+        placement: (navbarPosition === "top" ? "bottom" : "right") as Placement,
+        top: fallbackTop,
+        left: fallbackLeft,
         arrowOffset: 40,
         showArrow: false,
       };
@@ -332,7 +392,7 @@ export function ProductTour() {
     const placement = pickPlacement(rect, step.placement);
     const pos = positionCard(rect, placement);
     return { placement, ...pos, showArrow: true };
-  }, [rect, step]);
+  }, [rect, step, navbarPosition]);
 
   if (!step) return null;
 

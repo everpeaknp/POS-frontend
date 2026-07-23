@@ -4,7 +4,6 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
-  Plus,
   Users,
   Search,
   CalendarDays,
@@ -77,18 +76,6 @@ function getStatusDisplay(status: string) {
   return match
     ? { label: match.label, short: match.short, color: match.className }
     : { label: "No record", short: "-", color: "bg-gray-50 text-gray-400 dark:bg-muted/50 dark:text-muted-foreground" };
-}
-
-function MarkAttendanceFab() {
-  return (
-    <Link
-      href="/dashboard/hr/attendance/mark"
-      className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
-      aria-label="Mark attendance"
-    >
-      <Plus className="h-6 w-6" />
-    </Link>
-  );
 }
 
 function StatCard({
@@ -303,124 +290,117 @@ export default function AttendancePage() {
 
   if (!loading && employees.length === 0 && !hasActiveFilters) {
     return (
-      <>
-        <HRPageShell title="Attendance" subtitle="Employee attendance tracking">
-          <EmptyState
-            icon={Users}
-            title="No employees to track"
-            description="Add employees first, then mark daily attendance for your team"
-            actionLabel="Add Employee"
-            actionHref="/dashboard/hr/employees/new"
-          />
-        </HRPageShell>
-        <MarkAttendanceFab />
-      </>
+      <HRPageShell title="Attendance" subtitle="Employee attendance tracking">
+        <EmptyState
+          icon={Users}
+          title="No employees to track"
+          description="Add employees first, then mark daily attendance for your team"
+          actionLabel="Add Employee"
+          actionHref="/dashboard/hr/employees/new"
+        />
+      </HRPageShell>
     );
   }
 
   return (
-    <>
-      <HRPageShell
-        title="Attendance"
-        subtitle={
-          loading
-            ? "Loading attendance..."
-            : `${monthLabel} · ${filteredEmployees.length} employee${filteredEmployees.length === 1 ? "" : "s"}`
-        }
-        loading={loading}
-        toolbar={
-          <>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search employees..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
-              />
-            </div>
-            <Select value={department} onValueChange={(v) => setDepartment(v ?? "All")}>
-              <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+    <HRPageShell
+      title="Attendance"
+      subtitle={
+        loading
+          ? "Loading attendance..."
+          : `${monthLabel} · ${filteredEmployees.length} employee${filteredEmployees.length === 1 ? "" : "s"}`
+      }
+      loading={loading}
+    >
+      <div className="flex gap-3 items-center justify-between flex-wrap">
+        <div className="flex gap-3 items-center flex-1 min-w-0 flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search employees..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
+            />
+          </div>
+          <Select value={department} onValueChange={(v) => setDepartment(v ?? "All")}>
+            <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white dark:bg-card dark:border-border shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Departments</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {dateSystem === "AD" ? (
+            <Select value={adMonth} onValueChange={(v) => v && handlePeriodChange({ system: "AD", yearMonth: v })}>
+              <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white dark:bg-card dark:border-border shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All Departments</SelectItem>
-                {departments.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
+                {getAdMonthOptions().map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {dateSystem === "AD" ? (
-              <Select value={adMonth} onValueChange={(v) => v && handlePeriodChange({ system: "AD", yearMonth: v })}>
-                <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+          ) : (
+            <>
+              <Select
+                value={NEPALI_MONTHS[bsMonthIndex]}
+                onValueChange={(v) => {
+                  const index = NEPALI_MONTHS.indexOf(v as (typeof NEPALI_MONTHS)[number]);
+                  if (index >= 0) {
+                    handlePeriodChange({ system: "BS", year: bsYear, monthIndex: index });
+                  }
+                }}
+              >
+                <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {getAdMonthOptions().map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {NEPALI_MONTHS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
-              <>
-                <Select
-                  value={NEPALI_MONTHS[bsMonthIndex]}
-                  onValueChange={(v) => {
-                    const index = NEPALI_MONTHS.indexOf(v as (typeof NEPALI_MONTHS)[number]);
-                    if (index >= 0) {
-                      handlePeriodChange({ system: "BS", year: bsYear, monthIndex: index });
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NEPALI_MONTHS.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={String(bsYear)}
-                  onValueChange={(v) =>
-                    handlePeriodChange({ system: "BS", year: Number(v), monthIndex: bsMonthIndex })
-                  }
-                >
-                  <SelectTrigger className="h-9 w-28 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bsYearOptions.map((y) => (
-                      <SelectItem key={y} value={String(y)}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
-            )}
-            <DateSystemToggle />
-            <Link href="/dashboard/hr/attendance/mark" className="hidden sm:block">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 gap-1.5 border-gray-200 dark:border-border"
+              <Select
+                value={String(bsYear)}
+                onValueChange={(v) =>
+                  handlePeriodChange({ system: "BS", year: Number(v), monthIndex: bsMonthIndex })
+                }
               >
-                <ClipboardCheck className="h-4 w-4" />
-                Mark today
-              </Button>
-            </Link>
-          </>
-        }
-      >
-        <div className="space-y-6">
+                <SelectTrigger className="h-9 w-28 text-sm border-gray-200 bg-white dark:bg-card dark:border-border shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {bsYearOptions.map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+          <DateSystemToggle />
+        </div>
+        <Link href="/dashboard/hr/attendance/mark" className="shrink-0">
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <ClipboardCheck className="h-4 w-4" />
+            Mark today
+          </Button>
+        </Link>
+      </div>
+
+      <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <StatCard
               label="Working days"
@@ -677,8 +657,6 @@ export default function AttendancePage() {
             </>
           )}
         </div>
-      </HRPageShell>
-      <MarkAttendanceFab />
-    </>
+    </HRPageShell>
   );
 }

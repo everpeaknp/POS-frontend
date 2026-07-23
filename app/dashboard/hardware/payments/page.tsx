@@ -5,10 +5,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
   hardwareCardClass,
-  hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -25,12 +26,24 @@ const METHOD_STYLES: Record<string, string> = {
   cheque: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
 };
 
+const METHOD_FILTERS = [
+  { value: "all", label: "All Methods" },
+  { value: "cash", label: "Cash" },
+  { value: "bank", label: "Bank Transfer" },
+  { value: "cheque", label: "Cheque" },
+  { value: "esewa", label: "eSewa" },
+  { value: "khalti", label: "Khalti" },
+  { value: "fonepay", label: "FonePay" },
+  { value: "other", label: "Other" },
+] as const;
+
 export default function HardwarePaymentsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [payments, setPayments] = useState<PaymentReceived[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [methodFilter, setMethodFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
 
   const openModal = useCallback(() => {
@@ -69,13 +82,24 @@ export default function HardwarePaymentsPage() {
     }
   };
 
-  const filteredPayments = payments.filter(
-    (payment) =>
-      payment.payment_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPayments = payments.filter((payment) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      payment.payment_number?.toLowerCase().includes(q) ||
+      payment.customer_name?.toLowerCase().includes(q);
 
-  if (!loading && payments.length === 0 && !searchTerm) {
+    if (!matchesSearch) return false;
+    if (methodFilter === "all") return true;
+
+    const method = payment.payment_method || "";
+    if (methodFilter === "bank") {
+      return method === "bank" || method === "bank_transfer";
+    }
+    return method === methodFilter;
+  });
+
+  if (!loading && payments.length === 0 && !searchTerm && methodFilter === "all") {
     return (
       <>
         <HardwarePageShell
@@ -100,30 +124,41 @@ export default function HardwarePaymentsPage() {
       title="Hardware Payments"
       subtitle="Track customer payments and credit settlements"
       loading={loading}
-      toolbar={
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by payment number or customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={hardwareInputClass}
-          />
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by payment number or customer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200"
+            />
+          </div>
+          <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v || "all")}>
+            <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Methods" />
+            </SelectTrigger>
+            <SelectContent>
+              {METHOD_FILTERS.map((method) => (
+                <SelectItem key={method.value} value={method.value}>
+                  {method.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      }
-      action={
         <Button
           type="button"
           size="sm"
           onClick={openModal}
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
         >
-          <Plus className="h-4 w-4" />
-          Record Payment
+          <Plus className="h-4 w-4" /> Record Payment
         </Button>
-      }
-    >
+      </div>
+
       {filteredPayments.length === 0 ? (
         <div className={`${hardwareCardClass} p-12 text-center`}>
           <p className="text-gray-500 dark:text-muted-foreground">No payments found matching your search</p>

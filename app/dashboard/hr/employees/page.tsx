@@ -138,35 +138,43 @@ export default function EmployeesPage() {
       title="Employees"
       subtitle={loading ? "Loading..." : `${filtered.length} employees`}
       loading={loading}
-      toolbar={
-        <>
-          <div className="relative">
+    >
+      <div className="flex gap-3 items-center justify-between flex-wrap">
+        <div className="flex gap-3 items-center flex-1 min-w-0 flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input placeholder="Search employees..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white" />
+            <Input
+              placeholder="Search employees..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200 bg-white"
+            />
           </div>
           <Select value={department} onValueChange={(v) => setDepartment(v ?? "All")}>
-            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white shrink-0">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Departments</SelectItem>
               {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={(v) => setStatus(v ?? "All")}>
-            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white shrink-0">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {["All", "active", "inactive", "terminated"].map((s) => <SelectItem key={s} value={s}>{s === "All" ? "All Status" : s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
             </SelectContent>
           </Select>
-        </>
-      }
-      action={
-        <Link href="/dashboard/hr/employees/new">
+        </div>
+        <Link href="/dashboard/hr/employees/new" className="shrink-0">
           <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Employee
           </Button>
         </Link>
-      }
-    >
+      </div>
+
       <div className={hrTableWrapClass}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-100">

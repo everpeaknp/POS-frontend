@@ -5,7 +5,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, X, Calendar, DollarSign, User } from "lucide-react";
+import { Eye, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -143,48 +143,45 @@ export default function POSTransactionsPage() {
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="POS Transactions" subtitle="View all point of sale transactions" />
-      
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          {/* Filters */}
-          <div className="p-4 border-b border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <Input
-                placeholder="Search by transaction number..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="md:col-span-2"
-              />
-              
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="refunded">Refunded</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v ?? "all")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Payment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Payments</SelectItem>
-                  {POS_PAYMENT_METHODS.map((method) => (
-                    <SelectItem key={method.value} value={method.value}>
-                      {method.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          {/* Table */}
+      <div className="flex-1 p-6 space-y-4">
+        <div className="flex gap-3 items-center flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by transaction number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+            <SelectTrigger className="w-[150px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v ?? "all")}>
+            <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Payments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Payments</SelectItem>
+              {POS_PAYMENT_METHODS.map((method) => (
+                <SelectItem key={method.value} value={method.value}>
+                  {method.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
@@ -263,7 +260,6 @@ export default function POSTransactionsPage() {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalCount > POS_PAGE_SIZE && (
             <div className="p-4 border-t border-gray-100 flex items-center justify-between">
               <div className="text-sm text-gray-600">
@@ -273,7 +269,7 @@ export default function POSTransactionsPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
                   Previous
@@ -281,7 +277,7 @@ export default function POSTransactionsPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => setPage((p) => p + 1)}
                   disabled={page * POS_PAGE_SIZE >= totalCount}
                 >
                   Next

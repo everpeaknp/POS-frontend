@@ -15,7 +15,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials, redirectTo?: string) => Promise<void>;
-  loginWithGoogle: (credential: string, redirectTo?: string) => Promise<void>;
+  loginWithGoogle: (
+    payload: string | { credential?: string; code?: string },
+    redirectTo?: string
+  ) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (data: ProfileUpdateData) => Promise<void>;
@@ -157,8 +160,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persistSession(access, refresh, session_id, redirectTo);
   };
 
-  const loginWithGoogle = async (credential: string, redirectTo = '/erp') => {
-    const { access, refresh, session_id } = await authApi.loginWithGoogle(credential);
+  const loginWithGoogle = async (
+    payload: string | { credential?: string; code?: string },
+    redirectTo = '/erp'
+  ) => {
+    const { access, refresh, session_id } = await authApi.loginWithGoogle(payload);
     await persistSession(access, refresh, session_id, redirectTo);
   };
 

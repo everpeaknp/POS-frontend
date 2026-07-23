@@ -146,7 +146,7 @@ export default function PurchaseInvoiceDetailPage() {
         title={invoice.invoice_number}
         subtitle={`Purchase Invoice · ${invoice.date}`}
       />
-      <div className="flex-1 p-6 space-y-4 max-w-5xl">
+      <div className="flex-1 p-6 space-y-4 w-full">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={invoice.status} />
           <div className="flex-1" />
@@ -318,7 +318,7 @@ export default function PurchaseInvoiceDetailPage() {
                 onClick={handleRecordPayment}
                 disabled={submitting}
                 className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-              >
+              >
                 Save Payment
               </Button>
               <Button variant="outline" onClick={() => setPayModal(false)} className="flex-1" disabled={submitting}>

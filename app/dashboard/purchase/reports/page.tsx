@@ -240,7 +240,6 @@ export default function PurchaseReportsPage() {
     <PurchasePageShell
       title="Purchase Reports"
       subtitle="Analytics and spending insights across suppliers and products"
-      showBack
       loading={loading && !data}
       error={error}
       onRetry={loadReports}

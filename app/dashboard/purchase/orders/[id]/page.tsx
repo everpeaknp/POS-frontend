@@ -201,7 +201,7 @@ export default function PurchaseOrderDetailPage() {
         title={order.po_number} 
         subtitle={`Purchase Order · ${order.date}`}
       />
-      <div className="flex-1 p-6 space-y-4 max-w-5xl">
+      <div className="flex-1 p-6 space-y-4 w-full">
         {/* Action bar */}
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={order.status} />

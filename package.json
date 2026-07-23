@@ -2,13 +2,19 @@
   "name": "khata",
   "version": "0.1.0",
   "private": true,
+  "description": "Khata Business OS — Next.js ERP + Electron desktop shell",
+  "main": "electron/dist/main/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "desktop:dev": "npm run dev --prefix ../desktop",
-    "desktop:build": "npm run build:main --prefix ../desktop"
+    "desktop:build": "tsc -p electron/tsconfig.json && npm run desktop:preload",
+    "desktop:preload": "esbuild electron/src/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=electron/dist/preload.js",
+    "desktop:dev": "npm run desktop:build && electron .",
+    "desktop:start": "electron .",
+    "desktop:pack": "npm run desktop:build && electron-builder --dir",
+    "desktop:dist": "npm run desktop:build && electron-builder"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -18,6 +24,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.6.2",
     "lucide-react": "^0.577.0",
     "nepali-calender-saroj": "^5.4.0",
     "nepali-date-converter": "^3.4.0",
@@ -31,6 +39,7 @@
     "recharts": "^3.8.0",
     "shadcn": "^4.0.8",
     "sonner": "^2.0.7",
+    "sql.js": "^1.14.1",
     "tailwind-merge": "^3.5.0",
     "tw-animate-css": "^1.4.0",
     "zod": "^4.3.6"
@@ -38,13 +47,48 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^20",
+    "@types/node": "^20.19.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sql.js": "^1.4.11",
+    "electron": "^35.2.1",
+    "electron-builder": "^26.0.12",
     "enhanced-resolve": "^5.24.1",
+    "esbuild": "^0.25.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4.3.2",
-    "typescript": "^5"
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "app.khata.desktop",
+    "productName": "Khata",
+    "directories": {
+      "output": "electron/release"
+    },
+    "files": [
+      "electron/dist/**/*",
+      "electron/assets/**/*",
+      "package.json",
+      "node_modules/sql.js/dist/sql-wasm.wasm"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   }
 }

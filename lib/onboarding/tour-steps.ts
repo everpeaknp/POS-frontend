@@ -8,7 +8,11 @@ export type TourStep = {
   /** Optional: click a sidebar parent label before highlighting */
   expandNav?: string;
   placement?: "top" | "bottom" | "left" | "right" | "auto";
+  /** If true, skip this step when no selector matches (e.g. empty org strip) */
+  optional?: boolean;
 };
+
+export type NavbarPosition = "left" | "top";
 
 type ModuleTourDef = {
   /** Tenant module id; null = always shown (Dashboard) */
@@ -96,43 +100,128 @@ const MODULE_TOUR_DEFS: ModuleTourDef[] = [
   },
 ];
 
-const TOUR_INTRO: TourStep[] = [
-  {
-    id: "sidebar",
-    route: "/dashboard",
-    selectors: ['[data-tour="sidebar"]'],
-    title: "Main sidebar",
-    body: "This is your main menu. Every module you enabled appears here so you can move around Khata.",
-    placement: "right",
-  },
-  {
-    id: "sidebar_org",
-    route: "/dashboard",
-    selectors: ['[data-tour="sidebar-org"]'],
-    title: "Your organization",
-    body: "Your active workspace and role are shown here. Switch organizations from the user menu when you have more than one.",
-    placement: "right",
-  },
-];
+/** App bar (vertical left rail) — before module sidebar */
+function introForLeftNavbar(): TourStep[] {
+  return [
+    {
+      id: "app_icon_rail",
+      route: "/dashboard",
+      selectors: ['[data-tour="app-icon-rail"][data-position="left"]'],
+      title: "App icon rail",
+      body: "This vertical strip holds quick access — ERP home, your organizations, notifications, theme, and account.",
+      placement: "right",
+    },
+    {
+      id: "app_icon_rail_orgs",
+      route: "/dashboard",
+      selectors: [
+        '[data-tour="app-icon-rail"][data-position="left"] [data-tour="app-icon-rail-orgs"]',
+      ],
+      title: "Organizations",
+      body: "Jump between workspaces from here when you belong to more than one organization.",
+      placement: "right",
+      optional: true,
+    },
+    {
+      id: "sidebar",
+      route: "/dashboard",
+      selectors: ['[data-tour="sidebar"]'],
+      title: "Main sidebar",
+      body: "This is your main menu. Every module you enabled appears here so you can move around Khata.",
+      placement: "right",
+    },
+    {
+      id: "sidebar_org",
+      route: "/dashboard",
+      selectors: ['[data-tour="sidebar-org"]'],
+      title: "Your organization",
+      body: "Your active workspace and role are shown here.",
+      placement: "right",
+    },
+  ];
+}
 
-const TOUR_OUTRO: TourStep[] = [
-  {
-    id: "topbar_notifications",
-    route: "/dashboard",
-    selectors: ['[data-tour="topbar-notifications"]'],
-    title: "Notifications",
-    body: "Alerts and updates appear here — unpaid invoices, low stock, and other important events.",
-    placement: "left",
-  },
-  {
-    id: "topbar_user",
-    route: "/dashboard",
-    selectors: ['[data-tour="topbar-user"]'],
-    title: "Account menu",
-    body: "Open your profile, switch organization, or sign out from this menu.",
-    placement: "left",
-  },
-];
+/** App bar (horizontal top bar) — before module sidebar */
+function introForTopNavbar(): TourStep[] {
+  return [
+    {
+      id: "app_icon_rail",
+      route: "/dashboard",
+      selectors: ['[data-tour="app-icon-rail"][data-position="top"]'],
+      title: "Top app bar",
+      body: "This horizontal bar shows the page title, notifications, theme, and your account — always at the top.",
+      placement: "bottom",
+    },
+    {
+      id: "app_icon_rail_orgs",
+      route: "/dashboard",
+      selectors: [
+        '[data-tour="app-icon-rail"][data-position="top"] [data-tour="app-icon-rail-orgs"]',
+      ],
+      title: "Organizations",
+      body: "Jump between workspaces from the top bar when you belong to more than one organization.",
+      placement: "bottom",
+      optional: true,
+    },
+    {
+      id: "sidebar",
+      route: "/dashboard",
+      selectors: ['[data-tour="sidebar"]'],
+      title: "Main sidebar",
+      body: "Modules still live in this left menu. Expand a section to open its pages.",
+      placement: "right",
+    },
+    {
+      id: "sidebar_org",
+      route: "/dashboard",
+      selectors: ['[data-tour="sidebar-org"]'],
+      title: "Your organization",
+      body: "Your active workspace and role are shown here.",
+      placement: "right",
+    },
+  ];
+}
+
+/** Notifications / theme / account — placement depends on left vs top app bar */
+function outroForNavbar(position: NavbarPosition): TourStep[] {
+  const railPlacement = position === "top" ? "bottom" : "right";
+
+  return [
+    {
+      id: "topbar_notifications",
+      route: "/dashboard",
+      selectors: [
+        '[data-tour="app-icon-rail"] [data-tour="topbar-notifications"]',
+        '[data-tour="topbar-notifications"]',
+      ],
+      title: "Notifications",
+      body: "Alerts and updates appear here — unpaid invoices, low stock, and other important events.",
+      placement: railPlacement,
+    },
+    {
+      id: "topbar_theme",
+      route: "/dashboard",
+      selectors: [
+        '[data-tour="app-icon-rail"] [data-tour="topbar-theme"]',
+        '[data-tour="topbar-theme"]',
+      ],
+      title: "Theme",
+      body: "Switch between light and dark mode anytime from here.",
+      placement: railPlacement,
+    },
+    {
+      id: "topbar_user",
+      route: "/dashboard",
+      selectors: [
+        '[data-tour="app-icon-rail"] [data-tour="topbar-user"]',
+        '[data-tour="topbar-user"]',
+      ],
+      title: "Account menu",
+      body: "Open your profile or sign out from this menu.",
+      placement: railPlacement,
+    },
+  ];
+}
 
 function navKey(label: string): string {
   return label.toLowerCase();
@@ -170,21 +259,28 @@ function isModuleNavVisible(
 }
 
 /**
- * Build tour steps for the modules this user can actually see in the sidebar.
+ * Build tour steps for the modules this user can see, adapted to left or top app bar.
  */
 export function buildProductTourSteps(opts: {
   canView: (moduleId: string) => boolean;
   role?: string | null;
+  navbarPosition?: NavbarPosition;
 }): TourStep[] {
+  const position: NavbarPosition = opts.navbarPosition === "top" ? "top" : "left";
+
+  const intro =
+    position === "top" ? introForTopNavbar() : introForLeftNavbar();
+
   const moduleSteps = MODULE_TOUR_DEFS.filter((def) =>
     isModuleNavVisible(def, opts.canView, opts.role)
   ).map(moduleToStep);
 
-  return [...TOUR_INTRO, ...moduleSteps, ...TOUR_OUTRO];
+  return [...intro, ...moduleSteps, ...outroForNavbar(position)];
 }
 
 /** @deprecated Prefer buildProductTourSteps — kept for docs/tests */
 export const ADMIN_TOUR_STEPS: TourStep[] = buildProductTourSteps({
   canView: () => true,
   role: "admin",
+  navbarPosition: "left",
 });

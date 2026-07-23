@@ -16,7 +16,11 @@ export function DesktopRootChrome({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!desktop) return;
     document.documentElement.classList.add("khata-desktop");
-    return () => document.documentElement.classList.remove("khata-desktop");
+    document.documentElement.dataset.khataDesktop = "1";
+    return () => {
+      document.documentElement.classList.remove("khata-desktop");
+      delete document.documentElement.dataset.khataDesktop;
+    };
   }, [desktop]);
 
   if (!desktop) {

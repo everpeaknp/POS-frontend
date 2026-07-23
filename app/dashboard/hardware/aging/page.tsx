@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
   hardwareStatCardClass,
@@ -16,10 +19,14 @@ interface AgingRow extends AgingReport {
   id: string;
 }
 
+type AgingFilter = "all" | "current" | "days_30_60" | "days_60_90" | "days_90_plus" | "over_limit";
+
 export default function HardwareAgingPage() {
   const router = useRouter();
   const [rows, setRows] = useState<AgingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [bucketFilter, setBucketFilter] = useState<AgingFilter>("all");
 
   useEffect(() => {
     fetchAging();
@@ -63,6 +70,21 @@ export default function HardwareAgingPage() {
       setLoading(false);
     }
   };
+
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch = !q || row.customer_name?.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      if (bucketFilter === "current") return (row.current || 0) > 0;
+      if (bucketFilter === "days_30_60") return (row.days_30_60 || 0) > 0;
+      if (bucketFilter === "days_60_90") return (row.days_60_90 || 0) > 0;
+      if (bucketFilter === "days_90_plus") return (row.days_90_plus || 0) > 0;
+      if (bucketFilter === "over_limit") return Boolean(row.is_over_limit);
+      return true;
+    });
+  }, [rows, searchTerm, bucketFilter]);
 
   const totals = useMemo(
     () =>
@@ -125,6 +147,34 @@ export default function HardwareAgingPage() {
         </div>
       </div>
 
+      <div className="flex gap-3 items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 text-sm border-gray-200"
+          />
+        </div>
+        <Select
+          value={bucketFilter}
+          onValueChange={(v) => setBucketFilter((v as AgingFilter) || "all")}
+        >
+          <SelectTrigger className="w-[180px] h-9 border-gray-200 shrink-0">
+            <SelectValue placeholder="All Buckets" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Buckets</SelectItem>
+            <SelectItem value="current">Current (0–30d)</SelectItem>
+            <SelectItem value="days_30_60">31–60 days</SelectItem>
+            <SelectItem value="days_60_90">61–90 days</SelectItem>
+            <SelectItem value="days_90_plus">90+ days</SelectItem>
+            <SelectItem value="over_limit">Over Limit</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className={hardwareTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -143,14 +193,16 @@ export default function HardwareAgingPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {rows.length === 0 ? (
+              {filteredRows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-muted-foreground">
-                    No customers with outstanding balance
+                    {searchTerm || bucketFilter !== "all"
+                      ? "No customers found matching your filters"
+                      : "No customers with outstanding balance"}
                   </td>
                 </tr>
               ) : (
-                rows.map((item) => (
+                filteredRows.map((item) => (
                   <tr
                     key={item.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 transition-colors"

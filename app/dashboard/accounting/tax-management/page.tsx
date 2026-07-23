@@ -4,9 +4,11 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus, Receipt, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Plus, Receipt, FileText, AlertTriangle, CheckCircle2, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AccountingPageShell,
   accountingStatCardClass,
@@ -61,6 +63,8 @@ function TaxManagementContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "vat-returns" ? "VAT Returns" : "Tax Rules";
   const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [taxRules, setTaxRules] = useState<TaxRuleRow[]>([]);
   const [vatReturns, setVatReturns] = useState<VATReturnRow[]>([]);
   const [loadingRules, setLoadingRules] = useState(true);
@@ -114,6 +118,11 @@ function TaxManagementContent() {
   useEffect(() => {
     setTab(initialTab);
   }, [initialTab]);
+
+  useEffect(() => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  }, [tab]);
 
   const handleDeactivateTaxRule = (id: string) => {
     setConfirmAction({ kind: "deactivate-tax", id });
@@ -190,27 +199,37 @@ function TaxManagementContent() {
             }
           : null;
 
+  const filteredTaxRules = taxRules.filter((tax) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      tax.name?.toLowerCase().includes(q) ||
+      tax.type?.toLowerCase().includes(q) ||
+      tax.account_name?.toLowerCase().includes(q) ||
+      tax.account_code?.toLowerCase().includes(q);
 
-  const shellAction =
-    tab === "Tax Rules" && !loadingRules && taxRules.length > 0 ? (
-      <Link href="/dashboard/accounting/tax-management/new">
-        <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-          <Plus className="h-4 w-4" /> Add Tax Rule
-        </Button>
-      </Link>
-    ) : tab === "VAT Returns" && !loadingReturns && vatReturns.length > 0 ? (
-      <Link href="/dashboard/accounting/tax-management/returns/new">
-        <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-          <Plus className="h-4 w-4" /> New VAT Return
-        </Button>
-      </Link>
-    ) : undefined;
+    if (!matchesSearch) return false;
+    if (statusFilter === "active") return tax.status === "active";
+    if (statusFilter === "inactive") return tax.status === "inactive";
+    return true;
+  });
+
+  const filteredVatReturns = vatReturns.filter((vat) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      vat.return_number?.toLowerCase().includes(q) ||
+      vat.period?.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+    if (statusFilter !== "all") return vat.status === statusFilter;
+    return true;
+  });
 
   return (
     <AccountingPageShell
       title="Tax Management"
       subtitle="Tax rules and VAT returns"
-      action={shellAction}
     >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className={accountingStatCardClass}>
@@ -225,18 +244,71 @@ function TaxManagementContent() {
           </div>
         </div>
 
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              }`}
+        <div className="flex gap-3 items-center justify-between">
+          <div className="flex gap-3 items-center flex-1 min-w-0">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={
+                  tab === "Tax Rules"
+                    ? "Search tax rules..."
+                    : "Search by return number or period..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 text-sm border-gray-200"
+              />
+            </div>
+            <Select
+              value={tab}
+              onValueChange={(v) => setTab((v as (typeof TABS)[number]) || "Tax Rules")}
             >
-              {t}
-            </button>
-          ))}
+              <SelectTrigger className="w-[150px] h-9 border-gray-200 shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TABS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "all")}>
+              <SelectTrigger className="w-[140px] h-9 border-gray-200 shrink-0">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                {tab === "Tax Rules" ? (
+                  <>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="filed">Filed</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          {tab === "Tax Rules" ? (
+            <Link href="/dashboard/accounting/tax-management/new" className="shrink-0">
+              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+                <Plus className="h-4 w-4" /> Add Tax Rule
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/dashboard/accounting/tax-management/returns/new" className="shrink-0">
+              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+                <Plus className="h-4 w-4" /> New VAT Return
+              </Button>
+            </Link>
+          )}
         </div>
 
         {tab === "Tax Rules" && (
@@ -253,6 +325,10 @@ function TaxManagementContent() {
               <div className={accountingTableWrapClass}>
                   {loadingRules ? (
                     <PageLoading message="Loading…" />
+                  ) : filteredTaxRules.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                      No tax rules found matching your filters
+                    </div>
                   ) : (
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 border-b border-gray-100">
@@ -265,7 +341,7 @@ function TaxManagementContent() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {taxRules.map((tax) => (
+                        {filteredTaxRules.map((tax) => (
                           <tr key={tax.id} className="hover:bg-gray-50/50">
                             <td className="px-4 py-3 font-medium text-gray-800">{tax.name}</td>
                             <td className="px-4 py-3">
@@ -336,6 +412,10 @@ function TaxManagementContent() {
               <div className={accountingTableWrapClass}>
                   {loadingReturns ? (
                     <PageLoading message="Loading…" />
+                  ) : filteredVatReturns.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                      No VAT returns found matching your filters
+                    </div>
                   ) : (
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 border-b border-gray-100">
@@ -350,7 +430,7 @@ function TaxManagementContent() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {vatReturns.map((vat) => (
+                        {filteredVatReturns.map((vat) => (
                           <tr key={vat.id} className="hover:bg-gray-50/50">
                             <td className="px-4 py-3 font-mono text-xs text-gray-500">{vat.return_number}</td>
                             <td className="px-4 py-3 font-medium text-gray-800">{vat.period}</td>

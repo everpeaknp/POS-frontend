@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
   hardwareCardClass,
-  hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,12 +18,15 @@ import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
+type StatusFilter = "all" | "active" | "inactive";
+
 export default function HardwareBulkPricingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pricingRules, setPricingRules] = useState<BulkPricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showModal, setShowModal] = useState(false);
 
   const openModal = useCallback(() => {
@@ -72,11 +76,20 @@ export default function HardwareBulkPricingPage() {
     }
   };
 
-  const filteredRules = pricingRules.filter((rule) =>
-    rule.product_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRules = pricingRules.filter((rule) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      rule.product_name?.toLowerCase().includes(q) ||
+      rule.product_sku?.toLowerCase().includes(q);
 
-  if (!loading && pricingRules.length === 0 && !searchTerm) {
+    if (!matchesSearch) return false;
+    if (statusFilter === "active") return rule.is_active;
+    if (statusFilter === "inactive") return !rule.is_active;
+    return true;
+  });
+
+  if (!loading && pricingRules.length === 0 && !searchTerm && statusFilter === "all") {
     return (
       <>
         <HardwarePageShell
@@ -101,54 +114,66 @@ export default function HardwareBulkPricingPage() {
       title="Bulk Pricing"
       subtitle="Volume-based pricing tiers for hardware products"
       loading={loading}
-      toolbar={
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by product name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={hardwareInputClass}
-          />
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by product name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200"
+            />
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter((v as StatusFilter) || "all")}
+          >
+            <SelectTrigger className="w-[140px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      }
-      action={
         <Button
           type="button"
           size="sm"
           onClick={openModal}
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
         >
-          <Plus className="h-4 w-4" />
-          New Rule
+          <Plus className="h-4 w-4" /> New Rule
         </Button>
-      }
-    >
+      </div>
+
       {filteredRules.length === 0 ? (
         <div className={`${hardwareCardClass} p-12 text-center`}>
           <p className="text-gray-500 dark:text-muted-foreground">No bulk pricing rules found matching your search</p>
         </div>
       ) : (
-      <div className={hardwareTableWrapClass}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
-              <tr>
-                {["Product", "Min Qty", "Max Qty", "Unit Price", "Discount %", ""].map((h) => (
-                  <th
-                    key={h || "actions"}
-                    className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
-                      h === "" ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {h === "" ? "Actions" : h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-border">
-              {filteredRules.map((rule) => (
+        <div className={hardwareTableWrapClass}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-muted/50 border-b border-gray-100 dark:border-border">
+                <tr>
+                  {["Product", "Min Qty", "Max Qty", "Unit Price", "Discount %", ""].map((h) => (
+                    <th
+                      key={h || "actions"}
+                      className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase ${
+                        h === "" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {h === "" ? "Actions" : h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-border">
+                {filteredRules.map((rule) => (
                   <tr
                     key={rule.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 transition-colors"
@@ -179,10 +204,10 @@ export default function HardwareBulkPricingPage() {
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
       )}
 
       <NewBulkPricingModal

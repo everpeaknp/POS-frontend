@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   HardwarePageShell,
   hardwareCardClass,
-  hardwareInputClass,
   hardwareTableWrapClass,
 } from "@/components/dashboard/HardwarePageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,12 +18,14 @@ import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
+type StockFilter = "all" | "in_stock" | "low_stock" | "out_of_stock";
+
 function stockBadge(product: Product) {
   const stock = product.total_stock || 0;
   const reorder = product.reorder_level || 0;
-  if (stock === 0) return { label: "Out of Stock", className: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400" };
-  if (stock <= reorder) return { label: "Low Stock", className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" };
-  return { label: "In Stock", className: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400" };
+  if (stock === 0) return { label: "Out of Stock", className: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400", key: "out_of_stock" as const };
+  if (stock <= reorder) return { label: "Low Stock", className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400", key: "low_stock" as const };
+  return { label: "In Stock", className: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400", key: "in_stock" as const };
 }
 
 export default function HardwareProductsPage() {
@@ -30,6 +33,7 @@ export default function HardwareProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
 
   useEffect(() => {
     fetchProducts();
@@ -48,13 +52,19 @@ export default function HardwareProductsPage() {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      product.name.toLowerCase().includes(q) ||
+      product.sku?.toLowerCase().includes(q);
 
-  if (!loading && products.length === 0 && !searchTerm) {
+    if (!matchesSearch) return false;
+    if (stockFilter === "all") return true;
+    return stockBadge(product).key === stockFilter;
+  });
+
+  if (!loading && products.length === 0 && !searchTerm && stockFilter === "all") {
     return (
       <HardwarePageShell
         title="Hardware Products"
@@ -76,27 +86,40 @@ export default function HardwareProductsPage() {
       title="Hardware Products"
       subtitle="Manage hardware inventory with bulk pricing and stock tracking"
       loading={loading}
-      toolbar={
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or SKU..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={hardwareInputClass}
-          />
+    >
+      <div className="flex gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by name or SKU..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9 text-sm border-gray-200"
+            />
+          </div>
+          <Select
+            value={stockFilter}
+            onValueChange={(v) => setStockFilter((v as StockFilter) || "all")}
+          >
+            <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
+              <SelectValue placeholder="All Stock" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stock</SelectItem>
+              <SelectItem value="in_stock">In Stock</SelectItem>
+              <SelectItem value="low_stock">Low Stock</SelectItem>
+              <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      }
-      action={
         <Link href="/dashboard/hardware/products/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Product
+          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+            <Plus className="h-4 w-4" /> New Product
           </Button>
         </Link>
-      }
-    >
+      </div>
+
       {filteredProducts.length === 0 ? (
         <div className={`${hardwareCardClass} p-12 text-center`}>
           <p className="text-gray-500 dark:text-muted-foreground">No products found matching your search</p>

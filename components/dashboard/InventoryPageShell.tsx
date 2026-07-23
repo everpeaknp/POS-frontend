@@ -36,7 +36,12 @@ export function InventoryPageShell({
   variant = "default",
 }: InventoryPageShellProps) {
   if (loading) {
-    return <DashboardShellLoading message={loadingMessage} />;
+    return (
+      <div className="flex flex-col h-full min-h-0 w-full">
+        <DashHeader title={title} subtitle={subtitle} />
+        <DashboardShellLoading message={loadingMessage} />
+      </div>
+    );
   }
 
   const contentClass =

@@ -65,13 +65,16 @@ export default function DashboardPage() {
   );
 
   const periodToggle = (
-    <div className="flex items-center bg-gray-100 dark:bg-muted rounded-lg p-1 gap-0.5">
+    <div
+      data-page-tour="period"
+      className="flex items-center bg-gray-100 dark:bg-muted rounded-lg p-0.5 gap-0.5 h-8"
+    >
       {(["today", "week", "month", "year"] as DashboardPeriod[]).map((p) => (
         <button
           key={p}
           type="button"
           onClick={() => setPeriod(p)}
-          className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
+          className={`px-2.5 h-7 rounded-md text-xs font-medium capitalize transition-all ${
             period === p ? dashboardFilterPillActive : dashboardFilterPillInactive
           }`}
         >
@@ -125,7 +128,9 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              <ModuleOverviewGrid modules={visibleModules} catalogById={catalogById} />
+              <div data-page-tour="module-grid">
+                <ModuleOverviewGrid modules={visibleModules} catalogById={catalogById} />
+              </div>
 
               <div className="space-y-6">
                 {visibleModules.map((module) => (

@@ -1,4 +1,5 @@
-import apiClient from './client';
+import axios from 'axios';
+import apiClient, { API_BASE_URL } from './client';
 
 export interface LoginCredentials {
   email: string;
@@ -88,12 +89,23 @@ export const authApi = {
   },
 
   getGoogleConfig: async (): Promise<GoogleOAuthConfig> => {
-    const response = await apiClient.get('/auth/google/config/');
+    // Use plain axios (no JWT interceptor). Stale Electron tokens make DRF
+    // return 401 on this public route, which hides the Google button.
+    const response = await axios.get<GoogleOAuthConfig>(
+      `${API_BASE_URL}/auth/google/config/`
+    );
     return response.data;
   },
 
-  loginWithGoogle: async (credential: string): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/google/', { credential });
+  loginWithGoogle: async (payload: string | { credential?: string; code?: string }): Promise<AuthResponse> => {
+    const body =
+      typeof payload === 'string'
+        ? { credential: payload }
+        : {
+            credential: payload.credential || undefined,
+            code: payload.code || undefined,
+          };
+    const response = await apiClient.post('/auth/google/', body);
     return response.data;
   },
 
