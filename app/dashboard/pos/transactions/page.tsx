@@ -5,7 +5,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, X, Calendar, DollarSign, User } from "lucide-react";
+import { Eye, ArrowLeft, X, Calendar, DollarSign, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -241,6 +241,7 @@ export default function POSTransactionsPage() {
                             variant="ghost"
                             onClick={() => router.push(`/dashboard/pos/transactions/${transaction.id}`)}
                             className="h-8 w-8 p-0"
+                            title="View transaction"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -248,8 +249,20 @@ export default function POSTransactionsPage() {
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => router.push(`/dashboard/pos/transactions/${transaction.id}?refund=1`)}
+                              className="h-8 w-8 p-0 text-amber-500 hover:text-amber-700"
+                              title="Refund / Return"
+                            >
+                              <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {transaction.status === "completed" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => handleCancelTransaction(transaction.id!, transaction.transaction_number || transaction.id!)}
                               className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                              title="Cancel transaction"
                             >
                               <X className="h-4 w-4" />
                             </Button>

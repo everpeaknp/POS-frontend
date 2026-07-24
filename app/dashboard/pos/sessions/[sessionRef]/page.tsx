@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft, Clock, User, Warehouse, Banknote,
-  ArrowDownCircle, ArrowUpCircle, Trash2,
+  ArrowDownCircle, ArrowUpCircle, Trash2, Printer, Download,
 } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import { ZReport } from "@/lib/api/pos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +39,42 @@ export default function PosSessionDetailPage() {
   const [cashAmount, setCashAmount] = useState("");
   const [cashReason, setCashReason] = useState("");
   const [submittingCash, setSubmittingCash] = useState(false);
+
+  const [zReportData, setZReportData] = useState<ZReport | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintZReport = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Z-Report-${session?.session_number || "Session"}`,
+  });
+
+  const handleDownloadZReport = () => {
+    if (!zReportData) {
+      toast.error("Z-Report data is not loaded yet");
+      return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(zReportData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `Z-Report-${zReportData.session_number}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  useEffect(() => {
+    if (session && session.status === "closed") {
+      const fetchZReport = async () => {
+        try {
+          const data = await posApi.generateZReport(String(session.id));
+          setZReportData(data);
+        } catch (error) {
+          console.error("Failed to load Z-Report data:", error);
+        }
+      };
+      fetchZReport();
+    }
+  }, [session]);
 
   const fetchSession = async () => {
     if (!sessionRef) {
@@ -181,6 +219,27 @@ export default function PosSessionDetailPage() {
                   Close Session
                 </Button>
               </Link>
+            </>
+          )}
+          {session.status === "closed" && (
+            <>
+              <Button
+                size="sm"
+                onClick={handlePrintZReport}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8 font-medium"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Print Z-Report
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDownloadZReport}
+                className="gap-1.5 h-8 border-gray-200"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download Z-Report
+              </Button>
             </>
           )}
         </div>
@@ -479,6 +538,89 @@ export default function PosSessionDetailPage() {
           <p className="text-sm text-gray-500 dark:text-muted-foreground">
             Open the transactions list to review sales recorded during this session.
           </p>
+        </div>
+      </div>
+
+      {/* Hidden Z-Report Print Template */}
+      <div className="hidden">
+        <div ref={printRef} className="p-8 space-y-6 text-black bg-white font-mono text-sm max-w-[800px] mx-auto">
+          <div className="text-center space-y-1 border-b pb-4">
+            <h1 className="text-xl font-bold uppercase">Z-Report (End of Day)</h1>
+            <p className="text-xs text-gray-500">Session Number: {zReportData?.session_number}</p>
+            <p className="text-xs text-gray-500">Generated: {zReportData ? new Date(zReportData.report_generated_at).toLocaleString() : ""}</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div><strong>Cashier:</strong> {zReportData?.cashier}</div>
+            <div><strong>Warehouse:</strong> {zReportData?.warehouse || "N/A"}</div>
+            <div><strong>Opened At:</strong> {zReportData?.opened_at ? new Date(zReportData.opened_at).toLocaleString() : ""}</div>
+            <div><strong>Closed At:</strong> {zReportData?.closed_at ? new Date(zReportData.closed_at).toLocaleString() : ""}</div>
+          </div>
+          
+          <div className="border-t pt-4">
+            <h2 className="font-bold mb-2 uppercase text-xs">Sales Summary</h2>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span>Gross Sales:</span> <span>Rs. {zReportData?.gross_sales.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Total Discounts:</span> <span>Rs. {zReportData?.total_discounts.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Tax Collected:</span> <span>Rs. {zReportData?.tax_collected.toLocaleString()}</span></div>
+              <div className="flex justify-between font-bold border-t pt-1"><span>Net Sales:</span> <span>Rs. {zReportData?.net_sales.toLocaleString()}</span></div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h2 className="font-bold mb-2 uppercase text-xs">Payment Method Summary</h2>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span>Cash Sales:</span> <span>Rs. {zReportData?.cash_sales.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Card Sales:</span> <span>Rs. {zReportData?.card_sales.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Credit Sales:</span> <span>Rs. {zReportData?.credit_sales.toLocaleString()}</span></div>
+              <div className="flex justify-between font-bold border-t pt-1"><span>Digital Wallets (Total):</span> <span>Rs. {zReportData?.digital_wallet_sales.toLocaleString()}</span></div>
+              <div className="pl-4 space-y-1 text-[11px] text-gray-500">
+                <div className="flex justify-between"><span>eSewa:</span> <span>Rs. {zReportData?.esewa_sales.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span>Khalti:</span> <span>Rs. {zReportData?.khalti_sales.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span>Fonepay:</span> <span>Rs. {zReportData?.fonepay_sales.toLocaleString()}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h2 className="font-bold mb-2 uppercase text-xs">Cash Reconciliation</h2>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span>Opening Cash:</span> <span>Rs. {zReportData?.opening_cash.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Cash In:</span> <span>Rs. {zReportData?.cash_in.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Cash Out:</span> <span>Rs. {zReportData?.cash_out.toLocaleString()}</span></div>
+              <div className="flex justify-between font-bold border-t pt-1"><span>Expected Closing Cash:</span> <span>Rs. {zReportData?.expected_cash.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Actual Closing Cash:</span> <span>Rs. {zReportData?.closing_cash?.toLocaleString() ?? "—"}</span></div>
+              <div className="flex justify-between font-bold border-t pt-1">
+                <span>Variance:</span> 
+                <span>Rs. {zReportData?.cash_variance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Status:</span> 
+                <span>
+                  {zReportData && zReportData.cash_variance === 0 
+                    ? "Balanced" 
+                    : zReportData && zReportData.cash_variance < 0 
+                    ? "Cash Short" 
+                    : "Cash Over"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h2 className="font-bold mb-2 uppercase text-xs">Transaction Summary</h2>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span>Total Transactions:</span> <span>{zReportData?.total_transactions}</span></div>
+              <div className="flex justify-between"><span>Total Items Sold:</span> <span>{zReportData?.total_items_sold}</span></div>
+              <div className="flex justify-between"><span>Refunded Transactions:</span> <span>{zReportData?.refunded_transactions}</span></div>
+              <div className="flex justify-between"><span>Refunded Amount:</span> <span>Rs. {zReportData?.refunded_amount.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Cancelled Transactions:</span> <span>{zReportData?.cancelled_transactions}</span></div>
+            </div>
+          </div>
+          
+          <div className="text-center pt-8 border-t text-[10px] text-gray-400">
+            End of Z-Report
+          </div>
         </div>
       </div>
     </PosPageShell>

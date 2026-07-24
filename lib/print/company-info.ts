@@ -8,6 +8,7 @@ export interface CompanyPrintInfo {
   pan?: string;
   website?: string;
   vatRegistered?: boolean;
+  logo?: string | null;
 }
 
 export function tenantToCompanyInfo(tenant: Tenant): CompanyPrintInfo {
@@ -19,5 +20,6 @@ export function tenantToCompanyInfo(tenant: Tenant): CompanyPrintInfo {
     pan: tenant.pan_vat_number || undefined,
     website: tenant.website || undefined,
     vatRegistered: tenant.vat_registered,
+    logo: tenant.logo || null,
   };
 }

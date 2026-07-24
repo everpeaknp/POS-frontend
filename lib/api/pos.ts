@@ -133,6 +133,7 @@ export interface POSProduct {
   unit_name?: string;
   image?: string | null;
   status: string;
+  reorder_level?: number;
 }
 
 export interface POSHeldOrder {

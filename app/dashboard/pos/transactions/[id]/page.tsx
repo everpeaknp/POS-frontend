@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Printer, X, Calendar, User, CreditCard, Package, Receipt, Split } from "lucide-react";
 
 import { useReactToPrint } from "react-to-print";
@@ -27,6 +27,7 @@ import toast from "react-hot-toast";
 export default function TransactionDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const transactionId = params.id as string;
 
   const [transaction, setTransaction] = useState<POSTransaction | null>(null);
@@ -122,6 +123,12 @@ export default function TransactionDetailPage() {
     }
     loadPrintData();
   }, [transactionId]);
+
+  useEffect(() => {
+    if (transaction?.status === "completed" && searchParams.get("refund") === "1") {
+      setShowRefundDialog(true);
+    }
+  }, [transaction?.status, searchParams]);
 
   const loadTransaction = async () => {
     try {

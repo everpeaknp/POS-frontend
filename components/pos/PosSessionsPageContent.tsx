@@ -222,16 +222,16 @@ export function PosSessionsPageContent({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem
-                          onSelect={() => {
-                            window.location.href = `/dashboard/pos/sessions/${session.id}`;
+                          onClick={() => {
+                            router.push(`/dashboard/pos/sessions/${session.id}`);
                           }}
                         >
                           View
                         </DropdownMenuItem>
                         {session.status === "open" && (
                           <DropdownMenuItem
-                            onSelect={() => {
-                              window.location.href = `/dashboard/pos/sessions/${session.id}/close`;
+                            onClick={() => {
+                              router.push(`/dashboard/pos/sessions/${session.id}/close`);
                             }}
                           >
                             Close Session

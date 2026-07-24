@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X, Pause, Play, Split, Settings } from "lucide-react";
+import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X, Pause, Play, Split, Settings, Monitor } from "lucide-react";
 
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
@@ -79,11 +79,29 @@ export default function POSPage() {
   const [lastTransaction, setLastTransaction] = useState<POSTransaction | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Auto-print hook
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Receipt_${new Date().toISOString().split("T")[0]}`,
+  });
+
   // Loyalty program states
   const [loyaltyProgram, setLoyaltyProgram] = useState<any | null>(null);
   const [customerLoyalty, setCustomerLoyalty] = useState<any | null>(null);
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState<number>(0);
+
+  // Keyboard shortcut states
+  const [selectedCartIndex, setSelectedCartIndex] = useState<number | null>(null);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+
+  // Keyboard shortcut refs
+  const amountPaidRef = useRef<HTMLInputElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const customerTriggerRef = useRef<HTMLButtonElement>(null);
+  const discountTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Real-time synchronization BroadcastChannel for customer display
   const customerDisplayChannel = useRef<BroadcastChannel | null>(null);
@@ -211,28 +229,140 @@ export default function POSPage() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
       // F1: Focus barcode scanner
-      if (e.key === 'F1') {
+      if (e.key === "F1") {
         e.preventDefault();
         barcodeInputRef.current?.focus();
       }
+
       // F2: Focus product search
-      if (e.key === 'F2') {
+      if (e.key === "F2") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
-      // Escape: Clear search and focus barcode
-      if (e.key === 'Escape') {
+
+      // Escape: Clear search, close modals/menus
+      if (e.key === "Escape") {
+        e.preventDefault();
         setSearchQuery("");
         setProducts([]);
         setBarcodeQuery("");
+        setShowHeldOrders(false);
+        setDiscountOpen(false);
+        setCustomerOpen(false);
+        setShowShortcutsModal(false);
+        toast.dismiss(); // Dismiss active toast confirmations
         barcodeInputRef.current?.focus();
+      }
+
+      // Cart Item modifications (only when not typing in fields)
+      const currentSelectedIndex = selectedCartIndex !== null && selectedCartIndex < cart.length
+        ? selectedCartIndex
+        : (cart.length > 0 ? cart.length - 1 : null);
+
+      if (!isTyping && currentSelectedIndex !== null) {
+        // + (Numpad Plus or regular Plus): Increase quantity
+        if (e.key === "+" || e.key === "Add") {
+          e.preventDefault();
+          updateQuantity(currentSelectedIndex, 1);
+        }
+        // - (Numpad Minus or regular Minus): Decrease quantity
+        if (e.key === "-" || e.key === "Subtract") {
+          e.preventDefault();
+          updateQuantity(currentSelectedIndex, -1);
+        }
+        // Delete: Remove selected item
+        if (e.key === "Delete") {
+          e.preventDefault();
+          removeFromCart(currentSelectedIndex);
+        }
+      }
+
+      // Ctrl + D: Open Discount Selector
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        setDiscountOpen(true);
+        setTimeout(() => {
+          discountTriggerRef.current?.focus();
+        }, 50);
+      }
+
+      // Ctrl + C: Focus Customer selector
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        setCustomerOpen(true);
+        setTimeout(() => {
+          customerTriggerRef.current?.focus();
+        }, 50);
+      }
+
+      // Ctrl + N: Focus Notes field
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        notesRef.current?.focus();
+      }
+
+      // Ctrl + Enter: Complete Checkout
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleCheckout();
+      }
+
+      // Ctrl + P: Print last receipt
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        if (lastTransaction) {
+          handlePrint();
+        } else {
+          toast.error("No completed transaction to print");
+        }
+      }
+
+      // F8: Focus Payment/Checkout (Amount Paid)
+      if (e.key === "F8") {
+        e.preventDefault();
+        if (useSplitPayment) {
+          // Focus first split payment amount input
+          const firstSplitInput = document.querySelector('input[placeholder="0.00"]') as HTMLInputElement;
+          firstSplitInput?.focus();
+        } else {
+          amountPaidRef.current?.focus();
+        }
+      }
+
+      // F9: Void last added cart item
+      if (e.key === "F9") {
+        e.preventDefault();
+        if (cart.length > 0) {
+          removeFromCart(cart.length - 1);
+        } else {
+          toast.error("Cart is empty");
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [
+    cart,
+    selectedCartIndex,
+    amountPaid,
+    useSplitPayment,
+    lastTransaction,
+    discountOpen,
+    customerOpen,
+    showShortcutsModal,
+    updateQuantity,
+    removeFromCart,
+    handleCheckout,
+    handlePrint,
+  ]);
 
   // Search products
   useEffect(() => {
@@ -309,7 +439,7 @@ export default function POSPage() {
   };
 
   // Direct barcode scan handler (used by both form and global listener)
-  const handleBarcodeScanDirect = async (barcode: string) => {
+  async function handleBarcodeScanDirect(barcode: string) {
     if (!barcode.trim() || scanningBarcode) return;
     
     setScanningBarcode(true);
@@ -469,7 +599,7 @@ export default function POSPage() {
   };
 
   // Update cart item quantity
-  const updateQuantity = (index: number, delta: number) => {
+  function updateQuantity(index: number, delta: number) {
     const updated = [...cart];
     const newQty = updated[index].quantity + delta;
     
@@ -505,7 +635,7 @@ export default function POSPage() {
   };
 
   // Remove from cart
-  const removeFromCart = (index: number) => {
+  function removeFromCart(index: number) {
     const item = cart[index];
     
     // Show custom confirmation toast
@@ -575,6 +705,72 @@ export default function POSPage() {
     : amountPaid
       ? roundToTwo(Math.max(0, parseFloat(amountPaid) - total))
       : 0;
+
+  // Broadcast state to Customer Display
+  useEffect(() => {
+    const channel = new BroadcastChannel("pos-customer-display");
+
+    const getStatus = (): 'idle' | 'active' | 'success' => {
+      if (cart.length > 0) return 'active';
+      if (lastTransaction) return 'success';
+      return 'idle';
+    };
+
+    const data = {
+      status: getStatus(),
+      cart: cart.map(item => ({
+        product_name: item.product_name,
+        product_sku: item.product_sku,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        line_total: item.line_total ?? (item.quantity * item.unit_price),
+        unit_name: item.unit_name || "",
+      })),
+      subtotal,
+      itemLevelDiscount,
+      billLevelDiscount,
+      loyaltyDiscount,
+      totalDiscount,
+      taxAmount,
+      total,
+      paymentMethod,
+      amountPaid: useSplitPayment 
+        ? splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0)
+        : (parseFloat(amountPaid) || 0),
+      changeGiven,
+      businessName: companyInfo?.name || "Khata POS",
+      logo: companyInfo?.logo || null,
+      invoiceNumber: lastTransaction?.transaction_number || "",
+    };
+
+    channel.postMessage({ type: "update", data });
+
+    channel.onmessage = (event) => {
+      if (event.data?.type === "request-state") {
+        channel.postMessage({ type: "update", data });
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  }, [
+    cart,
+    subtotal,
+    itemLevelDiscount,
+    billLevelDiscount,
+    loyaltyDiscount,
+    totalDiscount,
+    taxAmount,
+    total,
+    paymentMethod,
+    amountPaid,
+    useSplitPayment,
+    splitPayments,
+    changeGiven,
+    companyInfo,
+    lastTransaction,
+  ]);
 
   // Clear cart
   const clearCart = () => {
@@ -743,14 +939,8 @@ export default function POSPage() {
     setSplitPayments(updated);
   };
 
-  // Auto-print hook
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `Receipt_${new Date().toISOString().split("T")[0]}`,
-  });
-
   // Process transaction
-  const handleCheckout = async () => {
+  async function handleCheckout() {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return;
@@ -845,6 +1035,11 @@ export default function POSPage() {
       toast.success(`✓ Transaction ${response.transaction_number} completed!`);
       setLastTransaction(response);
       
+      // Auto-reset customer display welcome screen after 12 seconds
+      setTimeout(() => {
+        setLastTransaction(null);
+      }, 12000);
+      
       // Reset form
       setCart([]);
       setSelectedCustomer("");
@@ -931,12 +1126,30 @@ export default function POSPage() {
                 Held Orders ({heldOrders.length})
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs gap-1"
+              onClick={() => setShowShortcutsModal(true)}
+            >
+              <span className="font-mono bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-[10px] border border-gray-300 mr-0.5">?</span>
+              Shortcuts
+            </Button>
             <Link href="/dashboard/pos/settings">
               <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
                 <Settings className="h-3 w-3" />
                 Settings
               </Button>
             </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+              onClick={() => window.open("/dashboard/pos/customer-display", "CustomerDisplay", "width=1024,height=768")}
+            >
+              <Monitor className="h-3 w-3" />
+              Customer Display
+            </Button>
           </div>
         </div>
       )}
@@ -1066,20 +1279,26 @@ export default function POSPage() {
                 <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
                   {products.map(product => {
                     const isOutOfStock = product.stock_quantity <= 0;
+                    const isLowStock = !isOutOfStock && (
+                      (product.reorder_level !== undefined && product.reorder_level > 0 && product.stock_quantity <= product.reorder_level) ||
+                      (product.stock_quantity > 0 && product.stock_quantity <= 5)
+                    );
                     return (
                       <button
                         key={product.id}
                         onClick={() => !isOutOfStock && addToCart(product)}
                         disabled={isOutOfStock}
-                        className={`w-full text-left p-2 rounded-lg transition-colors ${
+                        className={`w-full text-left p-2 rounded-lg transition-colors border-2 ${
                           isOutOfStock 
-                            ? 'bg-gray-100 cursor-not-allowed opacity-60' 
-                            : 'hover:bg-gray-50'
+                            ? 'bg-gray-100 border-transparent cursor-not-allowed opacity-60' 
+                            : isLowStock
+                            ? 'bg-amber-50/20 border-amber-100 hover:bg-amber-50/40'
+                            : 'bg-white border-transparent hover:bg-gray-50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           {product.image && (
-                            <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden bg-gray-100">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden bg-gray-100 border border-gray-100">
                               <Image
                                 src={product.image}
                                 alt={product.name}
@@ -1091,12 +1310,27 @@ export default function POSPage() {
                           )}
                           <div className="flex-1 flex justify-between items-start">
                             <div>
-                              <div className={`font-medium text-sm ${isOutOfStock ? 'text-gray-400' : ''}`}>
-                                {product.name}
-                                {isOutOfStock && <span className="ml-2 text-xs text-red-500 font-semibold">OUT OF STOCK</span>}
+                              <div className={`font-medium text-sm flex items-center gap-1.5 ${isOutOfStock ? 'text-gray-400' : ''}`}>
+                                <span>{product.name}</span>
+                                {isOutOfStock ? (
+                                  <span className="text-[9px] text-red-650 font-bold bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    OUT OF STOCK
+                                  </span>
+                                ) : isLowStock ? (
+                                  <span className="text-[9px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                                    LOW STOCK
+                                  </span>
+                                ) : null}
                               </div>
-                              <div className={`text-xs ${isOutOfStock ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <div className={`text-xs ${
+                                isOutOfStock 
+                                  ? 'text-gray-400' 
+                                  : isLowStock 
+                                  ? 'text-amber-600 font-medium' 
+                                  : 'text-gray-500'
+                              }`}>
                                 {product.sku} • Stock: {product.stock_quantity}
+                                {isLowStock && product.reorder_level && product.reorder_level > 0 && ` (Reorder at: ${product.reorder_level})`}
                               </div>
                             </div>
                             <div className={`text-sm font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-[#22C55E]'}`}>
@@ -1118,8 +1352,8 @@ export default function POSPage() {
                   <div className="h-5 w-5 text-[#22C55E] flex items-center justify-center">%</div>
                   <span className="text-sm font-medium text-gray-700">Apply Discount</span>
                 </div>
-                <Select value={selectedDiscount} onValueChange={(value) => setSelectedDiscount(value || "")}>
-                  <SelectTrigger>
+                <Select open={discountOpen} onOpenChange={setDiscountOpen} value={selectedDiscount} onValueChange={(value) => setSelectedDiscount(value || "")}>
+                  <SelectTrigger ref={discountTriggerRef}>
                     <SelectValue placeholder="No discount applied" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1214,8 +1448,20 @@ export default function POSPage() {
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {cart.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  {cart.map((item, index) => {
+                    const isSelected = selectedCartIndex !== null && selectedCartIndex < cart.length
+                      ? selectedCartIndex === index
+                      : (cart.length > 0 && index === cart.length - 1);
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => setSelectedCartIndex(index)}
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border ${
+                          isSelected
+                            ? "bg-green-50/70 border-[#22C55E] shadow-sm ring-1 ring-[#22C55E]"
+                            : "bg-gray-50 border-transparent hover:bg-gray-100/70"
+                        }`}
+                      >
                       <div className="flex-1">
                         <div className="font-medium text-sm">{item.product_name}</div>
                         <div className="text-xs text-gray-500">{item.product_sku}</div>
@@ -1260,7 +1506,8 @@ export default function POSPage() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1402,8 +1649,8 @@ export default function POSPage() {
                 
                 <div>
                   <Label className="text-sm">Customer {paymentMethod === "credit" ? "*" : "(Optional)"}</Label>
-                  <Select value={selectedCustomer || "walk-in"} onValueChange={(value) => setSelectedCustomer((value || "walk-in") === "walk-in" ? "" : (value || ""))}>
-                    <SelectTrigger className="mt-1">
+                  <Select open={customerOpen} onOpenChange={setCustomerOpen} value={selectedCustomer || "walk-in"} onValueChange={(value) => setSelectedCustomer((value || "walk-in") === "walk-in" ? "" : (value || ""))}>
+                    <SelectTrigger ref={customerTriggerRef} className="mt-1">
                       <SelectValue placeholder="Walk-in Customer" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1465,6 +1712,7 @@ export default function POSPage() {
                 <div>
                   <Label htmlFor="notes" className="text-sm">Notes</Label>
                   <Textarea
+                    ref={notesRef}
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -1519,6 +1767,7 @@ export default function POSPage() {
                 <div>
                   <Label className="text-sm">Amount Paid *</Label>
                   <Input
+                    ref={amountPaidRef}
                     type="number"
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(e.target.value)}
@@ -1566,6 +1815,98 @@ export default function POSPage() {
           />
         )}
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcutsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl border border-gray-150 shadow-xl max-w-lg w-full flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <div>
+                <h3 className="font-bold text-gray-950 text-lg">Keyboard Shortcuts</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Quick billing controls</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setShowShortcutsModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Focus Barcode</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">F1</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Focus Search</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">F2</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Clear / Escape</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Esc</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Increase Qty</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">+</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Decrease Qty</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">-</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Delete Item</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Delete</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Discount Selector</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Ctrl + D</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Customer Selector</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Ctrl + C</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Focus Notes</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Ctrl + N</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Focus Payment</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">F8</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Void Last Item</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">F9</kbd>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="text-gray-600 font-medium">Print Receipt</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded shadow-sm">Ctrl + P</kbd>
+                </div>
+                <div className="flex items-center justify-between col-span-2 p-2 bg-green-50/50 rounded border border-green-150">
+                  <span className="text-green-800 font-semibold">Complete Checkout</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-green-300 rounded shadow-sm text-green-700">Ctrl + Enter</kbd>
+                </div>
+              </div>
+              <p className="text-center text-[11px] text-gray-400 mt-2">
+                * Item actions (+, -, Delete) apply to the highlighted item in the cart.
+              </p>
+            </div>
+            
+            <div className="p-4 border-t border-gray-100 flex justify-end bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => setShowShortcutsModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
