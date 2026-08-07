@@ -5,20 +5,24 @@ import { PageLoading } from "@/components/shared/PageLoading";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X } from "lucide-react";
+import { Search, Barcode, ShoppingCart, Trash2, Plus, Minus, X, Pause, Play, DollarSign, Gift, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction, type POSSession } from "@/lib/api/pos";
+import posApi, { type POSProduct, type POSTransactionLine, type POSDiscount, type POSTransaction, type POSSession, type POSHeldOrder, type POSCashMovement, type POSLoyaltyProgram, type POSCustomerLoyalty, type POSPaymentEntry } from "@/lib/api/pos";
 import { POS_VAT_RATE } from "@/lib/api/pos-helpers";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
 import { POS_PAYMENT_METHODS, type PosPaymentMethod } from "@/lib/pos/payment-methods";
+import { CashMovementDialog } from "@/components/pos/CashMovementDialog";
+import { HeldOrdersDialog } from "@/components/pos/HeldOrdersDialog";
+import { SplitPaymentDialog } from "@/components/pos/SplitPaymentDialog";
 
 interface CartItem extends POSTransactionLine {
   product_name: string;
@@ -55,6 +59,26 @@ export default function POSPage() {
   const [todayTransactions, setTodayTransactions] = useState<POSTransaction[]>([]);
   const [openSession, setOpenSession] = useState<POSSession | null>(null);
 
+  // Split Payments State
+  const [splitPaymentMode, setSplitPaymentMode] = useState(false);
+  const [payments, setPayments] = useState<POSPaymentEntry[]>([]);
+  
+  // Held Orders State
+  const [heldOrders, setHeldOrders] = useState<POSHeldOrder[]>([]);
+  const [showHeldOrders, setShowHeldOrders] = useState(false);
+  
+  // Cash Movement State
+  const [showCashMovement, setShowCashMovement] = useState(false);
+  const [cashMovementType, setCashMovementType] = useState<'in' | 'out'>('in');
+  const [cashMovementAmount, setCashMovementAmount] = useState('');
+  const [cashMovementReason, setCashMovementReason] = useState('');
+  
+  // Loyalty State
+  const [loyaltyProgram, setLoyaltyProgram] = useState<POSLoyaltyProgram | null>(null);
+  const [customerLoyalty, setCustomerLoyalty] = useState<POSCustomerLoyalty | null>(null);
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+
   const fetchTodayTransactions = async () => {
     try {
       const data = await posApi.getTodayTransactions();
@@ -68,16 +92,20 @@ export default function POSPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [customersRes, warehousesRes, discountsRes, sessionRes] = await Promise.all([
+        const [customersRes, warehousesRes, discountsRes, sessionRes, heldRes, loyaltyRes] = await Promise.all([
           customerAPI.list({ status: 'active', page_size: 500 }),
           inventoryApi.warehouses.list({ page_size: 500 }),
           posApi.getActiveDiscounts(),
           posApi.getOpenSession(),
+          posApi.getHeldOrders(),
+          posApi.getLoyaltyProgram(),
         ]);
         setCustomers(customersRes.data.results);
         setWarehouses(warehousesRes.data.results);
         setDiscounts(discountsRes);
         setOpenSession(sessionRes);
+        setHeldOrders(heldRes);
+        setLoyaltyProgram(loyaltyRes);
 
         if (sessionRes?.warehouse) {
           setSelectedWarehouse(String(sessionRes.warehouse));
@@ -93,6 +121,17 @@ export default function POSPage() {
     fetchData();
     fetchTodayTransactions();
   }, []);
+
+  // Fetch customer loyalty when customer changes
+  useEffect(() => {
+    if (selectedCustomer && loyaltyProgram?.is_active) {
+      posApi.getCustomerLoyalty(selectedCustomer).then(setCustomerLoyalty);
+    } else {
+      setCustomerLoyalty(null);
+      setUsePoints(false);
+      setPointsToRedeem(0);
+    }
+  }, [selectedCustomer, loyaltyProgram]);
 
   // Auto-focus barcode input on mount and after each scan
   useEffect(() => {
@@ -532,6 +571,70 @@ export default function POSPage() {
     });
   };
 
+  // Hold Order
+  const handleHoldOrder = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    
+    try {
+      await posApi.createHeldOrder({
+        customer: selectedCustomer || null,
+        customer_name: customerName || undefined,
+        items: cart,
+        notes: notes || undefined,
+      });
+      toast.success("Order held successfully");
+      
+      // Clear current cart
+      setCart([]);
+      setSelectedCustomer("");
+      setCustomerName("");
+      setNotes("");
+      
+      // Refresh held orders
+      const updated = await posApi.getHeldOrders();
+      setHeldOrders(updated);
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || "Failed to hold order");
+    }
+  };
+
+  // Resume Order
+  const handleResumeOrder = (order: POSHeldOrder) => {
+    setCart(order.items.map((item: any) => ({
+      ...item,
+      product_name: item.product_name,
+      product_sku: item.product_sku,
+      stock_quantity: 999, // Will be validated on checkout
+    })));
+    setSelectedCustomer(order.customer || "");
+    setCustomerName(order.customer_name || "");
+    if (order.notes) setNotes(order.notes);
+    toast.success("Order resumed");
+  };
+
+  // Delete Held Order
+  const handleDeleteHeldOrder = async (orderId: string) => {
+    try {
+      await posApi.deleteHeldOrder(orderId);
+      const updated = await posApi.getHeldOrders();
+      setHeldOrders(updated);
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || "Failed to delete held order");
+    }
+  };
+
+  // Split Payment
+  const [showSplitPayment, setShowSplitPayment] = useState(false);
+  const handleSplitPaymentConfirm = (paymentEntries: POSPaymentEntry[]) => {
+    setPayments(paymentEntries);
+    const totalPaid = paymentEntries.reduce((sum, p) => sum + p.amount, 0);
+    setAmountPaid(totalPaid.toFixed(2));
+    toast.success(`Split payment configured: ${paymentEntries.length} methods`);
+  };
+
   // Process transaction
   const handleCheckout = async () => {
     if (cart.length === 0) {
@@ -574,16 +677,13 @@ export default function POSPage() {
     
     setProcessing(true);
     try {
-      const transactionData = {
+      const transactionData: any = {
         customer: selectedCustomer || null,
         customer_name: customerName || undefined,
         subtotal: roundToTwo(subtotal),
         discount_amount: roundToTwo(totalDiscount),
         tax_amount: roundToTwo(taxAmount),
         total: roundToTwo(total),
-        payment_method: paymentMethod,
-        amount_paid: paidAmount,
-        change_given: roundToTwo(changeGiven),
         warehouse: selectedWarehouse,
         notes: notes || undefined,
         lines: cart.map(item => ({
@@ -594,6 +694,15 @@ export default function POSPage() {
           line_total: roundToTwo(item.line_total || 0)
         }))
       };
+
+      // Split payment support
+      if (splitPaymentMode && payments.length > 0) {
+        transactionData.payments = payments;
+      } else {
+        transactionData.payment_method = paymentMethod;
+        transactionData.amount_paid = paidAmount;
+        transactionData.change_given = roundToTwo(changeGiven);
+      }
       
       const response = await posApi.createTransaction(transactionData);
       toast.success(`✓ Transaction ${response.transaction_number} completed!`);
@@ -606,6 +715,8 @@ export default function POSPage() {
       setAmountPaid("");
       setNotes("");
       setPaymentMethod("cash");
+      setSplitPaymentMode(false);
+      setPayments([]);
       fetchTodayTransactions();
       
       // Auto-focus barcode for next customer
@@ -657,10 +768,73 @@ export default function POSPage() {
       )}
 
       {openSession && (
-        <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-          Session <span className="font-mono font-semibold">{openSession.session_number}</span> is open
-          {openSession.warehouse_name ? ` · ${openSession.warehouse_name}` : ""}
-        </div>
+        <>
+          <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+            Session <span className="font-mono font-semibold">{openSession.session_number}</span> is open
+            {openSession.warehouse_name ? ` · ${openSession.warehouse_name}` : ""}
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="mx-6 mt-3 flex flex-wrap gap-2">
+            {cart.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleHoldOrder}
+                className="gap-1"
+              >
+                <Pause className="h-4 w-4" />
+                Hold Order
+              </Button>
+            )}
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowHeldOrders(true)}
+              className="gap-1"
+            >
+              <Play className="h-4 w-4" />
+              Held Orders
+              {heldOrders.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                  {heldOrders.length}
+                </span>
+              )}
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowCashMovement(true)}
+              className="gap-1"
+            >
+              <DollarSign className="h-4 w-4" />
+              Cash In/Out
+            </Button>
+            
+            {cart.length > 0 && (
+              <Button
+                size="sm"
+                variant={splitPaymentMode ? "default" : "outline"}
+                onClick={() => {
+                  if (!splitPaymentMode) {
+                    setShowSplitPayment(true);
+                  } else {
+                    setSplitPaymentMode(false);
+                    setPayments([]);
+                  }
+                }}
+                className={`gap-1 ${splitPaymentMode ? 'bg-[#22C55E] hover:bg-[#16A34A]' : ''}`}
+              >
+                Split Payment
+                {splitPaymentMode && payments.length > 0 && (
+                  <span className="ml-1">({payments.length})</span>
+                )}
+              </Button>
+            )}
+          </div>
+        </>
       )}
 
       <div className="flex-1 p-6">
@@ -995,6 +1169,52 @@ export default function POSPage() {
                   </div>
                 )}
                 
+                {/* Loyalty Points Display */}
+                {selectedCustomer && customerLoyalty && loyaltyProgram?.is_active && (
+                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-purple-700 font-medium flex items-center gap-1">
+                        <Gift className="h-4 w-4" />
+                        Loyalty Points
+                      </span>
+                      <span className="text-purple-900 font-bold">{customerLoyalty.points_balance} pts</span>
+                    </div>
+                    {loyaltyProgram.rupees_per_point > 0 && (
+                      <p className="text-xs text-purple-600 mb-2">
+                        1 point = Rs. {loyaltyProgram.rupees_per_point.toFixed(2)}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="usePoints"
+                        checked={usePoints}
+                        onChange={(e) => {
+                          setUsePoints(e.target.checked);
+                          if (!e.target.checked) setPointsToRedeem(0);
+                        }}
+                        className="rounded border-purple-300"
+                      />
+                      <Label htmlFor="usePoints" className="text-sm text-purple-700 cursor-pointer">
+                        Redeem points for this purchase
+                      </Label>
+                    </div>
+                    {usePoints && (
+                      <div className="mt-2">
+                        <Input
+                          type="number"
+                          value={pointsToRedeem}
+                          onChange={(e) => setPointsToRedeem(Math.min(Number(e.target.value), customerLoyalty.points_balance))}
+                          placeholder="Points to redeem"
+                          min={0}
+                          max={customerLoyalty.points_balance}
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <div>
                   <Label htmlFor="notes" className="text-sm">Notes</Label>
                   <Textarea
@@ -1077,6 +1297,38 @@ export default function POSPage() {
           </div>
         </div>
       </div>
+      
+      {/* Dialogs */}
+      <CashMovementDialog 
+        open={showCashMovement} 
+        onOpenChange={setShowCashMovement}
+        onSuccess={async () => {
+          toast.success("Cash movement recorded");
+          setShowCashMovement(false);
+        }}
+      />
+      
+      <HeldOrdersDialog 
+        open={showHeldOrders} 
+        onOpenChange={setShowHeldOrders}
+        heldOrders={heldOrders}
+        onResume={(order) => {
+          handleResumeOrder(order);
+          setShowHeldOrders(false);
+        }}
+        onDelete={handleDeleteHeldOrder}
+      />
+      
+      <SplitPaymentDialog 
+        open={showSplitPayment} 
+        onOpenChange={setShowSplitPayment}
+        totalAmount={total}
+        onConfirm={(paymentEntries) => {
+          handleSplitPaymentConfirm(paymentEntries);
+          setSplitPaymentMode(true);
+          setShowSplitPayment(false);
+        }}
+      />
     </div>
   );
 }

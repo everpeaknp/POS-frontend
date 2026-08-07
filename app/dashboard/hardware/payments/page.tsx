@@ -94,7 +94,7 @@ export default function HardwarePaymentsPage() {
 
     const method = payment.payment_method || "";
     if (methodFilter === "bank") {
-      return method === "bank" || method === "bank_transfer";
+      return method === "bank";
     }
     return method === methodFilter;
   });

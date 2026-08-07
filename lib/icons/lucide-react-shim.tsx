@@ -97,6 +97,7 @@ export const FileText: IconType = Hi.HiOutlineDocumentText;
 export const Filter: IconType = Hi.HiOutlineFunnel;
 export const Fingerprint: IconType = Hi.HiOutlineFingerPrint;
 export const FolderTree: IconType = Hi.HiOutlineFolder;
+export const Gift: IconType = Hi.HiOutlineGift;
 export const Globe: IconType = Hi.HiOutlineGlobeAlt;
 export const HardHat: IconType = Hi.HiOutlineWrenchScrewdriver;
 export const History: IconType = Hi.HiOutlineClock;
@@ -149,9 +150,11 @@ export const PanelTop: IconType = ({ size = 24, className, ...props }) => (
     <path d="M3 9h18" />
   </svg>
 );
+export const Pause: IconType = Hi.HiOutlinePause;
 export const Pencil: IconType = Hi.HiOutlinePencil;
 export const Phone: IconType = Hi.HiOutlinePhone;
 export const Pin: IconType = Hi.HiOutlineBookmark;
+export const Play: IconType = Hi.HiOutlinePlay;
 export const Plus: IconType = Hi.HiOutlinePlus;
 export const Printer: IconType = Hi.HiOutlinePrinter;
 export const Receipt: IconType = Hi.HiOutlineReceiptPercent;

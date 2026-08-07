@@ -122,6 +122,78 @@ export interface POSProduct {
   status: string;
 }
 
+export interface POSHeldOrder {
+  id: string;
+  session: string;
+  session_number?: string;
+  customer?: string | null;
+  customer_name?: string;
+  items: any[];
+  held_at: string;
+  notes?: string;
+}
+
+export interface POSCashMovement {
+  id: string;
+  session: string;
+  session_number?: string;
+  movement_type: 'in' | 'out';
+  amount: number;
+  reason: string;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
+  created_by_name?: string;
+}
+
+export interface POSLoyaltyProgram {
+  id: string;
+  name: string;
+  points_per_rupee: number;
+  rupees_per_point: number;
+  is_active: boolean;
+}
+
+export interface POSCustomerLoyalty {
+  id: string;
+  customer: string;
+  customer_name?: string;
+  points_balance: number;
+  total_earned: number;
+  total_redeemed: number;
+  last_transaction_date?: string;
+}
+
+export interface POSRefund {
+  id: string;
+  refund_number: string;
+  original_transaction: string;
+  original_transaction_number?: string;
+  refund_transaction?: string;
+  refund_transaction_number?: string;
+  reason: string;
+  refund_method: string;
+  total_refund_amount: number;
+  status: string;
+  created_at: string;
+  created_by?: string;
+  created_by_name?: string;
+  lines: POSRefundLine[];
+}
+
+export interface POSRefundLine {
+  id: string;
+  original_line: string;
+  product_name?: string;
+  quantity: number;
+  refund_amount: number;
+}
+
+export interface POSPaymentEntry {
+  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'credit';
+  amount: number;
+}
+
 export const POS_PAGE_SIZE = 25;
 
 const posApi = {
@@ -181,6 +253,11 @@ const posApi = {
 
   getTodayTransactions: async (): Promise<POSTransaction[]> => {
     const response = await apiClient.get('/pos/transactions/today/');
+    return response.data;
+  },
+
+  getTransactionByNumber: async (transactionNumber: string): Promise<POSTransaction> => {
+    const response = await apiClient.get(`/pos/transactions/by-number/${transactionNumber}/`);
     return response.data;
   },
 
@@ -269,6 +346,83 @@ const posApi = {
       closing_cash,
       ...(notes ? { notes } : {}),
     });
+    return response.data;
+  },
+
+  // Held Orders
+  getHeldOrders: async (): Promise<POSHeldOrder[]> => {
+    const response = await apiClient.get('/pos/held-orders/', { params: POS_LIST_PARAMS });
+    return unwrapList(response.data);
+  },
+
+  createHeldOrder: async (data: {
+    customer?: string | null;
+    customer_name?: string;
+    items: any[];
+    notes?: string;
+  }): Promise<POSHeldOrder> => {
+    const response = await apiClient.post('/pos/held-orders/', data);
+    return response.data;
+  },
+
+  deleteHeldOrder: async (id: string): Promise<void> => {
+    await apiClient.delete(`/pos/held-orders/${id}/`);
+  },
+
+  // Cash Movements
+  getCashMovements: async (session_id?: string): Promise<POSCashMovement[]> => {
+    const response = await apiClient.get('/pos/cash-movements/', {
+      params: { ...(session_id ? { session: session_id } : {}), ...POS_LIST_PARAMS },
+    });
+    return unwrapList(response.data);
+  },
+
+  createCashMovement: async (data: {
+    movement_type: 'in' | 'out';
+    amount: number;
+    reason: string;
+    notes?: string;
+  }): Promise<POSCashMovement> => {
+    const response = await apiClient.post('/pos/cash-movements/', data);
+    return response.data;
+  },
+
+  // Loyalty
+  getLoyaltyProgram: async (): Promise<POSLoyaltyProgram | null> => {
+    try {
+      const response = await apiClient.get('/pos/loyalty/program/');
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  getCustomerLoyalty: async (customerId: string): Promise<POSCustomerLoyalty | null> => {
+    try {
+      const response = await apiClient.get(`/pos/loyalty/customers/${customerId}/`);
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  // Refunds
+  getRefunds: async (): Promise<POSRefund[]> => {
+    const response = await apiClient.get('/pos/refunds/', { params: POS_LIST_PARAMS });
+    return unwrapList(response.data);
+  },
+
+  createRefund: async (data: {
+    original_transaction: string;
+    reason: string;
+    refund_method: string;
+    lines: {
+      original_line: string;
+      quantity: number;
+      refund_amount: number;
+    }[];
+  }): Promise<POSRefund> => {
+    const response = await apiClient.post('/pos/refunds/', data);
     return response.data;
   },
 };

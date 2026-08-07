@@ -152,6 +152,7 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Billing", href: "/dashboard/pos" },
       { label: "Sessions", href: "/dashboard/pos/sessions", createHref: "/dashboard/pos/sessions/new" },
       { label: "Transactions", href: "/dashboard/pos/transactions" },
+      { label: "Refunds", href: "/dashboard/pos/refunds", createHref: "/dashboard/pos/refunds/new" },
       { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts?new=1" },
       { label: "Daily Reports", href: "/dashboard/pos/reports" },
     ],
