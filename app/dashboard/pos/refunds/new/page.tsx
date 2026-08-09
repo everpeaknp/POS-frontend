@@ -109,7 +109,7 @@ export default function NewRefundPage() {
       await posApi.createRefund({
         original_transaction: transaction.id,
         reason: reason,
-        notes: notes || undefined,
+        refund_method: transaction.payment_method,
         lines: linesToRefund.map(line => ({
           original_line: line.original_line,
           quantity: line.quantity,

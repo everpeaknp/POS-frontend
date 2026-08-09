@@ -315,7 +315,7 @@ export default function NewEmployeePage() {
                   <div>
                     <Label htmlFor="type" className="text-sm font-medium text-gray-700">Employment Type*</Label>
                     <Select value={formData.employment_type || ""} onValueChange={(v) => setFormData({ ...formData, employment_type: v || "" })}>
-                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectTrigger className="mt-1 h-9 border-gray-200"><SelectValue placeholder="Select employment type" /></SelectTrigger>
                       <SelectContent>
                         {["Full-time", "Part-time", "Contract", "Probation"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                       </SelectContent>

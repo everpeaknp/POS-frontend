@@ -302,7 +302,7 @@ export default function NewSalesOrderPage() {
                           onValueChange={(v) => setNewCustomer({ ...newCustomer, type: v as "Individual" | "Business" })}
                         >
                           <SelectTrigger className="h-9 text-sm border-gray-200">
-                            <SelectValue />
+                            <SelectValue placeholder="Select customer type" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Individual">Individual</SelectItem>
@@ -339,7 +339,7 @@ export default function NewSalesOrderPage() {
               <Label className="text-sm">Payment Type</Label>
               <Select value={form.paymentType || ""} onValueChange={(v) => setForm({ ...form, paymentType: v as string })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select payment type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
@@ -351,7 +351,7 @@ export default function NewSalesOrderPage() {
               <Label className="text-sm">Status</Label>
               <Select value={form.status || ""} onValueChange={(v) => setForm({ ...form, status: v as string })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Draft">Draft</SelectItem>
@@ -465,14 +465,16 @@ export default function NewSalesOrderPage() {
               onClick={() => handleSubmit('Draft')}
               className="border-[#22C55E] text-[#22C55E] hover:bg-green-50"
               disabled={submitting}
-            >
+            >
+
               Save as Draft
             </Button>
             <Button 
               onClick={() => handleSubmit('Confirmed')}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
               disabled={submitting}
-            >
+            >
+
               Confirm Order
             </Button>
           </div>

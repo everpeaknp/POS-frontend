@@ -357,7 +357,7 @@ export default function NewInvoicePage() {
                 onValueChange={(v) => setForm({ ...form, payment_terms: v || "Net 30" })}
               >
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
                 <SelectContent>
                   {["Immediate", "Net 15", "Net 30", "Net 60"].map((t) => (
@@ -397,7 +397,7 @@ export default function NewInvoicePage() {
                 }}
               >
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select payment type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>

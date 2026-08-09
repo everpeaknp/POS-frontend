@@ -219,7 +219,7 @@ export default function NewAccountPage() {
                 </Field>
                 <Field label="Account Type" required>
                   <Select value={type} onValueChange={(v) => handleTypeChange(v ?? "Assets")}>
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select account type" /></SelectTrigger>
                     <SelectContent>
                       {["Assets", "Liabilities", "Equity", "Income", "Expense"].map((t) => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -268,7 +268,7 @@ export default function NewAccountPage() {
                 </Field>
                 <Field label="Status">
                   <Select value={formData.status} onValueChange={(v) => setFormData((prev) => ({ ...prev, status: v ?? "active" }))}>
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
@@ -277,7 +277,7 @@ export default function NewAccountPage() {
                 </Field>
                 <Field label="Tax Applicable">
                   <Select value={formData.taxApplicable} onValueChange={(v) => setFormData((prev) => ({ ...prev, taxApplicable: v ?? "No" }))}>
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select tax option" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Yes">Yes</SelectItem>
                       <SelectItem value="No">No</SelectItem>
@@ -320,7 +320,7 @@ export default function NewAccountPage() {
                 </Field>
                 <Field label="Balance Type">
                   <Select value={formData.balanceType} onValueChange={(v) => setFormData((prev) => ({ ...prev, balanceType: v ?? "Debit" }))}>
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select balance type" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Debit">Debit</SelectItem>
                       <SelectItem value="Credit">Credit</SelectItem>

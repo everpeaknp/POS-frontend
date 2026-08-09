@@ -177,7 +177,7 @@ export default function NewPaymentPage() {
                   onValueChange={(value) => setFormData({ ...formData, payment_method: value || "" })}
                 >
                   <SelectTrigger className="h-10 border-gray-200">
-                    <SelectValue />
+                    <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash</SelectItem>

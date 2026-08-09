@@ -177,7 +177,7 @@ export default function NewPurchaseInvoicePage() {
             <Field label="Payment Terms">
               <Select value={form.paymentTerms} onValueChange={(v) => setForm({ ...form, paymentTerms: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
                 <SelectContent>
                   {["Immediate", "Net 15", "Net 30", "Net 60"].map((t) => (
@@ -191,7 +191,7 @@ export default function NewPurchaseInvoicePage() {
             <Field label="Warehouse / Delivery Location">
               <Select value={form.warehouse} onValueChange={(v) => setForm({ ...form, warehouse: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select warehouse" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="main">Main Warehouse</SelectItem>
@@ -216,10 +216,12 @@ export default function NewPurchaseInvoicePage() {
               <ArrowLeft className="h-4 w-4" /> Cancel
             </Button>
             <div className="flex-1" />
-            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit("received")} disabled={submitting}>
+            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit("received")} disabled={submitting}>
+
               Save as Received
             </Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
+            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
+
               Save & Mark Paid
             </Button>
           </div>

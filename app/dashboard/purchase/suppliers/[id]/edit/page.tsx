@@ -152,7 +152,9 @@ export default function EditSupplierPage() {
               </Field>
               <Field label="Supplier Type">
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "" })}>
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200">
+                    <SelectValue placeholder="Select supplier type" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Individual">Individual</SelectItem>
                     <SelectItem value="Company">Company</SelectItem>
@@ -183,7 +185,9 @@ export default function EditSupplierPage() {
               </Field>
               <Field label="Status">
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v || "" })}>
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
@@ -275,7 +279,8 @@ export default function EditSupplierPage() {
               onClick={handleSubmit}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
               disabled={submitting}
-            >
+            >
+
               Save Changes
             </Button>
           </div>

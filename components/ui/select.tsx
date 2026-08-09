@@ -6,7 +6,49 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+// Context to store mapping from selected option values to their ReactNode labels
+interface SelectOptionContextType {
+  registerOption: (value: any, label: React.ReactNode) => void;
+  optionsMap: Map<any, React.ReactNode>;
+}
+
+const SelectOptionContext = React.createContext<SelectOptionContextType | null>(null);
+
+// Helper to extract textual content from a React Node for deep text comparison to prevent infinite loop
+function getTextContent(node: React.ReactNode): string {
+  if (node == null) return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(getTextContent).join("");
+  if (React.isValidElement(node)) {
+    return getTextContent((node.props as any)?.children);
+  }
+  return "";
+}
+
+function Select<Value = any, Multiple extends boolean = false>({ children, ...props }: SelectPrimitive.Root.Props<Value, Multiple>) {
+  const [optionsMap, setOptionsMap] = React.useState<Map<any, React.ReactNode>>(() => new Map());
+
+  const registerOption = React.useCallback((value: any, label: React.ReactNode) => {
+    setOptionsMap((prev) => {
+      const existing = prev.get(value);
+      const prevText = getTextContent(existing);
+      const newText = getTextContent(label);
+      if (prevText === newText && existing !== undefined) return prev;
+
+      const newMap = new Map(prev);
+      newMap.set(value, label);
+      return newMap;
+    });
+  }, []);
+
+  return (
+    <SelectOptionContext.Provider value={{ registerOption, optionsMap }}>
+      <SelectPrimitive.Root<Value, Multiple> {...props}>
+        {children}
+      </SelectPrimitive.Root>
+    </SelectOptionContext.Provider>
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -18,13 +60,30 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue<Value = any>({ className, placeholder, children, ...props }: SelectPrimitive.Value.Props<Value>) {
+  const context = React.useContext(SelectOptionContext);
+
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
+      placeholder={placeholder}
       {...props}
-    />
+    >
+      {(value) => {
+        const hasValue = value !== undefined && value !== null && value !== "";
+        if (hasValue) {
+          if (context && context.optionsMap.has(value)) {
+            return context.optionsMap.get(value);
+          }
+          return placeholder || "";
+        }
+        if (typeof children === "function") {
+          return (children as Function)(value);
+        }
+        return placeholder;
+      }}
+    </SelectPrimitive.Value>
   )
 }
 
@@ -71,7 +130,7 @@ function SelectContent({
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal keepMounted={true}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -84,6 +143,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn("relative isolate z-[200] max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          keepMounted={true}
           {...props}
         >
           <SelectScrollUpButton />
@@ -108,14 +168,24 @@ function SelectLabel({
   )
 }
 
-function SelectItem({
+function SelectItem<Value = any>({
   className,
   children,
+  value,
   ...props
-}: SelectPrimitive.Item.Props) {
+}: SelectPrimitive.Item.Props<Value>) {
+  const context = React.useContext(SelectOptionContext);
+
+  React.useEffect(() => {
+    if (context && value !== undefined) {
+      context.registerOption(value, children);
+    }
+  }, [context, value, children]);
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      value={value}
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
@@ -199,3 +269,4 @@ export {
   SelectTrigger,
   SelectValue,
 }
+

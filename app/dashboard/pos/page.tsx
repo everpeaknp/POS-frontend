@@ -1143,31 +1143,27 @@ export default function POSPage() {
                   </Select>
                 </div>
                 
-                {paymentMethod === "credit" ? (
-                  <div>
-                    <Label className="text-sm">Customer *</Label>
-                    <Select value={selectedCustomer || undefined} onValueChange={(value) => setSelectedCustomer(value || "")}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select customer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div>
-                    <Label className="text-sm">Customer Name (Optional)</Label>
-                    <Input
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Walk-in customer"
-                      className="mt-1"
-                    />
-                  </div>
-                )}
+                <div>
+                  <Label className="text-sm">Customer {paymentMethod === "credit" ? "*" : "(Optional)"}</Label>
+                  <Select
+                    value={selectedCustomer || ""}
+                    onValueChange={(value) => {
+                      setSelectedCustomer(value || "");
+                      const cust = customers.find(c => c.id === value);
+                      setCustomerName(cust ? cust.name : "");
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Walk-in Customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Walk-in Customer</SelectItem>
+                      {customers.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 {/* Loyalty Points Display */}
                 {selectedCustomer && customerLoyalty && loyaltyProgram?.is_active && (

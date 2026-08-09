@@ -169,7 +169,7 @@ export default function NewBankAccountPage() {
                     onValueChange={(value) => setFormData({ ...formData, type: value as AccountType })}
                     disabled={loading}
                   >
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select account type" /></SelectTrigger>
                     <SelectContent>
                       {(["Current", "Savings", "Overdraft", "Fixed"] as const).map((t) => <SelectItem key={t} value={t}>{t === "Fixed" ? "Fixed Deposit" : t}</SelectItem>)}
                     </SelectContent>
@@ -243,7 +243,7 @@ export default function NewBankAccountPage() {
                     onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
                     disabled={loading}
                   >
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>

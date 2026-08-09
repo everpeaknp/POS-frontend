@@ -145,7 +145,7 @@ export default function NewCustomerPage() {
                   value={form.type} 
                   onValueChange={(v) => setForm({ ...form, type: v as any })}
                 >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select customer type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Individual">Individual</SelectItem>
                     <SelectItem value="Business">Business</SelectItem>
@@ -287,7 +287,7 @@ export default function NewCustomerPage() {
                   value={form.payment_terms} 
                   onValueChange={(v) => setForm({ ...form, payment_terms: v as any })}
                 >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select payment terms" /></SelectTrigger>
                   <SelectContent>
                     {["Immediate", "Net 15", "Net 30", "Net 60"].map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -300,7 +300,7 @@ export default function NewCustomerPage() {
                   value={form.customer_group || ""} 
                   onValueChange={(v) => setForm({ ...form, customer_group: v as string })}
                 >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select customer group" /></SelectTrigger>
                   <SelectContent>
                     {["General", "Wholesale", "Retail", "VIP"].map((g) => (
                       <SelectItem key={g} value={g}>{g}</SelectItem>

@@ -259,7 +259,7 @@ export default function NewPurchaseOrderPage() {
             <Field label="Status">
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as 'Draft' | 'Sent' })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Draft">Draft</SelectItem>
@@ -301,7 +301,7 @@ export default function NewPurchaseOrderPage() {
             <Field label="Payment Terms">
               <Select value={form.payment_terms} onValueChange={(v) => setForm({ ...form, payment_terms: v || "" })}>
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
                 <SelectContent>
                   {["Immediate", "Net 15", "Net 30", "Net 60"].map((t) => (
@@ -378,14 +378,16 @@ export default function NewPurchaseOrderPage() {
               onClick={() => handleSubmit('Draft')}
               className="border-[#22C55E] text-[#22C55E] hover:bg-green-50"
               disabled={submitting}
-            >
+            >
+
               Save as Draft
             </Button>
             <Button 
               onClick={() => handleSubmit('Sent')}
               className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
               disabled={submitting}
-            >
+            >
+
               Send to Supplier
             </Button>
           </div>
@@ -443,7 +445,7 @@ export default function NewPurchaseOrderPage() {
                 onValueChange={(v) => setSupplierForm({ ...supplierForm, type: v || "Company" })}
               >
                 <SelectTrigger className="h-9 text-sm border-gray-200">
-                  <SelectValue />
+                  <SelectValue placeholder="Select supplier type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Individual">Personal</SelectItem>
