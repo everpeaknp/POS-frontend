@@ -29,6 +29,8 @@ interface CartItem extends POSTransactionLine {
   product_sku: string;
   stock_quantity: number;
   unit_name?: string;
+  discount_type?: 'none' | 'percentage' | 'fixed';
+  discount_value?: number;
 }
 
 export default function POSPage() {
@@ -112,7 +114,8 @@ export default function POSPage() {
         } else if (warehousesRes.data.results.length > 0) {
           setSelectedWarehouse(String(warehousesRes.data.results[0].id));
         }
-      } catch (error: any) {
+      } catch (error) {
+        console.error("Failed to load data", error);
         toast.error("Failed to load data");
       } finally {
         setLoading(false);
@@ -133,12 +136,12 @@ export default function POSPage() {
     }
   }, [selectedCustomer, loyaltyProgram]);
 
-  // Auto-focus barcode input on mount and after each scan
+  // Auto-focus barcode input on initial load and after scan actions
   useEffect(() => {
     if (!loading && barcodeInputRef.current) {
       barcodeInputRef.current.focus();
     }
-  }, [loading, cart]);
+  }, [loading]);
 
   // Global barcode listener - captures scans even when input is not focused
   useEffect(() => {
@@ -232,26 +235,16 @@ export default function POSPage() {
   // Recalculate discounts when selected discount changes
   useEffect(() => {
     if (cart.length === 0) return;
-    
+
     const updated = cart.map(item => {
-      const productForDiscount: POSProduct = {
-        id: item.product,
-        name: item.product_name,
-        sku: item.product_sku,
-        selling_price: item.unit_price,
-        stock_quantity: item.stock_quantity,
-        unit_name: item.unit_name,
-        status: 'active'
-      };
-      
-      const discountAmount = calculateProductDiscount(productForDiscount, item.quantity, item.unit_price);
+      const lineDiscountAmount = calculateLineDiscountAmount(item);
       return {
         ...item,
-        discount_amount: discountAmount,
-        line_total: (item.quantity * item.unit_price) - discountAmount
+        discount_amount: lineDiscountAmount,
+        line_total: (item.quantity * item.unit_price) - lineDiscountAmount,
       };
     });
-    
+
     setCart(updated);
   }, [selectedDiscount]);
 
@@ -294,13 +287,39 @@ export default function POSPage() {
     }
   };
 
+  const calculateLineDiscountAmount = (item: CartItem): number => {
+    const lineSubtotal = item.quantity * item.unit_price;
+    const discountType = item.discount_type || 'none';
+    const discountValue = Number(item.discount_value || 0);
+
+    if (discountType === 'percentage' && discountValue > 0) {
+      return roundToTwo(Math.min(lineSubtotal, lineSubtotal * (discountValue / 100)));
+    }
+
+    if (discountType === 'fixed' && discountValue > 0) {
+      return roundToTwo(Math.min(lineSubtotal, discountValue));
+    }
+
+    const productForDiscount: POSProduct = {
+      id: item.product,
+      name: item.product_name,
+      sku: item.product_sku,
+      selling_price: item.unit_price,
+      stock_quantity: item.stock_quantity,
+      unit_name: item.unit_name,
+      status: 'active'
+    };
+
+    return calculateProductDiscount(productForDiscount, item.quantity, item.unit_price);
+  };
+
   // Calculate applicable discount for a product
   const calculateProductDiscount = (product: POSProduct, quantity: number, unitPrice: number): number => {
     let maxDiscount = 0;
     const lineSubtotal = quantity * unitPrice;
 
     // If a specific discount is selected, only apply that one
-    const applicableDiscounts = selectedDiscount 
+    const applicableDiscounts = selectedDiscount
       ? discounts.filter(d => d.id === selectedDiscount)
       : discounts;
 
@@ -342,7 +361,7 @@ export default function POSPage() {
       maxDiscount = Math.max(maxDiscount, discountAmount);
     }
 
-    return maxDiscount;
+    return roundToTwo(maxDiscount);
   };
 
   // Calculate bill-level discount
@@ -393,17 +412,32 @@ export default function POSPage() {
       const newQty = currentQty + 1;
       updated[existingIndex].quantity = newQty;
       
-      // Recalculate discount for new quantity
-      const discountAmount = calculateProductDiscount(product, newQty, updated[existingIndex].unit_price);
-      updated[existingIndex].discount_amount = discountAmount;
-      updated[existingIndex].line_total = (newQty * updated[existingIndex].unit_price) - discountAmount;
-      
+      const updatedItem = {
+        ...updated[existingIndex],
+        quantity: newQty,
+      };
+
+      const discountAmount = calculateLineDiscountAmount(updatedItem);
+      updatedItem.discount_amount = discountAmount;
+      updatedItem.line_total = (newQty * updatedItem.unit_price) - discountAmount;
+      updated[existingIndex] = updatedItem;
+
       setCart(updated);
     } else {
-      // Calculate discount for new item
-      const discountAmount = calculateProductDiscount(product, 1, product.selling_price);
-      
-      // Add new item
+      const discountAmount = calculateLineDiscountAmount({
+        product: product.id,
+        product_name: product.name,
+        product_sku: product.sku,
+        quantity: 1,
+        unit_price: product.selling_price,
+        discount_amount: 0,
+        line_total: product.selling_price,
+        stock_quantity: product.stock_quantity,
+        unit_name: product.unit_name,
+        discount_type: 'none',
+        discount_value: 0,
+      });
+
       const newItem: CartItem = {
         product: product.id,
         product_name: product.name,
@@ -413,7 +447,9 @@ export default function POSPage() {
         discount_amount: discountAmount,
         line_total: product.selling_price - discountAmount,
         stock_quantity: product.stock_quantity,
-        unit_name: product.unit_name
+        unit_name: product.unit_name,
+        discount_type: 'none',
+        discount_value: 0,
       };
       setCart([...cart, newItem]);
     }
@@ -439,22 +475,34 @@ export default function POSPage() {
     
     updated[index].quantity = newQty;
     
-    // Recalculate discount for new quantity
-    // We need to find the product to recalculate discount
-    const productForDiscount: POSProduct = {
-      id: updated[index].product,
-      name: updated[index].product_name,
-      sku: updated[index].product_sku,
-      selling_price: updated[index].unit_price,
-      stock_quantity: updated[index].stock_quantity,
-      unit_name: updated[index].unit_name,
-      status: 'active'
+    const updatedItem = {
+      ...updated[index],
+      quantity: newQty,
     };
-    
-    const discountAmount = calculateProductDiscount(productForDiscount, newQty, updated[index].unit_price);
+
+    const discountAmount = calculateLineDiscountAmount(updatedItem);
+    updatedItem.discount_amount = discountAmount;
+    updatedItem.line_total = (newQty * updatedItem.unit_price) - discountAmount;
+    updated[index] = updatedItem;
+
+    setCart(updated);
+  };
+
+  const updateLineDiscount = (index: number, discountType: CartItem['discount_type'], discountValue: number) => {
+    const updated = [...cart];
+    const normalizedType = discountType === 'percentage' || discountType === 'fixed' ? discountType : 'none';
+    const normalizedValue = Math.max(0, Number(discountValue || 0));
+
+    updated[index] = {
+      ...updated[index],
+      discount_type: normalizedType,
+      discount_value: normalizedValue,
+    };
+
+    const discountAmount = calculateLineDiscountAmount(updated[index]);
     updated[index].discount_amount = discountAmount;
-    updated[index].line_total = (newQty * updated[index].unit_price) - discountAmount;
-    
+    updated[index].line_total = (updated[index].quantity * updated[index].unit_price) - discountAmount;
+
     setCart(updated);
   };
 
@@ -596,19 +644,30 @@ export default function POSPage() {
       // Refresh held orders
       const updated = await posApi.getHeldOrders();
       setHeldOrders(updated);
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to hold order");
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail || "Failed to hold order");
     }
   };
 
   // Resume Order
   const handleResumeOrder = (order: POSHeldOrder) => {
-    setCart(order.items.map((item: any) => ({
-      ...item,
-      product_name: item.product_name,
-      product_sku: item.product_sku,
-      stock_quantity: 999, // Will be validated on checkout
-    })));
+    setCart(order.items.map((item: Record<string, unknown>) => {
+      const resumedItem: CartItem = {
+        product: String(item.product ?? ''),
+        product_name: String(item.product_name ?? ''),
+        product_sku: String(item.product_sku ?? ''),
+        quantity: Number(item.quantity ?? 1),
+        unit_price: Number(item.unit_price ?? 0),
+        discount_amount: Number(item.discount_amount ?? 0),
+        line_total: Number(item.line_total ?? 0),
+        stock_quantity: 999, // Will be validated on checkout
+        discount_type: (item.discount_type as CartItem['discount_type']) || 'none',
+        discount_value: Number(item.discount_value ?? 0),
+      };
+
+      return resumedItem;
+    }));
     setSelectedCustomer(order.customer || "");
     setCustomerName(order.customer_name || "");
     if (order.notes) setNotes(order.notes);
@@ -621,8 +680,9 @@ export default function POSPage() {
       await posApi.deleteHeldOrder(orderId);
       const updated = await posApi.getHeldOrders();
       setHeldOrders(updated);
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to delete held order");
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail || "Failed to delete held order");
     }
   };
 
@@ -677,13 +737,17 @@ export default function POSPage() {
     
     setProcessing(true);
     try {
-      const transactionData: any = {
+      const paymentMethodValue: POSTransaction['payment_method'] = paymentMethod;
+      const transactionData: POSTransaction = {
         customer: selectedCustomer || null,
         customer_name: customerName || undefined,
         subtotal: roundToTwo(subtotal),
-        discount_amount: roundToTwo(totalDiscount),
+        discount_amount: roundToTwo(billLevelDiscount),
         tax_amount: roundToTwo(taxAmount),
         total: roundToTwo(total),
+        payment_method: paymentMethodValue,
+        amount_paid: paidAmount,
+        change_given: roundToTwo(changeGiven),
         warehouse: selectedWarehouse,
         notes: notes || undefined,
         lines: cart.map(item => ({
@@ -692,12 +756,12 @@ export default function POSPage() {
           unit_price: roundToTwo(item.unit_price),
           discount_amount: roundToTwo(item.discount_amount || 0),
           line_total: roundToTwo(item.line_total || 0)
-        }))
+        })),
       };
 
       // Split payment support
       if (splitPaymentMode && payments.length > 0) {
-        transactionData.payments = payments;
+        (transactionData as POSTransaction & { payments?: POSPaymentEntry[] }).payments = payments;
       } else {
         transactionData.payment_method = paymentMethod;
         transactionData.amount_paid = paidAmount;
@@ -728,11 +792,12 @@ export default function POSPage() {
       setTimeout(() => {
         router.push(`/dashboard/pos/transactions`);
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string; message?: string; error?: string } } };
       const errorMsg =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        error.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.response?.data?.error ||
         "Failed to process transaction";
       toast.error(errorMsg);
       console.error("Transaction error:", error);
@@ -1007,11 +1072,11 @@ export default function POSPage() {
             )}
 
             {/* Cart */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5 text-[#22C55E]" />
-                  <h3 className="font-semibold">Cart ({cart.length} items)</h3>
+                  <h3 className="font-semibold text-sm sm:text-base">Cart ({cart.length} items)</h3>
                 </div>
                 {cart.length > 0 && (
                   <Button
@@ -1032,52 +1097,111 @@ export default function POSPage() {
                   <p>Cart is empty</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                   {cart.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{item.product_name}</div>
-                        <div className="text-xs text-gray-500">{item.product_sku}</div>
-                        <div className="text-xs text-gray-600 mt-1">
-                          Rs. {item.unit_price.toLocaleString()} × {item.quantity} {item.unit_name}
+                    <div key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 sm:p-3">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{item.product_name}</div>
+                          <div className="text-xs text-gray-500">{item.product_sku}</div>
+                          <div className="mt-1 text-xs text-gray-600">
+                            Rs. {item.unit_price.toLocaleString()} × {item.quantity} {item.unit_name}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(index, -1)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-7 text-center text-sm font-medium">{item.quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(index, 1)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(index, -1)}
-                          className="h-7 w-7 p-0"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(index, 1)}
-                          className="h-7 w-7 p-0"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="font-semibold">Rs. {item.line_total?.toLocaleString()}</div>
+
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                            Discount
+                          </span>
+
+                          <Select
+                            value={item.discount_type || "none"}
+                            onValueChange={(value) =>
+                              updateLineDiscount(
+                                index,
+                                value as CartItem["discount_type"],
+                                value === "none" ? 0 : item.discount_value ?? 0
+                              )
+                            }
+                          >
+                            <SelectTrigger className="h-8 w-[105px] rounded-md px-2 text-xs">
+                              <SelectValue placeholder="Discount" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="percentage">Percentage (%)</SelectItem>
+                              <SelectItem value="fixed">Fixed amount (Rs.)</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {item.discount_type !== "none" && (
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              max={item.discount_type === "percentage" ? 100 : undefined}
+                              value={item.discount_value ?? 0.0}
+                              onChange={(e) =>
+                                updateLineDiscount(
+                                  index,
+                                  item.discount_type || "none",
+                                  Number(e.target.value)
+                                )
+                              }
+                              placeholder="0"
+                              className="h-8 w-[70px] rounded-md px-2 text-xs"
+                            />
+                          )}
+                        </div>
+
                         {item.discount_amount > 0 && (
-                          <div className="text-xs text-green-600">-Rs. {item.discount_amount.toFixed(2)} off</div>
+                          <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                            -Rs. {item.discount_amount.toFixed(2)}
+                          </span>
                         )}
                       </div>
-                      
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeFromCart(index)}
-                        className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+
+                      <div className="mt-2 border-t border-gray-200 pt-2.5 flex items-center justify-between">
+                        <div className="text-sm text-gray-600">Line total</div>
+                        <div className="text-right">
+                          <div className="font-semibold">Rs. {item.line_total?.toLocaleString()}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeFromCart(index)}
+                          className="h-7 px-2 text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
