@@ -442,7 +442,7 @@ export function Sidebar({
           type="button"
           onClick={() => setMobileOpen(true)}
           className={cn(
-            "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg",
+            "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[#1E2A3B] dark:bg-[#0f1419] text-white shadow-lg",
             railOnTop ? "left-4" : "left-16"
           )}
           aria-label="Open menu"
@@ -457,7 +457,7 @@ export function Sidebar({
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
+          <div className="relative w-64 h-full bg-[#1E2A3B] dark:bg-[#0f1419] z-50 overflow-hidden">
             <SidebarContent
               onClose={() => setMobileOpen(false)}
               searchFocusNonce={mobileFocusNonce}
@@ -470,7 +470,7 @@ export function Sidebar({
         data-tour="sidebar"
         data-compact={compact ? "true" : "false"}
         className={cn(
-          "relative flex-col h-full shrink-0 bg-[#1E2A3B] overflow-hidden transition-[width] duration-200",
+          "relative flex-col h-full shrink-0 bg-[#1E2A3B] dark:bg-[#0f1419] overflow-hidden transition-[width] duration-200",
           forceDesktop
             ? "flex w-full"
             : cn("hidden lg:flex", compact ? "w-[72px]" : "w-64")
@@ -483,7 +483,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={toggleCollapse}
-          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-white/15 bg-[#243447] text-gray-300 hover:bg-[#2d4058] hover:text-white grid place-items-center transition-colors"
+          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-white/15 bg-[#243447] dark:bg-[#1a2332] text-gray-300 hover:bg-[#2d4058] dark:hover:bg-[#232e3f] hover:text-white grid place-items-center transition-colors"
           aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
           title={compact ? "Expand sidebar" : "Collapse sidebar"}
         >
