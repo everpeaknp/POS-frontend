@@ -130,7 +130,7 @@ function SelectContent({
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
   return (
-    <SelectPrimitive.Portal keepMounted={true}>
+    <SelectPrimitive.Portal keepmounted="true">
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

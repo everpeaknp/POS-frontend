@@ -10,6 +10,7 @@ import {
   Settings,
   HardHat,
   Wrench,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -184,6 +185,20 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Financial Report", href: "/dashboard/reports/financial" },
       { label: "Tax Report", href: "/dashboard/reports/tax" },
       { label: "Custom Reports", href: "/dashboard/reports/custom", createHref: "/dashboard/reports/custom?tab=builder" },
+    ],
+  },
+  {
+    label: "Personal Finance",
+    icon: Wallet,
+    requiredModule: "personal_finance",
+    children: [
+      { label: "Overview", href: "/dashboard/personal-finance", exact: true },
+      { label: "Transactions", href: "/dashboard/personal-finance/transactions", createHref: "/dashboard/personal-finance/transactions/new" },
+      { label: "Budget", href: "/dashboard/personal-finance/budget", createHref: "/dashboard/personal-finance/budget/new" },
+      { label: "Category", href: "/dashboard/personal-finance/category", createHref: "/dashboard/personal-finance/category/new" },
+      { label: "Account", href: "/dashboard/personal-finance/account", createHref: "/dashboard/personal-finance/account/new" },
+      { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills/new" },
+      { label: "Reports & Analytics", href: "/dashboard/personal-finance/reports" },
     ],
   },
   {
