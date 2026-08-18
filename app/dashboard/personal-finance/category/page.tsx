@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Plus, Edit2, Trash2, Tags, TrendingUp, TrendingDown } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Edit2, Trash2, Tags, TrendingUp, TrendingDown, Search, X } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,54 +10,36 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/context/AuthContext";
+import {
+  getCategories,
+  setCategoriesForScope,
+  useSyncedList,
+  type PFCategory,
+} from "@/lib/personal-finance/store";
 import toast from "react-hot-toast";
 
-// MOCK DATA STRUCTURE
+// Categories come from the shared Personal Finance store
+// (lib/personal-finance/store.ts) — see /new pages and the Transactions /
+// Budget pages, which read from the same store.
 // TODO: Replace with real backend API calls when endpoints are ready
 // Backend needs: GET /api/personal-finance/categories, POST /categories, PUT /categories/:id, DELETE /categories/:id
 
 type CategoryType = "income" | "expense";
-
-interface Category {
-  id: string;
-  name: string;
-  type: CategoryType;
-  description?: string;
-  color?: string;
-  isSystem?: boolean; // System categories can't be deleted
-  createdAt: string;
-}
-
-// Initial mock categories - matches product spec and Transactions page
-const INITIAL_MOCK_CATEGORIES: Category[] = [
-  // Income categories
-  { id: "cat_1", name: "Salary", type: "income", description: "Monthly salary income", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_2", name: "Freelance", type: "income", description: "Freelance project income", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_3", name: "Investment Returns", type: "income", description: "Interest, dividends, capital gains", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_4", name: "Other Income", type: "income", description: "Miscellaneous income", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-  
-  // Expense categories - matches product spec
-  { id: "cat_5", name: "Groceries", type: "expense", description: "Food and household items", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_6", name: "Rent", type: "expense", description: "Monthly rent payment", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_7", name: "Utilities", type: "expense", description: "Electricity, water, internet, phone", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_8", name: "Dining", type: "expense", description: "Restaurants and food delivery", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_9", name: "Entertainment", type: "expense", description: "Movies, streaming, hobbies", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_10", name: "Transportation", type: "expense", description: "Fuel, public transport, vehicle maintenance", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_11", name: "Health", type: "expense", description: "Medical, pharmacy, insurance", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_12", name: "Shopping", type: "expense", description: "Clothing, electronics, personal items", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_13", name: "Education", type: "expense", description: "Courses, books, training", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "cat_14", name: "Other Expenses", type: "expense", description: "Miscellaneous expenses", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-];
+type Category = PFCategory;
 
 export default function CategoryPage() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>(INITIAL_MOCK_CATEGORIES);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const scope = user?.tenant?.slug ?? null;
+  const [categories, setCategories] = useSyncedList<Category>(scope, getCategories, setCategoriesForScope);
   const [showDialog, setShowDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<CategoryType>("expense");
+  const [filterType, setFilterType] = useState<string>("all"); // "all" | "expense" | "income"
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterParent, setFilterParent] = useState<string>("all");
 
   // Form state
   const [formData, setFormData] = useState<Omit<Category, "id" | "createdAt">>({
@@ -64,32 +47,89 @@ export default function CategoryPage() {
     type: "expense",
     description: "",
     isSystem: false,
+    parentId: undefined,
   });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Manage income and expense categories`;
 
   // Filter categories by type
-  const incomeCategories = useMemo(() => 
+  const filteredCategories = useMemo(() => {
+    let filtered = categories;
+    
+    // Filter by type
+    if (filterType === "income") {
+      filtered = filtered.filter((c) => c.type === "income");
+    } else if (filterType === "expense") {
+      filtered = filtered.filter((c) => c.type === "expense");
+    }
+    
+    // Search filter
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(lower) ||
+          (c.description || "").toLowerCase().includes(lower)
+      );
+    }
+    
+    // Parent filter
+    if (filterParent === "top") {
+      filtered = filtered.filter((c) => !c.parentId);
+    } else if (filterParent === "sub") {
+      filtered = filtered.filter((c) => !!c.parentId);
+    }
+    
+    return filtered;
+  }, [categories, filterType, searchTerm, filterParent]);
+
+  const incomeCategories = useMemo(() =>
     categories.filter((c) => c.type === "income"),
     [categories]
   );
 
-  const expenseCategories = useMemo(() => 
+  const expenseCategories = useMemo(() =>
     categories.filter((c) => c.type === "expense"),
     [categories]
   );
 
-  const openAddDialog = (type: CategoryType) => {
+  const hasActiveFilters = Boolean(searchTerm || filterParent !== "all" || filterType !== "all");
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterParent("all");
+    setFilterType("all");
+  };
+
+  // Only top-level categories of the current form type can be picked as a parent
+  // (keeps the hierarchy to two levels: category → sub-category)
+  const topLevelCategoriesForType = useMemo(
+    () =>
+      categories.filter(
+        (c) => c.type === formData.type && !c.parentId && c.id !== editingCategory?.id
+      ),
+    [categories, formData.type, editingCategory]
+  );
+
+  const openAddDialog = () => {
     setEditingCategory(null);
     setFormData({
       name: "",
-      type,
+      type: filterType === "income" || filterType === "expense" ? filterType : "expense",
       description: "",
       isSystem: false,
+      parentId: undefined,
     });
     setShowDialog(true);
   };
+
+  // Sidebar "+" deep-links with ?new=1 to open this dialog directly
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    openAddDialog();
+    router.replace("/dashboard/personal-finance/category", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, router]);
 
   const openEditDialog = (category: Category) => {
     if (category.isSystem) {
@@ -102,6 +142,7 @@ export default function CategoryPage() {
       type: category.type,
       description: category.description || "",
       isSystem: category.isSystem,
+      parentId: category.parentId,
     });
     setShowDialog(true);
   };
@@ -118,7 +159,7 @@ export default function CategoryPage() {
       setCategories((prev) =>
         prev.map((c) =>
           c.id === editingCategory.id
-            ? { ...c, name: formData.name, description: formData.description }
+            ? { ...c, name: formData.name, description: formData.description, parentId: formData.parentId }
             : c
         )
       );
@@ -150,81 +191,149 @@ export default function CategoryPage() {
     toast.success("Category deleted successfully");
   };
 
-  const renderCategoryList = (categoryList: Category[], type: CategoryType) => {
+  const renderCategoryList = (categoryList: Category[]) => {
     if (categoryList.length === 0) {
+      if (hasActiveFilters) {
+        return (
+          <div className="text-center py-12">
+            <Tags className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 mb-4">No categories match your filters</p>
+            <Button variant="outline" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          </div>
+        );
+      }
       return (
         <div className="text-center py-12">
           <Tags className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-4">No {type} categories yet</p>
-          <Button onClick={() => openAddDialog(type)} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+          <p className="text-gray-500 mb-4">No categories yet</p>
+          <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
             <Plus className="h-4 w-4 mr-2" />
-            Add {type === "income" ? "Income" : "Expense"} Category
+            Add Your First Category
           </Button>
         </div>
       );
     }
 
+    // Build table rows — show parent categories followed by their children
+    const topLevel = categoryList.filter((c) => !c.parentId);
+    const orphaned = categoryList.filter(
+      (c) => c.parentId && !categoryList.some((p) => p.id === c.parentId)
+    );
+
+    const rows: { category: Category; isChild: boolean }[] = [];
+    [...topLevel, ...orphaned].forEach((parent) => {
+      rows.push({ category: parent, isChild: false });
+      categoryList
+        .filter((c) => c.parentId === parent.id)
+        .forEach((child) => {
+          rows.push({ category: child, isChild: true });
+        });
+    });
+
     return (
-      <div className="space-y-2">
-        {categoryList.map((category) => (
-          <div
-            key={category.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium text-gray-900">{category.name}</h3>
-                  {category.isSystem && (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
-                      System
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Parent
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Description
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {rows.map(({ category, isChild }) => {
+              const parentCategory = category.parentId
+                ? categories.find((c) => c.id === category.parentId)
+                : null;
+
+              return (
+                <tr key={category.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    <div className={`flex items-center gap-2 ${isChild ? "pl-6" : ""}`}>
+                      {isChild && (
+                        <span className="text-gray-400">└─</span>
+                      )}
+                      <span className={isChild ? "text-gray-700" : "font-medium"}>
+                        {category.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge
+                      variant={category.type === "income" ? "default" : "secondary"}
+                      className={
+                        category.type === "income"
+                          ? "bg-green-100 text-[#22C55E] hover:bg-green-100"
+                          : "bg-red-100 text-red-600 hover:bg-red-100"
+                      }
+                    >
+                      {category.type === "income" ? (
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 mr-1" />
+                      )}
+                      {category.type === "income" ? "Income" : "Expense"}
                     </Badge>
-                  )}
-                  <Badge
-                    variant={type === "income" ? "default" : "secondary"}
-                    className={
-                      type === "income"
-                        ? "bg-green-100 text-[#22C55E] hover:bg-green-100 text-xs"
-                        : "bg-red-100 text-red-600 hover:bg-red-100 text-xs"
-                    }
-                  >
-                    {type === "income" ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {parentCategory ? parentCategory.name : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {category.description || "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {category.isSystem && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                        System
+                      </Badge>
                     )}
-                    {type === "income" ? "Income" : "Expense"}
-                  </Badge>
-                </div>
-                {category.description && (
-                  <p className="text-sm text-gray-600">{category.description}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2 ml-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => openEditDialog(category)}
-                  disabled={category.isSystem}
-                  className="h-8 w-8 p-0"
-                  title={category.isSystem ? "System categories cannot be edited" : "Edit category"}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeleteConfirmId(category.id)}
-                  disabled={category.isSystem}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  title={category.isSystem ? "System categories cannot be deleted" : "Delete category"}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(category)}
+                        disabled={category.isSystem}
+                        className="h-8 w-8 p-0"
+                        title={category.isSystem ? "System categories cannot be edited" : "Edit category"}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirmId(category.id)}
+                        disabled={category.isSystem}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        title={category.isSystem ? "System categories cannot be deleted" : "Delete category"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -256,32 +365,88 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as CategoryType)}>
-            <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-              <TabsList className="bg-gray-100">
-                <TabsTrigger value="expense" className="data-[state=active]:bg-white">
-                  Expense Categories ({expenseCategories.length})
-                </TabsTrigger>
-                <TabsTrigger value="income" className="data-[state=active]:bg-white">
-                  Income Categories ({incomeCategories.length})
-                </TabsTrigger>
-              </TabsList>
-              <Button onClick={() => openAddDialog(activeTab)} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
+        {/* Toolbar */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
+              <div className="relative shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-8 h-9 w-52 text-sm border-gray-200 bg-white focus-visible:ring-0 focus-visible:border-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <Select value={filterType} onValueChange={(v) => setFilterType(v ?? "all")}>
+                <SelectTrigger className="h-9 w-44 shrink-0 text-sm border-gray-200 bg-white">
+                  <SelectValue placeholder={`All (${categories.length})`} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    All ({categories.length})
+                  </SelectItem>
+                  <SelectItem value="expense">
+                    <div className="flex items-center gap-2">
+                      <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                      <span>Expense ({expenseCategories.length})</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="income">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-3.5 w-3.5 text-[#22C55E]" />
+                      <span>Income ({incomeCategories.length})</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterParent} onValueChange={(v) => setFilterParent(v ?? "all")}>
+                <SelectTrigger className="h-9 w-40 shrink-0 text-sm border-gray-200 bg-white">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="top">Top-level only</SelectItem>
+                  <SelectItem value="sub">Sub-categories only</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={clearFilters}
+                  aria-label="Clear filters"
+                  title="Clear filters"
+                  className="h-9 w-9 shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
-            <TabsContent value="expense" className="p-4 mt-0">
-              {renderCategoryList(expenseCategories, "expense")}
-            </TabsContent>
+            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </div>
+        </div>
 
-            <TabsContent value="income" className="p-4 mt-0">
-              {renderCategoryList(incomeCategories, "income")}
-            </TabsContent>
-          </Tabs>
+        {/* Categories Table */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          {renderCategoryList(filteredCategories)}
         </div>
 
         {/* Info Note */}
@@ -306,35 +471,73 @@ export default function CategoryPage() {
           <div className="space-y-4 py-4">
             <div>
               <Label>
-                Category Type <span className="text-red-500">*</span>
+                Type <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: CategoryType) => setFormData({ ...formData, type: value })}
-                disabled={!!editingCategory}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="mt-1 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={!!editingCategory}
+                  onClick={() => setFormData({ ...formData, type: "expense", parentId: undefined })}
+                  className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    formData.type === "expense"
+                      ? "border-red-300 bg-red-50 text-red-700"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <TrendingDown className="h-4 w-4" />
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  disabled={!!editingCategory}
+                  onClick={() => setFormData({ ...formData, type: "income", parentId: undefined })}
+                  className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    formData.type === "income"
+                      ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Income
+                </button>
+              </div>
               {editingCategory && (
                 <p className="text-xs text-gray-500 mt-1">Category type cannot be changed after creation</p>
               )}
             </div>
 
             <div>
+              <Label>Parent Category (optional)</Label>
+              <Select
+                value={formData.parentId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, parentId: value === "none" ? undefined : value ?? undefined })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="None — this is a new top-level category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None — this is a new top-level category</SelectItem>
+                  {topLevelCategoriesForType.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Leave as None to create a new Category, or pick one to add a Sub Category under it
+              </p>
+            </div>
+
+            <div>
               <Label>
-                Category Name <span className="text-red-500">*</span>
+                {formData.parentId ? "Sub Category" : "Category"} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Groceries, Salary, Rent"
-                className="mt-1"
+                placeholder={formData.parentId ? "e.g., Fast Food, Coffee" : "e.g., Groceries, Salary, Rent"}
+                className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
             </div>
 
@@ -344,7 +547,7 @@ export default function CategoryPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description"
-                className="mt-1"
+                className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
             </div>
           </div>

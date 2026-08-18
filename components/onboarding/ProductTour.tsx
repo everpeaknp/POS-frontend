@@ -269,16 +269,18 @@ export function ProductTour() {
     preferences.navbar_position === "top" ? "top" : "left";
 
   const activeModulesKey = user?.tenant?.active_modules?.join(",") ?? "";
+  const accountType = user?.tenant?.account_type ?? null;
   const steps = useMemo(
     () =>
       buildProductTourSteps({
         canView,
         role: user?.role ?? null,
         navbarPosition,
+        accountType,
       }),
     // Rebuild when org modules, role, navbar, or permission load state change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeModulesKey, user?.role, permissionsLoading, navbarPosition]
+    [activeModulesKey, user?.role, permissionsLoading, navbarPosition, accountType]
   );
 
   const [index, setIndex] = useState(0);

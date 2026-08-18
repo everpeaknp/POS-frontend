@@ -179,6 +179,7 @@ function SidebarContent({
   const filteredNavItems = filterDashboardNavItems(dashboardNavItems, {
     canView: permissions.canView,
     role: user?.role,
+    accountType: user?.tenant?.account_type,
   });
 
   const searchedNavItems = filterNavByQuery(filteredNavItems, navQuery);

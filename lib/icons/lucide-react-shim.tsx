@@ -51,6 +51,8 @@ export const ArrowRightFromLine: IconType = ({ size = 24, className, ...props })
     <path d="m15 18 6-6-6-6" />
   </svg>
 );
+export const ArrowUpCircle: IconType = Hi.HiOutlineArrowUpCircle;
+export const ArrowDownCircle: IconType = Hi.HiOutlineArrowDownCircle;
 export const ArrowUpDown: IconType = Hi.HiOutlineArrowsUpDown;
 export const Banknote: IconType = Hi.HiOutlineBanknotes;
 export const BarChart2: IconType = Hi.HiOutlineChartBar;

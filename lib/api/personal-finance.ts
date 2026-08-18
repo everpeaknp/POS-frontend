@@ -262,6 +262,13 @@ export interface PersonalFinanceDashboardData {
     amount?: number;
     date?: string;
   }>;
+  activities: Array<{
+    type: 'transaction' | 'account' | 'budget' | 'bill' | 'category';
+    action: 'created' | 'updated' | 'deleted';
+    description: string;
+    timestamp: string;
+    amount?: number;
+  }>;
   topAccounts: Array<{
     name: string;
     balance: number;
@@ -309,6 +316,48 @@ export const personalFinanceDashboardAPI = {
           type: 'over_budget',
           message: 'Shopping budget exceeded by 15%',
           amount: 3000,
+        },
+      ],
+      activities: [
+        {
+          type: 'transaction',
+          action: 'created',
+          description: 'Added expense: Grocery Shopping',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+          amount: 2500,
+        },
+        {
+          type: 'account',
+          action: 'created',
+          description: 'Created new account: Emergency Fund',
+          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+        },
+        {
+          type: 'budget',
+          action: 'updated',
+          description: 'Updated budget: Monthly Groceries',
+          timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          amount: 15000,
+        },
+        {
+          type: 'transaction',
+          action: 'created',
+          description: 'Added income: Salary Payment',
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          amount: 50000,
+        },
+        {
+          type: 'category',
+          action: 'created',
+          description: 'Created new category: Entertainment',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        },
+        {
+          type: 'bill',
+          action: 'created',
+          description: 'Added recurring bill: Internet',
+          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+          amount: 1200,
         },
       ],
       topAccounts: [

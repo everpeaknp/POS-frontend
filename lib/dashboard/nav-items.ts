@@ -19,6 +19,10 @@ export interface NavSubItem {
   href: string;
   createHref?: string;
   exact?: boolean;
+  /** Hide this sub-item for Personal accounts (business-only setting) */
+  hideForPersonal?: boolean;
+  /** Only show this sub-item for Personal accounts */
+  personalOnly?: boolean;
 }
 
 export interface NavItem {
@@ -28,6 +32,8 @@ export interface NavItem {
   children?: NavSubItem[];
   requiredModule?: string;
   requiredRoles?: string[];
+  /** Hide this item for Personal accounts (business-only nav, e.g. the org Dashboard) */
+  hideForPersonal?: boolean;
 }
 
 export function matchesNavChild(pathname: string, child: NavSubItem): boolean {
@@ -45,7 +51,7 @@ export function matchesNavChild(pathname: string, child: NavSubItem): boolean {
 }
 
 export const dashboardNavItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", hideForPersonal: true },
   {
     label: "Sales",
     icon: TrendingUp,
@@ -209,11 +215,12 @@ export const dashboardNavItems: NavItem[] = [
     requiredModule: "settings",
     requiredRoles: ["admin", "manager"],
     children: [
-      { label: "Organization Settings", href: "/dashboard/settings/org" },
-      { label: "Modules", href: "/dashboard/settings/modules" },
-      { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite" },
+      { label: "Profile", href: "/dashboard/settings/profile", personalOnly: true },
+      { label: "Organization Settings", href: "/dashboard/settings/org", hideForPersonal: true },
+      { label: "Modules", href: "/dashboard/settings/modules", hideForPersonal: true },
+      { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite", hideForPersonal: true },
       { label: "Help Desk", href: "/dashboard/settings/help" },
-      { label: "Audit Logs", href: "/dashboard/settings/audit" },
+      { label: "Audit Logs", href: "/dashboard/settings/audit", hideForPersonal: true },
     ],
   },
 ];
@@ -223,22 +230,41 @@ export function filterDashboardNavItems(
   opts: {
     canView: (module: string) => boolean;
     role?: string | null;
+    accountType?: string | null;
   }
 ): NavItem[] {
-  return items.filter((item) => {
-    if (item.requiredModule && !opts.canView(item.requiredModule)) {
-      return false;
-    }
+  const isPersonal = opts.accountType === "personal";
 
-    if (item.requiredRoles && opts.role) {
-      if (opts.role === "admin" || opts.role === "super_admin") {
-        return true;
-      }
-      if (!item.requiredRoles.includes(opts.role)) {
+  const filterChildren = (children?: NavSubItem[]) =>
+    children?.filter((child) => {
+      if (child.hideForPersonal && isPersonal) return false;
+      if (child.personalOnly && !isPersonal) return false;
+      return true;
+    });
+
+  return items
+    .filter((item) => {
+      if (item.hideForPersonal && isPersonal) {
         return false;
       }
-    }
 
-    return true;
-  });
+      if (item.requiredModule && !opts.canView(item.requiredModule)) {
+        return false;
+      }
+
+      if (item.requiredRoles && opts.role) {
+        if (opts.role === "admin" || opts.role === "super_admin") {
+          return true;
+        }
+        if (!item.requiredRoles.includes(opts.role)) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .map((item) =>
+      item.children ? { ...item, children: filterChildren(item.children) } : item
+    )
+    .filter((item) => !item.children || item.children.length > 0);
 }

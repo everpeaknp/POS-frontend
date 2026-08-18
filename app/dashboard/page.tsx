@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import {
@@ -23,6 +24,7 @@ import type { UnifiedDashboardData } from "@/lib/dashboard/types";
 import { ORG_MODULE_CATALOG } from "@/lib/modules/catalog";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<UnifiedDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,13 @@ export default function DashboardPage() {
   const { isDark } = useAppearance();
   const { user } = useAuth();
   const { canView } = usePermissions();
+  const isPersonal = user?.tenant?.account_type === "personal";
+
+  useEffect(() => {
+    if (isPersonal) {
+      router.replace("/dashboard/personal-finance");
+    }
+  }, [isPersonal, router]);
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -56,8 +65,13 @@ export default function DashboardPage() {
   }, [period]);
 
   useEffect(() => {
+    if (isPersonal) return;
     loadDashboard();
-  }, [loadDashboard]);
+  }, [isPersonal, loadDashboard]);
+
+  if (isPersonal) {
+    return null;
+  }
 
   // Hide Reports & Analytics from the home overview (stats/tiles stay in /dashboard/reports)
   const visibleModules = (data?.modules ?? []).filter(

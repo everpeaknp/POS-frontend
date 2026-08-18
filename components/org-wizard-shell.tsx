@@ -5,10 +5,19 @@ import {
   Check,
   ClipboardList,
   LayoutGrid,
+  type LucideIcon,
 } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
 import { cn } from "@/lib/utils";
+
+export interface WizardStepMeta {
+  eyebrow: string;
+  title: string;
+  description: string;
+  sidebarLabel: string;
+  icon: LucideIcon;
+}
 
 export const ORG_WIZARD_STEPS = {
   1: {
@@ -35,16 +44,18 @@ export const ORG_WIZARD_STEPS = {
     sidebarLabel: "Review and finish",
     icon: ClipboardList,
   },
-} as const;
+} as const satisfies Record<number, WizardStepMeta>;
 
-const SIDEBAR_STEPS = [
-  { id: 1 as const, ...ORG_WIZARD_STEPS[1] },
-  { id: 2 as const, ...ORG_WIZARD_STEPS[2] },
-  { id: 3 as const, ...ORG_WIZARD_STEPS[3] },
+const DEFAULT_STEPS: WizardStepMeta[] = [
+  ORG_WIZARD_STEPS[1],
+  ORG_WIZARD_STEPS[2],
+  ORG_WIZARD_STEPS[3],
 ];
 
 interface OrgWizardShellProps {
-  step: 1 | 2 | 3;
+  step: number;
+  /** Custom step sequence (id = index + 1). Defaults to the 3 standard org steps. */
+  steps?: WizardStepMeta[];
   children: React.ReactNode;
   /** Optional action (e.g. Skip) shown opposite the progress bar */
   headerEnd?: React.ReactNode;
@@ -58,6 +69,7 @@ interface OrgWizardShellProps {
 
 export function OrgWizardShell({
   step,
+  steps,
   children,
   headerEnd,
   title,
@@ -65,7 +77,9 @@ export function OrgWizardShell({
   eyebrow,
   variant = "page",
 }: OrgWizardShellProps) {
-  const meta = ORG_WIZARD_STEPS[step];
+  const stepList = steps ?? DEFAULT_STEPS;
+  const SIDEBAR_STEPS = stepList.map((s, index) => ({ id: index + 1, ...s }));
+  const meta = SIDEBAR_STEPS[step - 1] ?? SIDEBAR_STEPS[0];
   const total = SIDEBAR_STEPS.length;
   const progressPct = (step / total) * 100;
   const desktop = useIsElectron();

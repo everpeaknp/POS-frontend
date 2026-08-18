@@ -22,6 +22,8 @@ type ModuleTourDef = {
   title: string;
   body: string;
   requiredRoles?: string[];
+  /** Skip this step for Personal accounts (e.g. the org Dashboard, hidden from their sidebar) */
+  hideForPersonal?: boolean;
 };
 
 /**
@@ -34,6 +36,13 @@ const MODULE_TOUR_DEFS: ModuleTourDef[] = [
     label: "Dashboard",
     title: "Dashboard",
     body: "Open the home overview anytime — KPIs and module snapshots for your business.",
+    hideForPersonal: true,
+  },
+  {
+    moduleId: "personal_finance",
+    label: "Personal Finance",
+    title: "Personal Finance",
+    body: "Track your income, expenses, budgets, and bills here — this is your home for Khata.",
   },
   {
     moduleId: "sales",
@@ -101,11 +110,11 @@ const MODULE_TOUR_DEFS: ModuleTourDef[] = [
 ];
 
 /** App bar (vertical left rail) — before module sidebar */
-function introForLeftNavbar(): TourStep[] {
+function introForLeftNavbar(homeRoute: string): TourStep[] {
   return [
     {
       id: "app_icon_rail",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="app-icon-rail"][data-position="left"]'],
       title: "App icon rail",
       body: "This vertical strip holds quick access — ERP home, your organizations, notifications, theme, and account.",
@@ -113,7 +122,7 @@ function introForLeftNavbar(): TourStep[] {
     },
     {
       id: "app_icon_rail_orgs",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: [
         '[data-tour="app-icon-rail"][data-position="left"] [data-tour="app-icon-rail-orgs"]',
       ],
@@ -124,7 +133,7 @@ function introForLeftNavbar(): TourStep[] {
     },
     {
       id: "sidebar",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="sidebar"]'],
       title: "Main sidebar",
       body: "This is your main menu. Every module you enabled appears here so you can move around Khata.",
@@ -132,7 +141,7 @@ function introForLeftNavbar(): TourStep[] {
     },
     {
       id: "sidebar_org",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="sidebar-org"]'],
       title: "Your organization",
       body: "Your active workspace and role are shown here.",
@@ -142,11 +151,11 @@ function introForLeftNavbar(): TourStep[] {
 }
 
 /** App bar (horizontal top bar) — before module sidebar */
-function introForTopNavbar(): TourStep[] {
+function introForTopNavbar(homeRoute: string): TourStep[] {
   return [
     {
       id: "app_icon_rail",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="app-icon-rail"][data-position="top"]'],
       title: "Top app bar",
       body: "This horizontal bar shows the page title, notifications, theme, and your account — always at the top.",
@@ -154,7 +163,7 @@ function introForTopNavbar(): TourStep[] {
     },
     {
       id: "app_icon_rail_orgs",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: [
         '[data-tour="app-icon-rail"][data-position="top"] [data-tour="app-icon-rail-orgs"]',
       ],
@@ -165,7 +174,7 @@ function introForTopNavbar(): TourStep[] {
     },
     {
       id: "sidebar",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="sidebar"]'],
       title: "Main sidebar",
       body: "Modules still live in this left menu. Expand a section to open its pages.",
@@ -173,7 +182,7 @@ function introForTopNavbar(): TourStep[] {
     },
     {
       id: "sidebar_org",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: ['[data-tour="sidebar-org"]'],
       title: "Your organization",
       body: "Your active workspace and role are shown here.",
@@ -183,13 +192,13 @@ function introForTopNavbar(): TourStep[] {
 }
 
 /** Notifications / theme / account — placement depends on left vs top app bar */
-function outroForNavbar(position: NavbarPosition): TourStep[] {
+function outroForNavbar(position: NavbarPosition, homeRoute: string): TourStep[] {
   const railPlacement = position === "top" ? "bottom" : "right";
 
   return [
     {
       id: "topbar_notifications",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: [
         '[data-tour="app-icon-rail"] [data-tour="topbar-notifications"]',
         '[data-tour="topbar-notifications"]',
@@ -200,7 +209,7 @@ function outroForNavbar(position: NavbarPosition): TourStep[] {
     },
     {
       id: "topbar_theme",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: [
         '[data-tour="app-icon-rail"] [data-tour="topbar-theme"]',
         '[data-tour="topbar-theme"]',
@@ -211,7 +220,7 @@ function outroForNavbar(position: NavbarPosition): TourStep[] {
     },
     {
       id: "topbar_user",
-      route: "/dashboard",
+      route: homeRoute,
       selectors: [
         '[data-tour="app-icon-rail"] [data-tour="topbar-user"]',
         '[data-tour="topbar-user"]',
@@ -227,12 +236,12 @@ function navKey(label: string): string {
   return label.toLowerCase();
 }
 
-function moduleToStep(def: ModuleTourDef): TourStep {
+function moduleToStep(def: ModuleTourDef, homeRoute: string): TourStep {
   const key = navKey(def.label);
   const isLeaf = def.moduleId === null; // Dashboard is a direct link
   return {
     id: `nav_${key}`,
-    route: "/dashboard",
+    route: homeRoute,
     selectors: isLeaf
       ? [`[data-tour="nav-${key}"]`]
       : [`[data-tour="nav-${key}-toggle"]`, `[data-tour="nav-${key}"]`],
@@ -246,8 +255,10 @@ function moduleToStep(def: ModuleTourDef): TourStep {
 function isModuleNavVisible(
   def: ModuleTourDef,
   canView: (moduleId: string) => boolean,
-  role?: string | null
+  role?: string | null,
+  accountType?: string | null
 ): boolean {
+  if (def.hideForPersonal && accountType === "personal") return false;
   if (!def.moduleId) return true;
   if (!canView(def.moduleId)) return false;
 
@@ -265,17 +276,19 @@ export function buildProductTourSteps(opts: {
   canView: (moduleId: string) => boolean;
   role?: string | null;
   navbarPosition?: NavbarPosition;
+  accountType?: string | null;
 }): TourStep[] {
   const position: NavbarPosition = opts.navbarPosition === "top" ? "top" : "left";
+  const homeRoute = opts.accountType === "personal" ? "/dashboard/personal-finance" : "/dashboard";
 
   const intro =
-    position === "top" ? introForTopNavbar() : introForLeftNavbar();
+    position === "top" ? introForTopNavbar(homeRoute) : introForLeftNavbar(homeRoute);
 
   const moduleSteps = MODULE_TOUR_DEFS.filter((def) =>
-    isModuleNavVisible(def, opts.canView, opts.role)
-  ).map(moduleToStep);
+    isModuleNavVisible(def, opts.canView, opts.role, opts.accountType)
+  ).map((def) => moduleToStep(def, homeRoute));
 
-  return [...intro, ...moduleSteps, ...outroForNavbar(position)];
+  return [...intro, ...moduleSteps, ...outroForNavbar(position, homeRoute)];
 }
 
 /** @deprecated Prefer buildProductTourSteps — kept for docs/tests */

@@ -11,6 +11,7 @@ import {
   Monitor,
   Settings,
   LayoutDashboard,
+  Wallet,
 } from "lucide-react";
 
 export interface OrgModuleDefinition {
@@ -23,7 +24,28 @@ export interface OrgModuleDefinition {
   required?: boolean;
 }
 
-export const REQUIRED_MODULE_IDS = ["accounting", "settings", "dashboard"] as const;
+export const REQUIRED_MODULE_IDS = ["settings", "dashboard"] as const;
+
+/** Modules a Personal account gets — no business/org modules, ever. */
+export const PERSONAL_ACCOUNT_MODULE_IDS = [
+  "dashboard",
+  "settings",
+  "personal_finance",
+] as const;
+
+/**
+ * Personal Finance is only ever assigned to Personal accounts, never offered
+ * in the organization module picker — kept out of ORG_MODULE_CATALOG so it
+ * can't appear in getModuleCatalogSections(), but still resolvable by id.
+ */
+export const PERSONAL_MODULE: OrgModuleDefinition = {
+  id: "personal_finance",
+  name: "Personal Finance",
+  description: "Track your income, expenses, budgets, and bills in one place",
+  icon: Wallet,
+  defaultEnabled: true,
+  required: true,
+};
 
 /** Mirrors backend billing free-plan module list + core modules */
 export const FREE_PLAN_MODULE_IDS = [
@@ -140,6 +162,7 @@ export function getAllowedModulesForPlanType(planType: string): string[] {
 
 export function getModuleById(moduleId: string): OrgModuleDefinition | undefined {
   const normalized = moduleId.toLowerCase();
+  if (normalized === PERSONAL_MODULE.id) return PERSONAL_MODULE;
   return ORG_MODULE_CATALOG.find((module) => module.id === normalized);
 }
 

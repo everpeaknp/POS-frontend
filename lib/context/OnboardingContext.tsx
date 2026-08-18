@@ -228,12 +228,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           sessionStorage.removeItem(tourPendingKey(user.id));
         }
       }
+      const homeRoute =
+        user.tenant?.account_type === "personal" ? "/dashboard/personal-finance" : "/dashboard";
       if (opts?.startTour !== false) {
         setPhaseSafe("tour");
-        router.push("/dashboard");
+        router.push(homeRoute);
       } else {
         setPhaseSafe("done");
-        router.push("/dashboard");
+        router.push(homeRoute);
       }
     },
     [user, router, setPhaseSafe, clearHelpMode]
@@ -248,7 +250,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sessionStorage.setItem(tourPendingKey(user.id), "1");
     }
     setPhaseSafe("tour");
-    router.push("/dashboard");
+    router.push(user.tenant?.account_type === "personal" ? "/dashboard/personal-finance" : "/dashboard");
   }, [user, router, setPhaseSafe, clearHelpMode]);
 
   const replayWizard = useCallback(() => {

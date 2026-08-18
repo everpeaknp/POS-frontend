@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   Wallet,
   TrendingUp,
@@ -9,11 +10,18 @@ import {
   Plus,
   Building2,
   Banknote,
-  FileText,
   ChevronRight,
   DollarSign,
   AlertCircle,
+  Activity,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  FolderTree,
+  Receipt,
+  Clock,
+  TrendingDown,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AreaChart,
   Area,
@@ -32,82 +40,69 @@ import { formatNPR } from "@/lib/utils";
 
 const quickActions = [
   {
-    href: "/dashboard/personal-finance/transactions",
+    href: "/dashboard/personal-finance/transactions?new=1",
     label: "Add Transaction",
     sub: "Record income/expense",
     icon: Plus,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/account",
+    href: "/dashboard/personal-finance/account?new=1",
     label: "Add Account",
     sub: "Bank/wallet/cash",
     icon: Building2,
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/budget",
-    label: "Add Budget",
-    sub: "Set spending limits",
+    href: "/dashboard/personal-finance/account?new=1",
+    label: "Add Investment",
+    sub: "Track holdings",
     icon: TrendingUp,
-    color: "bg-purple-50 text-purple-600",
+    color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/bills",
-    label: "Manage Bills",
-    sub: "Track loans & EMIs",
+    href: "/dashboard/personal-finance/bills?new=1",
+    label: "Add Loan",
+    sub: "Record debt",
     icon: CreditCard,
-    color: "bg-amber-50 text-amber-600",
+    color: "bg-gray-50 text-gray-600",
   },
 ];
 
 const moduleLinks = [
   {
     href: "/dashboard/personal-finance/budget",
-    label: "Budget",
-    sub: "Track budgets & spending",
+    label: "Budgeting & Saving",
+    sub: "Track budgets & goals",
     icon: Banknote,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-gray-50 text-gray-600",
   },
   {
     href: "/dashboard/personal-finance/account",
-    label: "Accounts",
-    sub: "Manage accounts",
+    label: "Banking",
+    sub: "Accounts & transactions",
     icon: Building2,
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/transactions",
-    label: "Transactions",
-    sub: "Income & expenses",
+    href: "/dashboard/personal-finance/account",
+    label: "Investing",
+    sub: "Portfolio management",
     icon: TrendingUp,
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    href: "/dashboard/personal-finance/category",
-    label: "Categories",
-    sub: "Organize transactions",
-    icon: FileText,
-    color: "bg-indigo-50 text-indigo-600",
+    color: "bg-gray-50 text-gray-600",
   },
   {
     href: "/dashboard/personal-finance/bills",
-    label: "Bills & Loans",
-    sub: "Track payments",
+    label: "Loans & Credit",
+    sub: "Debt tracking",
     icon: CreditCard,
-    color: "bg-amber-50 text-amber-600",
-  },
-  {
-    href: "/dashboard/personal-finance/reports",
-    label: "Reports & Analytics",
-    sub: "Financial insights",
-    icon: FileText,
-    color: "bg-red-50 text-red-600",
+    color: "bg-gray-50 text-gray-600",
   },
 ];
 
 export default function PersonalFinanceDashboardPage() {
   const { user } = useAuth();
+  const [transactionTab, setTransactionTab] = useState<"income" | "expense">("expense");
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -154,7 +149,51 @@ export default function PersonalFinanceDashboardPage() {
     );
   }
 
-  const { summary, netWorthTrend, alerts, topAccounts } = data;
+  const { summary, netWorthTrend, alerts, activities, topAccounts } = data;
+
+  // Helper function to format relative time
+  const getRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInMs = now.getTime() - past.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+    } else {
+      return past.toLocaleDateString();
+    }
+  };
+
+  // Helper function to get activity icon
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'transaction':
+        return ArrowUpCircle;
+      case 'account':
+        return Building2;
+      case 'budget':
+        return Wallet;
+      case 'bill':
+        return Receipt;
+      case 'category':
+        return FolderTree;
+      default:
+        return Activity;
+    }
+  };
+
+  // Helper function to get activity color
+  const getActivityColor = (type: string, action: string) => {
+    if (action === 'deleted') return 'text-red-500';
+    return 'text-gray-600';
+  };
 
   const statCards = [
     {
@@ -162,28 +201,28 @@ export default function PersonalFinanceDashboardPage() {
       value: formatNPR(summary.total_balance),
       sub: "Banking accounts",
       icon: Wallet,
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-gray-50 text-gray-600",
     },
     {
       label: "Total Investments",
       value: formatNPR(summary.total_investments),
       sub: "Current value",
       icon: TrendingUp,
-      color: "bg-green-50 text-[#22C55E]",
+      color: "bg-gray-50 text-gray-600",
     },
     {
       label: "Total Debt",
       value: formatNPR(summary.total_debt),
       sub: "Loans & credit due",
       icon: CreditCard,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-gray-50 text-gray-600",
     },
     {
       label: "Upcoming Renewals",
       value: summary.upcoming_renewals.toLocaleString(),
       sub: "Insurance & tax",
       icon: Bell,
-      color: "bg-purple-50 text-purple-600",
+      color: "bg-gray-50 text-gray-600",
     },
   ];
 
@@ -217,7 +256,7 @@ export default function PersonalFinanceDashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
               <Link
-                key={action.href}
+                key={action.label}
                 href={action.href}
                 className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
               >
@@ -313,7 +352,7 @@ export default function PersonalFinanceDashboardPage() {
             <div className="space-y-2">
               {moduleLinks.map((link) => (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   className="flex items-center justify-between p-3 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-100 transition-colors group"
                 >
@@ -333,7 +372,70 @@ export default function PersonalFinanceDashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Recent Activities */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-700">Recent Activities</h3>
+              <Link
+                href="/dashboard/personal-finance/transactions"
+                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              >
+                View all
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {activities.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-500">
+                No recent activities
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {activities.slice(0, 5).map((activity, idx) => {
+                  const IconComponent = getActivityIcon(activity.type);
+                  const iconColor = getActivityColor(activity.type, activity.action);
+                  
+                  return (
+                    <div key={idx} className="px-5 py-3 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gray-50 ${iconColor}`}>
+                          <IconComponent className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 line-clamp-2">{activity.description}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="inline-flex items-center text-xs text-gray-500">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {getRelativeTime(activity.timestamp)}
+                            </span>
+                            {activity.amount && (
+                              <span className={`text-xs font-medium ${
+                                activity.type === 'transaction' && activity.description.toLowerCase().includes('expense')
+                                  ? 'text-red-600'
+                                  : 'text-[#22C55E]'
+                              }`}>
+                                {formatNPR(activity.amount)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                          activity.action === 'created' 
+                            ? 'bg-green-50 text-green-600' 
+                            : activity.action === 'updated'
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'bg-red-50 text-red-600'
+                        }`}>
+                          {activity.action}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Alerts */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
@@ -349,13 +451,7 @@ export default function PersonalFinanceDashboardPage() {
                   <div key={idx} className="px-5 py-3 hover:bg-gray-50/50 transition-colors">
                     <div className="flex items-start gap-3">
                       <AlertCircle 
-                        className={`h-5 w-5 mt-0.5 ${
-                          alert.type === 'over_budget' 
-                            ? 'text-red-500' 
-                            : alert.type === 'emi'
-                            ? 'text-amber-500'
-                            : 'text-blue-500'
-                        }`} 
+                        className="h-5 w-5 mt-0.5 shrink-0 text-gray-600" 
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900">{alert.message}</p>

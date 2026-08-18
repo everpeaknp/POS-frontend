@@ -6,8 +6,10 @@ import * as z from "zod";
 import toast from "react-hot-toast";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { useAuth } from "@/lib/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import FormField from "@/components/shared/FormField";
-import { User, Mail, Phone, Building2, Shield } from "lucide-react";
+import { User, Mail, Phone, Building2, Shield, Wallet } from "lucide-react";
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -18,8 +20,12 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+const inputCls =
+  "h-11 pl-10 pr-3 border-gray-200 focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/15 focus-visible:ring-3";
+
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
+  const isPersonal = user?.tenant?.account_type === "personal";
 
   const {
     register,
@@ -46,7 +52,10 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="My Profile" subtitle="Manage your account settings" />
+      <DashHeader
+        title="My Profile"
+        subtitle={isPersonal ? "Manage your personal account" : "Manage your account settings"}
+      />
 
       <div className="flex-1 p-6">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -68,8 +77,8 @@ export default function ProfilePage() {
                   </span>
                   {user?.tenant && (
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-                      <Building2 className="w-4 h-4" />
-                      {user.tenant.name}
+                      {isPersonal ? <Wallet className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                      {isPersonal ? "Personal Account" : user.tenant.name}
                     </span>
                   )}
                 </div>
@@ -92,11 +101,11 @@ export default function ProfilePage() {
                 >
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
+                    <Input
                       {...register("first_name")}
                       type="text"
                       id="first_name"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className={inputCls}
                       placeholder="John"
                     />
                   </div>
@@ -110,11 +119,11 @@ export default function ProfilePage() {
                 >
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
+                    <Input
                       {...register("last_name")}
                       type="text"
                       id="last_name"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className={inputCls}
                       placeholder="Doe"
                     />
                   </div>
@@ -130,11 +139,11 @@ export default function ProfilePage() {
               >
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
+                  <Input
                     {...register("email")}
                     type="email"
                     id="email"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className={inputCls}
                     placeholder="john@example.com"
                   />
                 </div>
@@ -148,11 +157,11 @@ export default function ProfilePage() {
               >
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
+                  <Input
                     {...register("phone")}
                     type="tel"
                     id="phone"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className={inputCls}
                     placeholder="+977 9800000000"
                   />
                 </div>
@@ -183,19 +192,19 @@ export default function ProfilePage() {
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-4">
-                <button
+                <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                >
+                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                >
                   {isSubmitting ? "Saving..." : "Save Changes"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
 
-          {/* Organization Info (Read-only) */}
-          {user?.tenant && (
+          {/* Organization Info (Read-only) — business accounts only */}
+          {user?.tenant && !isPersonal && (
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

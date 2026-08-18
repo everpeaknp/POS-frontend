@@ -65,6 +65,8 @@ export interface AccountLimits {
   max_orgs: number | null;
   orgs_created: number;
   can_create_org: boolean;
+  has_personal_account: boolean;
+  can_create_personal: boolean;
   new_org_plan_code: string;
   new_org_plan_name: string;
   new_org_allowed_modules: string[];

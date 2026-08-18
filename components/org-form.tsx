@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/collapsible";
 import { tenantApi } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface OrgFormData {
   organizationName: string;
@@ -93,6 +94,8 @@ function FieldGroup({ label, required, children, hint }: {
 }
 
 interface OrgFormProps {
+  /** "personal" hides business-only fields (industry, VAT, logo) and relaxes requirements */
+  accountType?: "organization" | "personal";
   initialData?: {
     name: string;
     business_type: string;
@@ -115,6 +118,7 @@ interface OrgFormProps {
 }
 
 export function OrgForm({
+  accountType = "organization",
   initialData,
   onSubmit,
   onNext,
@@ -123,9 +127,10 @@ export function OrgForm({
   showBackButton = true,
   onBack,
 }: OrgFormProps) {
+  const isPersonal = accountType === "personal";
   const router = useRouter();
-  const { refreshUser } = useAuth();
-  
+  const { user, refreshUser } = useAuth();
+
   const [form, setForm] = useState<OrgFormData>(() => {
     if (initialData) {
       return {
@@ -142,6 +147,16 @@ export function OrgForm({
         referralCode: "",
         agreeToTerms: true, // Auto-check for edit mode
         logo: null,
+      };
+    }
+    if (isPersonal && user) {
+      const registeredName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+      return {
+        ...defaultForm,
+        organizationName: registeredName || defaultForm.organizationName,
+        workspaceName: registeredName ? `${registeredName}'s Personal` : defaultForm.workspaceName,
+        email: user.email || "",
+        phone: user.phone || "",
       };
     }
     return defaultForm;
@@ -209,12 +224,12 @@ export function OrgForm({
 
   const isValid =
     form.organizationName.trim() !== "" &&
-    form.businessType !== "" &&
-    form.address.trim() !== "" &&
+    (isPersonal || form.businessType !== "") &&
+    (isPersonal || form.address.trim() !== "") &&
     form.accountingStartDate !== "" &&
     form.workspaceName.trim() !== "" &&
     form.agreeToTerms &&
-    (!form.vatRegistered || form.panVatNumber.trim() !== "");
+    (isPersonal || !form.vatRegistered || form.panVatNumber.trim() !== "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,11 +237,11 @@ export function OrgForm({
 
     const formData = {
       name: form.organizationName,
-      business_type: form.businessType,
+      business_type: isPersonal ? "other" : form.businessType,
       address: form.address,
       accounting_start_date: form.accountingStartDate,
-      vat_registered: form.vatRegistered,
-      pan_vat_number: form.vatRegistered ? form.panVatNumber.trim() : undefined,
+      vat_registered: isPersonal ? false : form.vatRegistered,
+      pan_vat_number: !isPersonal && form.vatRegistered ? form.panVatNumber.trim() : undefined,
       workspace_name: form.workspaceName,
       owner_name: form.ownerName || undefined,
       email: form.email || undefined,
@@ -292,41 +307,43 @@ export function OrgForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col [color-scheme:light] [--autofill-bg:#ffffff] [--autofill-text:#111827]">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
-        <div className="lg:col-span-2 space-y-8">
-          <FormSection title="Organization details">
-            <FieldGroup label="Organization Name" required>
-              <Input 
-                placeholder="e.g. ABC Construction" 
+      <div className={cn("grid grid-cols-1 gap-8 lg:gap-10", isPersonal ? "lg:max-w-xl" : "lg:grid-cols-3")}>
+        <div className={isPersonal ? "space-y-8" : "lg:col-span-2 space-y-8"}>
+          <FormSection title={isPersonal ? "Your details" : "Organization details"}>
+            <FieldGroup label={isPersonal ? "Full Name" : "Organization Name"} required>
+              <Input
+                placeholder={isPersonal ? "e.g. Ram Sharma" : "e.g. ABC Construction"}
                 value={form.organizationName}
                 onChange={(e) => setForm({ ...form, organizationName: e.target.value })}
-                required 
-                className={inputCls} 
+                required
+                className={inputCls}
               />
             </FieldGroup>
 
-            <FieldGroup label="Industry" required>
-              <Select value={form.businessType} onValueChange={(v) => setForm({ ...form, businessType: v ?? "" })}>
-                <SelectTrigger className={inputCls}>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent className={selectContentCls}>
-                  {businessTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value} className={selectItemCls}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FieldGroup>
+            {!isPersonal && (
+              <FieldGroup label="Industry" required>
+                <Select value={form.businessType} onValueChange={(v) => setForm({ ...form, businessType: v ?? "" })}>
+                  <SelectTrigger className={inputCls}>
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent className={selectContentCls}>
+                    {businessTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value} className={selectItemCls}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+            )}
 
-            <FieldGroup label="Organization Address" required>
-              <Input 
-                placeholder="e.g. Kathmandu, Nepal" 
+            <FieldGroup label={isPersonal ? "Address" : "Organization Address"} required={!isPersonal}>
+              <Input
+                placeholder="e.g. Kathmandu, Nepal"
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
-                required 
-                className={inputCls} 
+                required={!isPersonal}
+                className={inputCls}
               />
             </FieldGroup>
           </FormSection>
@@ -341,58 +358,62 @@ export function OrgForm({
               />
             </FieldGroup>
 
-            <FieldGroup label="Registered with VAT?" required>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, vatRegistered: true })}
-                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
-                    form.vatRegistered
-                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, vatRegistered: false, panVatNumber: "" })}
-                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
-                    !form.vatRegistered
-                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-            </FieldGroup>
+            {!isPersonal && (
+              <>
+                <FieldGroup label="Registered with VAT?" required>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, vatRegistered: true })}
+                      className={`h-11 rounded-lg border font-medium text-sm transition-all ${
+                        form.vatRegistered
+                          ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, vatRegistered: false, panVatNumber: "" })}
+                      className={`h-11 rounded-lg border font-medium text-sm transition-all ${
+                        !form.vatRegistered
+                          ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </FieldGroup>
 
-            {form.vatRegistered && (
-              <FieldGroup
-                label="VAT Number"
-                required
-                hint="Your IRD VAT / PAN registration number"
-              >
-                <Input
-                  placeholder="e.g. 601234567"
-                  value={form.panVatNumber}
-                  onChange={(e) => setForm({ ...form, panVatNumber: e.target.value })}
-                  required
-                  className={inputCls}
-                />
-              </FieldGroup>
+                {form.vatRegistered && (
+                  <FieldGroup
+                    label="VAT Number"
+                    required
+                    hint="Your IRD VAT / PAN registration number"
+                  >
+                    <Input
+                      placeholder="e.g. 601234567"
+                      value={form.panVatNumber}
+                      onChange={(e) => setForm({ ...form, panVatNumber: e.target.value })}
+                      required
+                      className={inputCls}
+                    />
+                  </FieldGroup>
+                )}
+              </>
             )}
           </FormSection>
 
           <FormSection title="Workspace setup">
             <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
-              <Input 
-                placeholder="e.g. ABC Main Workspace" 
+              <Input
+                placeholder="e.g. ABC Main Workspace"
                 value={form.workspaceName}
                 onChange={(e) => setForm({ ...form, workspaceName: e.target.value })}
-                required 
-                className={inputCls} 
+                required
+                className={inputCls}
               />
             </FieldGroup>
 
@@ -403,58 +424,60 @@ export function OrgForm({
           </FormSection>
         </div>
 
-        <div className="lg:col-span-1 order-first lg:order-last">
-          <div className="lg:sticky lg:top-24">
-            <FormSection title="Company logo (optional)">
-              <div className="border border-dashed border-gray-200 rounded-xl p-5 text-center bg-gray-50/50 hover:border-[#22C55E]/40 transition-colors">
-              {logoPreview ? (
-                <div className="space-y-4">
-                  <div className="w-full aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
-                    <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+        {!isPersonal && (
+          <div className="lg:col-span-1 order-first lg:order-last">
+            <div className="lg:sticky lg:top-24">
+              <FormSection title="Company logo (optional)">
+                <div className="border border-dashed border-gray-200 rounded-xl p-5 text-center bg-gray-50/50 hover:border-[#22C55E]/40 transition-colors">
+                {logoPreview ? (
+                  <div className="space-y-4">
+                    <div className="w-full aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
+                      <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoChange(null)}
+                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      Remove Logo
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleLogoChange(null)}
-                    className="text-sm text-red-600 hover:text-red-700 font-medium"
-                  >
-                    Remove Logo
-                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="w-20 h-20 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
+                      <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <label htmlFor="logo-upload" className="cursor-pointer">
+                        <span className="text-sm font-medium text-[#22C55E] hover:text-[#16A34A]">
+                          Upload a logo
+                        </span>
+                        <input
+                          id="logo-upload"
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/gif"
+                          onChange={(e) => handleLogoChange(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      JPG, PNG or GIF<br />
+                      Min 300x300px<br />
+                      Max 5MB
+                    </p>
+                  </div>
+                )}
+                {logoError && (
+                  <p className="text-xs text-red-500 mt-3">{logoError}</p>
+                )}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="w-20 h-20 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
-                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <label htmlFor="logo-upload" className="cursor-pointer">
-                      <span className="text-sm font-medium text-[#22C55E] hover:text-[#16A34A]">
-                        Upload a logo
-                      </span>
-                      <input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/gif"
-                        onChange={(e) => handleLogoChange(e.target.files?.[0] || null)}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    JPG, PNG or GIF<br />
-                    Min 300x300px<br />
-                    Max 5MB
-                  </p>
-                </div>
-              )}
-              {logoError && (
-                <p className="text-xs text-red-500 mt-3">{logoError}</p>
-              )}
-              </div>
-            </FormSection>
+              </FormSection>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="space-y-3 mt-8">

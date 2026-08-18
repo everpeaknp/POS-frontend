@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Edit2, Trash2, Building2, Wallet, CreditCard, Banknote, TrendingUp } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Edit2, Trash2, Building2, Wallet, CreditCard, Banknote, TrendingUp, Search, X, LayoutGrid, List } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,24 +12,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
-import { financeAccountAPI, type FinanceAccount } from "@/lib/api/personal-finance";
+import {
+  getAccounts,
+  setAccountsForScope,
+  useSyncedList,
+  type PFAccount,
+} from "@/lib/personal-finance/store";
 import toast from "react-hot-toast";
 
-// MOCK DATA STRUCTURE
-// Using real backend API now
+// Accounts come from the shared Personal Finance store
+// (lib/personal-finance/store.ts) — see /new pages and the Transactions page,
+// which reads from the same store.
+// TODO: Replace with real backend API calls when endpoints are ready
+// Backend needs: GET /api/personal-finance/accounts, POST /accounts, PUT /accounts/:id, DELETE /accounts/:id
 
 type AccountType = "bank" | "cash" | "credit_card" | "loan" | "investment";
-
-interface Account {
-  id: number;
-  name: string;
-  type: AccountType;
-  balance: number;
-  description?: string;
-  bank_name?: string;
-  account_number?: string;
-  createdAt: string;
-}
+type Account = PFAccount;
 
 // Nepali banks list
 const NEPALI_BANKS = [
@@ -63,48 +62,27 @@ const ACCOUNT_TYPE_OPTIONS = [
 
 export default function AccountPage() {
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const scope = user?.tenant?.slug ?? null;
+  const [accounts, setAccounts] = useSyncedList<Account>(scope, getAccounts, setAccountsForScope);
   const [showDialog, setShowDialog] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   // Form state
-  const [formData, setFormData] = useState<Partial<Account>>({
+  const [formData, setFormData] = useState<Omit<Account, "id" | "createdAt">>({
     name: "",
     type: "bank",
     balance: 0,
     description: "",
-    bank_name: "",
-    account_number: "",
+    bankName: "",
+    accountNumber: "",
+    isSystem: false,
   });
-
-  // Fetch accounts on mount
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  const loadAccounts = async () => {
-    try {
-      setLoading(true);
-      const data = await financeAccountAPI.list();
-      setAccounts(data.map(acc => ({
-        id: acc.id,
-        name: acc.name,
-        type: acc.type as AccountType,
-        balance: parseFloat(acc.current_balance),
-        description: acc.description,
-        bank_name: acc.bank_name,
-        account_number: acc.account_number,
-        createdAt: acc.created_at,
-      })));
-    } catch (error) {
-      console.error("Failed to load accounts:", error);
-      toast.error("Failed to load accounts");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Bank accounts, credit cards, and wallets`;
@@ -120,6 +98,30 @@ export default function AccountPage() {
     return { assets, liabilities, netWorth: assets - liabilities };
   }, [accounts]);
 
+  // Search + type filter
+  const filteredAccounts = useMemo(() => {
+    let filtered = accounts;
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.name.toLowerCase().includes(lower) ||
+          (a.bankName || "").toLowerCase().includes(lower) ||
+          (a.description || "").toLowerCase().includes(lower)
+      );
+    }
+    if (filterType !== "all") {
+      filtered = filtered.filter((a) => a.type === filterType);
+    }
+    return filtered;
+  }, [accounts, searchTerm, filterType]);
+
+  const hasActiveFilters = Boolean(searchTerm || filterType !== "all");
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterType("all");
+  };
+
   // Group accounts by type
   const groupedAccounts = useMemo(() => {
     const groups: Record<string, Account[]> = {
@@ -129,11 +131,11 @@ export default function AccountPage() {
       loan: [],
       investment: [],
     };
-    accounts.forEach((acc) => {
+    filteredAccounts.forEach((acc) => {
       groups[acc.type].push(acc);
     });
     return groups;
-  }, [accounts]);
+  }, [filteredAccounts]);
 
   const openAddDialog = () => {
     setEditingAccount(null);
@@ -142,82 +144,95 @@ export default function AccountPage() {
       type: "bank",
       balance: 0,
       description: "",
-      bank_name: "",
-      account_number: "",
+      bankName: "",
+      accountNumber: "",
+      isSystem: false,
     });
     setShowDialog(true);
   };
 
+  // Sidebar "+" deep-links with ?new=1 to open this dialog directly
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    openAddDialog();
+    router.replace("/dashboard/personal-finance/account", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, router]);
+
   const openEditDialog = (account: Account) => {
+    if (account.isSystem) {
+      toast.error("System accounts cannot be edited");
+      return;
+    }
     setEditingAccount(account);
     setFormData({
       name: account.name,
       type: account.type,
       balance: account.balance,
       description: account.description || "",
-      bank_name: account.bank_name || "",
-      account_number: account.account_number || "",
+      bankName: account.bankName || "",
+      accountNumber: account.accountNumber || "",
+      isSystem: account.isSystem,
     });
     setShowDialog(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validation
-    if (!formData.name?.trim()) {
+    if (!formData.name.trim()) {
       toast.error("Please enter an account name");
       return;
     }
 
     // Validate bank-specific fields
-    if (formData.type === "bank" && !formData.bank_name) {
-      toast.error("Please select a bank name for bank accounts");
+    if (formData.type === "bank" && !formData.bankName) {
+      toast.error("Please select a bank name");
       return;
     }
 
-    try {
-      if (editingAccount) {
-        // Update existing account
-        await financeAccountAPI.update(editingAccount.id, {
-          name: formData.name,
-          type: formData.type,
-          description: formData.description,
-          bank_name: formData.bank_name,
-          account_number: formData.account_number,
-        });
-        toast.success("Account updated successfully");
-      } else {
-        // Add new account - opening_balance is set on creation
-        await financeAccountAPI.create({
-          name: formData.name!,
-          type: formData.type!,
-          opening_balance: String(formData.balance || 0),
-          description: formData.description,
-          bank_name: formData.bank_name,
-          account_number: formData.account_number,
-        });
-        toast.success("Account added successfully");
-      }
-      
-      setShowDialog(false);
-      loadAccounts(); // Reload the list
-    } catch (error) {
-      console.error("Failed to save account:", error);
-      toast.error("Failed to save account");
+    if (editingAccount) {
+      // Update existing account
+      setAccounts((prev) =>
+        prev.map((a) =>
+          a.id === editingAccount.id
+            ? { 
+                ...a, 
+                name: formData.name, 
+                type: formData.type,
+                balance: formData.balance,
+                description: formData.description,
+                bankName: formData.bankName,
+                accountNumber: formData.accountNumber,
+              }
+            : a
+        )
+      );
+      toast.success("Account updated successfully");
+    } else {
+      // Add new account
+      const newAccount: Account = {
+        id: `acc_${Date.now()}`,
+        ...formData,
+        createdAt: new Date().toISOString(),
+      };
+      setAccounts((prev) => [...prev, newAccount]);
+      toast.success("Account added successfully");
     }
+
+    setShowDialog(false);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await financeAccountAPI.delete(id);
+  const handleDelete = (id: string) => {
+    const account = accounts.find((a) => a.id === id);
+    if (account?.isSystem) {
+      toast.error("System accounts cannot be deleted");
       setDeleteConfirmId(null);
-      toast.success("Account deleted successfully");
-      loadAccounts(); // Reload the list
-    } catch (error: any) {
-      console.error("Failed to delete account:", error);
-      const errorMsg = error?.response?.data?.detail || "Failed to delete account";
-      toast.error(errorMsg);
-      setDeleteConfirmId(null);
+      return;
     }
+
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    setDeleteConfirmId(null);
+    toast.success("Account deleted successfully");
   };
 
   const getAccountIcon = (type: AccountType) => {
@@ -234,7 +249,7 @@ export default function AccountPage() {
     const Icon = getAccountIcon(account.type);
     const isLiability = account.balance < 0;
     const displayBalance = Math.abs(account.balance);
-    const last4Digits = account.account_number ? account.account_number.slice(-4) : null;
+    const last4Digits = account.accountNumber ? account.accountNumber.slice(-4) : null;
 
     return (
       <div
@@ -243,18 +258,23 @@ export default function AccountPage() {
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isLiability ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"}`}>
+            <div className="p-2 rounded-lg bg-gray-50 text-gray-600">
               <Icon className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-gray-900">{account.name}</h3>
+                {account.isSystem && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
+                    System
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-gray-500 mt-0.5">{getAccountTypeLabel(account.type)}</p>
-              {account.type === "bank" && account.bank_name && (
-                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bank_name}</p>
+              {account.type === "bank" && account.bankName && (
+                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bankName}</p>
               )}
-              {(account.type === "bank" || account.type === "credit_card") && last4Digits && (
+              {account.type === "bank" && last4Digits && (
                 <p className="text-xs text-gray-400 mt-0.5">•••• {last4Digits}</p>
               )}
             </div>
@@ -264,8 +284,9 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => openEditDialog(account)}
+              disabled={account.isSystem}
               className="h-8 w-8 p-0"
-              title="Edit account"
+              title={account.isSystem ? "System accounts cannot be edited" : "Edit account"}
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -273,8 +294,9 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => setDeleteConfirmId(account.id)}
+              disabled={account.isSystem}
               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-              title="Delete account"
+              title={account.isSystem ? "System accounts cannot be deleted" : "Delete account"}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -298,6 +320,136 @@ export default function AccountPage() {
             <p className="text-xs text-gray-600 mt-2">{account.description}</p>
           )}
         </div>
+      </div>
+    );
+  };
+
+  const renderAccountsTable = () => {
+    if (filteredAccounts.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          {hasActiveFilters ? (
+            <>
+              <p className="text-gray-500 mb-4">No accounts match your filters</p>
+              <Button variant="outline" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-500 mb-4">No accounts yet</p>
+              <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Account
+              </Button>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Account Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Bank / Details
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Account Number
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Balance
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredAccounts.map((account) => {
+              const Icon = getAccountIcon(account.type);
+              const isLiability = account.balance < 0;
+              const displayBalance = Math.abs(account.balance);
+              const last4Digits = account.accountNumber ? account.accountNumber.slice(-4) : null;
+
+              return (
+                <tr key={account.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gray-50 text-gray-600">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900">{account.name}</span>
+                          {account.isSystem && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
+                              System
+                            </Badge>
+                          )}
+                        </div>
+                        {account.description && (
+                          <p className="text-xs text-gray-500 mt-0.5">{account.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {getAccountTypeLabel(account.type)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {account.type === "bank" && account.bankName ? account.bankName : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-400">
+                    {last4Digits ? `•••• ${last4Digits}` : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className={`text-sm font-medium ${isLiability ? "text-red-600" : "text-[#22C55E]"}`}>
+                      {isLiability && "-"}
+                      {formatCurrency(displayBalance)}
+                    </span>
+                    {isLiability && (
+                      <p className="text-xs text-gray-500 mt-0.5">Outstanding</p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(account)}
+                        disabled={account.isSystem}
+                        className="h-8 w-8 p-0"
+                        title={account.isSystem ? "System accounts cannot be edited" : "Edit account"}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirmId(account.id)}
+                        disabled={account.isSystem}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        title={account.isSystem ? "System accounts cannot be deleted" : "Delete account"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -342,12 +494,78 @@ export default function AccountPage() {
 
         {/* Toolbar */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-700">Your Accounts</h2>
-              <p className="text-xs text-gray-500 mt-0.5">{accounts.length} accounts total</p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
+              <div className="relative shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search accounts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-8 h-9 w-52 text-sm border-gray-200 bg-white focus-visible:ring-0 focus-visible:border-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <Select value={filterType} onValueChange={(v) => setFilterType(v ?? "all")}>
+                <SelectTrigger className="h-9 w-40 shrink-0 text-sm border-gray-200 bg-white">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {ACCOUNT_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={clearFilters}
+                  aria-label="Clear filters"
+                  title="Clear filters"
+                  className="h-9 w-9 shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                title="List view"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                title="Grid view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Account
             </Button>
@@ -355,18 +573,29 @@ export default function AccountPage() {
         </div>
 
         {/* Accounts List */}
-        {loading ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-500">Loading accounts...</p>
+        {viewMode === "list" ? (
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {renderAccountsTable()}
           </div>
-        ) : accounts.length === 0 ? (
+        ) : filteredAccounts.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 mb-4">No accounts yet</p>
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Account
-            </Button>
+            {hasActiveFilters ? (
+              <>
+                <p className="text-gray-500 mb-4">No accounts match your filters</p>
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500 mb-4">No accounts yet</p>
+                <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Account
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
@@ -449,7 +678,7 @@ export default function AccountPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingAccount ? "Edit Account" : "Add Account"}</DialogTitle>
           </DialogHeader>
@@ -459,21 +688,31 @@ export default function AccountPage() {
               <Label>
                 Account Type <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: AccountType) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACCOUNT_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mt-2 grid grid-cols-5 gap-2">
+                {ACCOUNT_TYPE_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const active = formData.type === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      disabled={!!editingAccount}
+                      onClick={() => setFormData({ ...formData, type: option.value })}
+                      className={`flex flex-col items-center justify-center gap-1.5 h-20 rounded-lg border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        active
+                          ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="text-center leading-tight px-1">{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {editingAccount && (
+                <p className="text-xs text-gray-500 mt-2">Account type cannot be changed after creation</p>
+              )}
             </div>
 
             {/* Bank Name - only show for bank accounts */}
@@ -483,10 +722,10 @@ export default function AccountPage() {
                   Bank Name <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.bank_name}
-                  onValueChange={(value) => setFormData({ ...formData, bank_name: value })}
+                  value={formData.bankName}
+                  onValueChange={(value) => setFormData({ ...formData, bankName: value ?? "" })}
                 >
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-1 focus-visible:ring-0 focus-visible:border-input">
                     <SelectValue placeholder="Select bank" />
                   </SelectTrigger>
                   <SelectContent>
@@ -508,19 +747,19 @@ export default function AccountPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., My Checking Account, Main Credit Card"
-                className="mt-1"
+                className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
             </div>
 
-            {/* Account Number - show for bank accounts and credit cards */}
-            {(formData.type === "bank" || formData.type === "credit_card") && (
+            {/* Account Number - only show for bank accounts */}
+            {formData.type === "bank" && (
               <div>
                 <Label>Account Number</Label>
                 <Input
-                  value={formData.account_number}
-                  onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+                  value={formData.accountNumber}
+                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
                   placeholder="e.g., 01234567890123"
-                  className="mt-1"
+                  className="mt-1 focus-visible:ring-0 focus-visible:border-input"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Optional. Only last 4 digits will be displayed in the list.
@@ -530,16 +769,21 @@ export default function AccountPage() {
 
             <div>
               <Label>
-                {editingAccount ? "Current Balance" : "Opening Balance"} <span className="text-red-500">*</span>
+                Current Balance <span className="text-red-500">*</span>
               </Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.balance || ""}
-                onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                  Rs.
+                </span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.balance || ""}
+                  onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  className="pl-9 focus-visible:ring-0 focus-visible:border-input"
+                />
+              </div>
               <p className="text-xs text-gray-500 mt-1">
                 For liabilities (credit cards, loans), enter as negative number (e.g., -25000)
               </p>
@@ -551,7 +795,7 @@ export default function AccountPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description"
-                className="mt-1"
+                className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
             </div>
           </div>

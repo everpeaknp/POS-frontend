@@ -1,93 +1,61 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Plus, Edit2, CheckCircle2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Edit2, CheckCircle2, TrendingUp, TrendingDown, AlertCircle, Search, X, LayoutGrid, List, Trash2 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
+import {
+  getCategories,
+  getTransactions,
+  getBudgets,
+  setBudgetsForScope,
+  useSyncedList,
+  type PFCategory,
+  type PFTransaction, 
+  type PFBudget,
+} from "@/lib/personal-finance/store";
 import toast from "react-hot-toast";
 
-// MOCK DATA STRUCTURE
+// Categories, transactions, and budgets come from the shared Personal Finance
+// store (lib/personal-finance/store.ts) — see /new pages and the Category /
+// Transactions pages, which read/write the same store.
 // TODO: Replace with real backend API calls when endpoints are ready
 // Backend needs: GET /api/personal-finance/budgets, POST /budgets, PUT /budgets/:id
 
 type CategoryType = "income" | "expense";
-
-interface Category {
-  id: string;
-  name: string;
-  type: CategoryType;
-}
-
-interface Budget {
-  id: string;
-  categoryId: string;
-  amount: number;
-  month: string; // Format: YYYY-MM
-  createdAt: string;
-}
-
-interface Transaction {
-  id: string;
-  date: string;
-  type: CategoryType;
-  amount: number;
-  categoryId: string;
-  accountId: string;
-  description: string;
-}
-
-// Mock categories - matches Category page exactly (cat_1 through cat_14)
-const MOCK_CATEGORIES: Category[] = [
-  // Income categories
-  { id: "cat_1", name: "Salary", type: "income" },
-  { id: "cat_2", name: "Freelance", type: "income" },
-  { id: "cat_3", name: "Investment Returns", type: "income" },
-  { id: "cat_4", name: "Other Income", type: "income" },
-  // Expense categories
-  { id: "cat_5", name: "Groceries", type: "expense" },
-  { id: "cat_6", name: "Rent", type: "expense" },
-  { id: "cat_7", name: "Utilities", type: "expense" },
-  { id: "cat_8", name: "Dining", type: "expense" },
-  { id: "cat_9", name: "Entertainment", type: "expense" },
-  { id: "cat_10", name: "Transportation", type: "expense" },
-  { id: "cat_11", name: "Health", type: "expense" },
-  { id: "cat_12", name: "Shopping", type: "expense" },
-  { id: "cat_13", name: "Education", type: "expense" },
-  { id: "cat_14", name: "Other Expenses", type: "expense" },
-];
-
-// Mock transactions - matches Transactions page
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: "txn_1", date: "2026-08-01", type: "income", amount: 85000, categoryId: "cat_1", accountId: "acc_1", description: "Monthly salary" },
-  { id: "txn_2", date: "2026-08-02", type: "expense", amount: 18000, categoryId: "cat_6", accountId: "acc_1", description: "Monthly rent payment" },
-  { id: "txn_3", date: "2026-08-05", type: "expense", amount: 4500, categoryId: "cat_5", accountId: "acc_3", description: "Weekly groceries" },
-  { id: "txn_4", date: "2026-08-07", type: "expense", amount: 2200, categoryId: "cat_8", accountId: "acc_4", description: "Dinner with friends" },
-  { id: "txn_5", date: "2026-08-10", type: "income", amount: 15000, categoryId: "cat_2", accountId: "acc_2", description: "Freelance project payment" },
-  { id: "txn_6", date: "2026-08-12", type: "expense", amount: 3500, categoryId: "cat_10", accountId: "acc_1", description: "Fuel and transportation" },
-];
-
-// Initial mock budgets
-const INITIAL_MOCK_BUDGETS: Budget[] = [
-  { id: "bud_1", categoryId: "cat_5", amount: 15000, month: "2026-08", createdAt: "2026-08-01T00:00:00Z" },
-  { id: "bud_2", categoryId: "cat_6", amount: 20000, month: "2026-08", createdAt: "2026-08-01T00:00:00Z" },
-  { id: "bud_3", categoryId: "cat_7", amount: 5000, month: "2026-08", createdAt: "2026-08-01T00:00:00Z" },
-  { id: "bud_4", categoryId: "cat_8", amount: 8000, month: "2026-08", createdAt: "2026-08-01T00:00:00Z" },
-  { id: "bud_5", categoryId: "cat_10", amount: 10000, month: "2026-08", createdAt: "2026-08-01T00:00:00Z" },
-];
+type Category = PFCategory;
+type Budget = PFBudget;
+type Transaction = PFTransaction;
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  const [budgets, setBudgets] = useState<Budget[]>(INITIAL_MOCK_BUDGETS);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const scope = user?.tenant?.slug ?? null;
+  const [categories, setCategories] = useState<Category[]>(() => getCategories(scope));
+  const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactions(scope));
+  useEffect(() => {
+    setCategories(getCategories(scope));
+    setTransactions(getTransactions(scope));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope]);
+  const [budgets, setBudgets] = useSyncedList<Budget>(scope, getBudgets, setBudgetsForScope);
   const [showDialog, setShowDialog] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-08");
-  const [activeTab, setActiveTab] = useState<CategoryType>("expense");
+  const [filterType, setFilterType] = useState<string>("all"); // "all" | "expense" | "income"
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
+  const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<{ categoryId: string; amount: number }>({
@@ -99,8 +67,8 @@ export default function BudgetPage() {
   const subtitle = `${workspaceName} · Budget planning and tracking`;
 
   // Filter categories by type
-  const expenseCategories = MOCK_CATEGORIES.filter((c) => c.type === "expense");
-  const incomeCategories = MOCK_CATEGORIES.filter((c) => c.type === "income");
+  const expenseCategories = categories.filter((c) => c.type === "expense");
+  const incomeCategories = categories.filter((c) => c.type === "income");
 
   // Get budgets for selected month
   const monthBudgets = useMemo(() => budgets.filter((b) => b.month === selectedMonth), [budgets, selectedMonth]);
@@ -108,7 +76,7 @@ export default function BudgetPage() {
   // Calculate spent amounts from transactions for selected month
   const spentByCategory = useMemo(() => {
     const spent: Record<string, number> = {};
-    MOCK_TRANSACTIONS.filter((t) => t.date.startsWith(selectedMonth)).forEach((t) => {
+    transactions.filter((t) => t.date.startsWith(selectedMonth)).forEach((t) => {
       if (t.type === "expense") {
         spent[t.categoryId] = (spent[t.categoryId] || 0) + t.amount;
       }
@@ -118,8 +86,16 @@ export default function BudgetPage() {
 
   // Build budget data with spent info
   const budgetData = useMemo(() => {
-    const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
-    return categories.map((category) => {
+    let categoriesToShow = [...expenseCategories, ...incomeCategories];
+    
+    // Filter by type
+    if (filterType === "expense") {
+      categoriesToShow = expenseCategories;
+    } else if (filterType === "income") {
+      categoriesToShow = incomeCategories;
+    }
+    
+    return categoriesToShow.map((category) => {
       const budget = monthBudgets.find((b) => b.categoryId === category.id);
       const spent = spentByCategory[category.id] || 0;
       const budgeted = budget?.amount || 0;
@@ -136,7 +112,7 @@ export default function BudgetPage() {
         isOverBudget: spent > budgeted && budgeted > 0,
       };
     });
-  }, [activeTab, expenseCategories, incomeCategories, monthBudgets, spentByCategory]);
+  }, [filterType, expenseCategories, incomeCategories, monthBudgets, spentByCategory]);
 
   // Summary
   const summary = useMemo(() => {
@@ -168,6 +144,14 @@ export default function BudgetPage() {
     }
     setShowDialog(true);
   };
+
+  // Sidebar "+" deep-links with ?new=1 to open this dialog directly
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    openAddDialog();
+    router.replace("/dashboard/personal-finance/budget", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, router]);
 
   const openEditDialog = (budget: Budget) => {
     setEditingBudget(budget);
@@ -224,6 +208,13 @@ export default function BudgetPage() {
   const handleDelete = (budgetId: string) => {
     setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
     toast.success("Budget deleted");
+    setDeleteConfirmDialog(false);
+    setBudgetToDelete(null);
+  };
+
+  const openDeleteConfirm = (budget: Budget) => {
+    setBudgetToDelete(budget);
+    setDeleteConfirmDialog(true);
   };
 
   const getProgressColor = (percentUsed: number, isOverBudget: boolean) => {
@@ -259,10 +250,10 @@ export default function BudgetPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(budget.id)}
+                  onClick={() => openDeleteConfirm(budget)}
                   className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <AlertCircle className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </>
             ) : (
@@ -317,8 +308,182 @@ export default function BudgetPage() {
     );
   };
 
+  const renderBudgetsTable = () => {
+    if (filteredBudgetData.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          {hasActiveFilters ? (
+            <>
+              <p className="text-gray-500 mb-4">No budgets match your filters</p>
+              <Button variant="outline" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-500 mb-4">No budgets set for {selectedMonth}</p>
+              <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Budget
+              </Button>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Budgeted
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Spent
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Remaining
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Progress
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredBudgetData.map((data) => {
+              const { category, budget, spent, budgeted, remaining, percentUsed, isOverBudget } = data;
+
+              return (
+                <tr key={category.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    {category.name}
+                  </td>
+                  <td className="px-4 py-3">
+                    {category.type === "income" ? (
+                      <div className="inline-flex items-center gap-1 text-xs text-[#22C55E]">
+                        <TrendingUp className="h-3 w-3" />
+                        Income
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1 text-xs text-red-600">
+                        <TrendingDown className="h-3 w-3" />
+                        Expense
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right text-gray-900">
+                    {budget ? formatCurrency(budgeted) : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right text-gray-600">
+                    {formatCurrency(spent)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {budget ? (
+                      <span className={isOverBudget ? "text-red-600 font-medium" : "text-[#22C55E]"}>
+                        {formatCurrency(remaining)}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {budget ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden min-w-[80px]">
+                          <div
+                            className={`h-full transition-all ${getProgressColor(percentUsed, isOverBudget)}`}
+                            style={{ width: `${Math.min(percentUsed, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500 shrink-0 w-10 text-right">
+                          {percentUsed.toFixed(0)}%
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">No budget</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {budget ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(budget)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteConfirm(budget)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openAddDialog(category.id)}
+                          className="h-8 px-3 text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Set Budget
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Search + status filter, applied on top of budgetData
+  const filteredBudgetData = useMemo(() => {
+    let filtered = budgetData;
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter((d) => d.category.name.toLowerCase().includes(lower));
+    }
+    if (filterStatus === "over") {
+      filtered = filtered.filter((d) => d.isOverBudget);
+    } else if (filterStatus === "on_track") {
+      filtered = filtered.filter((d) => d.budget && !d.isOverBudget);
+    } else if (filterStatus === "no_budget") {
+      filtered = filtered.filter((d) => !d.budget);
+    }
+    return filtered;
+  }, [budgetData, searchTerm, filterStatus]);
+
+  const hasActiveFilters = Boolean(searchTerm || filterStatus !== "all" || filterType !== "all");
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterStatus("all");
+    setFilterType("all");
+  };
+
   // Categories with no budget set
-  const categoriesWithoutBudget = budgetData.filter((d) => !d.budget);
+  const categoriesWithoutBudget = filteredBudgetData.filter((d) => !d.budget);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -360,84 +525,131 @@ export default function BudgetPage() {
 
         {/* Toolbar */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <div>
-              <Label className="text-xs text-gray-500 mb-1 block">Month</Label>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
+              <div className="relative shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-8 h-9 w-52 text-sm border-gray-200 bg-white focus-visible:ring-0 focus-visible:border-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <Select value={filterType} onValueChange={(v) => setFilterType(v ?? "all")}>
+                <SelectTrigger className="h-9 w-40 shrink-0 text-sm border-gray-200 bg-white">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({expenseCategories.length + incomeCategories.length})</SelectItem>
+                  <SelectItem value="expense">Expense ({expenseCategories.length})</SelectItem>
+                  <SelectItem value="income">Income ({incomeCategories.length})</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v ?? "all")}>
+                <SelectTrigger className="h-9 w-36 shrink-0 text-sm border-gray-200 bg-white">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="over">Over Budget</SelectItem>
+                  <SelectItem value="on_track">On Track</SelectItem>
+                  <SelectItem value="no_budget">No Budget Set</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-48"
+                className="h-9 w-36 shrink-0 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
               />
+
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={clearFilters}
+                  aria-label="Clear filters"
+                  title="Clear filters"
+                  className="h-9 w-9 shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-            <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                title="List view"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                title="Grid view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button onClick={() => openAddDialog()} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Budget
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Budgets List */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as CategoryType)}>
-            <div className="border-b border-gray-200 px-4 py-3">
-              <TabsList className="bg-gray-100">
-                <TabsTrigger value="expense" className="data-[state=active]:bg-white">
-                  Expense Budgets
-                </TabsTrigger>
-                <TabsTrigger value="income" className="data-[state=active]:bg-white">
-                  Income Goals
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="expense" className="p-4 mt-0">
-              {budgetData.filter((d) => d.category.type === "expense").length === 0 ? (
-                <div className="text-center py-12">
-                  <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">No expense budgets set for {selectedMonth}</p>
+          {viewMode === "list" ? (
+            renderBudgetsTable()
+          ) : filteredBudgetData.length === 0 ? (
+            <div className="text-center py-12">
+              <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              {hasActiveFilters ? (
+                <>
+                  <p className="text-gray-500 mb-4">No budgets match your filters</p>
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear filters
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500 mb-4">No budgets set for {selectedMonth}</p>
                   <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Budget
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {budgetData.filter((d) => d.category.type === "expense").map(renderBudgetCard)}
-                  </div>
-
-                  {categoriesWithoutBudget.filter((d) => d.category.type === "expense").length > 0 && (
-                    <div className="mt-6 pt-6 border-t">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                        Categories Without Budget ({categoriesWithoutBudget.filter((d) => d.category.type === "expense").length})
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categoriesWithoutBudget.filter((d) => d.category.type === "expense").map(renderBudgetCard)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </>
               )}
-            </TabsContent>
-
-            <TabsContent value="income" className="p-4 mt-0">
-              {budgetData.filter((d) => d.category.type === "income").length === 0 ? (
-                <div className="text-center py-12">
-                  <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">No income goals set for {selectedMonth}</p>
-                  <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Set Income Goal
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {budgetData.filter((d) => d.category.type === "income").map(renderBudgetCard)}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          ) : (
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredBudgetData.map(renderBudgetCard)}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Info Note */}
@@ -467,11 +679,20 @@ export default function BudgetPage() {
                 className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
               >
                 <option value="">Select category</option>
-                {(activeTab === "expense" ? expenseCategories : incomeCategories).map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                <optgroup label="Expense Categories">
+                  {expenseCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Income Categories">
+                  {incomeCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
               {editingBudget && (
                 <p className="text-xs text-gray-500 mt-1">Category cannot be changed after creation</p>
@@ -482,15 +703,20 @@ export default function BudgetPage() {
               <Label>
                 Budget Amount <span className="text-red-500">*</span>
               </Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.amount || ""}
-                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                  Rs.
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.amount || ""}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  className="pl-9 focus-visible:ring-0 focus-visible:border-input"
+                />
+              </div>
             </div>
 
             <div>
@@ -506,6 +732,37 @@ export default function BudgetPage() {
             </Button>
             <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
               {editingBudget ? "Update" : "Add"} Budget
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmDialog} onOpenChange={setDeleteConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Budget?</DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete the budget for{" "}
+              <span className="font-semibold text-gray-900">
+                {budgetToDelete && categories.find((c) => c.id === budgetToDelete.categoryId)?.name}
+              </span>
+              ? This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button variant="outline" onClick={() => setDeleteConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => budgetToDelete && handleDelete(budgetToDelete.id)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Budget
             </Button>
           </div>
         </DialogContent>

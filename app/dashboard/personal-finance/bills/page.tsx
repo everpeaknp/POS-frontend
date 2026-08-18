@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CreditCard,
@@ -23,8 +24,34 @@ import {
   Legend,
 } from "recharts";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DateInput } from "@/components/shared/DateInput";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatNPR, cn } from "@/lib/utils";
+import { getLoans, setLoansForScope, useSyncedList } from "@/lib/personal-finance/store";
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-sm">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+const LOAN_TYPE_OPTIONS: { value: LoanType; label: string }[] = [
+  { value: "home", label: "Home Loan" },
+  { value: "car", label: "Car Loan" },
+  { value: "personal", label: "Personal Loan" },
+  { value: "education", label: "Education Loan" },
+];
 
 // ============================================================================
 // TYPES & CONSTANTS
@@ -235,6 +262,8 @@ function calculateLoanTypeComparison(
 
 export default function LoansPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -255,31 +284,22 @@ export default function LoansPage() {
   // ============================================================================
   // STATE - Existing Loans List
   // ============================================================================
+  // Shared via lib/personal-finance/store.ts (localStorage — no backend for
+  // Personal Finance yet, see TODO at top of transactions/page.tsx)
 
-  const [existingLoans, setExistingLoans] = useState<ExistingLoan[]>([
-    {
-      id: "1",
-      name: "Home Loan - ABC Bank",
-      type: "home",
-      principal: 2000000,
-      emi: 18000,
-      remainingBalance: 1850000,
-      interestRate: 9.5,
-      startDate: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Car Loan - XYZ Finance",
-      type: "car",
-      principal: 500000,
-      emi: 8500,
-      remainingBalance: 380000,
-      interestRate: 11,
-      startDate: "2025-06-10",
-    },
-  ]);
+  const scope = user?.tenant?.slug ?? null;
+  const [existingLoans, setExistingLoans] = useSyncedList<ExistingLoan>(scope, getLoans, setLoansForScope);
 
   const [showAddLoanForm, setShowAddLoanForm] = useState(false);
+
+  // Sidebar "+" deep-links with ?new=1 to open the Add Loan dialog directly
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setShowAddLoanForm(true);
+    router.replace("/dashboard/personal-finance/bills", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, router]);
+
   const [newLoan, setNewLoan] = useState({
     name: "",
     type: "personal" as LoanType,
@@ -757,111 +777,13 @@ export default function LoansPage() {
               </p>
             </div>
             <button
-              onClick={() => setShowAddLoanForm(!showAddLoanForm)}
+              onClick={() => setShowAddLoanForm(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
             >
               <Plus className="h-4 w-4" />
               Add Loan
             </button>
           </div>
-
-          {/* Add Loan Form */}
-          {showAddLoanForm && (
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">
-                Add New Loan
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <input
-                  type="text"
-                  placeholder="Loan Name"
-                  value={newLoan.name}
-                  onChange={(e) =>
-                    setNewLoan({ ...newLoan, name: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                />
-                <select
-                  value={newLoan.type}
-                  onChange={(e) =>
-                    setNewLoan({
-                      ...newLoan,
-                      type: e.target.value as LoanType,
-                    })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                >
-                  <option value="home">Home Loan</option>
-                  <option value="car">Car Loan</option>
-                  <option value="personal">Personal Loan</option>
-                  <option value="education">Education Loan</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="Principal Amount"
-                  value={newLoan.principal}
-                  onChange={(e) =>
-                    setNewLoan({ ...newLoan, principal: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                />
-                <input
-                  type="number"
-                  placeholder="Monthly EMI"
-                  value={newLoan.emi}
-                  onChange={(e) =>
-                    setNewLoan({ ...newLoan, emi: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                />
-                <input
-                  type="number"
-                  placeholder="Remaining Balance"
-                  value={newLoan.remainingBalance}
-                  onChange={(e) =>
-                    setNewLoan({
-                      ...newLoan,
-                      remainingBalance: e.target.value,
-                    })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                />
-                <input
-                  type="number"
-                  placeholder="Interest Rate (%)"
-                  value={newLoan.interestRate}
-                  onChange={(e) =>
-                    setNewLoan({ ...newLoan, interestRate: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                  step="0.1"
-                />
-                <input
-                  type="date"
-                  placeholder="Start Date"
-                  value={newLoan.startDate}
-                  onChange={(e) =>
-                    setNewLoan({ ...newLoan, startDate: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleAddLoan}
-                    className="flex-1 px-4 py-2 bg-[#22C55E] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A]"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setShowAddLoanForm(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Loans List */}
           {existingLoans.length === 0 ? (
@@ -940,6 +862,110 @@ export default function LoansPage() {
           )}
         </div>
       </div>
+
+      {/* Add Loan Dialog */}
+      <Dialog open={showAddLoanForm} onOpenChange={setShowAddLoanForm}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Loan</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+            <Field label="Loan Name" required>
+              <Input
+                className="h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                placeholder="e.g. Home Loan - ABC Bank"
+                value={newLoan.name}
+                onChange={(e) => setNewLoan({ ...newLoan, name: e.target.value })}
+              />
+            </Field>
+            <Field label="Loan Type" required>
+              <Select
+                value={newLoan.type}
+                onValueChange={(v) => v && setNewLoan({ ...newLoan, type: v as LoanType })}
+              >
+                <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LOAN_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Principal Amount" required>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                  Rs.
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                  placeholder="0"
+                  value={newLoan.principal}
+                  onChange={(e) => setNewLoan({ ...newLoan, principal: e.target.value })}
+                />
+              </div>
+            </Field>
+            <Field label="Remaining Balance" required>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                  Rs.
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                  placeholder="0"
+                  value={newLoan.remainingBalance}
+                  onChange={(e) => setNewLoan({ ...newLoan, remainingBalance: e.target.value })}
+                />
+              </div>
+            </Field>
+            <Field label="Monthly EMI" required>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                  Rs.
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                  placeholder="0"
+                  value={newLoan.emi}
+                  onChange={(e) => setNewLoan({ ...newLoan, emi: e.target.value })}
+                />
+              </div>
+            </Field>
+            <Field label="Interest Rate (% p.a.)" required>
+              <Input
+                type="number"
+                min="0"
+                step="0.1"
+                className="h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                value={newLoan.interestRate}
+                onChange={(e) => setNewLoan({ ...newLoan, interestRate: e.target.value })}
+              />
+            </Field>
+            <Field label="Start Date" required>
+              <DateInput
+                className="h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                value={newLoan.startDate}
+                onChange={(date) => setNewLoan({ ...newLoan, startDate: date })}
+              />
+            </Field>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+            <Button type="button" variant="ghost" onClick={() => setShowAddLoanForm(false)} className="text-gray-500">
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleAddLoan} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6">
+              Save Loan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
