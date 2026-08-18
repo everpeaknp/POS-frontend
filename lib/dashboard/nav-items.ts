@@ -198,6 +198,8 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Category", href: "/dashboard/personal-finance/category", createHref: "/dashboard/personal-finance/category/new" },
       { label: "Account", href: "/dashboard/personal-finance/account", createHref: "/dashboard/personal-finance/account/new" },
       { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills/new" },
+      { label: "Tax", href: "/dashboard/personal-finance/tax" },
+      { label: "Parties / Lenders", href: "/dashboard/personal-finance/parties", createHref: "/dashboard/personal-finance/parties/new" },
       { label: "Reports & Analytics", href: "/dashboard/personal-finance/reports" },
     ],
   },

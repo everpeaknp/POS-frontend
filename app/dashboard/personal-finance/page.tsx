@@ -32,30 +32,30 @@ import { formatNPR } from "@/lib/utils";
 
 const quickActions = [
   {
-    href: "/dashboard/personal-finance/banking/transactions/new",
+    href: "/dashboard/personal-finance/transactions",
     label: "Add Transaction",
     sub: "Record income/expense",
     icon: Plus,
     color: "bg-green-50 text-[#22C55E]",
   },
   {
-    href: "/dashboard/personal-finance/banking/accounts/new",
+    href: "/dashboard/personal-finance/account",
     label: "Add Account",
     sub: "Bank/wallet/cash",
     icon: Building2,
     color: "bg-blue-50 text-blue-600",
   },
   {
-    href: "/dashboard/personal-finance/investing/new",
-    label: "Add Investment",
-    sub: "Track holdings",
+    href: "/dashboard/personal-finance/budget",
+    label: "Add Budget",
+    sub: "Set spending limits",
     icon: TrendingUp,
     color: "bg-purple-50 text-purple-600",
   },
   {
-    href: "/dashboard/personal-finance/loans/new",
-    label: "Add Loan",
-    sub: "Record debt",
+    href: "/dashboard/personal-finance/bills",
+    label: "Manage Bills",
+    sub: "Track loans & EMIs",
     icon: CreditCard,
     color: "bg-amber-50 text-amber-600",
   },
@@ -63,44 +63,44 @@ const quickActions = [
 
 const moduleLinks = [
   {
-    href: "/dashboard/personal-finance/budgeting",
-    label: "Budgeting & Saving",
-    sub: "Track budgets & goals",
+    href: "/dashboard/personal-finance/budget",
+    label: "Budget",
+    sub: "Track budgets & spending",
     icon: Banknote,
     color: "bg-green-50 text-[#22C55E]",
   },
   {
-    href: "/dashboard/personal-finance/banking",
-    label: "Banking",
-    sub: "Accounts & transactions",
+    href: "/dashboard/personal-finance/account",
+    label: "Accounts",
+    sub: "Manage accounts",
     icon: Building2,
     color: "bg-blue-50 text-blue-600",
   },
   {
-    href: "/dashboard/personal-finance/investing",
-    label: "Investing",
-    sub: "Portfolio management",
+    href: "/dashboard/personal-finance/transactions",
+    label: "Transactions",
+    sub: "Income & expenses",
     icon: TrendingUp,
     color: "bg-purple-50 text-purple-600",
   },
   {
-    href: "/dashboard/personal-finance/loans",
-    label: "Loans & Credit",
-    sub: "Debt tracking",
-    icon: CreditCard,
-    color: "bg-amber-50 text-amber-600",
-  },
-  {
-    href: "/dashboard/personal-finance/insurance",
-    label: "Insurance",
-    sub: "Policies & renewals",
+    href: "/dashboard/personal-finance/category",
+    label: "Categories",
+    sub: "Organize transactions",
     icon: FileText,
     color: "bg-indigo-50 text-indigo-600",
   },
   {
-    href: "/dashboard/personal-finance/taxes",
-    label: "Taxes",
-    sub: "Tax records",
+    href: "/dashboard/personal-finance/bills",
+    label: "Bills & Loans",
+    sub: "Track payments",
+    icon: CreditCard,
+    color: "bg-amber-50 text-amber-600",
+  },
+  {
+    href: "/dashboard/personal-finance/reports",
+    label: "Reports & Analytics",
+    sub: "Financial insights",
     icon: FileText,
     color: "bg-red-50 text-red-600",
   },
@@ -382,7 +382,7 @@ export default function PersonalFinanceDashboardPage() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-semibold text-gray-700">Top Accounts by Balance</h3>
               <Link
-                href="/dashboard/personal-finance/banking"
+                href="/dashboard/personal-finance/account"
                 className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all
