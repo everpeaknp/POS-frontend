@@ -104,6 +104,7 @@ export const History: IconType = Hi.HiOutlineClock;
 export const Home: IconType = Hi.HiOutlineHome;
 export const IdCard: IconType = Hi.HiOutlineIdentification;
 export const ImageIcon: IconType = Hi.HiOutlinePhoto;
+export const Info: IconType = Hi.HiOutlineInformationCircle;
 export const Key: IconType = Hi.HiOutlineKey;
 export const Laptop: IconType = Hi.HiOutlineComputerDesktop;
 export const Layers: IconType = Hi.HiOutlineSquare3Stack3D;

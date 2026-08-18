@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -108,9 +109,54 @@ export default function InventoryDashboardPage() {
   const subtitle = `${workspaceName} · Inventory overview and analytics`;
 
   const { data, loading, error, refetch } = useApi(
-    () => inventoryDashboardAPI.get(),
+    () => {
+      console.log('🌐 API Call: inventoryDashboardAPI.get() starting...');
+      return inventoryDashboardAPI.get().then(response => {
+        console.log('📥 RAW API Response received:', {
+          timestamp: new Date().toISOString(),
+          stockData: response.stockData,
+          summary: response.summary,
+          fullResponse: response
+        });
+        return response;
+      });
+    },
     { immediate: true }
   );
+
+  // Auto-refetch when page becomes visible (e.g., navigating back from Stock In/Out)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Page visible - refetching inventory data...');
+        refetch();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('🔄 Window focused - refetching inventory data...');
+      refetch();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refetch]);
+
+  // Log when data changes
+  useEffect(() => {
+    if (data) {
+      console.log('✅ Inventory dashboard data updated:', {
+        timestamp: new Date().toISOString(),
+        totalProducts: data.summary?.total_products,
+        stockDataPoints: data.stockData?.length
+      });
+    }
+  }, [data]);
 
   if (loading) {
     return (
@@ -150,6 +196,16 @@ export default function InventoryDashboardPage() {
 
   const { summary, valuation, stockData, lowStockItems, topByValue, warehouseCount, categoryCount } =
     data;
+
+  // Log stockData extraction from data object
+  console.log('🔍 stockData destructured from data:', {
+    timestamp: new Date().toISOString(),
+    dataObjectReference: data,
+    stockDataReference: stockData,
+    stockDataLength: stockData?.length,
+    stockDataValues: stockData,
+    isStockDataFromData: stockData === data.stockData
+  });
 
   const maxValue = topByValue[0]?.total_cost_value ?? 1;
 
@@ -239,29 +295,92 @@ export default function InventoryDashboardPage() {
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-700 mb-4">Stock Levels Overview</h3>
             {stockData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={stockData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="inventoryStock" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="stock"
-                    name="Stock"
-                    stroke="#22C55E"
-                    strokeWidth={2}
-                    fill="url(#inventoryStock)"
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <>
+                {console.log('📊 Stock Levels Overview Chart Data:', {
+                  timestamp: new Date().toISOString(),
+                  dataPoints: stockData.length,
+                  products: stockData.map(item => ({
+                    name: item.name,
+                    stock: item.stock,
+                    dataType: typeof item.stock
+                  }))
+                })}
+                {/* ⚠️ TEMPORARY TEST DATA - REMOVE AFTER VISUAL CONFIRMATION */}
+                {(() => {
+                  const testData = [
+                    { name: 'Prod-1', stock: 106 },
+                    { name: 'Prod-2', stock: 60 },
+                    { name: 'Prod-3', stock: 80 },
+                    { name: 'Prod-4', stock: 40 },
+                    { name: 'Prod-5', stock: 95 }
+                  ];
+                  console.log('⚠️ USING TEMPORARY TEST DATA:', testData);
+                  
+                  return (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <AreaChart data={testData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="inventoryStock" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        {/* Vertical gridlines only */}
+                        <CartesianGrid 
+                          strokeDasharray="3 3" 
+                          stroke="#e5e7eb" 
+                          vertical={true} 
+                          horizontal={false} 
+                        />
+                        {/* X-axis: clean, no axis line */}
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        {/* Y-axis: clean, no axis line */}
+                        <YAxis 
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        {/* Area with gradient fill */}
+                        <Area
+                          type="monotone"
+                          dataKey="stock"
+                          name="Stock"
+                          stroke="#22C55E"
+                          strokeWidth={2.5}
+                          fill="url(#inventoryStock)"
+                          dot={{ 
+                            fill: "#22C55E", 
+                            stroke: "#fff", 
+                            strokeWidth: 2, 
+                            r: 5 
+                          }}
+                          activeDot={{ 
+                            r: 7, 
+                            stroke: "#fff", 
+                            strokeWidth: 2, 
+                            fill: "#22C55E" 
+                          }}
+                          connectNulls={true}
+                          isAnimationActive={true}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  );
+                })()}
+              </>
             ) : (
               <div className="h-[260px] flex flex-col items-center justify-center text-gray-400 text-sm">
                 <Layers className="h-10 w-10 mb-2 text-gray-300" />

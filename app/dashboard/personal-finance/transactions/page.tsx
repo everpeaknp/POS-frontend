@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DateInput } from "@/components/shared/DateInput";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -144,6 +145,7 @@ export default function TransactionsPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"in" | "out" | "all">("all");
 
   // Form state
   const [formData, setFormData] = useState<Omit<Transaction, "id" | "createdAt">>({
@@ -177,6 +179,13 @@ export default function TransactionsPage() {
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
 
+    // Tab filter (In/Out/All)
+    if (activeTab === "in") {
+      filtered = filtered.filter((t) => t.type === "income");
+    } else if (activeTab === "out") {
+      filtered = filtered.filter((t) => t.type === "expense");
+    }
+
     // Search filter
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
@@ -188,8 +197,8 @@ export default function TransactionsPage() {
       );
     }
 
-    // Type filter
-    if (filterType !== "all") {
+    // Type filter (only apply if "All Transactions" tab is active)
+    if (activeTab === "all" && filterType !== "all") {
       filtered = filtered.filter((t) => t.type === filterType);
     }
 
@@ -213,7 +222,7 @@ export default function TransactionsPage() {
 
     // Sort by date descending
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, searchTerm, filterType, filterCategory, filterAccount, dateFrom, dateTo]);
+  }, [transactions, activeTab, searchTerm, filterType, filterCategory, filterAccount, dateFrom, dateTo]);
 
   // Summary calculations
   const summary = useMemo(() => {
@@ -228,9 +237,10 @@ export default function TransactionsPage() {
 
   const openAddDialog = () => {
     setEditingTransaction(null);
+    const defaultType: TransactionType = activeTab === "in" ? "income" : activeTab === "out" ? "expense" : "expense";
     setFormData({
       date: todayIsoDate(),
-      type: "expense",
+      type: defaultType,
       amount: 0,
       categoryId: "",
       accountId: "",
@@ -313,12 +323,239 @@ export default function TransactionsPage() {
   const hasActiveFilters =
     searchTerm || filterType !== "all" || filterCategory !== "all" || filterAccount !== "all" || dateFrom || dateTo;
 
+  const renderContent = () => (
+    <>
+      {/* Toolbar */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? "bg-gray-50" : ""}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+            {hasActiveFilters && (
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#22C55E] text-white rounded-full">
+                {[searchTerm, filterType !== "all", filterCategory !== "all", filterAccount !== "all", dateFrom, dateTo].filter(Boolean).length}
+              </span>
+            )}
+          </Button>
+          <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Transaction
+          </Button>
+        </div>
+
+        {/* Advanced Filters */}
+        {showFilters && (
+          <div className="pt-3 border-t space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Only show Type filter on "All Transactions" tab */}
+              {activeTab === "all" && (
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Type</Label>
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Category</Label>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {MOCK_CATEGORIES.filter(cat => 
+                      activeTab === "all" || 
+                      (activeTab === "in" && cat.type === "income") ||
+                      (activeTab === "out" && cat.type === "expense")
+                    ).map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Account</Label>
+                <Select value={filterAccount} onValueChange={setFilterAccount}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Accounts</SelectItem>
+                    {MOCK_ACCOUNTS.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">From Date</Label>
+                <DateInput value={dateFrom} onChange={setDateFrom} className="h-9" />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">To Date</Label>
+                <DateInput value={dateTo} onChange={setDateTo} className="h-9" />
+              </div>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} className="mt-2">
+                <X className="h-3 w-3 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Transactions List */}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {filteredTransactions.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">
+              {hasActiveFilters ? "No transactions match your filters" : "No transactions yet"}
+            </p>
+            {!hasActiveFilters && (
+              <Button onClick={openAddDialog} className="mt-4 bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Transaction
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Account
+                  </th>
+                  {activeTab === "all" && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                  )}
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredTransactions.map((transaction) => {
+                  const category = MOCK_CATEGORIES.find((c) => c.id === transaction.categoryId);
+                  const account = MOCK_ACCOUNTS.find((a) => a.id === transaction.accountId);
+
+                  return (
+                    <tr key={transaction.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        <FormattedDate value={transaction.date} />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {transaction.description || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{category?.name || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{account?.name || "-"}</td>
+                      {activeTab === "all" && (
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={transaction.type === "income" ? "default" : "secondary"}
+                            className={
+                              transaction.type === "income"
+                                ? "bg-green-100 text-[#22C55E] hover:bg-green-100"
+                                : "bg-red-100 text-red-600 hover:bg-red-100"
+                            }
+                          >
+                            {transaction.type === "income" ? (
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3 mr-1" />
+                            )}
+                            {transaction.type === "income" ? "Income" : "Expense"}
+                          </Badge>
+                        </td>
+                      )}
+                      <td
+                        className={`px-4 py-3 text-sm text-right font-medium ${
+                          transaction.type === "income" ? "text-[#22C55E]" : "text-red-600"
+                        }`}
+                      >
+                        {transaction.type === "income" ? "+" : "-"}
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(transaction)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteConfirmId(transaction.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Transactions" subtitle={subtitle} />
 
       <div className="flex-1 p-6 space-y-4">
-        {/* Summary Cards */}
+        {/* Summary Cards - always visible */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -350,217 +587,26 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        {/* Toolbar */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search transactions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? "bg-gray-50" : ""}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#22C55E] text-white rounded-full">
-                  {[searchTerm, filterType !== "all", filterCategory !== "all", filterAccount !== "all", dateFrom, dateTo].filter(Boolean).length}
-                </span>
-              )}
-            </Button>
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Transaction
-            </Button>
-          </div>
+        {/* Tabs for Transaction In / Out / All */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "in" | "out" | "all")}>
+          <TabsList variant="line" className="w-full justify-start border-b border-gray-200">
+            <TabsTrigger value="all">All Transactions</TabsTrigger>
+            <TabsTrigger value="in">Transaction In (Income)</TabsTrigger>
+            <TabsTrigger value="out">Transaction Out (Expense)</TabsTrigger>
+          </TabsList>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="pt-3 border-t space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Type</Label>
-                  <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="income">Income</SelectItem>
-                      <SelectItem value="expense">Expense</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Category</Label>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {MOCK_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Account</Label>
-                  <Select value={filterAccount} onValueChange={setFilterAccount}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Accounts</SelectItem>
-                      {MOCK_ACCOUNTS.map((acc) => (
-                        <SelectItem key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">From Date</Label>
-                  <DateInput value={dateFrom} onChange={setDateFrom} className="h-9" />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">To Date</Label>
-                  <DateInput value={dateTo} onChange={setDateTo} className="h-9" />
-                </div>
-              </div>
-              {hasActiveFilters && (
-                <Button variant="outline" size="sm" onClick={clearFilters} className="mt-2">
-                  <X className="h-3 w-3 mr-1" />
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+          <TabsContent value="all" className="mt-4 space-y-4">
+            {renderContent()}
+          </TabsContent>
 
-        {/* Transactions List */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {filteredTransactions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">
-                {hasActiveFilters ? "No transactions match your filters" : "No transactions yet"}
-              </p>
-              {!hasActiveFilters && (
-                <Button onClick={openAddDialog} className="mt-4 bg-[#22C55E] hover:bg-[#22C55E]/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Transaction
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Account
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredTransactions.map((transaction) => {
-                    const category = MOCK_CATEGORIES.find((c) => c.id === transaction.categoryId);
-                    const account = MOCK_ACCOUNTS.find((a) => a.id === transaction.accountId);
+          <TabsContent value="in" className="mt-4 space-y-4">
+            {renderContent()}
+          </TabsContent>
 
-                    return (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          <FormattedDate value={transaction.date} />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          {transaction.description || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{category?.name || "-"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{account?.name || "-"}</td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            variant={transaction.type === "income" ? "default" : "secondary"}
-                            className={
-                              transaction.type === "income"
-                                ? "bg-green-100 text-[#22C55E] hover:bg-green-100"
-                                : "bg-red-100 text-red-600 hover:bg-red-100"
-                            }
-                          >
-                            {transaction.type === "income" ? (
-                              <TrendingUp className="h-3 w-3 mr-1" />
-                            ) : (
-                              <TrendingDown className="h-3 w-3 mr-1" />
-                            )}
-                            {transaction.type === "income" ? "Income" : "Expense"}
-                          </Badge>
-                        </td>
-                        <td
-                          className={`px-4 py-3 text-sm text-right font-medium ${
-                            transaction.type === "income" ? "text-[#22C55E]" : "text-red-600"
-                          }`}
-                        >
-                          {transaction.type === "income" ? "+" : "-"}
-                          {formatCurrency(transaction.amount)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(transaction)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeleteConfirmId(transaction.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          <TabsContent value="out" className="mt-4 space-y-4">
+            {renderContent()}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Add/Edit Dialog */}
