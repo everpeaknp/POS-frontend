@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Edit2, Trash2, Building2, Wallet, CreditCard, Banknote, TrendingUp } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
@@ -11,23 +11,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
+import { financeAccountAPI, type FinanceAccount } from "@/lib/api/personal-finance";
 import toast from "react-hot-toast";
 
 // MOCK DATA STRUCTURE
-// TODO: Replace with real backend API calls when endpoints are ready
-// Backend needs: GET /api/personal-finance/accounts, POST /accounts, PUT /accounts/:id, DELETE /accounts/:id
+// Using real backend API now
 
 type AccountType = "bank" | "cash" | "credit_card" | "loan" | "investment";
 
 interface Account {
-  id: string;
+  id: number;
   name: string;
   type: AccountType;
   balance: number;
   description?: string;
-  bankName?: string; // For bank accounts only
-  accountNumber?: string; // For bank accounts only
-  isSystem?: boolean; // System accounts can't be deleted
+  bank_name?: string;
+  account_number?: string;
   createdAt: string;
 }
 
@@ -54,19 +53,6 @@ const NEPALI_BANKS = [
   "Laxmi Sunrise Bank",
 ];
 
-// Initial mock accounts - matches product spec, Personal CoA, and Transactions page
-const INITIAL_MOCK_ACCOUNTS: Account[] = [
-  // Asset accounts
-  { id: "acc_1", name: "Checking Account", type: "bank", balance: 125000, description: "Primary checking/current account", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "acc_2", name: "Savings Account", type: "bank", balance: 350000, description: "Savings and deposit accounts", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "acc_3", name: "Cash Wallet", type: "cash", balance: 15000, description: "Cash on hand and wallet", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "acc_5", name: "Investment Account", type: "investment", balance: 500000, description: "Brokerage and investment accounts", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-  
-  // Liability accounts (negative balances represent debt)
-  { id: "acc_4", name: "Credit Card", type: "credit_card", balance: -25000, description: "Credit card balances", isSystem: true, createdAt: "2026-01-01T00:00:00Z" },
-  { id: "acc_6", name: "Personal Loan", type: "loan", balance: -180000, description: "Personal loans and borrowings", isSystem: false, createdAt: "2026-01-01T00:00:00Z" },
-];
-
 const ACCOUNT_TYPE_OPTIONS = [
   { value: "bank", label: "Bank Account", icon: Building2 },
   { value: "cash", label: "Cash", icon: Wallet },
@@ -77,21 +63,48 @@ const ACCOUNT_TYPE_OPTIONS = [
 
 export default function AccountPage() {
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>(INITIAL_MOCK_ACCOUNTS);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Form state
-  const [formData, setFormData] = useState<Omit<Account, "id" | "createdAt">>({
+  const [formData, setFormData] = useState<Partial<Account>>({
     name: "",
     type: "bank",
     balance: 0,
     description: "",
-    bankName: "",
-    accountNumber: "",
-    isSystem: false,
+    bank_name: "",
+    account_number: "",
   });
+
+  // Fetch accounts on mount
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
+  const loadAccounts = async () => {
+    try {
+      setLoading(true);
+      const data = await financeAccountAPI.list();
+      setAccounts(data.map(acc => ({
+        id: acc.id,
+        name: acc.name,
+        type: acc.type as AccountType,
+        balance: parseFloat(acc.current_balance),
+        description: acc.description,
+        bank_name: acc.bank_name,
+        account_number: acc.account_number,
+        createdAt: acc.created_at,
+      })));
+    } catch (error) {
+      console.error("Failed to load accounts:", error);
+      toast.error("Failed to load accounts");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Bank accounts, credit cards, and wallets`;
@@ -129,87 +142,82 @@ export default function AccountPage() {
       type: "bank",
       balance: 0,
       description: "",
-      bankName: "",
-      accountNumber: "",
-      isSystem: false,
+      bank_name: "",
+      account_number: "",
     });
     setShowDialog(true);
   };
 
   const openEditDialog = (account: Account) => {
-    if (account.isSystem) {
-      toast.error("System accounts cannot be edited");
-      return;
-    }
     setEditingAccount(account);
     setFormData({
       name: account.name,
       type: account.type,
       balance: account.balance,
       description: account.description || "",
-      bankName: account.bankName || "",
-      accountNumber: account.accountNumber || "",
-      isSystem: account.isSystem,
+      bank_name: account.bank_name || "",
+      account_number: account.account_number || "",
     });
     setShowDialog(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       toast.error("Please enter an account name");
       return;
     }
 
     // Validate bank-specific fields
-    if (formData.type === "bank" && !formData.bankName) {
-      toast.error("Please select a bank name");
+    if (formData.type === "bank" && !formData.bank_name) {
+      toast.error("Please select a bank name for bank accounts");
       return;
     }
 
-    if (editingAccount) {
-      // Update existing account
-      setAccounts((prev) =>
-        prev.map((a) =>
-          a.id === editingAccount.id
-            ? { 
-                ...a, 
-                name: formData.name, 
-                type: formData.type,
-                balance: formData.balance,
-                description: formData.description,
-                bankName: formData.bankName,
-                accountNumber: formData.accountNumber,
-              }
-            : a
-        )
-      );
-      toast.success("Account updated successfully");
-    } else {
-      // Add new account
-      const newAccount: Account = {
-        id: `acc_${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
-      };
-      setAccounts((prev) => [...prev, newAccount]);
-      toast.success("Account added successfully");
+    try {
+      if (editingAccount) {
+        // Update existing account
+        await financeAccountAPI.update(editingAccount.id, {
+          name: formData.name,
+          type: formData.type,
+          description: formData.description,
+          bank_name: formData.bank_name,
+          account_number: formData.account_number,
+        });
+        toast.success("Account updated successfully");
+      } else {
+        // Add new account - opening_balance is set on creation
+        await financeAccountAPI.create({
+          name: formData.name!,
+          type: formData.type!,
+          opening_balance: String(formData.balance || 0),
+          description: formData.description,
+          bank_name: formData.bank_name,
+          account_number: formData.account_number,
+        });
+        toast.success("Account added successfully");
+      }
+      
+      setShowDialog(false);
+      loadAccounts(); // Reload the list
+    } catch (error) {
+      console.error("Failed to save account:", error);
+      toast.error("Failed to save account");
     }
-
-    setShowDialog(false);
   };
 
-  const handleDelete = (id: string) => {
-    const account = accounts.find((a) => a.id === id);
-    if (account?.isSystem) {
-      toast.error("System accounts cannot be deleted");
+  const handleDelete = async (id: number) => {
+    try {
+      await financeAccountAPI.delete(id);
       setDeleteConfirmId(null);
-      return;
+      toast.success("Account deleted successfully");
+      loadAccounts(); // Reload the list
+    } catch (error: any) {
+      console.error("Failed to delete account:", error);
+      const errorMsg = error?.response?.data?.detail || "Failed to delete account";
+      toast.error(errorMsg);
+      setDeleteConfirmId(null);
     }
-
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
-    setDeleteConfirmId(null);
-    toast.success("Account deleted successfully");
   };
 
   const getAccountIcon = (type: AccountType) => {
@@ -226,7 +234,7 @@ export default function AccountPage() {
     const Icon = getAccountIcon(account.type);
     const isLiability = account.balance < 0;
     const displayBalance = Math.abs(account.balance);
-    const last4Digits = account.accountNumber ? account.accountNumber.slice(-4) : null;
+    const last4Digits = account.account_number ? account.account_number.slice(-4) : null;
 
     return (
       <div
@@ -241,17 +249,12 @@ export default function AccountPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-gray-900">{account.name}</h3>
-                {account.isSystem && (
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
-                    System
-                  </Badge>
-                )}
               </div>
               <p className="text-xs text-gray-500 mt-0.5">{getAccountTypeLabel(account.type)}</p>
-              {account.type === "bank" && account.bankName && (
-                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bankName}</p>
+              {account.type === "bank" && account.bank_name && (
+                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bank_name}</p>
               )}
-              {account.type === "bank" && last4Digits && (
+              {(account.type === "bank" || account.type === "credit_card") && last4Digits && (
                 <p className="text-xs text-gray-400 mt-0.5">•••• {last4Digits}</p>
               )}
             </div>
@@ -261,9 +264,8 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => openEditDialog(account)}
-              disabled={account.isSystem}
               className="h-8 w-8 p-0"
-              title={account.isSystem ? "System accounts cannot be edited" : "Edit account"}
+              title="Edit account"
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -271,9 +273,8 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => setDeleteConfirmId(account.id)}
-              disabled={account.isSystem}
               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-              title={account.isSystem ? "System accounts cannot be deleted" : "Delete account"}
+              title="Delete account"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -354,7 +355,11 @@ export default function AccountPage() {
         </div>
 
         {/* Accounts List */}
-        {accounts.length === 0 ? (
+        {loading ? (
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <p className="text-gray-500">Loading accounts...</p>
+          </div>
+        ) : accounts.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 mb-4">No accounts yet</p>
@@ -478,8 +483,8 @@ export default function AccountPage() {
                   Bank Name <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.bankName}
-                  onValueChange={(value) => setFormData({ ...formData, bankName: value })}
+                  value={formData.bank_name}
+                  onValueChange={(value) => setFormData({ ...formData, bank_name: value })}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select bank" />
@@ -507,13 +512,13 @@ export default function AccountPage() {
               />
             </div>
 
-            {/* Account Number - only show for bank accounts */}
-            {formData.type === "bank" && (
+            {/* Account Number - show for bank accounts and credit cards */}
+            {(formData.type === "bank" || formData.type === "credit_card") && (
               <div>
                 <Label>Account Number</Label>
                 <Input
-                  value={formData.accountNumber}
-                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                  value={formData.account_number}
+                  onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
                   placeholder="e.g., 01234567890123"
                   className="mt-1"
                 />
@@ -525,7 +530,7 @@ export default function AccountPage() {
 
             <div>
               <Label>
-                Current Balance <span className="text-red-500">*</span>
+                {editingAccount ? "Current Balance" : "Opening Balance"} <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="number"
