@@ -2,6 +2,7 @@
 import type { IconType } from "react-icons";
 import type { IconBaseProps } from "react-icons";
 import * as Hi from "react-icons/hi2";
+import * as Fa from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 
 export type LucideIcon = IconType;
@@ -123,6 +124,7 @@ export const Mail: IconType = Hi.HiOutlineEnvelope;
 export const MapPin: IconType = Hi.HiOutlineMapPin;
 export const Maximize2: IconType = Hi.HiOutlineArrowsPointingOut;
 export const Menu: IconType = Hi.HiOutlineBars3;
+export const MessageCircle: IconType = Hi.HiOutlineChatBubbleLeftRight;
 export const Minimize2: IconType = Hi.HiOutlineArrowsPointingIn;
 export const Minus: IconType = Hi.HiOutlineMinus;
 export const Monitor: IconType = Hi.HiOutlineComputerDesktop;
@@ -171,6 +173,7 @@ export const SearchX: IconType = Hi.HiOutlineMagnifyingGlass;
 export const Send: IconType = Hi.HiOutlinePaperAirplane;
 export const Server: IconType = Hi.HiOutlineServer;
 export const Settings: IconType = Hi.HiOutlineCog6Tooth;
+export const Share2: IconType = Hi.HiOutlineShare;
 export const Shield: IconType = Hi.HiOutlineShieldCheck;
 export const ShoppingBag: IconType = Hi.HiOutlineShoppingBag;
 export const ShoppingCart: IconType = Hi.HiOutlineShoppingCart;
@@ -198,3 +201,9 @@ export const X: IconType = Hi.HiOutlineXMark;
 export const XCircle: IconType = Hi.HiOutlineXCircle;
 export const XIcon: IconType = Hi.HiOutlineXMark;
 export const Zap: IconType = Hi.HiOutlineBolt;
+
+// Brand Icons
+export const WhatsAppIcon: IconType = Fa.FaWhatsapp;
+export const FacebookMessengerIcon: IconType = Fa.FaFacebookMessenger;
+export const TelegramIcon: IconType = Fa.FaTelegram;
+export const EnvelopeIcon: IconType = Fa.FaEnvelope;

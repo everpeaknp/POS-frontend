@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Edit2, Trash2, Users, User, Phone, Mail, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, Phone, Mail, LayoutGrid, List, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Copy, Check } from "@/lib/icons/lucide-react-shim";
+import { WhatsAppIcon, FacebookMessengerIcon, TelegramIcon, EnvelopeIcon } from "@/lib/icons/lucide-react-shim";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
+import { PartyTransactions } from "./transactions";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
 import { partyLenderAPI } from "@/lib/api/personal-finance";
-
-// MOCK DATA STRUCTURE
-// TODO: Replace with real backend API calls when endpoints are ready
 
 interface Party {
   id: number;
@@ -24,7 +23,11 @@ interface Party {
   mobile?: string;
   email?: string;
   photo?: string;
-  address?: string;
+  photo_url?: string;
+  total_given: number;
+  total_received: number;
+  net_balance: number;
+  share_token?: string;
   createdAt: string;
 }
 
@@ -37,38 +40,45 @@ export default function PartiesPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingParty, setEditingParty] = useState<Party | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedPartyForTransactions, setSelectedPartyForTransactions] = useState<Party | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [shareCopied, setShareCopied] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState<Omit<Party, "id" | "createdAt">>({
+  const [formData, setFormData] = useState<Omit<Party, "id" | "createdAt" | "total_given" | "total_received" | "net_balance">>({
     name: "",
     pan: "",
     mobile: "",
     email: "",
     photo: "",
-    address: "",
+    photo_url: "",
   });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Manage parties and lenders`;
 
-  // Load parties from backend
   const loadParties = async () => {
     try {
       setLoading(true);
       const data = await partyLenderAPI.list();
-      setParties(data.map(p => ({
+      const mappedParties = data.map(p => ({
         id: p.id,
         name: p.name,
-        pan: p.pan,
-        mobile: p.mobile,
-        email: p.email,
-        photo: p.photo,
-        address: p.address,
+        pan: p.pan || undefined,
+        mobile: p.mobile || undefined,
+        email: p.email || undefined,
+        photo: p.photo || undefined,
+        photo_url: p.photo_url || undefined,
+        total_given: p.total_given,
+        total_received: p.total_received,
+        net_balance: p.net_balance,
+        share_token: p.share_token,
         createdAt: p.created_at,
-      })));
+      }));
+      setParties(mappedParties as Party[]);
     } catch (error) {
       console.error("Failed to load parties:", error);
       toast.error("Failed to load parties");
@@ -81,20 +91,15 @@ export default function PartiesPage() {
     loadParties();
   }, []);
 
-  // Open dialog when ?new=1 is in URL (from sidebar + icon)
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       openAddDialog();
-      // Remove the query param after opening dialog
       router.replace("/dashboard/personal-finance/parties", { scroll: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
-  // Filtered parties
   const filteredParties = useMemo(() => {
     if (!searchTerm) return parties;
-    
     const lower = searchTerm.toLowerCase();
     return parties.filter(
       (p) =>
@@ -114,7 +119,7 @@ export default function PartiesPage() {
       mobile: "",
       email: "",
       photo: "",
-      address: "",
+      photo_url: "",
     });
     setShowDialog(true);
   };
@@ -128,13 +133,12 @@ export default function PartiesPage() {
       mobile: party.mobile || "",
       email: party.email || "",
       photo: party.photo || "",
-      address: party.address || "",
+      photo_url: party.photo_url || "",
     });
     setShowDialog(true);
   };
 
   const handleSave = async () => {
-    // Validation - only name is required
     if (!formData.name.trim()) {
       toast.error("Party name is required");
       return;
@@ -142,34 +146,28 @@ export default function PartiesPage() {
 
     try {
       if (editingParty) {
-        // Update existing party
         const updateData = new FormData();
         updateData.append('name', formData.name);
         if (formData.pan) updateData.append('pan', formData.pan);
         if (formData.mobile) updateData.append('mobile', formData.mobile);
         if (formData.email) updateData.append('email', formData.email);
-        if (formData.address) updateData.append('address', formData.address);
         if (photoFile) updateData.append('photo', photoFile);
-
         await partyLenderAPI.update(editingParty.id, updateData);
         toast.success("Party updated successfully");
       } else {
-        // Add new party
         const createData = new FormData();
         createData.append('name', formData.name);
         if (formData.pan) createData.append('pan', formData.pan);
         if (formData.mobile) createData.append('mobile', formData.mobile);
         if (formData.email) createData.append('email', formData.email);
-        if (formData.address) createData.append('address', formData.address);
         if (photoFile) createData.append('photo', photoFile);
-
         await partyLenderAPI.create(createData);
         toast.success("Party added successfully");
       }
 
       setShowDialog(false);
       setPhotoFile(null);
-      loadParties(); // Reload list from backend
+      loadParties();
     } catch (error) {
       console.error("Failed to save party:", error);
       toast.error("Failed to save party");
@@ -181,10 +179,28 @@ export default function PartiesPage() {
       await partyLenderAPI.delete(id);
       toast.success("Party deleted successfully");
       setDeleteConfirmId(null);
-      loadParties(); // Reload list from backend
+      loadParties();
     } catch (error) {
       console.error("Failed to delete party:", error);
       toast.error("Failed to delete party");
+    }
+  };
+
+  const handleShare = (party: Party) => {
+    if (party.share_token) {
+      const shareUrl = `${window.location.origin}/shares/party/${party.share_token}`;
+      setShareLink(shareUrl);
+      setShareModalOpen(true);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy link");
     }
   };
 
@@ -196,18 +212,39 @@ export default function PartiesPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  if (selectedPartyForTransactions) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <DashHeader 
+          title={selectedPartyForTransactions.name} 
+          subtitle="Party Transactions"
+        />
+        <div className="flex-1 p-6 space-y-4">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedPartyForTransactions(null)}
+            className="gap-2 mb-4"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            Back to Parties
+          </Button>
+          <PartyTransactions partyId={selectedPartyForTransactions.id} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader title="Parties / Lenders" subtitle={subtitle} />
 
       <div className="flex-1 p-6 space-y-4">
-        {/* Toolbar */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search parties by name, PAN, mobile, or email..."
+                placeholder="Search parties..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -220,7 +257,6 @@ export default function PartiesPage() {
                 size="icon"
                 onClick={() => setViewMode("list")}
                 className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
-                title="List view"
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -229,7 +265,6 @@ export default function PartiesPage() {
                 size="icon"
                 onClick={() => setViewMode("grid")}
                 className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
-                title="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -242,13 +277,11 @@ export default function PartiesPage() {
           </div>
         </div>
 
-        {/* Parties List/Grid */}
         {loading ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <p className="text-gray-500">Loading parties...</p>
           </div>
         ) : viewMode === "list" ? (
-          /* Table View */
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {filteredParties.length === 0 ? (
               <div className="p-12 text-center">
@@ -268,24 +301,12 @@ export default function PartiesPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Party
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mobile
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        PAN
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Address
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Given</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Received</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Net Balance</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -293,50 +314,41 @@ export default function PartiesPage() {
                       <tr key={party.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            {party.photo ? (
-                              <img
-                                src={party.photo}
-                                alt={party.name}
-                                className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
-                              />
+                            {party.photo_url ? (
+                              <img src={party.photo_url} alt={party.name} className="h-10 w-10 rounded-full object-cover" />
                             ) : (
-                              <div className="h-10 w-10 rounded-full bg-[#22C55E]/10 border-2 border-[#22C55E]/20 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-[#22C55E]">
-                                  {getInitials(party.name)}
-                                </span>
+                              <div className="h-10 w-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
+                                <span className="text-xs font-semibold text-[#22C55E]">{getInitials(party.name)}</span>
                               </div>
                             )}
-                            <span className="text-sm font-medium text-gray-900">{party.name}</span>
+                            <span className="text-sm font-medium">{party.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {party.mobile || "-"}
+                        <td className="px-4 py-3 text-sm text-emerald-600 font-semibold">
+                          Rs. {party.total_given.toLocaleString('en-NP')}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {party.pan || "-"}
+                        <td className="px-4 py-3 text-sm text-blue-600 font-semibold">
+                          Rs. {party.total_received.toLocaleString('en-NP')}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {party.email || "-"}
+                        <td className="px-4 py-3 text-sm font-semibold">
+                          <Badge className={party.net_balance >= 0 ? 'bg-orange-200 text-orange-900' : 'bg-purple-200 text-purple-900'}>
+                            {party.net_balance >= 0 ? 'Get' : 'Owe'} Rs. {Math.abs(party.net_balance).toLocaleString('en-NP')}
+                          </Badge>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {party.address || "-"}
-                        </td>
+                        <td className="px-4 py-3 text-sm">{party.mobile || party.email || "-"}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(party)}
-                              className="h-8 w-8 p-0"
-                            >
+                            <Button size="sm" variant="outline" onClick={() => handleShare(party)} className="gap-1">
+                              <ExternalLink className="h-4 w-4" />
+                              Share
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setSelectedPartyForTransactions(party)}>
+                              Transactions
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeleteConfirmId(party.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirmId(party.id)} className="h-8 w-8 p-0 text-red-600">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -349,210 +361,189 @@ export default function PartiesPage() {
             )}
           </div>
         ) : (
-          /* Grid View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredParties.length === 0 ? (
               <div className="col-span-full bg-white border border-gray-200 rounded-lg p-12 text-center">
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">
-                  {searchTerm ? "No parties match your search" : "No parties added yet"}
-                </p>
-                {!searchTerm && (
-                  <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Party
-                  </Button>
-                )}
+                <Button onClick={openAddDialog} className="bg-[#22C55E]">Add Your First Party</Button>
               </div>
             ) : (
               filteredParties.map((party) => (
-              <div
-                key={party.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  {/* Avatar */}
-                  {party.photo ? (
-                    <img
-                      src={party.photo}
-                      alt={party.name}
-                      className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
-                    />
-                  ) : (
-                    <div className="h-12 w-12 rounded-full bg-[#22C55E]/10 border-2 border-[#22C55E]/20 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-[#22C55E]">
-                        {getInitials(party.name)}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Name and Actions */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">{party.name}</h3>
-                    {party.pan && (
-                      <p className="text-xs text-gray-500 mt-1">PAN: {party.pan}</p>
+                <div key={party.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    {party.photo_url ? (
+                      <img src={party.photo_url} alt={party.name} className="h-12 w-12 rounded-full" />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-[#22C55E]">{getInitials(party.name)}</span>
+                      </div>
                     )}
+                    <div className="flex-1">
+                      <h3 className="font-medium">{party.name}</h3>
+                      <div className="flex gap-1 mt-2">
+                        <Button size="sm" onClick={() => handleShare(party)} variant="outline" className="text-xs">
+                          Share
+                        </Button>
+                        <Button size="sm" onClick={() => setSelectedPartyForTransactions(party)} className="bg-[#22C55E]">
+                          View Txn
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(party)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteConfirmId(party.id)}
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="space-y-2 border-t pt-3">
+                    <p className="text-xs"><strong>Given:</strong> Rs. {party.total_given.toLocaleString('en-NP')}</p>
+                    <p className="text-xs"><strong>Received:</strong> Rs. {party.total_received.toLocaleString('en-NP')}</p>
+                    <p className={`text-xs font-semibold ${party.net_balance >= 0 ? 'text-orange-600' : 'text-purple-600'}`}>
+                      {party.net_balance >= 0 ? 'Get' : 'Owe'}: Rs. {Math.abs(party.net_balance).toLocaleString('en-NP')}
+                    </p>
                   </div>
                 </div>
-
-                {/* Contact Details */}
-                <div className="space-y-2 border-t border-gray-100 pt-3">
-                  {party.mobile && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <span className="truncate">{party.mobile}</span>
-                    </div>
-                  )}
-                  {party.email && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="truncate">{party.email}</span>
-                    </div>
-                  )}
-                  {!party.mobile && !party.email && (
-                    <p className="text-xs text-gray-400 italic">No contact details</p>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
           </div>
         )}
       </div>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingParty ? "Edit Party" : "Add Party"}</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4 py-4">
             <div>
-              <Label className="text-center block">Photo</Label>
-              <div className="mt-2 flex justify-center">
+              <Label className="block text-center mb-2">Photo</Label>
+              <div className="flex justify-center">
                 <ProfilePhotoUpload
-                  existingUrl={formData.photo || null}
-                  initials={formData.name ? formData.name.substring(0, 2) : "P"}
+                  existingUrl={formData.photo_url || null}
+                  initials={formData.name?.substring(0, 2) || "P"}
                   onChange={(file) => setPhotoFile(file)}
-                  onRemove={() => {
-                    setPhotoFile(null);
-                    setFormData({ ...formData, photo: "" });
-                  }}
+                  onRemove={() => { setPhotoFile(null); setFormData({ ...formData, photo: "", photo_url: "" }); }}
                   variant="compact"
                 />
               </div>
             </div>
-
             <div>
-              <Label>
-                Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Ram Kumar Sharma"
-                className="mt-1"
-              />
+              <Label>Name <span className="text-red-500">*</span></Label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </div>
-
             <div>
-              <Label>Mobile Number</Label>
-              <Input
-                value={formData.mobile}
-                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                placeholder="e.g., +977-9841234567"
-                className="mt-1"
-              />
+              <Label>Mobile</Label>
+              <Input value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
             </div>
-
             <div>
-              <Label>PAN Number</Label>
-              <Input
-                value={formData.pan}
-                onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
-                placeholder="e.g., 123456789"
-                className="mt-1"
-              />
+              <Label>PAN</Label>
+              <Input value={formData.pan} onChange={(e) => setFormData({ ...formData, pan: e.target.value })} />
             </div>
-
             <div>
-              <Label>Email Address</Label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="e.g., contact@example.com"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label>Address</Label>
-              <Input
-                value={formData.address || ""}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="e.g., Kathmandu, Nepal"
-                className="mt-1"
-              />
+              <Label>Email</Label>
+              <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </div>
           </div>
-
           <div className="flex justify-end gap-2 border-t pt-4">
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-              {editingParty ? "Update" : "Add"} Party
-            </Button>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+            <Button onClick={handleSave} className="bg-[#22C55E]">Save</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
         <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete Party</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-gray-600 py-4">
-              Are you sure you want to delete this party? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-2 border-t pt-4">
-              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => handleDelete(deleteConfirmId)}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Delete
-              </Button>
+            <p className="text-sm text-gray-600 py-4">Are you sure?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+              <Button onClick={() => handleDelete(deleteConfirmId)} className="bg-red-600">Delete</Button>
             </div>
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Share Ledger Modal */}
+      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Party Ledger</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">
+              Share this link to allow others to view this party's ledger without logging in:
+            </p>
+            
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={shareLink}
+                readOnly
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+              />
+              <Button
+                onClick={handleCopyShareLink}
+                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+              >
+                {shareCopied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Social Share Icons */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(shareLink)}`, '_blank')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                title="Share on WhatsApp"
+              >
+                <WhatsAppIcon className="h-5 w-5 text-green-600" />
+              </button>
+              <button
+                onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                title="Share on Facebook Messenger"
+              >
+                <FacebookMessengerIcon className="h-5 w-5 text-blue-600" />
+              </button>
+              <button
+                onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareLink)}`, '_blank')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                title="Share on Telegram"
+              >
+                <TelegramIcon className="h-5 w-5 text-blue-500" />
+              </button>
+              <button
+                onClick={() => window.open(`mailto:?body=${encodeURIComponent(shareLink)}`, '_blank')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                title="Share via Email"
+              >
+                <EnvelopeIcon className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button
+              onClick={() => setShareModalOpen(false)}
+              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+            >
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

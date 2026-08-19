@@ -255,11 +255,12 @@ export const dashboardNavItems: NavItem[] = [
   {
     label: "Parties / Lenders",
     icon: Users,
-    href: "/dashboard/personal-finance/parties",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Parties / Lenders", href: "/dashboard/personal-finance/parties", createHref: "/dashboard/personal-finance/parties?new=1" },
+      { label: "List", href: "/dashboard/personal-finance/parties", exact: true },
+      { label: "In", href: "/dashboard/personal-finance/parties/in" },
+      { label: "Out", href: "/dashboard/personal-finance/parties/out" },
     ],
   },
   {
