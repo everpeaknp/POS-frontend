@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileText, Calculator, TrendingUp, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import { FormattedDate } from "@/components/shared/FormattedDate";
-
-// MOCK DATA - In real app, this would come from Transaction In entries
-// TODO: Replace with actual API call to fetch income transactions
+import {
+  getTransactions,
+  getCategories,
+  type PFTransaction,
+  type PFCategory,
+} from "@/lib/personal-finance/store";
 
 interface IncomeEntry {
   id: string;
@@ -20,44 +23,18 @@ interface IncomeEntry {
   categoryName: string;
 }
 
-// Mock income data (from Transaction In)
-const MOCK_INCOME_ENTRIES: IncomeEntry[] = [
-  {
-    id: "txn_1",
-    date: "2026-08-01",
-    description: "Monthly salary",
-    amount: 85000,
-    categoryName: "Salary",
-  },
-  {
-    id: "txn_5",
-    date: "2026-08-10",
-    description: "Freelance project payment",
-    amount: 15000,
-    categoryName: "Freelance",
-  },
-  {
-    id: "txn_7",
-    date: "2026-07-01",
-    description: "Monthly salary",
-    amount: 85000,
-    categoryName: "Salary",
-  },
-  {
-    id: "txn_8",
-    date: "2026-06-01",
-    description: "Monthly salary",
-    amount: 85000,
-    categoryName: "Salary",
-  },
-  {
-    id: "txn_9",
-    date: "2026-06-15",
-    description: "Freelance project",
-    amount: 20000,
-    categoryName: "Freelance",
-  },
-];
+function toIncomeEntries(transactions: PFTransaction[], categories: PFCategory[]): IncomeEntry[] {
+  const categoryName = (id: string) => categories.find((c) => c.id === id)?.name || "Uncategorized";
+  return transactions
+    .filter((t) => t.type === "income")
+    .map((t) => ({
+      id: t.id,
+      date: t.date,
+      description: t.description || categoryName(t.categoryId),
+      amount: t.amount,
+      categoryName: categoryName(t.categoryId),
+    }));
+}
 
 // Nepal Tax Slabs for FY 2080/81 (simplified)
 // Individual taxpayers
@@ -100,8 +77,19 @@ function calculateTax(totalIncome: number) {
 
 export default function TaxPage() {
   const { user } = useAuth();
+  const scope = user?.tenant?.slug ?? null;
   const [selectedPeriod, setSelectedPeriod] = useState<"ytd" | "fy2026" | "fy2025">("ytd");
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>(() =>
+    toIncomeEntries(getTransactions(scope), getCategories(scope))
+  );
+
+  // Transactions/categories live in the shared Personal Finance store — reload
+  // whenever the scope (tenant) changes so this stays in sync with what was
+  // actually recorded on the Transactions page.
+  useEffect(() => {
+    setIncomeEntries(toIncomeEntries(getTransactions(scope), getCategories(scope)));
+  }, [scope]);
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Tax calculation based on income`;
@@ -110,30 +98,30 @@ export default function TaxPage() {
   const filteredIncome = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
-    
+
     switch (selectedPeriod) {
       case "ytd":
         // Year to date
-        return MOCK_INCOME_ENTRIES.filter(entry => {
+        return incomeEntries.filter(entry => {
           const entryDate = new Date(entry.date);
           return entryDate.getFullYear() === currentYear;
         });
       case "fy2026":
         // Fiscal year 2026 (example: July 2025 - June 2026)
-        return MOCK_INCOME_ENTRIES.filter(entry => {
+        return incomeEntries.filter(entry => {
           const entryDate = new Date(entry.date);
           return entryDate >= new Date("2025-07-01") && entryDate <= new Date("2026-06-30");
         });
       case "fy2025":
         // Fiscal year 2025
-        return MOCK_INCOME_ENTRIES.filter(entry => {
+        return incomeEntries.filter(entry => {
           const entryDate = new Date(entry.date);
           return entryDate >= new Date("2024-07-01") && entryDate <= new Date("2025-06-30");
         });
       default:
-        return MOCK_INCOME_ENTRIES;
+        return incomeEntries;
     }
-  }, [selectedPeriod]);
+  }, [selectedPeriod, incomeEntries]);
 
   const totalIncome = useMemo(() => {
     return filteredIncome.reduce((sum, entry) => sum + entry.amount, 0);

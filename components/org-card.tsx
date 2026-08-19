@@ -31,8 +31,10 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   const canManageOrg = isTenantOrgAdmin(org.user_role);
   const isWorkspaceActive = org.status === "active";
   const hasPosModule = (org.active_modules ?? []).some((m) => m.toLowerCase() === "pos");
-  const roleLabel =
-    org.user_role === "super_admin"
+  const isPersonalAccount = org.account_type === "personal";
+  const roleLabel = isPersonalAccount
+    ? "Personal"
+    : org.user_role === "super_admin"
       ? "Super Admin"
       : org.user_role
         ? org.user_role.replace(/_/g, " ")
@@ -163,7 +165,7 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
         {roleLabel && (
           <p className="text-xs text-muted-foreground mt-1">
             Role:{" "}
-            <span className={`font-medium ${isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
+            <span className={`font-medium ${isPersonalAccount ? "text-[#16A34A]" : isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
               {roleLabel}
             </span>
           </p>

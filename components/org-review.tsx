@@ -111,7 +111,6 @@ export function OrgReview({
     try {
       const tenant = await tenantApi.create({
         ...organizationData,
-        account_type: accountType,
         active_modules: selectedModules,
       });
 

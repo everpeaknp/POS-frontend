@@ -19,17 +19,21 @@ export interface PFCategory {
   type: "income" | "expense";
   icon?: string;
   color?: string;
+  description?: string;
+  parentId?: string;
+  isSystem?: boolean;
   createdAt: string;
 }
 
 export interface PFAccount {
   id: string;
   name: string;
-  type: "bank" | "cash" | "wallet" | "investment" | "credit_card";
+  type: "bank" | "cash" | "credit_card" | "loan" | "investment";
   balance: number;
-  currency: string;
-  institution?: string;
+  bankName?: string;
   accountNumber?: string;
+  description?: string;
+  isSystem?: boolean;
   createdAt: string;
 }
 
@@ -111,18 +115,21 @@ function setToStorage<T>(key: string, value: T[]): void {
 
 const DEFAULT_CATEGORIES: PFCategory[] = [
   // Expense Categories
-  { id: "cat_1", name: "Groceries", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_2", name: "Transportation", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_3", name: "Utilities", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_4", name: "Entertainment", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_5", name: "Healthcare", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_6", name: "Shopping", type: "expense", createdAt: new Date().toISOString() },
-  { id: "cat_7", name: "Dining", type: "expense", createdAt: new Date().toISOString() },
+  { id: "cat_1", name: "Groceries", type: "expense", description: "Food and household items", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_2", name: "Rent", type: "expense", description: "Monthly rent payment", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_3", name: "Utilities", type: "expense", description: "Electricity, water, internet, phone", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_4", name: "Dining", type: "expense", description: "Restaurants and food delivery", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_5", name: "Entertainment", type: "expense", description: "Movies, streaming, hobbies", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_6", name: "Transportation", type: "expense", description: "Fuel, public transport, vehicle maintenance", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_7", name: "Healthcare", type: "expense", description: "Medical expenses and insurance", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_12", name: "Shopping", type: "expense", description: "Clothing and personal items", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_13", name: "Education", type: "expense", description: "Courses, books, tuition", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_14", name: "Other Expenses", type: "expense", description: "Miscellaneous expenses", isSystem: true, createdAt: new Date().toISOString() },
   // Income Categories
-  { id: "cat_8", name: "Salary", type: "income", createdAt: new Date().toISOString() },
-  { id: "cat_9", name: "Freelance", type: "income", createdAt: new Date().toISOString() },
-  { id: "cat_10", name: "Investment", type: "income", createdAt: new Date().toISOString() },
-  { id: "cat_11", name: "Other Income", type: "income", createdAt: new Date().toISOString() },
+  { id: "cat_8", name: "Salary", type: "income", description: "Monthly salary income", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_9", name: "Freelance", type: "income", description: "Freelance project income", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_10", name: "Investment Returns", type: "income", description: "Interest, dividends, capital gains", isSystem: true, createdAt: new Date().toISOString() },
+  { id: "cat_11", name: "Other Income", type: "income", description: "Miscellaneous income", isSystem: false, createdAt: new Date().toISOString() },
 ];
 
 export function getCategories(scope: string | null): PFCategory[] {
@@ -143,19 +150,21 @@ export function setCategoriesForScope(scope: string | null, categories: PFCatego
 const DEFAULT_ACCOUNTS: PFAccount[] = [
   {
     id: "acc_1",
-    name: "Cash",
+    name: "Cash Wallet",
     type: "cash",
     balance: 5000,
-    currency: "NPR",
+    description: "Cash on hand and wallet",
+    isSystem: true,
     createdAt: new Date().toISOString(),
   },
   {
     id: "acc_2",
-    name: "Main Bank Account",
+    name: "Checking Account",
     type: "bank",
     balance: 50000,
-    currency: "NPR",
-    institution: "Sample Bank",
+    bankName: "Nabil Bank",
+    description: "Primary checking/current account",
+    isSystem: true,
     createdAt: new Date().toISOString(),
   },
 ];
@@ -235,6 +244,80 @@ export function getLoans(scope: string | null): PFLoan[] {
 export function setLoansForScope(scope: string | null, loans: PFLoan[]): void {
   const key = getStorageKey(scope, "loans");
   setToStorage(key, loans);
+}
+
+// ============================================================================
+// PREFERENCES
+// ============================================================================
+
+export interface PFPreferences {
+  currency: string;
+  dateFormat: string;
+  timezone: string;
+}
+
+export const DEFAULT_PREFERENCES: PFPreferences = {
+  currency: "NPR",
+  dateFormat: "DD/MM/YYYY",
+  timezone: "Asia/Kathmandu",
+};
+
+export function getPreferences(scope: string | null): PFPreferences {
+  const key = getStorageKey(scope, "preferences");
+  if (typeof window === "undefined") return DEFAULT_PREFERENCES;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? { ...DEFAULT_PREFERENCES, ...JSON.parse(item) } : DEFAULT_PREFERENCES;
+  } catch (error) {
+    console.error(`Error reading from localStorage (${key}):`, error);
+    return DEFAULT_PREFERENCES;
+  }
+}
+
+export function setPreferencesForScope(scope: string | null, prefs: PFPreferences): void {
+  const key = getStorageKey(scope, "preferences");
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(prefs));
+  } catch (error) {
+    console.error(`Error writing to localStorage (${key}):`, error);
+  }
+}
+
+// ============================================================================
+// DATA MANAGEMENT (export / clear all scoped data)
+// ============================================================================
+
+export interface PFDataSnapshot {
+  categories: PFCategory[];
+  accounts: PFAccount[];
+  transactions: PFTransaction[];
+  budgets: PFBudget[];
+  loans: PFLoan[];
+  preferences: PFPreferences;
+  exportedAt: string;
+}
+
+export function exportAllData(scope: string | null): PFDataSnapshot {
+  return {
+    categories: getCategories(scope),
+    accounts: getAccounts(scope),
+    transactions: getTransactions(scope),
+    budgets: getBudgets(scope),
+    loans: getLoans(scope),
+    preferences: getPreferences(scope),
+    exportedAt: new Date().toISOString(),
+  };
+}
+
+/** Wipes all locally-stored Personal Finance data for this scope back to defaults. */
+export function clearAllData(scope: string | null): void {
+  setCategoriesForScope(scope, []);
+  setAccountsForScope(scope, []);
+  setTransactionsForScope(scope, []);
+  setBudgetsForScope(scope, []);
+  setLoansForScope(scope, []);
+  setPreferencesForScope(scope, DEFAULT_PREFERENCES);
 }
 
 // ============================================================================

@@ -17,5 +17,6 @@ export function mapTenantToOrganization(tenant: Tenant, userId?: number): Organi
     created_by: tenant.created_by,
     can_delete: tenant.user_role === "super_admin" || tenant.created_by === userId,
     active_modules: tenant.active_modules ?? [],
+    account_type: tenant.account_type,
   };
 }

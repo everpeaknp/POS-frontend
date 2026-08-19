@@ -28,7 +28,6 @@ export const REQUIRED_MODULE_IDS = ["settings", "dashboard"] as const;
 
 /** Modules a Personal account gets — no business/org modules, ever. */
 export const PERSONAL_ACCOUNT_MODULE_IDS = [
-  "dashboard",
   "settings",
   "personal_finance",
 ] as const;

@@ -25,20 +25,22 @@ import { ORG_MODULE_CATALOG } from "@/lib/modules/catalog";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [period, setPeriod] = useState<DashboardPeriod>("month");
-  const [data, setData] = useState<UnifiedDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const { isDark } = useAppearance();
   const { user } = useAuth();
-  const { canView } = usePermissions();
   const isPersonal = user?.tenant?.account_type === "personal";
 
+  // Redirect personal accounts immediately
   useEffect(() => {
     if (isPersonal) {
       router.replace("/dashboard/personal-finance");
     }
   }, [isPersonal, router]);
+
+  const [period, setPeriod] = useState<DashboardPeriod>("month");
+  const [data, setData] = useState<UnifiedDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const { isDark } = useAppearance();
+  const { canView } = usePermissions();
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -69,8 +71,16 @@ export default function DashboardPage() {
     loadDashboard();
   }, [isPersonal, loadDashboard]);
 
+  // Show loading state while redirecting personal accounts
   if (isPersonal) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+          <p className="mt-4 text-gray-600">Redirecting to Personal Finance...</p>
+        </div>
+      </div>
+    );
   }
 
   // Hide Reports & Analytics from the home overview (stats/tiles stay in /dashboard/reports)

@@ -34,6 +34,8 @@ export interface NavItem {
   requiredRoles?: string[];
   /** Hide this item for Personal accounts (business-only nav, e.g. the org Dashboard) */
   hideForPersonal?: boolean;
+  /** Only show this item for Personal accounts (hide from organizations) */
+  personalOnly?: boolean;
 }
 
 export function matchesNavChild(pathname: string, child: NavSubItem): boolean {
@@ -194,26 +196,99 @@ export const dashboardNavItems: NavItem[] = [
     ],
   },
   {
-    label: "Personal Finance",
-    icon: Wallet,
+    label: "Overview",
+    icon: LayoutDashboard,
+    href: "/dashboard/personal-finance",
     requiredModule: "personal_finance",
+    personalOnly: true,
+  },
+  {
+    label: "Transactions",
+    icon: TrendingUp,
+    href: "/dashboard/personal-finance/transactions",
+    requiredModule: "personal_finance",
+    personalOnly: true,
     children: [
-      { label: "Overview", href: "/dashboard/personal-finance", exact: true },
-      { label: "Transactions", href: "/dashboard/personal-finance/transactions", createHref: "/dashboard/personal-finance/transactions/new" },
-      { label: "Budget", href: "/dashboard/personal-finance/budget", createHref: "/dashboard/personal-finance/budget/new" },
-      { label: "Category", href: "/dashboard/personal-finance/category", createHref: "/dashboard/personal-finance/category/new" },
-      { label: "Account", href: "/dashboard/personal-finance/account", createHref: "/dashboard/personal-finance/account/new" },
-      { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills/new" },
-      { label: "Tax", href: "/dashboard/personal-finance/tax" },
-      { label: "Parties / Lenders", href: "/dashboard/personal-finance/parties", createHref: "/dashboard/personal-finance/parties/new" },
-      { label: "Reports & Analytics", href: "/dashboard/personal-finance/reports" },
+      { label: "Transactions", href: "/dashboard/personal-finance/transactions", createHref: "/dashboard/personal-finance/transactions?new=1" },
     ],
+  },
+  {
+    label: "Budget",
+    icon: Wallet,
+    href: "/dashboard/personal-finance/budget",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Budget", href: "/dashboard/personal-finance/budget", createHref: "/dashboard/personal-finance/budget?new=1" },
+    ],
+  },
+  {
+    label: "Category",
+    icon: Package,
+    href: "/dashboard/personal-finance/category",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Category", href: "/dashboard/personal-finance/category", createHref: "/dashboard/personal-finance/category?new=1" },
+    ],
+  },
+  {
+    label: "Account",
+    icon: BookOpen,
+    href: "/dashboard/personal-finance/account",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Account", href: "/dashboard/personal-finance/account", createHref: "/dashboard/personal-finance/account?new=1" },
+    ],
+  },
+  {
+    label: "Bills",
+    icon: ShoppingCart,
+    href: "/dashboard/personal-finance/bills",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills?new=1" },
+    ],
+  },
+  {
+    label: "Parties / Lenders",
+    icon: Users,
+    href: "/dashboard/personal-finance/parties",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Parties / Lenders", href: "/dashboard/personal-finance/parties", createHref: "/dashboard/personal-finance/parties?new=1" },
+    ],
+  },
+  {
+    label: "Tax",
+    icon: BarChart2,
+    href: "/dashboard/personal-finance/tax",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+  },
+  {
+    label: "Reports & Analytics",
+    icon: BarChart2,
+    href: "/dashboard/personal-finance/reports",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: "/dashboard/personal-finance/settings",
+    requiredModule: "personal_finance",
+    personalOnly: true,
   },
   {
     label: "Settings",
     icon: Settings,
     requiredModule: "settings",
     requiredRoles: ["admin", "manager"],
+    hideForPersonal: true,
     children: [
       { label: "Profile", href: "/dashboard/settings/profile", personalOnly: true },
       { label: "Organization Settings", href: "/dashboard/settings/org", hideForPersonal: true },
@@ -244,6 +319,12 @@ export function filterDashboardNavItems(
 
   return items
     .filter((item) => {
+      // Hide personal-only items from organizations
+      if (item.personalOnly && !isPersonal) {
+        return false;
+      }
+
+      // Hide business-only items from personal accounts
       if (item.hideForPersonal && isPersonal) {
         return false;
       }

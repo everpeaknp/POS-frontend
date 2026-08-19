@@ -12,7 +12,7 @@ export default function SettingsPage() {
     if (!user) return;
     router.replace(
       user.tenant?.account_type === "personal"
-        ? "/dashboard/settings/profile"
+        ? "/dashboard/personal-finance/settings"
         : "/dashboard/settings/org"
     );
   }, [user, router]);

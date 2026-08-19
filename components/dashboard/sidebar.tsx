@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,34 +37,67 @@ function SidebarItem({
 
   const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
-  const overviewHref =
-    item.href ||
-    item.children?.find((c) => c.exact)?.href ||
-    item.children?.[0]?.href;
+  
+  // Check if this is a "direct link with add button" pattern (has href AND single child with createHref)
+  const hasDirectAdd = item.href && item.children?.length === 1 && item.children[0].createHref;
+  const addHref = hasDirectAdd ? item.children[0].createHref : undefined;
 
-  // Direct link (Dashboard) — or compact parent → jump to overview
-  if ((item.href && !item.children) || (compact && overviewHref)) {
-    const href = item.href && !item.children ? item.href : overviewHref!;
-    const active = item.href && !item.children ? isParentActive : isChildActive;
+  // Direct link (no children) OR compact mode
+  if ((item.href && !item.children) || (compact && item.href)) {
     return (
       <Link
-        href={href}
+        href={item.href}
         title={item.label}
         data-tour={`nav-${item.label.toLowerCase()}`}
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
           compact && "justify-center px-2",
-          active
+          isParentActive
             ? "bg-[#22C55E] text-white"
-            : "text-gray-400 hover:text-white hover:bg-white/10"
+            : "!text-gray-400 hover:!text-white hover:bg-white/10"
         )}
       >
-        <item.icon size={17} className="shrink-0" />
+        <item.icon size={17} className={cn(
+          "shrink-0",
+          isParentActive ? "!text-white" : "!text-gray-400"
+        )} />
         {!compact && item.label}
       </Link>
     );
   }
 
+  // Direct link with add button (href + children with createHref)
+  if (hasDirectAdd && !compact) {
+    return (
+      <div className="group flex items-center gap-1" data-tour={`nav-${item.label.toLowerCase()}`}>
+        <Link
+          href={item.href!}
+          title={item.label}
+          className={cn(
+            "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+            isParentActive
+              ? "bg-[#22C55E] text-white"
+              : "!text-gray-400 hover:!text-white hover:bg-white/10"
+          )}
+        >
+          <item.icon size={17} className={cn(
+            "shrink-0",
+            isParentActive ? "!text-white" : "!text-gray-400"
+          )} />
+          {item.label}
+        </Link>
+        <Link
+          href={addHref!}
+          className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+          title={`Add ${item.label}`}
+        >
+          <Plus size={16} />
+        </Link>
+      </div>
+    );
+  }
+
+  // Expandable menu with children
   return (
     <div data-tour={`nav-${item.label.toLowerCase()}`}>
       <button
@@ -79,10 +112,17 @@ function SidebarItem({
             ? "bg-[#22C55E] text-white"
             : isOpen
               ? "bg-white/10 text-white"
-              : "text-gray-400 hover:text-white hover:bg-white/10"
+              : "!text-gray-400 hover:!text-white hover:bg-white/10"
         )}
       >
-        <item.icon size={17} className="shrink-0" />
+        <item.icon size={17} className={cn(
+          "shrink-0",
+          isParentActive && !isOpen
+            ? "!text-white"
+            : isOpen
+              ? "!text-white"
+              : "!text-gray-400"
+        )} />
         {!compact && (
           <>
             <span className="flex-1 text-left">{item.label}</span>
@@ -176,11 +216,21 @@ function SidebarContent({
   const [modKey, setModKey] = useState("Ctrl");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredNavItems = filterDashboardNavItems(dashboardNavItems, {
-    canView: permissions.canView,
-    role: user?.role,
-    accountType: user?.tenant?.account_type,
-  });
+  const filteredNavItems = useMemo(() => {
+    const items = filterDashboardNavItems(dashboardNavItems, {
+      canView: permissions.canView,
+      role: user?.role,
+      accountType: user?.tenant?.account_type,
+    });
+    
+    // Debug logging
+    if (typeof window !== 'undefined') {
+      console.log('Sidebar - Account Type:', user?.tenant?.account_type);
+      console.log('Sidebar - Filtered Nav Items:', items.map(i => i.label));
+    }
+    
+    return items;
+  }, [permissions.canView, user?.role, user?.tenant?.account_type]);
 
   const searchedNavItems = filterNavByQuery(filteredNavItems, navQuery);
   const isSearching = navQuery.trim().length > 0;
@@ -443,7 +493,7 @@ export function Sidebar({
           type="button"
           onClick={() => setMobileOpen(true)}
           className={cn(
-            "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg",
+            "lg:hidden fixed top-4 z-50 p-2 rounded-lg !bg-[#1E2A3B] !text-white shadow-lg",
             railOnTop ? "left-4" : "left-16"
           )}
           aria-label="Open menu"
@@ -458,7 +508,7 @@ export function Sidebar({
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
+          <div className="relative w-64 h-full !bg-[#1E2A3B] z-50 overflow-hidden">
             <SidebarContent
               onClose={() => setMobileOpen(false)}
               searchFocusNonce={mobileFocusNonce}
@@ -471,7 +521,7 @@ export function Sidebar({
         data-tour="sidebar"
         data-compact={compact ? "true" : "false"}
         className={cn(
-          "relative flex-col h-full shrink-0 bg-[#1E2A3B] overflow-hidden transition-[width] duration-200",
+          "relative flex-col h-full shrink-0 !bg-[#1E2A3B] overflow-hidden transition-[width] duration-200",
           forceDesktop
             ? "flex w-full"
             : cn("hidden lg:flex", compact ? "w-[72px]" : "w-64")
@@ -481,20 +531,27 @@ export function Sidebar({
           compact={compact}
           searchFocusNonce={desktopFocusNonce}
         />
+      </aside>
+      
+      {/* Toggle button - positioned outside sidebar */}
+      {!forceDesktop && (
         <button
           type="button"
           onClick={toggleCollapse}
-          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-white/15 bg-[#243447] text-gray-300 hover:bg-[#2d4058] hover:text-white grid place-items-center transition-colors"
+          className={cn(
+            "hidden lg:block absolute top-1/2 z-20 -translate-y-1/2 !text-gray-400 hover:!text-white transition-all duration-200",
+            compact ? "left-[72px]" : "left-64"
+          )}
           aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
           title={compact ? "Expand sidebar" : "Collapse sidebar"}
         >
           {compact ? (
-            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.5} />
+            <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
           )}
         </button>
-      </aside>
+      )}
     </>
   );
 }
