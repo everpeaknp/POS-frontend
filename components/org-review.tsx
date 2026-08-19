@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { getModuleById } from "@/lib/modules/catalog";
 
 interface OrgReviewProps {
+  accountType?: "organization" | "personal";
   organizationData: {
     name: string;
     business_type: string;
@@ -77,6 +78,7 @@ function DetailRow({
 }
 
 export function OrgReview({
+  accountType = "organization",
   organizationData,
   selectedModules,
   onBack,
@@ -87,6 +89,7 @@ export function OrgReview({
 }: OrgReviewProps) {
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const isPersonal = accountType === "personal";
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -147,7 +150,9 @@ export function OrgReview({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">Organization</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              {isPersonal ? "Your details" : "Organization"}
+            </h3>
             <Button
               type="button"
               variant="ghost"
@@ -166,26 +171,32 @@ export function OrgReview({
               value={workspaceUrl}
               valueClassName="font-mono text-[#16A34A] text-xs sm:text-sm"
             />
-            <DetailRow
-              icon={Briefcase}
-              label="Industry"
-              value={
-                businessTypeLabels[organizationData.business_type] ||
-                organizationData.business_type
-              }
-            />
-            <DetailRow icon={MapPin} label="Address" value={organizationData.address} />
+            {!isPersonal && (
+              <DetailRow
+                icon={Briefcase}
+                label="Industry"
+                value={
+                  businessTypeLabels[organizationData.business_type] ||
+                  organizationData.business_type
+                }
+              />
+            )}
+            {organizationData.address && (
+              <DetailRow icon={MapPin} label="Address" value={organizationData.address} />
+            )}
             <DetailRow
               icon={Calendar}
               label="Accounting start"
               value={formatDate(organizationData.accounting_start_date)}
             />
-            <DetailRow
-              icon={organizationData.vat_registered ? CheckCircle2 : XCircle}
-              label="VAT registered"
-              value={organizationData.vat_registered ? "Yes" : "No"}
-            />
-            {organizationData.vat_registered && organizationData.pan_vat_number && (
+            {!isPersonal && (
+              <DetailRow
+                icon={organizationData.vat_registered ? CheckCircle2 : XCircle}
+                label="VAT registered"
+                value={organizationData.vat_registered ? "Yes" : "No"}
+              />
+            )}
+            {!isPersonal && organizationData.vat_registered && organizationData.pan_vat_number && (
               <DetailRow
                 icon={Briefcase}
                 label="VAT number"
@@ -198,17 +209,19 @@ export function OrgReview({
         <div>
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-gray-900">
-              Modules ({selectedModules.length})
+              {isPersonal ? "Included" : `Modules (${selectedModules.length})`}
             </h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
-            >
-              Edit
-            </Button>
+            {!isPersonal && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
+              >
+                Edit
+              </Button>
+            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {selectedModules.map((moduleId) => {

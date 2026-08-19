@@ -25,6 +25,15 @@ export function useApi<T>(
   const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState<Error | null>(null);
   
+  // Track data state changes
+  useEffect(() => {
+    console.log('🔄 useApi: data state changed', {
+      hasData: !!data,
+      dataReference: data,
+      timestamp: new Date().toISOString()
+    });
+  }, [data]);
+  
   // Use refs to avoid recreating fetchData on every render
   const apiFunctionRef = useRef(apiFunction);
   const onSuccessRef = useRef(onSuccess);
@@ -38,21 +47,31 @@ export function useApi<T>(
   });
 
   const fetchData = useCallback(async () => {
+    console.log('⚙️ useApi fetchData called');
     try {
       setLoading(true);
       setError(null);
+      console.log('⏳ useApi: calling API function...');
       const result = await apiFunctionRef.current();
+      console.log('✅ useApi: API call complete, setting data state', {
+        resultReference: result,
+        hasData: !!result,
+        resultKeys: result ? Object.keys(result) : []
+      });
       setData(result);
+      console.log('✅ useApi: setData() called with new result');
       onSuccessRef.current?.(result);
     } catch (err) {
       const error = err as AxiosError;
       const errorMessage = (error.response?.data as any)?.detail || error.message || 'An error occurred';
       const errorObj = new Error(errorMessage);
+      console.error('❌ useApi: error occurred', errorMessage);
       setError(errorObj);
       onErrorRef.current?.(errorObj);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+      console.log('✅ useApi: fetchData complete, loading set to false');
     }
   }, []); // Empty dependency array - stable reference
 

@@ -65,9 +65,9 @@ function RailButton({
     "rounded-lg grid place-items-center transition-colors shrink-0",
     horizontal ? "h-9 w-9" : "h-10 w-10",
     danger
-      ? "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
+      ? "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300"
       : active
-        ? "bg-[#22C55E]/15 ring-1 ring-[#22C55E]/40 dark:bg-[#22C55E]/20 dark:ring-[#22C55E]/50"
+        ? "bg-[#22C55E]/20 ring-1 ring-[#22C55E]/50"
         : "hover:bg-black/5 dark:hover:bg-white/10",
     disabled && "opacity-50 pointer-events-none"
   );
@@ -89,7 +89,7 @@ function RailButton({
       disabled={disabled}
       className={cn(
         className,
-        !danger && !active && "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+        !danger && !active && "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
       )}
     >
       {children}
@@ -204,7 +204,11 @@ export function AppIconRail({
 
     try {
       setSwitchingSlug(tenant.slug);
-      await switchOrganization(tenant.slug, "/dashboard");
+      // Redirect personal accounts to personal-finance, others to dashboard
+      const redirectPath = tenant.account_type === "personal" 
+        ? "/dashboard/personal-finance" 
+        : "/dashboard";
+      await switchOrganization(tenant.slug, redirectPath);
     } catch {
       toast.error(`Could not open ${tenant.name}`);
       setSwitchingSlug(null);
@@ -212,10 +216,10 @@ export function AppIconRail({
   };
 
   const shellClass = cn(
-    "bg-white border-gray-200 dark:bg-[#162232] dark:border-white/10"
+    "bg-card border-border"
   );
 
-  const dividerClass = "bg-gray-200 dark:bg-white/10";
+  const dividerClass = "bg-border";
 
   const erpBtn = (
     <RailButton label="ERP" href="/erp" active={onErp} horizontal={horizontal}>
@@ -283,9 +287,9 @@ export function AppIconRail({
           horizontal={horizontal}
         >
           {isDark ? (
-            <Sun className="h-[18px] w-[18px] text-gray-400" strokeWidth={2} />
+            <Sun className="h-[18px] w-[18px] !text-gray-400" strokeWidth={2} />
           ) : (
-            <Moon className="h-[18px] w-[18px] text-gray-500" strokeWidth={2} />
+            <Moon className="h-[18px] w-[18px] !text-gray-400" strokeWidth={2} />
           )}
         </RailButton>
       </div>
@@ -378,21 +382,13 @@ export function AppIconRail({
           >
             <h1
               className={cn(
-                "text-base font-medium tracking-tight flex items-baseline gap-x-2 whitespace-nowrap",
-                pageChrome
-                  ? "text-foreground"
-                  : "text-foreground dark:text-white"
+                "text-base font-medium tracking-tight flex items-baseline gap-x-2 whitespace-nowrap text-foreground"
               )}
             >
               <span className="truncate">{pageTitle}</span>
               {pageSubtitle && (
                 <span
-                  className={cn(
-                    "text-xs font-normal truncate",
-                    pageChrome
-                      ? "text-muted-foreground"
-                      : "text-muted-foreground dark:text-gray-400"
-                  )}
+                  className="text-xs font-normal truncate text-muted-foreground"
                 >
                   {pageSubtitle}
                 </span>

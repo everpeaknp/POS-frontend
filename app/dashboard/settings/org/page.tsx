@@ -114,6 +114,13 @@ function OrgSettingsContent() {
   const { user, refreshUser } = useAuth();
   const { dateSystem, setDateSystem } = useDateSystem();
 
+  // Redirect personal accounts to their dedicated settings
+  useEffect(() => {
+    if (user?.tenant?.account_type === "personal") {
+      router.replace("/dashboard/personal-finance/settings");
+    }
+  }, [user?.tenant?.account_type, router]);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -123,6 +130,18 @@ function OrgSettingsContent() {
   const [form, setForm] = useState<OrgFormState>(() =>
     tenantToForm({ address: "" } as Tenant, "AD")
   );
+
+  // Don't load data if it's a personal account
+  if (user?.tenant?.account_type === "personal") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+          <p className="mt-4 text-gray-600">Redirecting to Personal Finance Settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   const canEdit = isTenantOrgAdmin(tenantMeta?.user_role);
 

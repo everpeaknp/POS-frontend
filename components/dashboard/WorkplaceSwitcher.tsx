@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageLoading } from "@/components/shared/PageLoading";
 
 function TenantMark({
   tenant,
@@ -82,7 +83,13 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
     try {
       setSwitchingSlug(tenant.slug);
       setOpen(false);
-      await switchOrganization(tenant.slug, "/dashboard");
+      // Redirect personal accounts to personal-finance, others to dashboard
+      const redirectPath = tenant.account_type === "personal" 
+        ? "/dashboard/personal-finance" 
+        : "/dashboard";
+      await switchOrganization(tenant.slug, redirectPath);
+      // Clear immediately after switch completes
+      setSwitchingSlug(null);
     } catch {
       toast.error(`Could not open ${tenant.name}`);
       setSwitchingSlug(null);
@@ -90,7 +97,15 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <>
+      {/* Loading overlay when switching workplaces */}
+      {switchingSlug && (
+        <div className="fixed inset-0 z-[9999]">
+          <PageLoading message="Switching workspace..." fullScreen />
+        </div>
+      )}
+      
+      <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         className={cn(
           "flex items-center gap-1.5 min-w-0 rounded-lg outline-none transition-colors",
@@ -107,11 +122,15 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
             <span className="text-white font-semibold text-sm leading-tight truncate">
               {current.name}
             </span>
-            {user.role && (
+            {user.tenant.account_type === "personal" ? (
+              <span className="text-gray-400 text-xs leading-tight truncate">
+                Personal
+              </span>
+            ) : user.role ? (
               <span className="text-gray-400 text-xs leading-tight truncate capitalize">
                 {user.role === "super_admin" ? "Super Admin" : user.role}
               </span>
-            )}
+            ) : null}
           </div>
         )}
         <span
@@ -168,5 +187,6 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }

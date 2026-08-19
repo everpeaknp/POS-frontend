@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import {
@@ -23,12 +24,22 @@ import type { UnifiedDashboardData } from "@/lib/dashboard/types";
 import { ORG_MODULE_CATALOG } from "@/lib/modules/catalog";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const isPersonal = user?.tenant?.account_type === "personal";
+
+  // Redirect personal accounts immediately
+  useEffect(() => {
+    if (isPersonal) {
+      router.replace("/dashboard/personal-finance");
+    }
+  }, [isPersonal, router]);
+
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<UnifiedDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const { isDark } = useAppearance();
-  const { user } = useAuth();
   const { canView } = usePermissions();
 
   const workspaceName =
@@ -56,8 +67,21 @@ export default function DashboardPage() {
   }, [period]);
 
   useEffect(() => {
+    if (isPersonal) return;
     loadDashboard();
-  }, [loadDashboard]);
+  }, [isPersonal, loadDashboard]);
+
+  // Show loading state while redirecting personal accounts
+  if (isPersonal) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+          <p className="mt-4 text-gray-600">Redirecting to Personal Finance...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Hide Reports & Analytics from the home overview (stats/tiles stay in /dashboard/reports)
   const visibleModules = (data?.modules ?? []).filter(

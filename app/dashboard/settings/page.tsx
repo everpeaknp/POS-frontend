@@ -1,5 +1,21 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function SettingsPage() {
-  redirect("/dashboard/settings/org");
+  const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    router.replace(
+      user.tenant?.account_type === "personal"
+        ? "/dashboard/personal-finance/settings"
+        : "/dashboard/settings/org"
+    );
+  }, [user, router]);
+
+  return null;
 }
