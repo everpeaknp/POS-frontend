@@ -47,6 +47,7 @@ export interface PFTransaction {
   description: string;
   date: string; // YYYY-MM-DD
   notes?: string;
+  receiptUrl?: string; // URL or base64 of receipt image
   createdAt: string;
 }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronDown, ChevronLeft, ChevronRight, X, Menu, Plus,
   Search,
@@ -26,14 +26,18 @@ function SidebarItem({
   openKey,
   onToggle,
   compact = false,
+  onQuickAction,
 }: {
   item: NavItem;
   openKey: string | null;
   onToggle: (label: string) => void;
   compact?: boolean;
+  onQuickAction?: (item: NavItem) => void;
 }) {
   const pathname = usePathname();
   const isOpen = openKey === item.label;
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const quickMenuRef = useRef<HTMLDivElement>(null);
 
   const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
@@ -42,8 +46,82 @@ function SidebarItem({
   const hasDirectAdd = item.href && item.children?.length === 1 && item.children[0].createHref;
   const addHref = hasDirectAdd ? item.children[0].createHref : undefined;
 
+  // Close quick menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (quickMenuRef.current && !quickMenuRef.current.contains(event.target as Node)) {
+        setShowQuickMenu(false);
+      }
+    };
+    if (showQuickMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showQuickMenu]);
+
   // Direct link (no children) OR compact mode
   if ((item.href && !item.children) || (compact && item.href)) {
+    // Check if it has quick action
+    if (item.hasQuickAction && !compact) {
+      return (
+        <div className="group flex items-center gap-1 relative" data-tour={`nav-${item.label.toLowerCase()}`}>
+          <Link
+            href={item.href!}
+            title={item.label}
+            className={cn(
+              "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+              isParentActive
+                ? "bg-[#22C55E] text-white"
+                : "!text-gray-400 hover:!text-white hover:bg-white/10"
+            )}
+          >
+            <item.icon size={17} className={cn(
+              "shrink-0",
+              isParentActive ? "!text-white" : "!text-gray-400"
+            )} />
+            {item.label}
+          </Link>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setShowQuickMenu(!showQuickMenu);
+            }}
+            className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+            title="Quick actions"
+          >
+            <Plus size={16} />
+          </button>
+          
+          {/* Quick Action Menu */}
+          {showQuickMenu && (
+            <div
+              ref={quickMenuRef}
+              className="absolute left-full ml-2 top-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[150px]"
+            >
+              <button
+                onClick={() => {
+                  setShowQuickMenu(false);
+                  if (onQuickAction) onQuickAction({ ...item, quickActionType: "money-in" } as any);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+              >
+                💰 Money In
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuickMenu(false);
+                  if (onQuickAction) onQuickAction({ ...item, quickActionType: "money-out" } as any);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              >
+                💸 Money Out
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
     return (
       <Link
         href={item.href}
@@ -210,6 +288,7 @@ function SidebarContent({
   searchFocusNonce?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const permissions = usePermissions();
   const [navQuery, setNavQuery] = useState("");
@@ -271,6 +350,13 @@ function SidebarContent({
 
   const handleToggle = (label: string) => {
     setOpenKey((prev) => (prev === label ? null : label));
+  };
+
+  const handleQuickAction = (item: any) => {
+    const actionType = item.quickActionType;
+    if (item.href && actionType) {
+      router.push(`${item.href}?action=${actionType}`);
+    }
   };
 
   return (
@@ -392,6 +478,7 @@ function SidebarContent({
                   : openKey
               }
               onToggle={handleToggle}
+              onQuickAction={handleQuickAction}
               compact={compact}
             />
           ))

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Trash2, ExternalLink, Download, DollarSign, TrendingUp, TrendingDown, Copy, Check } from "@/lib/icons/lucide-react-shim";
+import { useRouter } from "next/navigation";
+import { Plus, Trash2, ExternalLink, Download, DollarSign, TrendingUp, TrendingDown, Copy, Check, Search } from "@/lib/icons/lucide-react-shim";
 import { WhatsAppIcon, FacebookMessengerIcon, TelegramIcon, EnvelopeIcon } from "@/lib/icons/lucide-react-shim";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { DateInput } from "@/components/shared/DateInput";
+import { FormattedDate } from "@/components/shared/FormattedDate";
+import { useDateSystem } from "@/lib/context/DateSystemContext";
 import toast from "react-hot-toast";
 import { partyTransactionAPI, partyLenderAPI, partyTransactionShareAPI, PartyTransaction, PartyLender } from "@/lib/api/personal-finance";
 
@@ -17,9 +21,12 @@ interface PartyTransactionForm extends Omit<PartyTransaction, 'id' | 'party_name
 
 interface Props {
   partyId: number;
+  onOpenDialog?: (direction?: 'in' | 'out') => void;
 }
 
-export function PartyTransactions({ partyId }: Props) {
+export function PartyTransactions({ partyId, onOpenDialog }: Props) {
+  const router = useRouter();
+  const { dateSystem } = useDateSystem();
   const [transactions, setTransactions] = useState<PartyTransaction[]>([]);
   const [party, setParty] = useState<PartyLender | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +38,13 @@ export function PartyTransactions({ partyId }: Props) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
+  
+  // Search and Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
 
   const [formData, setFormData] = useState<Partial<PartyTransactionForm>>({
     party: partyId,
@@ -41,6 +55,53 @@ export function PartyTransactions({ partyId }: Props) {
     receipt: null,
     note: '',
   });
+  
+  const [transactionId, setTransactionId] = useState<string>('');
+
+  // Generate URL-friendly slug from party name
+  const generatePartySlug = (party: PartyLender | null): string => {
+    if (!party) return String(partyId);
+    return party.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-')
+      + `-${party.id}`;
+  };
+
+  // Generate short alphanumeric ID from number
+  const generateShortId = (id: number): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    let num = id;
+    
+    // Convert to base-36 and pad
+    while (result.length < 6) {
+      result = chars[num % chars.length] + result;
+      num = Math.floor(num / chars.length);
+      if (num === 0 && result.length < 6) {
+        result = chars[0] + result;
+      }
+    }
+    
+    return result.slice(-6);
+  };
+
+  // Generate transaction ID
+  useEffect(() => {
+    const generateTransactionId = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+    
+    if (showDialog && !editingTransaction) {
+      setTransactionId(generateTransactionId());
+    }
+  }, [showDialog, editingTransaction]);
 
   // Load party data
   useEffect(() => {
@@ -70,13 +131,54 @@ export function PartyTransactions({ partyId }: Props) {
   const outTransactions = useMemo(() => transactions.filter(t => t.direction === 'out'), [transactions]);
   const inTransactions = useMemo(() => transactions.filter(t => t.direction === 'in'), [transactions]);
 
-  const openAddDialog = () => {
+  // Filtered transactions based on search and filters
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...transactions];
+
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(t => t.direction === filterType);
+    }
+
+    // Filter by payment method
+    if (filterPaymentMethod !== 'all') {
+      filtered = filtered.filter(t => t.payment_method === filterPaymentMethod);
+    }
+
+    // Filter by date range
+    if (dateFrom) {
+      filtered = filtered.filter(t => t.date >= dateFrom);
+    }
+    if (dateTo) {
+      filtered = filtered.filter(t => t.date <= dateTo);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(t => {
+        const shortId = generateShortId(t.id).toLowerCase();
+        const amount = t.amount.toString();
+        const note = t.note?.toLowerCase() || '';
+        const paymentMethod = t.payment_method_display?.toLowerCase() || '';
+        
+        return shortId.includes(query) || 
+               amount.includes(query) || 
+               note.includes(query) ||
+               paymentMethod.includes(query);
+      });
+    }
+
+    return filtered;
+  }, [transactions, filterType, filterPaymentMethod, searchQuery, dateFrom, dateTo]);
+
+  const openAddDialog = (defaultDirection: 'in' | 'out' = 'in') => {
     setEditingTransaction(null);
     setReceiptFile(null);
-    setDirection('in');
+    setDirection(defaultDirection);
     setFormData({
       party: partyId,
-      direction: 'in',
+      direction: defaultDirection,
       amount: '',
       date: new Date().toISOString().split('T')[0],
       payment_method: null,
@@ -85,6 +187,16 @@ export function PartyTransactions({ partyId }: Props) {
     });
     setShowDialog(true);
   };
+
+  // Expose openAddDialog to parent
+  useEffect(() => {
+    if (onOpenDialog) {
+      (window as any).__openTransactionDialog = openAddDialog;
+    }
+    return () => {
+      delete (window as any).__openTransactionDialog;
+    };
+  }, [onOpenDialog]);
 
   const openEditDialog = (transaction: PartyTransaction) => {
     setEditingTransaction(transaction);
@@ -115,7 +227,7 @@ export function PartyTransactions({ partyId }: Props) {
       updateData.append('direction', formData.direction || 'in');
       updateData.append('amount', String(formData.amount));
       updateData.append('date', formData.date);
-      if (formData.direction === 'out' && formData.payment_method) {
+      if (formData.payment_method) {
         updateData.append('payment_method', formData.payment_method);
       }
       if (receiptFile) {
@@ -211,179 +323,225 @@ export function PartyTransactions({ partyId }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Summary Cards */}
-      {party && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-emerald-700 uppercase tracking-wider">Total Given</p>
-                <p className="text-2xl font-bold text-emerald-900 mt-2">Rs. {party.total_given.toLocaleString('en-NP', { maximumFractionDigits: 2 })}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-emerald-600 opacity-20" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-blue-700 uppercase tracking-wider">Total Received</p>
-                <p className="text-2xl font-bold text-blue-900 mt-2">Rs. {party.total_received.toLocaleString('en-NP', { maximumFractionDigits: 2 })}</p>
-              </div>
-              <TrendingDown className="h-8 w-8 text-blue-600 opacity-20" />
-            </div>
-          </div>
-
-          <div className={`rounded-lg p-4 border ${
-            party.net_balance >= 0 
-              ? 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200' 
-              : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-xs font-medium uppercase tracking-wider ${
-                  party.net_balance >= 0 ? 'text-orange-700' : 'text-purple-700'
-                }`}>
-                  {party.net_balance >= 0 ? 'You will get' : 'You owe'}
-                </p>
-                <p className={`text-2xl font-bold mt-2 ${
-                  party.net_balance >= 0 ? 'text-orange-900' : 'text-purple-900'
-                }`}>
-                  Rs. {Math.abs(party.net_balance).toLocaleString('en-NP', { maximumFractionDigits: 2 })}
-                </p>
-              </div>
-              <DollarSign className={`h-8 w-8 opacity-20 ${
-                party.net_balance >= 0 ? 'text-orange-600' : 'text-purple-600'
-              }`} />
-            </div>
+    <div className="space-y-4">
+      {/* Search and Filters */}
+      <div className="flex flex-wrap items-center gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        {/* Search */}
+        <div className="flex-1 min-w-[200px]">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search by ID, amount, note..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
         </div>
-      )}
 
-      {/* Share Ledger Button */}
-      <div className="flex gap-2">
-        <Button
-          onClick={() => handleShare('party_ledger')}
-          variant="outline"
-          className="gap-2"
+        {/* Date Range Filters */}
+        <div className="w-36">
+          <DateInput
+            value={dateFrom}
+            onChange={(date) => setDateFrom(date)}
+            placeholder="From date"
+            className="h-10"
+          />
+        </div>
+        <div className="w-36">
+          <DateInput
+            value={dateTo}
+            onChange={(date) => setDateTo(date)}
+            placeholder="To date"
+            className="h-10"
+          />
+        </div>
+
+        {/* Filter by Type */}
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as 'all' | 'in' | 'out')}
+          className="px-3 py-2 h-10 border border-gray-300 rounded-md text-sm bg-white"
         >
-          <ExternalLink className="h-4 w-4" />
-          Share Ledger
-        </Button>
-        <Button
-          onClick={openAddDialog}
-          className="bg-[#22C55E] hover:bg-[#22C55E]/90 gap-2 ml-auto"
+          <option value="all">All Types</option>
+          <option value="in">Money In</option>
+          <option value="out">Money Out</option>
+        </select>
+
+        {/* Filter by Payment Method */}
+        <select
+          value={filterPaymentMethod}
+          onChange={(e) => setFilterPaymentMethod(e.target.value)}
+          className="px-3 py-2 h-10 border border-gray-300 rounded-md text-sm bg-white"
         >
-          <Plus className="h-4 w-4" />
-          Add Transaction
-        </Button>
+          <option value="all">All Methods</option>
+          <option value="cash">Cash</option>
+          <option value="esewa">eSewa</option>
+          <option value="bank">Bank Transfer</option>
+        </select>
+
+        {/* Clear Filters */}
+        {(searchQuery || filterType !== 'all' || filterPaymentMethod !== 'all' || dateFrom || dateTo) && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterType('all');
+              setFilterPaymentMethod('all');
+              setDateFrom('');
+              setDateTo('');
+            }}
+            className="whitespace-nowrap h-10"
+          >
+            Clear Filters
+          </Button>
+        )}
       </div>
 
-      {/* Transactions */}
+      {/* Transactions Table */}
       <div className="space-y-4">
-        {/* Out Transactions */}
-        {outTransactions.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              Money Given ({outTransactions.length})
-            </h3>
-            <div className="space-y-2">
-              {outTransactions.map(txn => (
-                <div key={txn.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <div>
-                    <p className="font-medium text-gray-900">{txn.date}</p>
-                    {txn.payment_method && (
-                      <Badge className="mt-1 bg-emerald-200 text-emerald-900">{txn.payment_method_display}</Badge>
-                    )}
-                    {txn.note && <p className="text-sm text-gray-600 mt-1">{txn.note}</p>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-semibold text-emerald-900">Rs. {parseFloat(txn.amount).toLocaleString('en-NP', { maximumFractionDigits: 2 })}</p>
-                    <div className="flex gap-1">
-                      {txn.receipt_url && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => txn.receipt_url && window.open(txn.receipt_url, '_blank')}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleShare('transaction', txn.id)}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                        onClick={() => setDeleteConfirmId(txn.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* In Transactions */}
-        {inTransactions.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-blue-600" />
-              Money Received ({inTransactions.length})
-            </h3>
-            <div className="space-y-2">
-              {inTransactions.map(txn => (
-                <div key={txn.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div>
-                    <p className="font-medium text-gray-900">{txn.date}</p>
-                    {txn.note && <p className="text-sm text-gray-600 mt-1">{txn.note}</p>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-semibold text-blue-900">Rs. {parseFloat(txn.amount).toLocaleString('en-NP', { maximumFractionDigits: 2 })}</p>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleShare('transaction', txn.id)}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                        onClick={() => setDeleteConfirmId(txn.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {transactions.length === 0 && (
+        {filteredTransactions.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-500 mb-4">No transactions yet</p>
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add First Transaction
-            </Button>
+            {transactions.length === 0 ? (
+              <>
+                <p className="text-gray-500 mb-4">No transactions yet</p>
+                <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Transaction
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500 mb-4">No transactions match your filters</p>
+                <Button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterType('all');
+                    setFilterPaymentMethod('all');
+                    setDateFrom('');
+                    setDateTo('');
+                  }}
+                  variant="outline"
+                >
+                  Clear Filters
+                </Button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date & Time
+                      <Badge variant="outline" className="ml-2 text-xs font-normal">{dateSystem}</Badge>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredTransactions.map(txn => (
+                    <tr 
+                      key={txn.id} 
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}/${generateShortId(txn.id)}`)}
+                    >
+                      <td className="px-4 py-3 text-sm">
+                        <span className="font-mono text-xs text-gray-900">#{generateShortId(txn.id)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        <div>
+                          <p className="font-medium"><FormattedDate value={txn.date} /></p>
+                          <p className="text-xs text-gray-500">{new Date(txn.created_at).toLocaleTimeString('en-NP', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className={txn.direction === 'out' ? 'bg-red-100 text-red-700 border-0' : 'bg-emerald-100 text-emerald-700 border-0'}>
+                          {txn.direction === 'out' ? 'Money Out' : 'Money In'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`font-semibold ${txn.direction === 'out' ? 'text-red-900' : 'text-emerald-900'}`}>
+                          Rs. {parseFloat(txn.amount).toLocaleString('en-NP', { maximumFractionDigits: 2 })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {txn.payment_method ? (
+                          <Badge variant="outline" className="text-xs">
+                            {txn.payment_method_display}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {txn.receipt_url ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(txn.receipt_url!, '_blank');
+                            }}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View
+                          </Button>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No receipt</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {txn.note ? (
+                          <span className="text-xs line-clamp-2">{txn.note}</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare('transaction', txn.id);
+                            }}
+                            title="Share"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(txn.id);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -396,30 +554,53 @@ export function PartyTransactions({ partyId }: Props) {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Direction Toggle */}
+            {/* Transaction ID - Read Only */}
+            {!editingTransaction && (
+              <div>
+                <Label>Transaction ID</Label>
+                <Input
+                  type="text"
+                  value={transactionId}
+                  readOnly
+                  className="mt-1 bg-gray-50 text-gray-600 font-mono"
+                  placeholder="Auto-generated"
+                />
+                <p className="text-xs text-gray-500 mt-1">Auto-generated unique identifier</p>
+              </div>
+            )}
+
+            {/* Direction Tabs */}
             <div>
               <Label>Transaction Type</Label>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  variant={direction === 'in' ? 'default' : 'outline'}
+              <div className="flex gap-1 mt-2 bg-gray-100 p-1 rounded-lg">
+                <button
+                  type="button"
                   onClick={() => {
                     setDirection('in');
-                    setFormData({ ...formData, direction: 'in', payment_method: null });
+                    setFormData({ ...formData, direction: 'in' });
                   }}
-                  className={direction === 'in' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    direction === 'in'
+                      ? 'bg-white text-emerald-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
                   Money In (Received)
-                </Button>
-                <Button
-                  variant={direction === 'out' ? 'default' : 'outline'}
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setDirection('out');
                     setFormData({ ...formData, direction: 'out' });
                   }}
-                  className={direction === 'out' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    direction === 'out'
+                      ? 'bg-white text-red-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
                   Money Out (Given)
-                </Button>
+                </button>
               </div>
             </div>
 
@@ -438,41 +619,36 @@ export function PartyTransactions({ partyId }: Props) {
 
             <div>
               <Label>Date <span className="text-red-500">*</span></Label>
-              <Input
-                type="date"
+              <DateInput
                 value={formData.date || ''}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={(date) => setFormData({ ...formData, date })}
                 className="mt-1"
               />
             </div>
 
-            {direction === 'out' && (
-              <>
-                <div>
-                  <Label>Payment Method</Label>
-                  <select
-                    value={formData.payment_method || ''}
-                    onChange={(e) => setFormData({ ...formData, payment_method: (e.target.value as any) || null })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mt-1"
-                  >
-                    <option value="">Select payment method...</option>
-                    <option value="cash">Cash</option>
-                    <option value="esewa">eSewa</option>
-                    <option value="bank">Bank Transfer</option>
-                  </select>
-                </div>
+            <div>
+              <Label>Payment Method</Label>
+              <select
+                value={formData.payment_method || ''}
+                onChange={(e) => setFormData({ ...formData, payment_method: (e.target.value as any) || null })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mt-1"
+              >
+                <option value="">Select payment method...</option>
+                <option value="cash">Cash</option>
+                <option value="esewa">eSewa</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
 
-                <div>
-                  <Label>Receipt (Image/PDF)</Label>
-                  <Input
-                    type="file"
-                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-                    accept="image/*,.pdf"
-                    className="mt-1"
-                  />
-                </div>
-              </>
-            )}
+            <div>
+              <Label>Receipt (Image/PDF)</Label>
+              <Input
+                type="file"
+                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                accept="image/*,.pdf"
+                className="mt-1"
+              />
+            </div>
 
             <div>
               <Label>Note</Label>

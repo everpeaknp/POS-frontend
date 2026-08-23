@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Edit2, Trash2, Users, Phone, Mail, LayoutGrid, List, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Copy, Check, ArrowDownLeft, ArrowUpRight, Upload } from "@/lib/icons/lucide-react-shim";
+import { Plus, Search, Edit2, Trash2, Users, Phone, Mail, LayoutGrid, List, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Copy, Check, ArrowDownLeft, ArrowUpRight, Upload, DollarSign } from "@/lib/icons/lucide-react-shim";
 import { WhatsAppIcon, FacebookMessengerIcon, TelegramIcon, EnvelopeIcon } from "@/lib/icons/lucide-react-shim";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
+import { DateInput } from "@/components/shared/DateInput";
 import { PartyTransactions } from "./transactions";
 import { PartySelector } from "./party-selector";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
-import { partyLenderAPI, partyTransactionAPI } from "@/lib/api/personal-finance";
+import { partyLenderAPI, partyTransactionAPI, partyTransactionShareAPI } from "@/lib/api/personal-finance";
 
 interface Party {
   id: number;
@@ -45,6 +47,9 @@ export default function PartiesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [balanceFilter, setBalanceFilter] = useState<"all" | "receivable" | "payable">("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
@@ -74,6 +79,28 @@ export default function PartiesPage() {
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Manage parties and lenders`;
+
+  // Generate URL-friendly slug from party name
+  const generatePartySlug = (party: Party): string => {
+    return party.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      + `-${party.id}`; // Append ID to ensure uniqueness
+  };
+
+  // Calculate totals
+  const totals = useMemo(() => {
+    return parties.reduce(
+      (acc, party) => ({
+        totalGiven: acc.totalGiven + party.total_given,
+        totalReceived: acc.totalReceived + party.total_received,
+        netBalance: acc.netBalance + party.net_balance,
+      }),
+      { totalGiven: 0, totalReceived: 0, netBalance: 0 }
+    );
+  }, [parties]);
 
   const loadParties = async () => {
     try {
@@ -112,7 +139,17 @@ export default function PartiesPage() {
       router.replace("/dashboard/personal-finance/parties", { scroll: false });
     }
     
-    // Handle action query parameter for Money In/Out
+    // Handle edit query parameter
+    const editId = searchParams.get("edit");
+    if (editId && parties.length > 0) {
+      const partyToEdit = parties.find(p => p.id === Number(editId));
+      if (partyToEdit) {
+        openEditDialog(partyToEdit);
+        router.replace("/dashboard/personal-finance/parties", { scroll: false });
+      }
+    }
+    
+    // Handle action query parameter for Money In/Out and Add Transaction
     const action = searchParams.get("action");
     if (action === "money-in") {
       openTransactionModal("in");
@@ -120,20 +157,44 @@ export default function PartiesPage() {
     } else if (action === "money-out") {
       openTransactionModal("out");
       router.replace("/dashboard/personal-finance/parties", { scroll: false });
+    } else if (action === "add-transaction") {
+      openTransactionModal("in");
+      router.replace("/dashboard/personal-finance/parties", { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, parties]);
 
   const filteredParties = useMemo(() => {
-    if (!searchTerm) return parties;
-    const lower = searchTerm.toLowerCase();
-    return parties.filter(
-      (p) =>
-        p.name.toLowerCase().includes(lower) ||
-        p.pan?.toLowerCase().includes(lower) ||
-        p.mobile?.toLowerCase().includes(lower) ||
-        p.email?.toLowerCase().includes(lower)
-    );
-  }, [parties, searchTerm]);
+    let filtered = parties;
+    
+    // Search filter
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(lower) ||
+          p.pan?.toLowerCase().includes(lower) ||
+          p.mobile?.toLowerCase().includes(lower) ||
+          p.email?.toLowerCase().includes(lower)
+      );
+    }
+    
+    // Balance filter
+    if (balanceFilter === "receivable") {
+      filtered = filtered.filter((p) => p.net_balance > 0);
+    } else if (balanceFilter === "payable") {
+      filtered = filtered.filter((p) => p.net_balance < 0);
+    }
+    
+    // Date range filter (filter by party creation date)
+    if (dateFrom) {
+      filtered = filtered.filter((p) => p.createdAt >= dateFrom);
+    }
+    if (dateTo) {
+      filtered = filtered.filter((p) => p.createdAt <= dateTo);
+    }
+    
+    return filtered;
+  }, [parties, searchTerm, balanceFilter, dateFrom, dateTo]);
 
   const openAddDialog = () => {
     setEditingParty(null);
@@ -211,11 +272,33 @@ export default function PartiesPage() {
     }
   };
 
-  const handleShare = (party: Party) => {
-    if (party.share_token) {
-      const shareUrl = `${window.location.origin}/shares/party/${party.share_token}`;
+  const handleShare = async (party: Party) => {
+    try {
+      // Check if party already has a share token via the share_token field
+      // If it does, we can use it directly
+      if (party.share_token) {
+        const shareUrl = `${window.location.origin}/shares/party/${party.share_token}`;
+        setShareLink(shareUrl);
+        setShareModalOpen(true);
+        return;
+      }
+      
+      // Otherwise create a new share
+      const shareData = await partyTransactionShareAPI.create({
+        share_type: 'party_ledger',
+        party: party.id,
+        is_active: true,
+      });
+      
+      const shareUrl = `${window.location.origin}/shares/party/${shareData.token}`;
       setShareLink(shareUrl);
       setShareModalOpen(true);
+      
+      // Reload parties to get the updated data
+      await loadParties();
+    } catch (error: any) {
+      console.error("Failed to generate share link:", error);
+      toast.error(error.response?.data?.message || "Failed to generate share link");
     }
   };
 
@@ -294,7 +377,7 @@ export default function PartiesPage() {
       toast.error("Please select a date");
       return;
     }
-    if (transactionType === "out" && !transactionFormData.paymentMethod) {
+    if (!transactionFormData.paymentMethod) {
       toast.error("Please select a payment method");
       return;
     }
@@ -306,9 +389,7 @@ export default function PartiesPage() {
       createData.append("direction", transactionType);
       createData.append("amount", transactionFormData.amount);
       createData.append("date", transactionFormData.date);
-      if (transactionType === "out") {
-        createData.append("payment_method", transactionFormData.paymentMethod);
-      }
+      createData.append("payment_method", transactionFormData.paymentMethod);
       if (transactionFormData.note) createData.append("note", transactionFormData.note);
       if (receiptFile) createData.append("receipt", receiptFile);
 
@@ -351,6 +432,67 @@ export default function PartiesPage() {
       <DashHeader title="Parties / Lenders" subtitle={subtitle} />
 
       <div className="flex-1 p-6 space-y-4">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Money Given Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-2xl font-bold text-gray-900 mb-2">
+                  Rs. {totals.totalGiven.toLocaleString('en-NP')}
+                </p>
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Given</h3>
+                <p className="text-xs text-gray-400">Total paid to all parties</p>
+              </div>
+              <div className="p-2.5 bg-red-50 rounded-lg">
+                <ArrowUpRight className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Received Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-2xl font-bold text-gray-900 mb-2">
+                  Rs. {totals.totalReceived.toLocaleString('en-NP')}
+                </p>
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Received</h3>
+                <p className="text-xs text-gray-400">Total received from all parties</p>
+              </div>
+              <div className="p-2.5 bg-emerald-50 rounded-lg">
+                <ArrowDownLeft className="h-6 w-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Net Balance Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className={`text-2xl font-bold mb-2 ${
+                  totals.netBalance >= 0 ? 'text-blue-600' : 'text-gray-700'
+                }`}>
+                  Rs. {Math.abs(totals.netBalance).toLocaleString('en-NP')}
+                </p>
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Net Balance
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {totals.netBalance >= 0 ? 'Total receivable' : 'Total payable'}
+                </p>
+              </div>
+              <div className={`p-2.5 rounded-lg ${
+                totals.netBalance >= 0 ? 'bg-blue-50' : 'bg-gray-100'
+              }`}>
+                <DollarSign className={`h-6 w-6 ${
+                  totals.netBalance >= 0 ? 'text-blue-600' : 'text-gray-700'
+                }`} />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
@@ -362,6 +504,48 @@ export default function PartiesPage() {
                 className="pl-9"
               />
             </div>
+
+            <Select value={balanceFilter} onValueChange={(value: "all" | "receivable" | "payable") => setBalanceFilter(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Parties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Parties</SelectItem>
+                <SelectItem value="receivable">Receivable Only</SelectItem>
+                <SelectItem value="payable">Payable Only</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2">
+              <DateInput
+                value={dateFrom}
+                onChange={setDateFrom}
+                placeholder="From date"
+                className="w-[150px] h-9"
+              />
+              <span className="text-sm text-gray-400">to</span>
+              <DateInput
+                value={dateTo}
+                onChange={setDateTo}
+                placeholder="To date"
+                className="w-[150px] h-9"
+              />
+            </div>
+
+            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Party
+            </Button>
+            
+            <Button onClick={() => openTransactionModal("in")} className="bg-emerald-600 hover:bg-emerald-700">
+              <ArrowDownLeft className="h-4 w-4 mr-2" />
+              Money In
+            </Button>
+            
+            <Button onClick={() => openTransactionModal("out")} className="bg-red-600 hover:bg-red-700">
+              <ArrowUpRight className="h-4 w-4 mr-2" />
+              Money Out
+            </Button>
             
             <div className="flex items-center gap-2">
               <Button
@@ -381,21 +565,6 @@ export default function PartiesPage() {
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
-
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Party
-            </Button>
-            
-            <Button onClick={() => openTransactionModal("in")} className="bg-emerald-600 hover:bg-emerald-700">
-              <ArrowDownLeft className="h-4 w-4 mr-2" />
-              Money In
-            </Button>
-            
-            <Button onClick={() => openTransactionModal("out")} className="bg-blue-600 hover:bg-blue-700">
-              <ArrowUpRight className="h-4 w-4 mr-2" />
-              Money Out
-            </Button>
           </div>
         </div>
 
@@ -433,7 +602,11 @@ export default function PartiesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredParties.map((party) => (
-                      <tr key={party.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={party.id} 
+                        onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}`)}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {party.photo_url ? (
@@ -443,34 +616,57 @@ export default function PartiesPage() {
                                 <span className="text-xs font-semibold text-[#22C55E]">{getInitials(party.name)}</span>
                               </div>
                             )}
-                            <span className="text-sm font-medium">{party.name}</span>
+                            <span className="text-sm font-medium text-left">{party.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-emerald-600 font-semibold">
+                        <td className="px-4 py-3 text-sm text-red-600 font-semibold">
                           Rs. {party.total_given.toLocaleString('en-NP')}
                         </td>
                         <td className="px-4 py-3 text-sm text-blue-600 font-semibold">
                           Rs. {party.total_received.toLocaleString('en-NP')}
                         </td>
                         <td className="px-4 py-3 text-sm font-semibold">
-                          <Badge className={party.net_balance >= 0 ? 'bg-orange-200 text-orange-900' : 'bg-purple-200 text-purple-900'}>
+                          <Badge className={party.net_balance >= 0 ? 'bg-blue-100 text-blue-900' : 'bg-gray-200 text-gray-900'}>
                             {party.net_balance >= 0 ? 'Get' : 'Owe'} Rs. {Math.abs(party.net_balance).toLocaleString('en-NP')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-sm">{party.mobile || party.email || "-"}</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleShare(party)} className="gap-1">
-                              <ExternalLink className="h-4 w-4" />
-                              Share
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(party);
+                              }} 
+                              className="h-8 w-8 p-0 hover:bg-gray-100"
+                              title="Share Ledger"
+                            >
+                              <ExternalLink className="h-4 w-4 text-gray-600" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => setSelectedPartyForTransactions(party)}>
-                              Transactions
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditDialog(party);
+                              }} 
+                              className="h-8 w-8 p-0 hover:bg-gray-100"
+                              title="Edit"
+                            >
+                              <Edit2 className="h-4 w-4 text-gray-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirmId(party.id)} className="h-8 w-8 p-0 text-red-600">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmId(party.id);
+                              }} 
+                              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                              title="Delete"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -492,7 +688,10 @@ export default function PartiesPage() {
             ) : (
               filteredParties.map((party) => (
                 <div key={party.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3 mb-4">
+                  <button
+                    onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}`)}
+                    className="flex items-start gap-3 mb-4 w-full text-left hover:opacity-80 transition-opacity"
+                  >
                     {party.photo_url ? (
                       <img src={party.photo_url} alt={party.name} className="h-12 w-12 rounded-full" />
                     ) : (
@@ -501,21 +700,21 @@ export default function PartiesPage() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="font-medium">{party.name}</h3>
-                      <div className="flex gap-1 mt-2">
-                        <Button size="sm" onClick={() => handleShare(party)} variant="outline" className="text-xs">
-                          Share
-                        </Button>
-                        <Button size="sm" onClick={() => setSelectedPartyForTransactions(party)} className="bg-[#22C55E]">
-                          View Txn
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <h3 className="font-medium hover:text-[#22C55E] transition-colors">{party.name}</h3>
                     </div>
+                  </button>
+                  <div className="flex gap-1 mt-2">
+                    <Button size="sm" onClick={() => handleShare(party)} variant="outline" className="text-xs">
+                      Share
+                    </Button>
+                    <Button size="sm" onClick={() => setSelectedPartyForTransactions(party)} className="bg-[#22C55E]">
+                      View Txn
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="space-y-2 border-t pt-3">
+                  <div className="space-y-2 border-t pt-3 mt-3">
                     <p className="text-xs"><strong>Given:</strong> Rs. {party.total_given.toLocaleString('en-NP')}</p>
                     <p className="text-xs"><strong>Received:</strong> Rs. {party.total_received.toLocaleString('en-NP')}</p>
                     <p className={`text-xs font-semibold ${party.net_balance >= 0 ? 'text-orange-600' : 'text-purple-600'}`}>
@@ -672,19 +871,46 @@ export default function PartiesPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {transactionType === "in" ? (
-                <>
-                  <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
-                  Money Received
-                </>
-              ) : (
-                <>
-                  <ArrowUpRight className="h-5 w-5 text-blue-600" />
-                  Money Given
-                </>
-              )}
+              <Plus className="h-5 w-5 text-blue-600" />
+              Add Transaction
             </DialogTitle>
           </DialogHeader>
+          
+          {/* Tabs for In/Out */}
+          <div className="flex gap-2 border-b border-gray-200 pb-4">
+            <button
+              onClick={() => {
+                setTransactionType("in");
+                setReceiptFile(null);
+                setReceiptPreview("");
+              }}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                transactionType === "in"
+                  ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-500"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <ArrowDownLeft className="h-4 w-4" />
+                Money In
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setTransactionType("out");
+              }}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                transactionType === "out"
+                  ? "bg-red-100 text-red-700 border-2 border-red-500"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <ArrowUpRight className="h-4 w-4" />
+                Money Out
+              </div>
+            </button>
+          </div>
           
           <div className="space-y-4 py-4">
             {/* Party Selector */}
@@ -712,100 +938,95 @@ export default function PartiesPage() {
             {/* Date */}
             <div>
               <Label>Date <span className="text-red-500">*</span></Label>
-              <Input
-                type="date"
+              <DateInput
                 value={transactionFormData.date}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, date: e.target.value })}
+                onChange={(date) => setTransactionFormData({ ...transactionFormData, date })}
                 className="mt-1"
               />
             </div>
 
-            {/* Payment Method (only for Money Out) */}
-            {transactionType === "out" && (
-              <div>
-                <Label>Payment Method <span className="text-red-500">*</span></Label>
-                <select
-                  value={transactionFormData.paymentMethod}
-                  onChange={(e) => setTransactionFormData({ ...transactionFormData, paymentMethod: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                >
-                  <option value="">Select payment method...</option>
-                  <option value="cash">Cash</option>
-                  <option value="esewa">eSewa</option>
-                  <option value="bank">Bank Transfer</option>
-                </select>
-              </div>
-            )}
+            {/* Payment Method (for both In and Out) */}
+            <div>
+              <Label>Payment Method <span className="text-red-500">*</span></Label>
+              <select
+                value={transactionFormData.paymentMethod}
+                onChange={(e) => setTransactionFormData({ ...transactionFormData, paymentMethod: e.target.value })}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              >
+                <option value="">Select payment method...</option>
+                <option value="cash">Cash</option>
+                <option value="esewa">eSewa</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
 
-            {/* Receipt Upload (only for Money Out) */}
-            {transactionType === "out" && (
-              <div>
-                <Label>Receipt (Image/PDF)</Label>
-                <div className="mt-1">
-                  {!receiptFile ? (
-                    <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="h-5 w-5 text-gray-400" />
-                        <span className="text-sm text-gray-600">
-                          Click to upload
-                        </span>
-                        <span className="text-xs text-gray-500">PNG, JPG, GIF or PDF (up to 10MB)</span>
-                      </div>
-                      <input
-                        type="file"
-                        onChange={handleReceiptChange}
-                        accept="image/png,image/jpeg,image/gif,.pdf"
-                        className="hidden"
-                      />
-                    </label>
-                  ) : (
-                    <div className="space-y-3">
-                      {receiptPreview === "pdf" ? (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
-                              <span className="text-xs font-bold text-red-600">PDF</span>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{receiptFile.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(receiptFile.size / 1024).toFixed(1)} KB
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleRemoveReceipt}
-                            className="text-red-600 hover:bg-red-50"
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <img
-                            src={receiptPreview}
-                            alt="Receipt preview"
-                            className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleRemoveReceipt}
-                            className="w-full text-red-600 hover:bg-red-50"
-                          >
-                            Remove Image
-                          </Button>
-                        </div>
-                      )}
+            {/* Receipt Upload (for both In and Out) */}
+            <div>
+              <Label>Receipt (Image/PDF)</Label>
+              <div className="mt-1">
+                {!receiptFile ? (
+                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        Click to upload
+                      </span>
+                      <span className="text-xs text-gray-500">PNG, JPG, GIF or PDF (up to 10MB)</span>
                     </div>
-                  )}
-                </div>
+                    <input
+                      type="file"
+                      onChange={handleReceiptChange}
+                      accept="image/png,image/jpeg,image/gif,.pdf"
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="space-y-3">
+                    {receiptPreview === "pdf" ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                            <span className="text-xs font-bold text-red-600">PDF</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{receiptFile.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {(receiptFile.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveReceipt}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <img
+                          src={receiptPreview}
+                          alt="Receipt preview"
+                          className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveReceipt}
+                          className="w-full text-red-600 hover:bg-red-50"
+                        >
+                          Remove Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Note (Optional) */}
             <div>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MonthYearPicker } from "@/components/shared/MonthYearPicker";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -570,11 +571,10 @@ export default function BudgetPage() {
                 </SelectContent>
               </Select>
 
-              <Input
-                type="month"
+              <MonthYearPicker
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="h-9 w-36 shrink-0 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
+                onChange={(value) => setSelectedMonth(value)}
+                className="shrink-0"
               />
 
               {hasActiveFilters && (
@@ -721,8 +721,14 @@ export default function BudgetPage() {
 
             <div>
               <Label>Month</Label>
-              <Input type="month" value={selectedMonth} disabled className="mt-1 bg-gray-50" />
-              <p className="text-xs text-gray-500 mt-1">Budget will be set for {selectedMonth}</p>
+              <div className="mt-1">
+                <MonthYearPicker
+                  value={selectedMonth}
+                  onChange={() => {}} // Disabled - can't change month in edit mode
+                  className="opacity-50 pointer-events-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Budget will be set for the selected month</p>
             </div>
           </div>
 

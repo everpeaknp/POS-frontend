@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Trash2, Edit2, TrendingUp, TrendingDown, X } from "lucide-react";
+import { Plus, Search, Trash2, Edit2, TrendingUp, TrendingDown, X, Upload } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,9 +71,54 @@ export default function TransactionsPage() {
   const [filterAccount, setFilterAccount] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const [transactionId, setTransactionId] = useState<string>("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string>("");
+
+  // Generate transaction ID when opening add dialog
+  useEffect(() => {
+    const generateTransactionId = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+    
+    if (showDialog && !editingTransaction) {
+      setTransactionId(generateTransactionId());
+    }
+  }, [showDialog, editingTransaction]);
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Income and expense transactions`;
+
+  // Generate a consistent random-looking 6-character ID from transaction ID
+  const generateDisplayId = (id: string): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = ((hash << 5) - hash) + id.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    let result = '';
+    let num = Math.abs(hash);
+    for (let i = 0; i < 6; i++) {
+      result += chars[num % chars.length];
+      num = Math.floor(num / chars.length);
+    }
+    
+    return result;
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-NP', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   // Filter categories based on selected type
   const availableCategories = useMemo(() => {
@@ -130,6 +175,8 @@ export default function TransactionsPage() {
 
   const openAddDialog = () => {
     setEditingTransaction(null);
+    setReceiptFile(null);
+    setReceiptPreview("");
     setFormData({
       date: todayIsoDate(),
       type: "expense",
@@ -151,6 +198,8 @@ export default function TransactionsPage() {
 
   const openEditDialog = (transaction: Transaction) => {
     setEditingTransaction(transaction);
+    setReceiptFile(null);
+    setReceiptPreview("");
     setFormData({
       date: transaction.date,
       type: transaction.type,
@@ -174,7 +223,7 @@ export default function TransactionsPage() {
       setTransactions((prev) =>
         prev.map((t) =>
           t.id === editingTransaction.id
-            ? { ...t, ...formData }
+            ? { ...t, ...formData, receiptUrl: receiptPreview || t.receiptUrl }
             : t
         )
       );
@@ -184,6 +233,7 @@ export default function TransactionsPage() {
       const newTransaction: Transaction = {
         id: `txn_${Date.now()}`,
         ...formData,
+        receiptUrl: receiptPreview || undefined,
         createdAt: new Date().toISOString(),
       };
       setTransactions((prev) => [newTransaction, ...prev]);
@@ -191,6 +241,8 @@ export default function TransactionsPage() {
     }
 
     setShowDialog(false);
+    setReceiptFile(null);
+    setReceiptPreview("");
   };
 
   const handleDelete = (id: string) => {
@@ -211,6 +263,36 @@ export default function TransactionsPage() {
   const hasActiveFilters = Boolean(
     searchTerm || filterType !== "all" || filterCategory !== "all" || filterAccount !== "all" || dateFrom || dateTo
   );
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Please upload an image (JPG, PNG, GIF) or PDF file");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+      setReceiptFile(file);
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setReceiptPreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setReceiptPreview("pdf");
+      }
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview("");
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -340,9 +422,42 @@ export default function TransactionsPage() {
               )}
             </div>
 
-            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button 
+              onClick={() => {
+                setEditingTransaction(null);
+                setFormData({
+                  date: todayIsoDate(),
+                  type: "income",
+                  amount: 0,
+                  categoryId: "",
+                  accountId: "",
+                  description: "",
+                });
+                setShowDialog(true);
+              }} 
+              className="h-9 shrink-0 bg-emerald-600 hover:bg-emerald-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Add Transaction
+              Add Income
+            </Button>
+
+            <Button 
+              onClick={() => {
+                setEditingTransaction(null);
+                setFormData({
+                  date: todayIsoDate(),
+                  type: "expense",
+                  amount: 0,
+                  categoryId: "",
+                  accountId: "",
+                  description: "",
+                });
+                setShowDialog(true);
+              }} 
+              className="h-9 shrink-0 bg-red-600 hover:bg-red-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Expense
             </Button>
           </div>
         </div>
@@ -366,6 +481,9 @@ export default function TransactionsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Transaction ID
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
@@ -395,7 +513,14 @@ export default function TransactionsPage() {
                     const account = accounts.find((a) => a.id === transaction.accountId);
 
                     return (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={transaction.id} 
+                        onClick={() => router.push(`/dashboard/personal-finance/transactions/${generateDisplayId(transaction.id)}`)}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <td className="px-4 py-3 text-sm">
+                          <span className="font-mono text-xs text-gray-900">#{generateDisplayId(transaction.id)}</span>
+                        </td>
                         <td className="px-4 py-3 text-sm text-gray-900">
                           <FormattedDate value={transaction.date} />
                         </td>
@@ -430,7 +555,7 @@ export default function TransactionsPage() {
                           {formatCurrency(transaction.amount)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -467,6 +592,21 @@ export default function TransactionsPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Transaction ID - Read Only (only for new transactions) */}
+            {!editingTransaction && (
+              <div>
+                <Label>Transaction ID</Label>
+                <Input
+                  type="text"
+                  value={transactionId}
+                  readOnly
+                  className="mt-1 bg-gray-50 text-gray-600 font-mono"
+                  placeholder="Auto-generated"
+                />
+                <p className="text-xs text-gray-500 mt-1">Auto-generated unique identifier</p>
+              </div>
+            )}
+
             <div>
               <Label>
                 Type <span className="text-red-500">*</span>
@@ -570,6 +710,74 @@ export default function TransactionsPage() {
                 placeholder="Optional note"
                 className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
+            </div>
+
+            {/* Receipt Upload */}
+            <div>
+              <Label>Receipt / Bill (Image/PDF)</Label>
+              <div className="mt-1">
+                {!receiptFile ? (
+                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        Click to upload receipt
+                      </span>
+                      <span className="text-xs text-gray-500">PNG, JPG, GIF or PDF (up to 10MB)</span>
+                    </div>
+                    <input
+                      type="file"
+                      onChange={handleReceiptChange}
+                      accept="image/png,image/jpeg,image/gif,.pdf"
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="space-y-3">
+                    {receiptPreview === "pdf" ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                            <span className="text-xs font-bold text-red-600">PDF</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{receiptFile.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {(receiptFile.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveReceipt}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <img
+                          src={receiptPreview}
+                          alt="Receipt preview"
+                          className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveReceipt}
+                          className="w-full text-red-600 hover:bg-red-50"
+                        >
+                          Remove Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
