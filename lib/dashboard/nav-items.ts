@@ -38,6 +38,8 @@ export interface NavItem {
   hideForPersonal?: boolean;
   /** Only show this item for Personal accounts (hide from organizations) */
   personalOnly?: boolean;
+  /** Show a + icon that triggers a quick action menu */
+  hasQuickAction?: boolean;
 }
 
 export function matchesNavChild(pathname: string, child: NavSubItem): boolean {
@@ -215,6 +217,16 @@ export const dashboardNavItems: NavItem[] = [
     ],
   },
   {
+    label: "Parties / Lenders",
+    icon: Users,
+    href: "/dashboard/personal-finance/parties",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+    children: [
+      { label: "Add Transaction", href: "/dashboard/personal-finance/parties?action=add-transaction", createHref: "/dashboard/personal-finance/parties?action=add-transaction" },
+    ],
+  },
+  {
     label: "Budget",
     icon: Wallet,
     href: "/dashboard/personal-finance/budget",
@@ -252,17 +264,6 @@ export const dashboardNavItems: NavItem[] = [
     personalOnly: true,
     children: [
       { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills?new=1" },
-    ],
-  },
-  {
-    label: "Parties / Lenders",
-    icon: Users,
-    requiredModule: "personal_finance",
-    personalOnly: true,
-    children: [
-      { label: "List", href: "/dashboard/personal-finance/parties", exact: true },
-      { label: "In", href: "/dashboard/personal-finance/parties/in" },
-      { label: "Out", href: "/dashboard/personal-finance/parties/out" },
     ],
   },
   {

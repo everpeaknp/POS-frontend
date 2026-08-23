@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import { FormattedDate } from "@/components/shared/FormattedDate";
+import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
 import {
   getTransactions,
   getCategories,
@@ -78,6 +79,7 @@ function calculateTax(totalIncome: number) {
 export default function TaxPage() {
   const { user } = useAuth();
   const scope = user?.tenant?.slug ?? null;
+  const { dateSystem } = useDateSystemStore();
   const [selectedPeriod, setSelectedPeriod] = useState<"ytd" | "fy2026" | "fy2025">("ytd");
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>(() =>
@@ -93,6 +95,11 @@ export default function TaxPage() {
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Tax calculation based on income`;
+
+  // Get display labels for years based on date system
+  const currentYearLabel = dateSystem === 'BS' ? '2083' : '2026';
+  const fy2026Label = dateSystem === 'BS' ? 'FY 2082/83' : 'FY 2025/26';
+  const fy2025Label = dateSystem === 'BS' ? 'FY 2081/82' : 'FY 2024/25';
 
   // Filter income by period
   const filteredIncome = useMemo(() => {
@@ -152,28 +159,33 @@ export default function TaxPage() {
 
         {/* Period Selector */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Period</Label>
+          <Label className="text-sm font-medium text-gray-700 mb-3 block">
+            Select Period 
+            <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${dateSystem === 'BS' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+              {dateSystem}
+            </span>
+          </Label>
           <div className="flex gap-2">
             <Button
               variant={selectedPeriod === "ytd" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("ytd")}
               className={selectedPeriod === "ytd" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
             >
-              Year to Date (2026)
+              Year to Date ({currentYearLabel})
             </Button>
             <Button
               variant={selectedPeriod === "fy2026" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("fy2026")}
               className={selectedPeriod === "fy2026" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
             >
-              FY 2025/26
+              {fy2026Label}
             </Button>
             <Button
               variant={selectedPeriod === "fy2025" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("fy2025")}
               className={selectedPeriod === "fy2025" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
             >
-              FY 2024/25
+              {fy2025Label}
             </Button>
           </div>
         </div>

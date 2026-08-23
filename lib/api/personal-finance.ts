@@ -190,7 +190,7 @@ export const partyTransactionShareAPI = {
     const response = await apiClient.get<PartyTransactionShare>(`/finance/party-shares/${id}/`);
     return response.data;
   },
-  create: async (data: Partial<PartyTransactionShare>) => {
+  create: async (data: { share_type: 'transaction' | 'party_ledger'; transaction?: number; party?: number; is_active: boolean }) => {
     const response = await apiClient.post<PartyTransactionShare>('/finance/party-shares/', data);
     return response.data;
   },

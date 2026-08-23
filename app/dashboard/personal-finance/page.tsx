@@ -378,7 +378,7 @@ export default function PersonalFinanceDashboardPage() {
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700">Recent Activities</h3>
               <Link
-                href="/dashboard/personal-finance/transactions"
+                href="/dashboard/personal-finance/activities"
                 className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all
