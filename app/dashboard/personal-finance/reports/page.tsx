@@ -20,6 +20,7 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
+import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
 
 // MOCK DATA - Pulls from same structure as Transactions, Category, and Account pages
 // TODO: Replace with real backend API calls when endpoints are ready
@@ -116,9 +117,19 @@ const CHART_COLORS = {
 
 export default function ReportsPage() {
   const { user } = useAuth();
+  const dateSystem = useDateSystemStore((state) => state.dateSystem);
+  const formatDate = useDateSystemStore((state) => state.formatDate);
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Financial reports and analytics`;
+
+  // Helper to format month/year based on date system
+  const formatMonthYear = (dateString: string) => {
+    // Format as YYYY-MM-01 to get the first day of the month
+    const fullDate = dateString + "-01";
+    // Use the store's formatDate which handles AD/BS conversion
+    return formatDate(fullDate);
+  };
 
   // Monthly Income vs Expense Trend
   const monthlyTrend = useMemo(() => {
@@ -139,12 +150,12 @@ export default function ReportsPage() {
     return Object.entries(months)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, data]) => ({
-        month: new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+        month: formatMonthYear(month),
         income: data.income,
         expense: data.expense,
         net: data.income - data.expense,
       }));
-  }, []);
+  }, [dateSystem]);
 
   // Category Spending Breakdown (Expenses only)
   const categoryBreakdown = useMemo(() => {
@@ -171,11 +182,11 @@ export default function ReportsPage() {
 
     // Simulate historical data (in real app, this would come from historical snapshots)
     return [
-      { month: "Jun 2026", netWorth: currentNetWorth - 50000 },
-      { month: "Jul 2026", netWorth: currentNetWorth - 20000 },
-      { month: "Aug 2026", netWorth: currentNetWorth },
+      { month: formatMonthYear("2026-06"), netWorth: currentNetWorth - 50000 },
+      { month: formatMonthYear("2026-07"), netWorth: currentNetWorth - 20000 },
+      { month: formatMonthYear("2026-08"), netWorth: currentNetWorth },
     ];
-  }, []);
+  }, [dateSystem]);
 
   // Summary Stats
   const summary = useMemo(() => {

@@ -86,8 +86,42 @@ export interface PartyLender {
   email?: string;
   photo?: File | string | null;
   photo_url?: string | null;
+  total_given: number;
+  total_received: number;
+  net_balance: number;
+  share_token?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PartyTransaction {
+  id: number;
+  party: number;
+  party_name: string;
+  direction: 'in' | 'out';
+  direction_display: string;
+  amount: string;
+  date: string;
+  payment_method?: 'cash' | 'esewa' | 'bank' | null;
+  payment_method_display?: string;
+  receipt?: File | string | null;
+  receipt_url?: string | null;
+  note?: string;
+  share_token?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartyTransactionShare {
+  id: number;
+  token: string;
+  share_type: 'transaction' | 'party_ledger';
+  share_type_display: string;
+  is_active: boolean;
+  expires_at?: string | null;
+  transaction_data?: PartyTransaction | null;
+  party_data?: PartyLender | null;
+  created_at: string;
 }
 
 // ==================== API ENDPOINTS ====================
@@ -116,6 +150,52 @@ export const partyLenderAPI = {
   },
   delete: async (id: number) => {
     await apiClient.delete(`/finance/parties/${id}/`);
+  },
+};
+
+// Party Transactions API (In/Out)
+export const partyTransactionAPI = {
+  list: async () => {
+    const response = await apiClient.get<{ results: PartyTransaction[] }>('/finance/party-transactions/');
+    return response.data.results;
+  },
+  get: async (id: number) => {
+    const response = await apiClient.get<PartyTransaction>(`/finance/party-transactions/${id}/`);
+    return response.data;
+  },
+  create: async (data: FormData | Partial<PartyTransaction>) => {
+    const response = await apiClient.post<PartyTransaction>('/finance/party-transactions/', data, {
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
+    return response.data;
+  },
+  update: async (id: number, data: FormData | Partial<PartyTransaction>) => {
+    const response = await apiClient.put<PartyTransaction>(`/finance/party-transactions/${id}/`, data, {
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    await apiClient.delete(`/finance/party-transactions/${id}/`);
+  },
+};
+
+// Party Transaction Shares API (Read-only links)
+export const partyTransactionShareAPI = {
+  list: async () => {
+    const response = await apiClient.get<{ results: PartyTransactionShare[] }>('/finance/party-shares/');
+    return response.data.results;
+  },
+  get: async (id: number) => {
+    const response = await apiClient.get<PartyTransactionShare>(`/finance/party-shares/${id}/`);
+    return response.data;
+  },
+  create: async (data: { share_type: 'transaction' | 'party_ledger'; transaction?: number; party?: number; is_active: boolean }) => {
+    const response = await apiClient.post<PartyTransactionShare>('/finance/party-shares/', data);
+    return response.data;
+  },
+  delete: async (id: number) => {
+    await apiClient.delete(`/finance/party-shares/${id}/`);
   },
 };
 

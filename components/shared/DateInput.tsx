@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
 import { useAppearance } from "@/lib/context/AppearanceContext";
 import { formatIsoDateLocal, parseIsoDateLocal, todayIsoDate } from "@/lib/dates";
 import "./DateInput.css";
@@ -193,7 +194,8 @@ export function DateInput({
   min,
   max,
 }: DateInputProps) {
-  const { dateSystem } = useDateSystem();
+  // Use Zustand store directly for instant reactivity
+  const dateSystem = useDateSystemStore((state) => state.dateSystem);
 
   if (dateSystem === "AD") {
     return (
