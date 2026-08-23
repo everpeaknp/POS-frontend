@@ -258,6 +258,10 @@ export const dashboardNavItems: NavItem[] = [
     href: "/dashboard/personal-finance/parties",
     requiredModule: "personal_finance",
     personalOnly: true,
+    children: [
+      { label: "Money In", href: "/dashboard/personal-finance/parties?action=money-in" },
+      { label: "Money Out", href: "/dashboard/personal-finance/parties?action=money-out" },
+    ],
   },
   {
     label: "Tax",

@@ -111,6 +111,16 @@ export default function PartiesPage() {
       openAddDialog();
       router.replace("/dashboard/personal-finance/parties", { scroll: false });
     }
+    
+    // Handle action query parameter for Money In/Out
+    const action = searchParams.get("action");
+    if (action === "money-in") {
+      openTransactionModal("in");
+      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+    } else if (action === "money-out") {
+      openTransactionModal("out");
+      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+    }
   }, [searchParams, router]);
 
   const filteredParties = useMemo(() => {
