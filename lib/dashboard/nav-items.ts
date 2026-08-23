@@ -11,6 +11,8 @@ import {
   HardHat,
   Wrench,
   Wallet,
+  CreditCard,
+  DollarSign,
   type LucideIcon,
 } from "lucide-react";
 
@@ -307,9 +309,11 @@ export function filterDashboardNavItems(
     canView: (module: string) => boolean;
     role?: string | null;
     accountType?: string | null;
+    businessType?: string | null;
   }
 ): NavItem[] {
   const isPersonal = opts.accountType === "personal";
+  const isKirana = opts.businessType === "kirana" || opts.businessType === "retail";
 
   const filterChildren = (children?: NavSubItem[]) =>
     children?.filter((child) => {
@@ -318,6 +322,107 @@ export function filterDashboardNavItems(
       return true;
     });
 
+  // If kirana, return only kirana navigation
+  if (isKirana) {
+    const kiranaItems: NavItem[] = [
+      { label: "Overview", icon: LayoutDashboard, href: "/dashboard/kirana", hideForPersonal: true },
+      {
+        label: "Sales/POS",
+        icon: TrendingUp,
+        requiredModule: "sales",
+        children: [
+          { label: "Overview", href: "/dashboard/sales", exact: true },
+          { label: "Invoices", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
+          { label: "Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
+        ],
+      },
+      {
+        label: "Inventory",
+        icon: Package,
+        requiredModule: "inventory",
+        children: [
+          { label: "Overview", href: "/dashboard/inventory", exact: true },
+          { label: "Products", href: "/dashboard/inventory/products", createHref: "/dashboard/inventory/products/new" },
+          { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment?new=1" },
+        ],
+      },
+      {
+        label: "Udhaaro",
+        icon: CreditCard,
+        requiredModule: "sales",
+        children: [
+          { label: "Overview", href: "/dashboard/sales", exact: true },
+          { label: "Credit Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
+          { label: "Credit Sales", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
+        ],
+      },
+      {
+        label: "Purchases",
+        icon: ShoppingCart,
+        requiredModule: "purchase",
+        children: [
+          { label: "Overview", href: "/dashboard/purchase", exact: true },
+          { label: "Invoices", href: "/dashboard/purchase/invoices", createHref: "/dashboard/purchase/invoices/new" },
+          { label: "Suppliers", href: "/dashboard/purchase/suppliers", createHref: "/dashboard/purchase/suppliers/new" },
+        ],
+      },
+      {
+        label: "Expenses",
+        icon: DollarSign,
+        requiredModule: "accounting",
+        children: [
+          { label: "Overview", href: "/dashboard/accounting", exact: true },
+          { label: "Journal Entries", href: "/dashboard/accounting/journal-entries", createHref: "/dashboard/accounting/journal-entries/new" },
+        ],
+      },
+      {
+        label: "Reports",
+        icon: BarChart2,
+        requiredModule: "reports",
+        children: [
+          { label: "Overview", href: "/dashboard/reports", exact: true },
+          { label: "Sales Report", href: "/dashboard/reports/sales" },
+          { label: "Inventory Report", href: "/dashboard/reports/inventory" },
+        ],
+      },
+      {
+        label: "Settings",
+        icon: Settings,
+        requiredModule: "settings",
+        requiredRoles: ["admin", "manager"],
+        hideForPersonal: true,
+        children: [
+          { label: "Organization Settings", href: "/dashboard/settings/org", hideForPersonal: true },
+          { label: "Modules", href: "/dashboard/settings/modules", hideForPersonal: true },
+          { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite", hideForPersonal: true },
+        ],
+      },
+    ];
+
+    return kiranaItems
+      .filter((item) => {
+        if (item.requiredModule && !opts.canView(item.requiredModule)) {
+          return false;
+        }
+
+        if (item.requiredRoles && opts.role) {
+          if (opts.role === "admin" || opts.role === "super_admin") {
+            return true;
+          }
+          if (!item.requiredRoles.includes(opts.role)) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .map((item) =>
+        item.children ? { ...item, children: filterChildren(item.children) } : item
+      )
+      .filter((item) => !item.children || item.children.length > 0);
+  }
+
+  // Standard navigation for non-kirana
   return items
     .filter((item) => {
       // Hide personal-only items from organizations

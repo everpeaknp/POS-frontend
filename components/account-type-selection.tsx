@@ -1,10 +1,10 @@
 "use client";
 
-import { User, Users, AlertCircle } from "lucide-react";
+import { User, Users, ShoppingBag, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type AccountType = "personal" | "organization";
+export type AccountType = "personal" | "retail" | "organization";
 
 interface AccountTypeSelectionProps {
   onSelect: (type: AccountType) => void;
@@ -35,6 +35,20 @@ export function AccountTypeSelection({
       disabledReason: "You already have a personal account",
     },
     {
+      type: "retail" as AccountType,
+      icon: ShoppingBag,
+      title: "Retail",
+      description: "Run a retail shop or kirana store",
+      features: [
+        "Point of sale (POS) & billing",
+        "Inventory & stock tracking",
+        "Udhaaro / credit ledger",
+        "Daily sales reports",
+      ],
+      disabled: !canCreateOrganization,
+      disabledReason: "Organization limit reached for your plan",
+    },
+    {
       type: "organization" as AccountType,
       icon: Users,
       title: "Organization",
@@ -52,7 +66,7 @@ export function AccountTypeSelection({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {accountTypes.map((option) => {
           const Icon = option.icon;
           return (

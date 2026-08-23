@@ -50,7 +50,7 @@ export default function NewOrgPage() {
     if (accountType === "personal") {
       return [ACCOUNT_TYPE_STEP, PERSONAL_DETAILS_STEP, ORG_WIZARD_STEPS[3]];
     }
-    if (accountType === "organization") {
+    if (accountType === "retail" || accountType === "organization") {
       return [ACCOUNT_TYPE_STEP, ORG_WIZARD_STEPS[1], ORG_WIZARD_STEPS[2], ORG_WIZARD_STEPS[3]];
     }
     return [ACCOUNT_TYPE_STEP];
@@ -106,8 +106,11 @@ export default function NewOrgPage() {
     if (accountType === "personal") {
       setSelectedModules([...PERSONAL_ACCOUNT_MODULE_IDS]);
       setStep(3); // straight to review — no module picker for Personal
-    } else {
+    } else if (accountType === "retail") {
+      // Retail uses kirana modules (already set via business_type='retail')
       setStep(3); // module picker
+    } else {
+      setStep(3); // module picker for organization
     }
   };
 
@@ -167,15 +170,15 @@ export default function NewOrgPage() {
 
       {step === 2 && (
         <OrgForm
-          accountType={accountType ?? "organization"}
-          initialData={organizationData ?? undefined}
+          accountType={accountType === "retail" ? "organization" : (accountType ?? "organization")}
+          initialData={organizationData ? { ...organizationData, business_type: accountType === "retail" ? "retail" : organizationData.business_type } : (accountType === "retail" ? { business_type: "retail" } : undefined)}
           onNext={handleDetailsComplete}
           showBackButton
           onBack={() => setStep(1)}
         />
       )}
 
-      {accountType === "organization" && step === 3 && organizationData && (
+      {(accountType === "organization" || accountType === "retail") && step === 3 && organizationData && (
         <ModuleSelection
           organizationData={organizationData}
           onBack={() => setStep(2)}
@@ -185,7 +188,7 @@ export default function NewOrgPage() {
 
       {step === reviewStep && organizationData && selectedModules.length > 0 && (
         <OrgReview
-          accountType={accountType ?? "organization"}
+          accountType={accountType === "retail" ? "organization" : (accountType ?? "organization")}
           organizationData={organizationData}
           selectedModules={selectedModules}
           onBack={() => setStep(accountType === "personal" ? 2 : 3)}

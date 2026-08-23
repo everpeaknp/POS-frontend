@@ -54,14 +54,14 @@ export default function NewPurchaseInvoicePage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [suppliersData, ordersData, productsData] = await Promise.all([
+      const [suppliersData, ordersData, productsResponse] = await Promise.all([
         suppliersAPI.list({ status: "active" }),
         purchaseOrdersAPI.list(),
         inventoryApi.products.list({ status: "active" }),
       ]);
       setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
-      setProducts(Array.isArray(productsData) ? productsData : (productsData as { results?: Product[] })?.results || []);
+      setProducts(productsResponse.data.results || []);
     } catch (error) {
       toast.error("Failed to load data");
     } finally {
