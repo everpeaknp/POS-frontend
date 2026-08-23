@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Edit2, Trash2, Users, Phone, Mail, LayoutGrid, List, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Copy, Check } from "@/lib/icons/lucide-react-shim";
+import { Plus, Search, Edit2, Trash2, Users, Phone, Mail, LayoutGrid, List, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Copy, Check, ArrowDownLeft, ArrowUpRight, Upload } from "@/lib/icons/lucide-react-shim";
 import { WhatsAppIcon, FacebookMessengerIcon, TelegramIcon, EnvelopeIcon } from "@/lib/icons/lucide-react-shim";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { PartyTransactions } from "./transactions";
+import { PartySelector } from "./party-selector";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
-import { partyLenderAPI } from "@/lib/api/personal-finance";
+import { partyLenderAPI, partyTransactionAPI } from "@/lib/api/personal-finance";
 
 interface Party {
   id: number;
@@ -47,6 +48,20 @@ export default function PartiesPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
+  
+  // Transaction modal state
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState<"in" | "out">("in");
+  const [transactionLoading, setTransactionLoading] = useState(false);
+  const [transactionPartyId, setTransactionPartyId] = useState<number | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string>("");
+  const [transactionFormData, setTransactionFormData] = useState({
+    amount: "",
+    date: new Date().toISOString().split("T")[0],
+    paymentMethod: "cash",
+    note: "",
+  });
 
   const [formData, setFormData] = useState<Omit<Party, "id" | "createdAt" | "total_given" | "total_received" | "net_balance">>({
     name: "",
@@ -212,6 +227,93 @@ export default function PartiesPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const openTransactionModal = (type: "in" | "out") => {
+    setTransactionType(type);
+    setTransactionPartyId(null);
+    setReceiptFile(null);
+    setReceiptPreview("");
+    setTransactionFormData({
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      paymentMethod: "cash",
+      note: "",
+    });
+    setTransactionModalOpen(true);
+  };
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Please upload an image (JPG, PNG, GIF) or PDF file");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+      setReceiptFile(file);
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setReceiptPreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setReceiptPreview("pdf");
+      }
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview("");
+  };
+
+  const handleSaveTransaction = async () => {
+    if (!transactionPartyId) {
+      toast.error("Please select a party");
+      return;
+    }
+    if (!transactionFormData.amount || parseFloat(transactionFormData.amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (!transactionFormData.date) {
+      toast.error("Please select a date");
+      return;
+    }
+    if (transactionType === "out" && !transactionFormData.paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
+    try {
+      setTransactionLoading(true);
+      const createData = new FormData();
+      createData.append("party", String(transactionPartyId));
+      createData.append("direction", transactionType);
+      createData.append("amount", transactionFormData.amount);
+      createData.append("date", transactionFormData.date);
+      if (transactionType === "out") {
+        createData.append("payment_method", transactionFormData.paymentMethod);
+      }
+      if (transactionFormData.note) createData.append("note", transactionFormData.note);
+      if (receiptFile) createData.append("receipt", receiptFile);
+
+      await partyTransactionAPI.create(createData);
+      toast.success("Transaction recorded successfully");
+      setTransactionModalOpen(false);
+      loadParties();
+    } catch (error) {
+      console.error("Failed to create transaction:", error);
+      toast.error("Failed to record transaction");
+    } finally {
+      setTransactionLoading(false);
+    }
+  };
+
   if (selectedPartyForTransactions) {
     return (
       <div className="flex flex-col min-h-full">
@@ -273,6 +375,16 @@ export default function PartiesPage() {
             <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Party
+            </Button>
+            
+            <Button onClick={() => openTransactionModal("in")} className="bg-emerald-600 hover:bg-emerald-700">
+              <ArrowDownLeft className="h-4 w-4 mr-2" />
+              Money In
+            </Button>
+            
+            <Button onClick={() => openTransactionModal("out")} className="bg-blue-600 hover:bg-blue-700">
+              <ArrowUpRight className="h-4 w-4 mr-2" />
+              Money Out
             </Button>
           </div>
         </div>
@@ -540,6 +652,178 @@ export default function PartiesPage() {
               className="bg-[#22C55E] hover:bg-[#22C55E]/90"
             >
               Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Modal (Money In/Out) */}
+      <Dialog open={transactionModalOpen} onOpenChange={setTransactionModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {transactionType === "in" ? (
+                <>
+                  <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+                  Money Received
+                </>
+              ) : (
+                <>
+                  <ArrowUpRight className="h-5 w-5 text-blue-600" />
+                  Money Given
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Party Selector */}
+            <PartySelector
+              value={transactionPartyId}
+              onChange={(id) => setTransactionPartyId(id)}
+              label="Select Party"
+              required
+            />
+
+            {/* Amount */}
+            <div>
+              <Label>Amount (Rs.) <span className="text-red-500">*</span></Label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={transactionFormData.amount}
+                onChange={(e) => setTransactionFormData({ ...transactionFormData, amount: e.target.value })}
+                className="mt-1"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            {/* Date */}
+            <div>
+              <Label>Date <span className="text-red-500">*</span></Label>
+              <Input
+                type="date"
+                value={transactionFormData.date}
+                onChange={(e) => setTransactionFormData({ ...transactionFormData, date: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Payment Method (only for Money Out) */}
+            {transactionType === "out" && (
+              <div>
+                <Label>Payment Method <span className="text-red-500">*</span></Label>
+                <select
+                  value={transactionFormData.paymentMethod}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, paymentMethod: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                >
+                  <option value="">Select payment method...</option>
+                  <option value="cash">Cash</option>
+                  <option value="esewa">eSewa</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
+            )}
+
+            {/* Receipt Upload (only for Money Out) */}
+            {transactionType === "out" && (
+              <div>
+                <Label>Receipt (Image/PDF)</Label>
+                <div className="mt-1">
+                  {!receiptFile ? (
+                    <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-5 w-5 text-gray-400" />
+                        <span className="text-sm text-gray-600">
+                          Click to upload
+                        </span>
+                        <span className="text-xs text-gray-500">PNG, JPG, GIF or PDF (up to 10MB)</span>
+                      </div>
+                      <input
+                        type="file"
+                        onChange={handleReceiptChange}
+                        accept="image/png,image/jpeg,image/gif,.pdf"
+                        className="hidden"
+                      />
+                    </label>
+                  ) : (
+                    <div className="space-y-3">
+                      {receiptPreview === "pdf" ? (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                              <span className="text-xs font-bold text-red-600">PDF</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{receiptFile.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(receiptFile.size / 1024).toFixed(1)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRemoveReceipt}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <img
+                            src={receiptPreview}
+                            alt="Receipt preview"
+                            className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoveReceipt}
+                            className="w-full text-red-600 hover:bg-red-50"
+                          >
+                            Remove Image
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Note (Optional) */}
+            <div>
+              <Label>Note (Optional)</Label>
+              <textarea
+                placeholder="Add a note..."
+                value={transactionFormData.note}
+                onChange={(e) => setTransactionFormData({ ...transactionFormData, note: e.target.value })}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setTransactionModalOpen(false)}
+              disabled={transactionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveTransaction}
+              disabled={transactionLoading}
+              className={transactionType === "in" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"}
+            >
+              {transactionLoading ? "Saving..." : "Record Transaction"}
             </Button>
           </div>
         </DialogContent>
