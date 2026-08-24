@@ -6,7 +6,7 @@
  */
 
 export interface ParsedRetailCommand {
-  intent: 'add-item' | 'restock' | 'unknown';
+  intent: 'add-item' | 'restock' | 'stock-out' | 'unknown';
   itemName?: string;
   quantity?: number;
   missingFields?: string[];
@@ -47,6 +47,20 @@ export function parseRetailCommand(input: string): ParsedRetailCommand {
     const itemName = restockMatch[2].trim();
     return {
       intent: 'restock',
+      itemName,
+      quantity,
+    };
+  }
+
+  // Pattern 3: "remove/deduct [quantity] stock from [item]"
+  // Example: "remove 400 stock from chowmein"
+  // Example: "deduct 400 from chowmein"
+  const stockOutMatch = normalized.match(/^(?:remove|deduct|घटाउनुहोस्|निकाल्नुहोस्)\s+(\d+)\s+(?:stock\s+)?(?:from|बाट)\s+(.+?)$/i);
+  if (stockOutMatch) {
+    const quantity = parseInt(stockOutMatch[1], 10);
+    const itemName = stockOutMatch[2].trim();
+    return {
+      intent: 'stock-out',
       itemName,
       quantity,
     };

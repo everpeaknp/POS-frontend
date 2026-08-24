@@ -60,6 +60,19 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
     loadData();
   }, []);
 
+  // Reload data when modal opens if warehouses/accounts are empty (fixes race condition on some pages)
+  useEffect(() => {
+    if (isOpen) {
+      if (isPersonal && accounts.length === 0) {
+        console.log('[QuickAdd] Modal opened but accounts empty - reloading data');
+        loadData();
+      } else if (!isPersonal && warehouses.length === 0) {
+        console.log('[QuickAdd] Modal opened but warehouses empty - reloading data');
+        loadData();
+      }
+    }
+  }, [isOpen, isPersonal, accounts.length, warehouses.length]);
+
   const loadData = async () => {
     try {
       if (isPersonal) {
@@ -76,20 +89,48 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
         }
       } else {
         // Load products and warehouses for retail/kirana
-        const [productsRes, warehousesRes] = await Promise.all([
+        let [productsRes, warehousesRes] = await Promise.all([
           inventoryApi.products.list({ limit: 1000 }),
           inventoryApi.warehouses.list({ limit: 100 }),
         ]);
         
         const allProducts = productsRes.data?.results || [];
-        const allWarehouses = warehousesRes.data?.results || [];
+        let allWarehouses = warehousesRes.data?.results || [];
+        
+        console.log('[QuickAdd] warehouses loaded:', allWarehouses);
+        console.log('[QuickAdd] products loaded:', allProducts.length);
+        
+        // If no warehouses exist, create a default one
+        if (allWarehouses.length === 0) {
+          console.log('[QuickAdd] No warehouses found - creating default warehouse');
+          try {
+            const defaultWarehouse = await inventoryApi.warehouses.create({
+              name: 'Main Warehouse',
+              location: 'Default Location',
+              is_active: true,
+            });
+            allWarehouses = [defaultWarehouse.data];
+            console.log('[QuickAdd] Default warehouse created:', defaultWarehouse.data);
+          } catch (error) {
+            console.error('[QuickAdd] Failed to create default warehouse:', error);
+            toast.error('Failed to create default warehouse');
+          }
+        }
         
         setProducts(allProducts);
         setWarehouses(allWarehouses);
 
         // Auto-select first warehouse if available
+        console.log('[QuickAdd] auto-select check:', { 
+          warehouseCount: allWarehouses.length, 
+          currentSelected: selectedWarehouse,
+          willAutoSelect: allWarehouses.length > 0 && !selectedWarehouse
+        });
         if (allWarehouses.length > 0 && !selectedWarehouse) {
+          console.log('[QuickAdd] auto-selecting warehouse:', allWarehouses[0].id);
           setSelectedWarehouse(allWarehouses[0].id);
+        } else if (allWarehouses.length === 0) {
+          console.warn('[QuickAdd] No warehouses available - button will be disabled');
         }
       }
     } catch (error) {
@@ -235,10 +276,16 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
       
       // Check if item already exists
       const existingProduct = fuzzyMatchProduct(itemName, products);
+      console.log('[QuickAdd] existing check result:', existingProduct ? `Found: ${existingProduct.name}` : 'Not found - will create');
       
       if (existingProduct) {
+        console.log('[QuickAdd] showing toast (error - already exists)');
         toast.error(`${existingProduct.name} already exists in inventory (Stock: ${existingProduct.total_stock || 0} units)`);
-        handleClose();
+        console.log('[QuickAdd] closing modal (error path)');
+        // Delay close so user sees the error toast
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
       } else {
         // Item doesn't exist - create it with default values
         // Required fields: name, unit, cost_price, selling_price
@@ -250,6 +297,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
           const units = unitsRes.data?.results || [];
           const defaultUnit = units.length > 0 ? units[0].id : 1;
 
+          console.log('[QuickAdd] calling create with:', { name: itemName, unit: defaultUnit });
           // Create the product with minimal required fields
           const newProduct = await inventoryApi.products.create({
             name: itemName,
@@ -260,27 +308,42 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
             description: `Added via Quick Add`,
             status: 'active',
           });
+          console.log('[QuickAdd] create success:', newProduct);
 
-          toast.success(`${itemName} added to inventory! Now add stock.`);
-          
           // Refresh products list
           await loadData();
           
-          // Close modal and show next step
-          handleClose();
+          console.log('[QuickAdd] showing toast (success)');
+          // Show success toast FIRST
+          toast.success(`${itemName} added to inventory! Now add stock.`);
           
-          // Optionally navigate to product edit page
+          console.log('[QuickAdd] closing modal (success path)');
+          // Delay close so user sees the success toast
           setTimeout(() => {
+            handleClose();
+            // Navigate to product edit page after modal closes
             router.push(`/dashboard/inventory/products/${newProduct?.id}`);
-          }, 1000);
+          }, 1500);
         } catch (err: any) {
-          console.error('Error creating product:', err);
+          console.error('[QuickAdd] Error creating product:', err);
+          console.log('[QuickAdd] showing toast (error - create failed)');
           toast.error(err.response?.data?.detail || 'Failed to create item');
+          console.log('[QuickAdd] closing modal (create error path)');
+          // Delay close so user sees the error toast
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
         }
       }
     } catch (error) {
-      console.error('Error checking item:', error);
+      console.error('[QuickAdd] Error checking item:', error);
+      console.log('[QuickAdd] showing toast (error - check failed)');
       toast.error('Failed to process item');
+      console.log('[QuickAdd] closing modal (check error path)');
+      // Delay close so user sees the error toast
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
     } finally {
       setIsSaving(false);
     }
@@ -314,7 +377,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
         await inventoryApi.operations.stockIn({
           product: productId,
           warehouse: selectedWarehouse,
-          quantity: quantity.toString(),
+          quantity,
           reason: 'New order received',
           notes: `Added via quick add: ${input}`,
         });
@@ -330,7 +393,73 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
       }
     } catch (error) {
       console.error('Error restocking item:', error);
+      console.log('[QuickAdd] stockIn error response:', error.response?.data);
       toast.error('Failed to restock item');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRetailStockOut = async () => {
+    if (!retailParsedCommand || !retailParsedCommand.itemName || !retailParsedCommand.quantity) return;
+
+    setIsSaving(true);
+    try {
+      const itemName = retailParsedCommand.itemName;
+      const quantity = retailParsedCommand.quantity;
+      
+      // Check if item exists
+      const existingProduct = fuzzyMatchProduct(itemName, products);
+      
+      if (!existingProduct) {
+        toast.error(`"${itemName}" not found in inventory`);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+      } else {
+        // Check warehouse
+        if (!selectedWarehouse) {
+          toast.error('No warehouse selected');
+          return;
+        }
+
+        // Check sufficient stock
+        const currentStock = existingProduct.total_stock || 0;
+        if (currentStock < quantity) {
+          toast.error(`Not enough stock — ${existingProduct.name} has only ${currentStock} in stock`);
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
+          return;
+        }
+
+        const productId = Number(existingProduct.id);
+
+        await inventoryApi.operations.stockOut({
+          product: productId,
+          warehouse: selectedWarehouse,
+          quantity,
+          reason: 'Stock removed via quick add',
+          notes: `Removed via quick add: ${input}`,
+        });
+
+        const newStock = currentStock - quantity;
+        toast.success(`${quantity} stock removed from ${existingProduct.name}. New stock: ${newStock}`);
+        
+        // Refresh products list
+        await loadData();
+        
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error removing stock:', error);
+      console.log('[QuickAdd] stockOut error response:', error.response?.data);
+      toast.error('Failed to remove stock');
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
     } finally {
       setIsSaving(false);
     }
@@ -343,6 +472,8 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
       await handleRetailAddItem();
     } else if (retailParsedCommand.intent === 'restock') {
       await handleRetailRestock();
+    } else if (retailParsedCommand.intent === 'stock-out') {
+      await handleRetailStockOut();
     }
   };
 
@@ -619,6 +750,12 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
             {/* Confirmation Card - Retail/Kirana */}
             {!isPersonal && retailParsedCommand && (
               <div className="bg-white border-2 border-[#22C55E] rounded-lg p-4 space-y-3">
+                {console.log('[QuickAdd] Retail confirmation card render', { 
+                  isSaving, 
+                  selectedWarehouse, 
+                  warehouses: warehouses.length,
+                  retailParsedCommand: retailParsedCommand?.itemName 
+                })}
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-gray-900">
@@ -663,6 +800,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t">
+                  {console.log('[QuickAdd] restock button state', { isSaving, selectedWarehouse, intent: retailParsedCommand?.intent })}
                   <Button
                     variant="outline"
                     size="sm"
@@ -674,7 +812,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
                   </Button>
                   <Button
                     onClick={handleConfirm}
-                    disabled={isSaving || !selectedWarehouse}
+                    disabled={isSaving || ((retailParsedCommand?.intent === 'restock' || retailParsedCommand?.intent === 'stock-out') && !selectedWarehouse)}
                     className="bg-[#22C55E] hover:bg-[#22C55E]/90"
                   >
                     {isSaving ? (
