@@ -300,16 +300,18 @@ function SidebarContent({
       canView: permissions.canView,
       role: user?.role,
       accountType: user?.tenant?.account_type,
+      businessType: user?.tenant?.business_type,
     });
     
     // Debug logging
     if (typeof window !== 'undefined') {
       console.log('Sidebar - Account Type:', user?.tenant?.account_type);
+      console.log('Sidebar - Business Type:', user?.tenant?.business_type);
       console.log('Sidebar - Filtered Nav Items:', items.map(i => i.label));
     }
     
     return items;
-  }, [permissions.canView, user?.role, user?.tenant?.account_type]);
+  }, [permissions.canView, user?.role, user?.tenant?.account_type, user?.tenant?.business_type]);
 
   const searchedNavItems = filterNavByQuery(filteredNavItems, navQuery);
   const isSearching = navQuery.trim().length > 0;

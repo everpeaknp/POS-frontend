@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
-import { Plus } from "lucide-react";
+import { Plus, Upload, X, ChevronDownIcon } from "lucide-react";
 
 import FormField from '@/components/shared/FormField';
 import { inventoryApi } from '@/lib/api/inventory';
@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DateInput } from '@/components/shared/DateInput';
 import { cn } from '@/lib/utils';
 
-const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-[#22C55E]';
+const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300';
 
 const productSchema = z
   .object({
@@ -26,9 +26,10 @@ const productSchema = z
     sku: z
       .string()
       .trim()
-      .min(1, 'SKU is required')
       .max(100, 'SKU must be 100 characters or less')
-      .regex(/^[A-Za-z0-9._-]+$/, 'SKU can only contain letters, numbers, dots, dashes, and underscores'),
+      .regex(/^[A-Za-z0-9._-]*$/, 'SKU can only contain letters, numbers, dots, dashes, and underscores')
+      .optional()
+      .or(z.literal('')),
     category: z
       .string()
       .nullable()
@@ -39,8 +40,9 @@ const productSchema = z
       .refine((val) => !!val, 'Unit of measure is required'),
     cost_price: z
       .string()
-      .min(1, 'Cost price is required')
-      .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, {
+      .optional()
+      .or(z.literal(''))
+      .refine((val) => !val || val === '' || (!Number.isNaN(Number(val)) && Number(val) >= 0), {
         message: 'Enter a valid amount (0 or greater)',
       }),
     selling_price: z
@@ -49,21 +51,22 @@ const productSchema = z
       .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, {
         message: 'Enter a valid amount (0 or greater)',
       }),
-    reorder_level: z
+    opening_stock: z
       .string()
       .optional()
       .refine((val) => !val || val === '' || (!Number.isNaN(Number(val)) && Number(val) >= 0), {
-        message: 'Reorder level must be 0 or greater',
+        message: 'Opening stock must be 0 or greater',
       }),
     expiry_date: z.string().optional().or(z.literal('')),
     description: z.string().max(2000, 'Description is too long').optional().or(z.literal('')),
     status: z.enum(['active', 'inactive', 'discontinued']),
     total_stock: z.number().optional(),
+    image: z.any().optional(),
   })
   .superRefine((data, ctx) => {
-    const cost = Number(data.cost_price);
+    const cost = data.cost_price ? Number(data.cost_price) : 0;
     const selling = Number(data.selling_price);
-    if (!Number.isNaN(cost) && !Number.isNaN(selling) && selling < cost) {
+    if (data.cost_price && !Number.isNaN(cost) && !Number.isNaN(selling) && selling < cost) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Selling price cannot be less than cost price',
@@ -112,6 +115,22 @@ export default function ProductForm({
     type: 'count' as 'count' | 'weight' | 'length' | 'volume' | 'area',
   });
 
+  const [imagePreview, setImagePreview] = useState<string | undefined>();
+  
+  const [categorySearch, setCategorySearch] = useState('');
+  const [unitSearch, setUnitSearch] = useState('');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [unitOpen, setUnitOpen] = useState(false);
+
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  const filteredUnits = units.filter((unit) =>
+    unit.name.toLowerCase().includes(unitSearch.toLowerCase()) ||
+    unit.abbreviation.toLowerCase().includes(unitSearch.toLowerCase())
+  );
+
   const isEdit = !!productId;
 
   const emptyDefaults: ProductFormData = {
@@ -121,7 +140,7 @@ export default function ProductForm({
     unit: null,
     cost_price: '',
     selling_price: '',
-    reorder_level: '0',
+    opening_stock: '0',
     expiry_date: '',
     description: '',
     status: 'active',
@@ -173,6 +192,11 @@ export default function ProductForm({
 
         setCategories(categoriesData);
         setUnits(unitsData);
+
+        // Load existing image if editing
+        if (initialData?.image) {
+          setImagePreview(initialData.image as string);
+        }
       } catch {
         toast.error('Failed to load categories and units');
       } finally {
@@ -181,6 +205,20 @@ export default function ProductForm({
     };
 
     fetchData();
+  }, [initialData]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setCategoryOpen(false);
+        setUnitOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const hasMissingData = categories.length === 0 || units.length === 0;
@@ -239,6 +277,25 @@ export default function ProductForm({
     }
   };
 
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setValue('image', file);
+    } else {
+      setImagePreview(undefined);
+      setValue('image', null);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(undefined);
+    setValue('image', null);
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     if (hasMissingData) {
       toast.error('Create at least one category and unit before adding products');
@@ -246,26 +303,36 @@ export default function ProductForm({
     }
 
     try {
-      const payload: any = {
-        name: data.name.trim(),
-        sku: data.sku.trim(),
-        category: Number(data.category),
-        unit: Number(data.unit),
-        cost_price: Number(data.cost_price),
-        selling_price: Number(data.selling_price),
-        reorder_level: data.reorder_level ? Number(data.reorder_level) : 0,
-        expiry_date: data.expiry_date?.trim() || null,
-        description: data.description?.trim() || '',
-        status: data.status,
-      };
+      const formData = new FormData();
+      
+      formData.append('name', data.name.trim());
+      if (data.sku?.trim()) {
+        formData.append('sku', data.sku.trim());
+      }
+      formData.append('category', String(data.category));
+      formData.append('unit', String(data.unit));
+      formData.append('cost_price', data.cost_price ? String(data.cost_price) : '0');
+      formData.append('selling_price', String(data.selling_price));
+      formData.append('opening_stock', data.opening_stock ? String(data.opening_stock) : '0');
+      if (data.expiry_date?.trim()) {
+        formData.append('expiry_date', data.expiry_date.trim());
+      }
+      formData.append('description', data.description?.trim() || '');
+      formData.append('status', data.status);
+
+      // Handle image upload
+      if (data.image instanceof File) {
+        formData.append('image', data.image);
+      }
 
       if (isEdit && productId) {
-        await inventoryApi.products.update(Number(productId), payload);
+        await inventoryApi.products.update(Number(productId), formData);
         toast.success('Product updated successfully');
       } else {
-        await inventoryApi.products.create(payload);
+        await inventoryApi.products.create(formData);
         toast.success('Product created successfully');
         reset(emptyDefaults);
+        setImagePreview(undefined);
       }
       onSuccess?.();
     } catch (error: any) {
@@ -286,7 +353,8 @@ export default function ProductForm({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="flex items-center justify-center p-12">
+
       </div>
     );
   }
@@ -329,38 +397,71 @@ export default function ProductForm({
             />
           </FormField>
 
-          <FormField label="SKU" name="sku" error={errors.sku} required hint="Unique code, e.g. PROD-001">
-            <Input
-              {...register('sku')}
-              id="sku"
-              className={cn(inputClass, errors.sku && 'border-red-500')}
-              placeholder="PROD-001"
-            />
-          </FormField>
-
           <FormField label="Category" name="category" error={errors.category} required>
             <div className="flex gap-2">
-              <Controller
-                name="category"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? null}
-                    onValueChange={(value) => field.onChange(value)}
-                  >
-                    <SelectTrigger className={cn('flex-1', inputClass, errors.category && 'border-red-500')}>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <div className="flex-1 relative" data-dropdown>
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedCategory = categories.find(c => String(c.id) === field.value);
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setCategoryOpen(!categoryOpen)}
+                          className={cn(
+                            'flex w-full items-center justify-between h-9 px-3 text-sm border rounded-md bg-white',
+                            inputClass,
+                            errors.category && 'border-red-500',
+                            !field.value && 'text-gray-500'
+                          )}
+                        >
+                          <span className="truncate">
+                            {selectedCategory ? selectedCategory.name : 'Select category'}
+                          </span>
+                          <ChevronDownIcon className="h-4 w-4 opacity-50" />
+                        </button>
+                        {categoryOpen && (
+                          <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-64 overflow-auto rounded-lg bg-white shadow-lg border border-gray-200">
+                            <div className="px-2 py-1.5 border-b bg-white sticky top-0">
+                              <Input
+                                placeholder="Search categories..."
+                                value={categorySearch}
+                                onChange={(e) => setCategorySearch(e.target.value)}
+                                className="h-8 text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <div className="p-1">
+                              {filteredCategories.length === 0 ? (
+                                <div className="py-6 text-center text-sm text-gray-500">No category found</div>
+                              ) : (
+                                filteredCategories.map((cat) => (
+                                  <div
+                                    key={cat.id}
+                                    onClick={() => {
+                                      field.onChange(String(cat.id));
+                                      setCategoryOpen(false);
+                                      setCategorySearch('');
+                                    }}
+                                    className={cn(
+                                      "px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-gray-100",
+                                      field.value === String(cat.id) && "bg-gray-100 font-medium"
+                                    )}
+                                  >
+                                    {cat.name}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  }}
+                />
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -375,27 +476,69 @@ export default function ProductForm({
 
           <FormField label="Unit of Measure" name="unit" error={errors.unit} required>
             <div className="flex gap-2">
-              <Controller
-                name="unit"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? null}
-                    onValueChange={(value) => field.onChange(value)}
-                  >
-                    <SelectTrigger className={cn('flex-1', inputClass, errors.unit && 'border-red-500')}>
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units.map((unit) => (
-                        <SelectItem key={unit.id} value={String(unit.id)}>
-                          {unit.name} ({unit.abbreviation})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <div className="flex-1 relative" data-dropdown>
+                <Controller
+                  name="unit"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedUnit = units.find(u => String(u.id) === field.value);
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setUnitOpen(!unitOpen)}
+                          className={cn(
+                            'flex w-full items-center justify-between h-9 px-3 text-sm border rounded-md bg-white',
+                            inputClass,
+                            errors.unit && 'border-red-500',
+                            !field.value && 'text-gray-500'
+                          )}
+                        >
+                          <span className="truncate">
+                            {selectedUnit ? `${selectedUnit.name} (${selectedUnit.abbreviation})` : 'Select unit'}
+                          </span>
+                          <ChevronDownIcon className="h-4 w-4 opacity-50" />
+                        </button>
+                        {unitOpen && (
+                          <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-64 overflow-auto rounded-lg bg-white shadow-lg border border-gray-200">
+                            <div className="px-2 py-1.5 border-b bg-white sticky top-0">
+                              <Input
+                                placeholder="Search units..."
+                                value={unitSearch}
+                                onChange={(e) => setUnitSearch(e.target.value)}
+                                className="h-8 text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <div className="p-1">
+                              {filteredUnits.length === 0 ? (
+                                <div className="py-6 text-center text-sm text-gray-500">No unit found</div>
+                              ) : (
+                                filteredUnits.map((unit) => (
+                                  <div
+                                    key={unit.id}
+                                    onClick={() => {
+                                      field.onChange(String(unit.id));
+                                      setUnitOpen(false);
+                                      setUnitSearch('');
+                                    }}
+                                    className={cn(
+                                      "px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-gray-100",
+                                      field.value === String(unit.id) && "bg-gray-100 font-medium"
+                                    )}
+                                  >
+                                    {unit.name} ({unit.abbreviation})
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  }}
+                />
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -406,22 +549,6 @@ export default function ProductForm({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-          </FormField>
-        </div>
-      </Section>
-
-      <Section title="Pricing & Inventory">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <FormField label="Cost Price (NPR)" name="cost_price" error={errors.cost_price} required>
-            <Input
-              {...register('cost_price')}
-              id="cost_price"
-              type="number"
-              min="0"
-              step="0.01"
-              className={cn(inputClass, errors.cost_price && 'border-red-500')}
-              placeholder="0.00"
-            />
           </FormField>
 
           <FormField label="Selling Price (NPR)" name="selling_price" error={errors.selling_price} required>
@@ -436,14 +563,35 @@ export default function ProductForm({
             />
           </FormField>
 
-          <FormField label="Reorder Level" name="reorder_level" error={errors.reorder_level} hint="Low stock alert threshold">
+          <FormField label="Cost Price (NPR)" name="cost_price" error={errors.cost_price}>
             <Input
-              {...register('reorder_level')}
-              id="reorder_level"
+              {...register('cost_price')}
+              id="cost_price"
               type="number"
               min="0"
               step="0.01"
-              className={cn(inputClass, errors.reorder_level && 'border-red-500')}
+              className={cn(inputClass, errors.cost_price && 'border-red-500')}
+              placeholder="0.00"
+            />
+          </FormField>
+
+          <FormField label="SKU" name="sku" error={errors.sku} hint="Unique code, e.g. PROD-001 (optional)">
+            <Input
+              {...register('sku')}
+              id="sku"
+              className={cn(inputClass, errors.sku && 'border-red-500')}
+              placeholder="PROD-001"
+            />
+          </FormField>
+
+          <FormField label="Opening Stock" name="opening_stock" error={errors.opening_stock} hint="Initial stock quantity">
+            <Input
+              {...register('opening_stock')}
+              id="opening_stock"
+              type="number"
+              min="0"
+              step="0.01"
+              className={cn(inputClass, errors.opening_stock && 'border-red-500')}
               placeholder="0"
             />
           </FormField>
@@ -461,72 +609,82 @@ export default function ProductForm({
               )}
             />
           </FormField>
-
-          <FormField label="Status" name="status" error={errors.status} required>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={(value) => field.onChange(value ?? 'active')}
-                >
-                  <SelectTrigger className={cn(inputClass, errors.status && 'border-red-500')}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="discontinued">Discontinued</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </FormField>
-
-          {isEdit && (
-            <FormField label="Total Stock" name="total_stock" hint="Current stock across all warehouses">
-              <div className="flex h-9 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3">
-                <span className="text-sm font-semibold text-gray-900">
-                  {(initialData as any)?.total_stock ?? 0}
-                </span>
-                <span
-                  className={cn(
-                    'rounded-full px-2 py-0.5 text-xs font-medium',
-                    (initialData as any)?.total_stock > 0
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  )}
-                >
-                  {(initialData as any)?.total_stock > 0 ? 'In Stock' : 'Out of Stock'}
-                </span>
-              </div>
-            </FormField>
-          )}
         </div>
       </Section>
 
-      <Section title="Description">
-        <FormField label="Description" name="description" error={errors.description}>
-          <textarea
-            {...register('description')}
-            id="description"
-            rows={4}
-            className={cn(
-              'w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent',
-              errors.description && 'border-red-500'
-            )}
-            placeholder="Optional product description"
-          />
-        </FormField>
+      <Section title="Additional Information">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <FormField label="Description" name="description" error={errors.description}>
+              <textarea
+                {...register('description')}
+                id="description"
+                className={cn(
+                  'w-full h-40 rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-gray-300 resize-none',
+                  errors.description && 'border-red-500'
+                )}
+                placeholder="Optional product description"
+              />
+            </FormField>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-700">Product Image</Label>
+            <div className="relative">
+              {imagePreview ? (
+                <div className="relative group">
+                  <img
+                    src={imagePreview}
+                    alt="Product"
+                    className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor="image"
+                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-gray-50 transition-colors"
+                >
+                  <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600 font-medium">Click to upload image</span>
+                  <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</span>
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error('Image size must be less than 5MB');
+                          return;
+                        }
+                        handleImageChange(file);
+                      }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        </div>
       </Section>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
         {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="text-gray-500">
-            Cancel
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="gap-1.5 text-gray-500 hover:text-gray-900">
+            <ChevronDownIcon className="h-4 w-4 rotate-90" />
+            Back
           </Button>
         )}
+        <div className="flex-1"></div>
         {!isEdit && (
           <Button type="button" variant="outline" onClick={() => reset(emptyDefaults)} disabled={isSubmitting} className="border-gray-200">
             Reset

@@ -127,6 +127,7 @@ export const MapPin: IconType = Hi.HiOutlineMapPin;
 export const Maximize2: IconType = Hi.HiOutlineArrowsPointingOut;
 export const Menu: IconType = Hi.HiOutlineBars3;
 export const MessageCircle: IconType = Hi.HiOutlineChatBubbleLeftRight;
+export const Mic: IconType = Hi.HiOutlineMicrophone;
 export const Minimize2: IconType = Hi.HiOutlineArrowsPointingIn;
 export const Minus: IconType = Hi.HiOutlineMinus;
 export const Monitor: IconType = Hi.HiOutlineComputerDesktop;

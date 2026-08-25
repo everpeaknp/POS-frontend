@@ -138,18 +138,20 @@ export function LineItemsTable({ items, onChange, products = [], readOnly = fals
                 <td className="px-3 py-3">
                   {readOnly ? <span>{getProductName(item.product)}</span> : (
                     <Combobox
-                      options={products
-                        .filter((p) => p.total_stock && p.total_stock > 0) // Only show in-stock products
-                        .map((p) => ({
+                      options={products.map((p) => {
+                        const stock = p.total_stock !== undefined ? p.total_stock : 0;
+                        const stockLabel = stock > 0 ? `Stock: ${stock}` : 'Out of stock';
+                        return {
                           value: String(p.id),
                           label: `${p.name} (${p.sku})`,
-                          subtitle: p.total_stock !== undefined ? `Stock: ${p.total_stock}` : undefined,
-                        }))}
+                          subtitle: stockLabel,
+                        };
+                      })}
                       value={item.product}
                       onValueChange={(v) => setProduct(idx, v)}
                       placeholder="Select product"
                       searchPlaceholder="Search products..."
-                      emptyText="No in-stock products found."
+                      emptyText="No products available. Add products to inventory first."
                       className="min-w-[200px]"
                     />
                   )}

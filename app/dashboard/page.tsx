@@ -27,13 +27,17 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isPersonal = user?.tenant?.account_type === "personal";
+  const isKiranaOrRetail = user?.tenant?.business_type === "kirana" || user?.tenant?.business_type === "retail";
 
-  // Redirect personal accounts immediately
+  // Redirect personal accounts to personal-finance
+  // Redirect kirana/retail accounts to kirana dashboard
   useEffect(() => {
     if (isPersonal) {
       router.replace("/dashboard/personal-finance");
+    } else if (isKiranaOrRetail) {
+      router.replace("/dashboard/kirana");
     }
-  }, [isPersonal, router]);
+  }, [isPersonal, isKiranaOrRetail, router]);
 
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<UnifiedDashboardData | null>(null);
@@ -67,17 +71,19 @@ export default function DashboardPage() {
   }, [period]);
 
   useEffect(() => {
-    if (isPersonal) return;
+    if (isPersonal || isKiranaOrRetail) return;
     loadDashboard();
-  }, [isPersonal, loadDashboard]);
+  }, [isPersonal, isKiranaOrRetail, loadDashboard]);
 
-  // Show loading state while redirecting personal accounts
-  if (isPersonal) {
+  // Show loading state while redirecting personal or kirana/retail accounts
+  if (isPersonal || isKiranaOrRetail) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-          <p className="mt-4 text-gray-600">Redirecting to Personal Finance...</p>
+          <p className="mt-4 text-gray-600">
+            {isPersonal ? "Redirecting to Personal Finance..." : "Loading dashboard..."}
+          </p>
         </div>
       </div>
     );

@@ -10,6 +10,7 @@ import { useAppearance } from "@/lib/context/AppearanceContext";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
 import { DesktopWorkspaceProvider } from "@/lib/context/DesktopWorkspaceContext";
 import { DesktopShell } from "@/components/desktop/DesktopShell";
+import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -77,6 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
           </div>
         </div>
+        <DashboardWidgets />
       </div>
     );
   }
@@ -91,6 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </DesktopShell>
       </DesktopWorkspaceProvider>
+      <DashboardWidgets />
     </div>
   );
 }

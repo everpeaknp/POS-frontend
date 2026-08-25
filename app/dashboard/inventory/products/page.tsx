@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, AlertTriangle, Package } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -17,9 +17,11 @@ export default function ProductsListPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [categories, setCategories] = useState<any[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     type: 'single' | 'bulk';
@@ -37,9 +39,25 @@ export default function ProductsListPage() {
       page_size: pageSize,
       search: searchTerm || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
+      category: categoryFilter !== "all" ? categoryFilter : undefined,
     }),
-    { immediate: true, deps: [currentPage, pageSize, searchTerm, statusFilter] }
+    { immediate: true, deps: [currentPage, pageSize, searchTerm, statusFilter, categoryFilter] }
   );
+
+  // Fetch categories for filter
+  const { data: categoriesData } = useApi(
+    () => inventoryApi.categories.list(),
+    { immediate: true }
+  );
+
+  useEffect(() => {
+    if (categoriesData?.data) {
+      const cats = Array.isArray(categoriesData.data) 
+        ? categoriesData.data 
+        : (categoriesData.data as any).results || [];
+      setCategories(cats);
+    }
+  }, [categoriesData]);
 
   const products = productsData?.data?.results || [];
   const totalCount = productsData?.data?.count || 0;
@@ -161,25 +179,57 @@ export default function ProductsListPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-[#22C55E]"
+                className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300"
               />
             </div>
 
+            {/* Filters */}
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400 shrink-0" />
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
+              >
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
               <select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="discontinued">Discontinued</option>
               </select>
+
+              {(searchTerm || statusFilter !== "all" || categoryFilter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setCategoryFilter("all");
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 underline whitespace-nowrap"
+                >
+                  Clear all
+                </button>
+              )}
             </div>
           </div>
 
@@ -198,7 +248,7 @@ export default function ProductsListPage() {
             )}
             <Button
               type="button"
-              onClick={() => router.push("/dashboard/inventory/products/new")}
+              onClick={() => router.push('/dashboard/inventory/products/new')}
               className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
               <Plus className="h-4 w-4 mr-1.5" />
@@ -221,8 +271,8 @@ export default function ProductsListPage() {
                       className="rounded border-gray-300"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">SKU</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">SKU</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Unit</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Cost Price</th>
@@ -248,8 +298,8 @@ export default function ProductsListPage() {
                           className="rounded border-gray-300"
                         />
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-500">{product.sku}</td>
                       <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-500">{product.sku}</td>
                       <td className="px-4 py-3 text-gray-600">{product.category_name || "-"}</td>
                       <td className="px-4 py-3 text-gray-600 text-xs">{product.unit_name}</td>
                       <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(product.cost_price)}</td>
@@ -264,15 +314,37 @@ export default function ProductsListPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          isOutOfStock ? "bg-red-100 text-red-700" :
-                          isLowStock ? "bg-orange-100 text-orange-700" :
-                          product.status === "active" ? "bg-green-100 text-green-700" :
-                          product.status === "inactive" ? "bg-gray-100 text-gray-700" :
-                          "bg-red-100 text-red-700"
-                        }`}>
-                          {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : product.status}
-                        </span>
+                        <select
+                          value={product.status}
+                          onChange={async (e) => {
+                            const newStatus = e.target.value as 'active' | 'inactive' | 'discontinued';
+                            try {
+                              await inventoryApi.products.update(Number(product.id), { status: newStatus });
+                              toast.success(`Product status updated to ${newStatus}`);
+                              refetch();
+                            } catch (error) {
+                              toast.error('Failed to update status');
+                            }
+                          }}
+                          className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#22C55E] ${
+                            isOutOfStock ? "border-red-200 bg-red-50 text-red-700" :
+                            isLowStock ? "border-orange-200 bg-orange-50 text-orange-700" :
+                            product.status === "active" ? "border-green-200 bg-green-50 text-green-700" :
+                            product.status === "inactive" ? "border-gray-200 bg-gray-50 text-gray-700" :
+                            "border-red-200 bg-red-50 text-red-700"
+                          }`}
+                          disabled={isOutOfStock || isLowStock}
+                          title={isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Change status"}
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="discontinued">Discontinued</option>
+                        </select>
+                        {(isOutOfStock || isLowStock) && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {isOutOfStock ? "Out of Stock" : "Low Stock"}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -356,7 +428,7 @@ export default function ProductsListPage() {
         </div>
 
         {/* Empty search result */}
-        {products.length === 0 && (searchTerm || statusFilter !== "all") && (
+        {products.length === 0 && (searchTerm || statusFilter !== "all" || categoryFilter !== "all") && (
           <div className="text-center py-12">
             <p className="text-gray-500">No products found matching your filters.</p>
             <button
@@ -364,6 +436,7 @@ export default function ProductsListPage() {
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("all");
+                setCategoryFilter("all");
                 setCurrentPage(1);
               }}
               className="mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] hover:underline"
