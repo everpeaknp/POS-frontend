@@ -27,17 +27,22 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isPersonal = user?.tenant?.account_type === "personal";
+  const isConstruction = user?.tenant?.account_type === "construction";
+  const isHardware = user?.tenant?.account_type === "hardware";
   const isKiranaOrRetail = user?.tenant?.business_type === "kirana" || user?.tenant?.business_type === "retail";
 
-  // Redirect personal accounts to personal-finance
-  // Redirect kirana/retail accounts to kirana dashboard
+  // Redirect accounts to their specific dashboards
   useEffect(() => {
     if (isPersonal) {
       router.replace("/dashboard/personal-finance");
+    } else if (isConstruction) {
+      router.replace("/dashboard/construction");
+    } else if (isHardware) {
+      router.replace("/dashboard/hardware");
     } else if (isKiranaOrRetail) {
       router.replace("/dashboard/kirana");
     }
-  }, [isPersonal, isKiranaOrRetail, router]);
+  }, [isPersonal, isConstruction, isHardware, isKiranaOrRetail, router]);
 
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<UnifiedDashboardData | null>(null);
@@ -71,18 +76,24 @@ export default function DashboardPage() {
   }, [period]);
 
   useEffect(() => {
-    if (isPersonal || isKiranaOrRetail) return;
+    if (isPersonal || isConstruction || isHardware || isKiranaOrRetail) return;
     loadDashboard();
-  }, [isPersonal, isKiranaOrRetail, loadDashboard]);
+  }, [isPersonal, isConstruction, isHardware, isKiranaOrRetail, loadDashboard]);
 
-  // Show loading state while redirecting personal or kirana/retail accounts
-  if (isPersonal || isKiranaOrRetail) {
+  // Show loading state while redirecting
+  if (isPersonal || isConstruction || isHardware || isKiranaOrRetail) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
           <p className="mt-4 text-gray-600">
-            {isPersonal ? "Redirecting to Personal Finance..." : "Loading dashboard..."}
+            {isPersonal 
+              ? "Redirecting to Personal Finance..." 
+              : isConstruction
+              ? "Redirecting to Construction..."
+              : isHardware
+              ? "Redirecting to Hardware..."
+              : "Loading dashboard..."}
           </p>
         </div>
       </div>

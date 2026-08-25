@@ -32,6 +32,24 @@ export const PERSONAL_ACCOUNT_MODULE_IDS = [
   "personal_finance",
 ] as const;
 
+/** Modules a Construction account gets */
+export const CONSTRUCTION_ACCOUNT_MODULE_IDS = [
+  "settings",
+  "dashboard",
+  "construction",
+  "inventory",
+  "reports",
+] as const;
+
+/** Modules a Hardware account gets */
+export const HARDWARE_ACCOUNT_MODULE_IDS = [
+  "settings",
+  "dashboard",
+  "hardware",
+  "inventory",
+  "reports",
+] as const;
+
 /**
  * Personal Finance is only ever assigned to Personal accounts, never offered
  * in the organization module picker — kept out of ORG_MODULE_CATALOG so it
@@ -42,6 +60,26 @@ export const PERSONAL_MODULE: OrgModuleDefinition = {
   name: "Personal Finance",
   description: "Track your income, expenses, budgets, and bills in one place",
   icon: Wallet,
+  defaultEnabled: true,
+  required: true,
+};
+
+/** Construction module - only for Construction accounts */
+export const CONSTRUCTION_MODULE: OrgModuleDefinition = {
+  id: "construction",
+  name: "Construction Management",
+  description: "Site management, worker tracking, equipment, and material consumption",
+  icon: HardHat,
+  defaultEnabled: true,
+  required: true,
+};
+
+/** Hardware module - only for Hardware accounts */
+export const HARDWARE_MODULE: OrgModuleDefinition = {
+  id: "hardware",
+  name: "Hardware Business",
+  description: "Specialized features for hardware stores including bulk pricing and credit management",
+  icon: Wrench,
   defaultEnabled: true,
   required: true,
 };
@@ -162,6 +200,8 @@ export function getAllowedModulesForPlanType(planType: string): string[] {
 export function getModuleById(moduleId: string): OrgModuleDefinition | undefined {
   const normalized = moduleId.toLowerCase();
   if (normalized === PERSONAL_MODULE.id) return PERSONAL_MODULE;
+  if (normalized === CONSTRUCTION_MODULE.id) return CONSTRUCTION_MODULE;
+  if (normalized === HARDWARE_MODULE.id) return HARDWARE_MODULE;
   return ORG_MODULE_CATALOG.find((module) => module.id === normalized);
 }
 

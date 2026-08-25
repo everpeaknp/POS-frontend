@@ -51,9 +51,11 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
 
   const recognitionRef = useRef<any>(null);
 
-  // Determine if this is a personal account
+  // Determine account type
   const isPersonal = user?.tenant?.account_type === "personal";
-  const isRetailOrKirana = !isPersonal;
+  const isConstruction = user?.tenant?.account_type === "construction";
+  const isHardware = user?.tenant?.account_type === "hardware";
+  const isRetailOrKirana = !isPersonal && !isConstruction && !isHardware;
 
   // Load categories and accounts on mount
   useEffect(() => {
@@ -87,8 +89,8 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
         if (fetchedAccounts.length > 0 && !selectedAccount) {
           setSelectedAccount(fetchedAccounts[0].id);
         }
-      } else {
-        // Load products and warehouses for retail/kirana
+      } else if (isRetailOrKirana) {
+        // Load products and warehouses for retail/kirana only
         let [productsRes, warehousesRes] = await Promise.all([
           inventoryApi.products.list({ limit: 1000 }),
           inventoryApi.warehouses.list({ limit: 100 }),

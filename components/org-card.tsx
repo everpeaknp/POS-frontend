@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, AlertTriangle, ExternalLink, ShoppingCart } from "lucide-react";
+import { MoreVertical, AlertTriangle, ExternalLink, ShoppingCart, Building2, Wallet, HardHat, Wrench, ShoppingBag } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Organization } from "@/lib/types";
@@ -14,9 +14,10 @@ import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
 interface OrgCardProps {
   org: Organization;
   onDelete?: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 }
 
-export function OrgCard({ org, onDelete }: OrgCardProps) {
+export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
   const router = useRouter();
   const { switchOrganization } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +40,38 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
       : org.user_role
         ? org.user_role.replace(/_/g, " ")
         : null;
+
+  // Get icon based on account type
+  const getAccountIcon = () => {
+    switch (org.account_type) {
+      case "personal":
+        return <Wallet className="h-4 w-4 text-[#16A34A]" />;
+      case "construction":
+        return <HardHat className="h-4 w-4 text-[#16A34A]" />;
+      case "hardware":
+        return <Wrench className="h-4 w-4 text-[#16A34A]" />;
+      case "retail":
+        return <ShoppingBag className="h-4 w-4 text-[#16A34A]" />;
+      default:
+        return <Building2 className="h-4 w-4 text-[#16A34A]" />;
+    }
+  };
+
+  // Get account type label
+  const getAccountTypeLabel = () => {
+    switch (org.account_type) {
+      case "personal":
+        return "Personal";
+      case "construction":
+        return "Construction";
+      case "hardware":
+        return "Hardware";
+      case "retail":
+        return "Retail";
+      default:
+        return "Organization";
+    }
+  };
 
   const handleOpenKhata = async () => {
     try {
@@ -119,12 +152,37 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
   return (
     <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-[#22C55E]/30 transition-all">
       <div className="flex items-start justify-between gap-2">
-        <div className="w-12 h-12 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-lg font-bold border border-[#22C55E]/20 overflow-hidden shrink-0">
-          {org.logo ? (
-            <img src={org.logo} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-[#16A34A]">{org.icon}</span>
-          )}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div 
+            {...dragHandleProps}
+            className="w-12 h-12 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-lg font-bold border border-[#22C55E]/20 overflow-hidden shrink-0 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-[#22C55E]/30 transition-all"
+            title="Drag to reorder"
+          >
+            {org.logo ? (
+              <img src={org.logo} alt="" className="w-full h-full object-cover" />
+            ) : org.account_type === "personal" ? (
+              <Wallet className="h-6 w-6 text-[#16A34A]" />
+            ) : org.account_type === "construction" ? (
+              <HardHat className="h-6 w-6 text-[#16A34A]" />
+            ) : org.account_type === "hardware" ? (
+              <Wrench className="h-6 w-6 text-[#16A34A]" />
+            ) : org.account_type === "retail" ? (
+              <ShoppingBag className="h-6 w-6 text-[#16A34A]" />
+            ) : (
+              <Building2 className="h-6 w-6 text-[#16A34A]" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-[#16A34A] mb-0.5">{getAccountTypeLabel()}</p>
+            {roleLabel && (
+              <p className="text-xs text-muted-foreground">
+                Role:{" "}
+                <span className={`font-medium ${isPersonalAccount ? "text-[#16A34A]" : isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
+                  {roleLabel}
+                </span>
+              </p>
+            )}
+          </div>
         </div>
         {(canManageOrg || isSuperAdmin) && (
         <DropdownMenu>
@@ -160,16 +218,11 @@ export function OrgCard({ org, onDelete }: OrgCardProps) {
         )}
       </div>
       <div>
-        <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5 font-mono">{org.subdomain}</p>
-        {roleLabel && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Role:{" "}
-            <span className={`font-medium ${isPersonalAccount ? "text-[#16A34A]" : isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
-              {roleLabel}
-            </span>
-          </p>
-        )}
+        <div className="flex items-center gap-2">
+          {getAccountIcon()}
+          <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5 font-mono">Workspace URL: {org.subdomain}</p>
       </div>
       {org.status === "expired" && (
         <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
