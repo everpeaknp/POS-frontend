@@ -13,6 +13,9 @@ import {
   Wallet,
   CreditCard,
   DollarSign,
+  Building2,
+  ClipboardCheck,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -314,6 +317,8 @@ export function filterDashboardNavItems(
   }
 ): NavItem[] {
   const isPersonal = opts.accountType === "personal";
+  const isConstruction = opts.accountType === "construction";
+  const isHardware = opts.accountType === "hardware";
   const isKirana = opts.businessType === "kirana" || opts.businessType === "retail";
 
   const filterChildren = (children?: NavSubItem[]) =>
@@ -322,6 +327,216 @@ export function filterDashboardNavItems(
       if (child.personalOnly && !isPersonal) return false;
       return true;
     });
+
+  // If construction account, show only construction-related modules
+  if (isConstruction) {
+    const constructionItems: NavItem[] = [
+      // Individual construction menu items (no submenu)
+      {
+        label: "Overview",
+        icon: LayoutDashboard,
+        href: "/dashboard/construction",
+        requiredModule: "construction",
+      },
+      {
+        label: "Sites",
+        icon: Building2,
+        href: "/dashboard/construction/sites",
+        requiredModule: "construction",
+      },
+      {
+        label: "Workers",
+        icon: HardHat,
+        href: "/dashboard/construction/workers",
+        requiredModule: "construction",
+      },
+      {
+        label: "Attendance",
+        icon: ClipboardCheck,
+        href: "/dashboard/construction/attendance",
+        requiredModule: "construction",
+      },
+      {
+        label: "Daily Logs",
+        icon: FileText,
+        href: "/dashboard/construction/daily-logs",
+        requiredModule: "construction",
+      },
+      {
+        label: "Material Consumption",
+        icon: Package,
+        href: "/dashboard/construction/material-consumption",
+        requiredModule: "construction",
+      },
+      {
+        label: "Equipment",
+        icon: Wrench,
+        href: "/dashboard/construction/equipment",
+        requiredModule: "construction",
+      },
+      {
+        label: "Equipment Usage",
+        icon: BarChart2,
+        href: "/dashboard/construction/equipment-usage",
+        requiredModule: "construction",
+      },
+      {
+        label: "Reports",
+        icon: BarChart2,
+        href: "/dashboard/construction/reports",
+        requiredModule: "construction",
+      },
+      // Add Inventory module
+      {
+        label: "Inventory",
+        icon: Package,
+        requiredModule: "inventory",
+        children: [
+          { label: "Overview", href: "/dashboard/inventory", exact: true },
+          { label: "Products", href: "/dashboard/inventory/products", createHref: "/dashboard/inventory/products/new" },
+          { label: "Product Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories?new=1" },
+          { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment?new=1" },
+          { label: "Stock Transfer", href: "/dashboard/inventory/transfer", createHref: "/dashboard/inventory/transfer?new=1" },
+          { label: "Warehouses", href: "/dashboard/inventory/warehouses", createHref: "/dashboard/inventory/warehouses?new=1" },
+          { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom?new=1" },
+          { label: "Stock In", href: "/dashboard/inventory/stock-in" },
+          { label: "Stock Out", href: "/dashboard/inventory/stock-out" },
+          { label: "Inventory Reports", href: "/dashboard/inventory/reports" },
+        ],
+      },
+      {
+        label: "Settings",
+        icon: Settings,
+        requiredModule: "settings",
+        requiredRoles: ["admin", "manager"],
+        hideForPersonal: true,
+        children: [
+          { label: "Organization Settings", href: "/dashboard/settings/org", hideForPersonal: true },
+          { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite", hideForPersonal: true },
+          { label: "Help Desk", href: "/dashboard/settings/help" },
+        ],
+      },
+    ];
+
+    return constructionItems
+      .filter((item) => {
+        if (item.requiredModule && !opts.canView(item.requiredModule)) {
+          return false;
+        }
+        if (item.requiredRoles && opts.role) {
+          if (opts.role === "admin" || opts.role === "super_admin") {
+            return true;
+          }
+          if (!item.requiredRoles.includes(opts.role)) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .map((item) =>
+        item.children ? { ...item, children: filterChildren(item.children) } : item
+      )
+      .filter((item) => !item.children || item.children.length > 0);
+  }
+
+  // If hardware account, show only hardware-related modules
+  if (isHardware) {
+    const hardwareItems: NavItem[] = [
+      // Individual hardware menu items (no submenu)
+      {
+        label: "Overview",
+        icon: LayoutDashboard,
+        href: "/dashboard/hardware",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Products",
+        icon: Package,
+        href: "/dashboard/hardware/products",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Customers",
+        icon: Users,
+        href: "/dashboard/hardware/customers",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Orders",
+        icon: ShoppingCart,
+        href: "/dashboard/hardware/orders",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Payments",
+        icon: DollarSign,
+        href: "/dashboard/hardware/payments",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Customer Credit",
+        icon: CreditCard,
+        href: "/dashboard/hardware/credit",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Aging Report",
+        icon: BarChart2,
+        href: "/dashboard/hardware/aging",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Bulk Pricing",
+        icon: DollarSign,
+        href: "/dashboard/hardware/bulk-pricing",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Reports",
+        icon: BarChart2,
+        href: "/dashboard/hardware/reports",
+        requiredModule: "hardware",
+      },
+      {
+        label: "Inventory",
+        icon: Package,
+        href: "/dashboard/inventory/products",
+        requiredModule: "inventory",
+      },
+      {
+        label: "Settings",
+        icon: Settings,
+        requiredModule: "settings",
+        requiredRoles: ["admin", "manager"],
+        hideForPersonal: true,
+        children: [
+          { label: "Organization Settings", href: "/dashboard/settings/org", hideForPersonal: true },
+          { label: "Users & Roles", href: "/dashboard/settings/users", createHref: "/dashboard/settings/users/invite", hideForPersonal: true },
+          { label: "Help Desk", href: "/dashboard/settings/help" },
+        ],
+      },
+    ];
+
+    return hardwareItems
+      .filter((item) => {
+        if (item.requiredModule && !opts.canView(item.requiredModule)) {
+          return false;
+        }
+        if (item.requiredRoles && opts.role) {
+          if (opts.role === "admin" || opts.role === "super_admin") {
+            return true;
+          }
+          if (!item.requiredRoles.includes(opts.role)) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .map((item) =>
+        item.children ? { ...item, children: filterChildren(item.children) } : item
+      )
+      .filter((item) => !item.children || item.children.length > 0);
+  }
 
   // If kirana, return only kirana navigation
   if (isKirana) {

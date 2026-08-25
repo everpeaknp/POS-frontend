@@ -103,16 +103,23 @@ export default function ConsumptionForm({
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [sitesRes, productsRes] = await Promise.all([
-          apiClient.get("/construction/sites/"),
-          apiClient.get("/inventory/products/"),
-        ]);
-
+        
+        // Fetch sites
+        const sitesRes = await apiClient.get("/construction/sites/");
         setSites(sitesRes.data.results || sitesRes.data || []);
-        setProducts(productsRes.data.results || productsRes.data || []);
+        
+        // Try to fetch products, but don't fail if inventory module is not available
+        try {
+          const productsRes = await apiClient.get("/inventory/products/");
+          setProducts(productsRes.data.results || productsRes.data || []);
+        } catch (productError: any) {
+          console.warn("Inventory products not available (module may not be enabled):", productError);
+          // Continue without products - user can enter product details manually
+          setProducts([]);
+        }
       } catch (error: unknown) {
         console.error("Failed to load form data:", error);
-        toast.error("Failed to load form data. Please refresh the page.");
+        toast.error("Failed to load sites. Please refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -149,7 +156,10 @@ export default function ConsumptionForm({
 
       try {
         const site = sites.find((s) => s.id === watchedSite);
-        if (!site) return;
+        if (!site || !site.warehouse) {
+          setAvailableStock(null);
+          return;
+        }
 
         const response = await apiClient.get("/inventory/stocks/", {
           params: {
@@ -161,7 +171,8 @@ export default function ConsumptionForm({
         const stocks = response.data.results || response.data || [];
         setAvailableStock(stocks.length > 0 ? Number(stocks[0].quantity) : 0);
       } catch (error) {
-        console.error("Failed to fetch stock:", error);
+        console.warn("Failed to fetch stock (inventory may not be available):", error);
+        // Don't show error - just proceed without stock info
         setAvailableStock(null);
       }
     };
@@ -392,7 +403,8 @@ export default function ConsumptionForm({
           type="submit"
           disabled={isSubmitting || availableStock === 0}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
+        >
+
           {isSubmitting ? "Logging..." : "Log Consumption"}
         </button>
       </div>

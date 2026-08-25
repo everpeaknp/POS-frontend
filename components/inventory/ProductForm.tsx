@@ -57,6 +57,10 @@ const productSchema = z
       .refine((val) => !val || val === '' || (!Number.isNaN(Number(val)) && Number(val) >= 0), {
         message: 'Opening stock must be 0 or greater',
       }),
+    warehouse: z
+      .string()
+      .nullable()
+      .optional(),
     expiry_date: z.string().optional().or(z.literal('')),
     description: z.string().max(2000, 'Description is too long').optional().or(z.literal('')),
     status: z.enum(['active', 'inactive', 'discontinued']),
@@ -101,6 +105,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
@@ -141,6 +146,7 @@ export default function ProductForm({
     cost_price: '',
     selling_price: '',
     opening_stock: '0',
+    warehouse: null,
     expiry_date: '',
     description: '',
     status: 'active',
@@ -154,6 +160,7 @@ export default function ProductForm({
       ...initialData,
       category: initialData?.category ? String(initialData.category) : null,
       unit: initialData?.unit ? String(initialData.unit) : null,
+      warehouse: initialData?.warehouse ? String(initialData.warehouse) : null,
       status: initialData?.status ?? 'active',
     },
   });
@@ -173,9 +180,10 @@ export default function ProductForm({
       try {
         setLoading(true);
 
-        const [categoriesRes, unitsRes] = await Promise.all([
+        const [categoriesRes, unitsRes, warehousesRes] = await Promise.all([
           inventoryApi.categories.list().catch(() => null),
           inventoryApi.units.list().catch(() => null),
+          inventoryApi.warehouses.list().catch(() => null),
         ]);
 
         const categoriesData = categoriesRes
@@ -190,15 +198,27 @@ export default function ProductForm({
             : (unitsRes.data as any).results || []
           : [];
 
+        const warehousesData = warehousesRes
+          ? Array.isArray(warehousesRes.data)
+            ? warehousesRes.data
+            : (warehousesRes.data as any).results || []
+          : [];
+
         setCategories(categoriesData);
         setUnits(unitsData);
+        setWarehouses(warehousesData);
+
+        // Auto-select first warehouse if available and not editing
+        if (!isEdit && warehousesData.length > 0 && !initialData?.warehouse) {
+          setValue('warehouse', String(warehousesData[0].id), { shouldValidate: true });
+        }
 
         // Load existing image if editing
         if (initialData?.image) {
           setImagePreview(initialData.image as string);
         }
       } catch {
-        toast.error('Failed to load categories and units');
+        toast.error('Failed to load form data');
       } finally {
         setLoading(false);
       }
@@ -593,6 +613,50 @@ export default function ProductForm({
               step="0.01"
               className={cn(inputClass, errors.opening_stock && 'border-red-500')}
               placeholder="0"
+            />
+          </FormField>
+
+          <FormField label="Warehouse" name="warehouse" error={errors.warehouse} hint="Select warehouse for opening stock">
+            <Controller
+              name="warehouse"
+              control={control}
+              render={({ field }) => (
+                <Select 
+                  key={field.value || 'no-warehouse'} 
+                  value={field.value || undefined} 
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className={cn(inputClass, errors.warehouse && 'border-red-500')}>
+                    <SelectValue placeholder="Select warehouse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={String(warehouse.id)}>
+                        {warehouse.name} - {warehouse.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
+
+          <FormField label="Status" name="status" error={errors.status} required hint="Product availability status">
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select key={field.value} value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className={cn(inputClass, errors.status && 'border-red-500')}>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="discontinued">Discontinued</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             />
           </FormField>
 

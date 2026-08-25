@@ -19,14 +19,15 @@ const siteSchema = z.object({
   location: z.string().min(1, 'Location is required').max(500, 'Location too long'),
   client_name: z.string().max(255, 'Client name too long').optional().or(z.literal('')),
   allocated_budget: z.string()
-    .min(1, 'Allocated budget is required')
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    .optional()
+    .or(z.literal(''))
+    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: 'Must be a valid positive number',
     }),
   start_date: z.string().min(1, 'Start date is required'),
   estimated_end_date: z.string().optional().or(z.literal('')),
-  manager: z.string().min(1, 'Assigned manager is required'),
-  warehouse: z.string().min(1, 'Warehouse is required'),
+  manager: z.string().optional().or(z.literal('')),
+  warehouse: z.string().optional().or(z.literal('')),
   status: z.enum(['planned', 'active', 'on_hold', 'completed']),
   description: z.string().optional().or(z.literal('')),
 });
@@ -117,11 +118,12 @@ export default function SiteForm({
         setManagers(transformedManagers);
         setWarehouses(warehousesData);
         
+        // Log warnings for optional fields instead of showing error toasts
         if (transformedManagers.length === 0) {
-          toast.error('No managers or supervisors found in HR employees. Please create employees with Manager or Supervisor designation.');
+          console.warn('No managers or supervisors found in HR employees. Manager field will be optional.');
         }
         if (warehousesData.length === 0) {
-          toast.error('No warehouses found. Please create a warehouse first.');
+          console.warn('No warehouses found. Warehouse field will be optional.');
         }
       } catch (error: any) {
         console.error('Failed to load form data:', error);
@@ -137,10 +139,10 @@ export default function SiteForm({
 
   const onSubmit = async (data: SiteFormData) => {
     try {
-      // Convert allocated_budget to number for API
+      // Convert allocated_budget to number for API, or set to 0 if empty
       const payload = {
         ...data,
-        allocated_budget: Number(data.allocated_budget),
+        allocated_budget: data.allocated_budget ? Number(data.allocated_budget) : 0,
       };
 
       if (isEdit && siteId) {
@@ -240,15 +242,14 @@ export default function SiteForm({
             label="Allocated Budget (NPR)"
             name="allocated_budget"
             error={errors.allocated_budget}
-            required
-            hint="Total budget allocated for this construction site"
+            hint="Total budget allocated for this construction site (optional)"
           >
             <input
               {...register('allocated_budget')}
               type="text"
               id="allocated_budget"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-              placeholder="0.00"
+              placeholder="0.00 (optional)"
             />
           </FormField>
         </div>
@@ -290,15 +291,14 @@ export default function SiteForm({
             label="Assigned Manager"
             name="manager"
             error={errors.manager}
-            required
-            hint="Select a manager to oversee this site"
+            hint="Select a manager to oversee this site (optional)"
           >
             <select
               {...register('manager')}
               id="manager"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             >
-              <option value="">Select manager</option>
+              <option value="">Select manager (optional)</option>
               {managers.map((manager) => (
                 <option key={manager.id} value={manager.id}>
                   {manager.username} - {manager.role}
@@ -311,15 +311,14 @@ export default function SiteForm({
             label="Warehouse"
             name="warehouse"
             error={errors.warehouse}
-            required
-            hint="Warehouse for site materials"
+            hint="Warehouse for site materials (optional)"
           >
             <select
               {...register('warehouse')}
               id="warehouse"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             >
-              <option value="">Select warehouse</option>
+              <option value="">Select warehouse (optional)</option>
               {warehouses.map((warehouse) => (
                 <option key={warehouse.id} value={warehouse.id}>
                   {warehouse.name} - {warehouse.location}
@@ -371,7 +370,8 @@ export default function SiteForm({
           type="submit"
           disabled={isSubmitting}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
+        >
+
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Site' : 'Create Site'}
         </button>
         

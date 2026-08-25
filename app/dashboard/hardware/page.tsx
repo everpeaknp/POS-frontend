@@ -75,6 +75,13 @@ const moduleLinks = [
     color: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
   },
   {
+    href: "/dashboard/inventory/products",
+    label: "Inventory",
+    sub: "Stock management",
+    icon: Layers,
+    color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400",
+  },
+  {
     href: "/dashboard/hardware/customers",
     label: "Customers",
     sub: "Credit & contacts",

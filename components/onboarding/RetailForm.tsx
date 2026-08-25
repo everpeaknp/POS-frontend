@@ -229,6 +229,7 @@ export function RetailForm({
 
     const formData = {
       name: form.organizationName,
+      account_type: "retail" as const,
       business_type: form.businessType,
       address: form.address,
       accounting_start_date: form.accountingStartDate,

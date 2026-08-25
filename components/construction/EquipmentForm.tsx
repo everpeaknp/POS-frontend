@@ -125,7 +125,7 @@ export default function EquipmentForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div>
         <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Equipment Details</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <FormField
           label="Equipment Name"
           name="name"

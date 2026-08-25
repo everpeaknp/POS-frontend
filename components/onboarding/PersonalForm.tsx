@@ -85,6 +85,7 @@ export function PersonalForm({
     const registeredName = `${user?.first_name || ""} ${user?.last_name || ""}`.trim();
     const formData = {
       name: registeredName || "Personal Account",
+      account_type: "personal" as const,
       business_type: "other",
       address: form.address,
       accounting_start_date: new Date().toISOString().split('T')[0],

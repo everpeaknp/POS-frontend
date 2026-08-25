@@ -210,6 +210,7 @@ export function HardwareForm({
 
     const formData = {
       name: form.organizationName,
+      account_type: "hardware" as const,
       business_type: form.businessType,
       address: form.address,
       accounting_start_date: new Date().toISOString().split('T')[0],

@@ -2,7 +2,7 @@ import apiClient from './client';
 
 export interface TenantData {
   name: string;
-  account_type?: "organization" | "personal";
+  account_type?: "organization" | "personal" | "construction" | "hardware" | "retail";
   business_type: string;
   address?: string;
   pan_vat_number?: string;
@@ -31,7 +31,7 @@ export interface Tenant {
   id: number;
   name: string;
   slug: string;
-  account_type: "organization" | "personal";
+  account_type: "organization" | "personal" | "construction" | "hardware" | "retail";
   business_type: string;
   address: string;
   pan_vat_number?: string;

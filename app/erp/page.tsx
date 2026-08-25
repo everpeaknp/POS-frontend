@@ -12,6 +12,23 @@ import {
   Check,
   X,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,7 +39,36 @@ import { tenantApi, invitationApi, Invitation } from "@/lib/api/tenant";
 import { billingApi, type AccountLimits } from "@/lib/api/billing";
 import { mapTenantToOrganization } from "@/lib/erp/org-mapper";
 import { PageLoading } from "@/components/shared/PageLoading";
+import type { Organization } from "@/lib/types";
 import toast from "react-hot-toast";
+
+interface SortableOrgCardProps {
+  org: Organization;
+  onDelete: () => void;
+}
+
+function SortableOrgCard({ org, onDelete }: SortableOrgCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: org.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <OrgCard org={org} onDelete={onDelete} dragHandleProps={{ ...attributes, ...listeners }} />
+    </div>
+  );
+}
 
 function ErpPageContent() {
   const router = useRouter();
@@ -34,6 +80,26 @@ function ErpPageContent() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [accountLimits, setAccountLimits] = useState<AccountLimits | null>(null);
+  const [orgOrder, setOrgOrder] = useState<number[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Load saved order from localStorage
+  useEffect(() => {
+    const savedOrder = localStorage.getItem("khata-org-order");
+    if (savedOrder) {
+      try {
+        setOrgOrder(JSON.parse(savedOrder));
+      } catch (e) {
+        console.error("Failed to parse saved org order:", e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -134,13 +200,44 @@ function ErpPageContent() {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = organizations.findIndex((org) => org.id === active.id);
+      const newIndex = organizations.findIndex((org) => org.id === over.id);
+
+      const newOrder = arrayMove(organizations, oldIndex, newIndex).map((org) => org.id);
+      setOrgOrder(newOrder);
+      localStorage.setItem("khata-org-order", JSON.stringify(newOrder));
+      toast.success("Organization order saved");
+    }
+  };
+
   if (authLoading || !user || loading) {
     return <PageLoading fullScreen message="Loading organizations…" />;
   }
 
   const organizations = tenants.map((tenant) => mapTenantToOrganization(tenant, user.id));
 
-  const filteredOrgs = organizations.filter(
+  // Sort organizations based on saved order
+  const sortedOrganizations = [...organizations].sort((a, b) => {
+    const indexA = orgOrder.indexOf(a.id);
+    const indexB = orgOrder.indexOf(b.id);
+    
+    // If both are in the order list, sort by their position
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    // If only A is in the list, it comes first
+    if (indexA !== -1) return -1;
+    // If only B is in the list, it comes first
+    if (indexB !== -1) return 1;
+    // If neither is in the list, maintain original order
+    return 0;
+  });
+
+  const filteredOrgs = sortedOrganizations.filter(
     (org) =>
       org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       org.subdomain.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -214,11 +311,22 @@ function ErpPageContent() {
                   />
                 </div>
               ) : filteredOrgs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
-                  {filteredOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} onDelete={fetchTenants} />
-                  ))}
-                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={filteredOrgs.map((org) => org.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+                      {filteredOrgs.map((org) => (
+                        <SortableOrgCard key={org.id} org={org} onDelete={fetchTenants} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               ) : (
                 <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
