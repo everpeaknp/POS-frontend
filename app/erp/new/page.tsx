@@ -170,8 +170,8 @@ export default function NewOrgPage() {
 
       {step === 2 && (
         <OrgForm
-          accountType={accountType === "retail" ? "organization" : (accountType ?? "organization")}
-          initialData={organizationData ? { ...organizationData, business_type: accountType === "retail" ? "retail" : organizationData.business_type } : (accountType === "retail" ? { business_type: "retail" } : undefined)}
+          accountType={accountType ?? "organization"}
+          initialData={organizationData}
           onNext={handleDetailsComplete}
           showBackButton
           onBack={() => setStep(1)}
@@ -188,7 +188,7 @@ export default function NewOrgPage() {
 
       {step === reviewStep && organizationData && selectedModules.length > 0 && (
         <OrgReview
-          accountType={accountType === "retail" ? "organization" : (accountType ?? "organization")}
+          accountType={accountType ?? "organization"}
           organizationData={organizationData}
           selectedModules={selectedModules}
           onBack={() => setStep(accountType === "personal" ? 2 : 3)}

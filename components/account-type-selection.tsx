@@ -1,10 +1,10 @@
 "use client";
 
-import { User, Users, ShoppingBag, AlertCircle } from "lucide-react";
+import { User, Users, ShoppingBag, HardHat, Wrench, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type AccountType = "personal" | "retail" | "organization";
+export type AccountType = "personal" | "retail" | "construction" | "hardware" | "organization";
 
 interface AccountTypeSelectionProps {
   onSelect: (type: AccountType) => void;
@@ -37,7 +37,7 @@ export function AccountTypeSelection({
     {
       type: "retail" as AccountType,
       icon: ShoppingBag,
-      title: "Retail",
+      title: "Retail / Kirana",
       description: "Run a retail shop or kirana store",
       features: [
         "Point of sale (POS) & billing",
@@ -62,11 +62,39 @@ export function AccountTypeSelection({
       disabled: !canCreateOrganization,
       disabledReason: "Organization limit reached for your plan",
     },
+    {
+      type: "construction" as AccountType,
+      icon: HardHat,
+      title: "Construction",
+      description: "Manage construction sites and projects",
+      features: [
+        "Site & project management",
+        "Worker attendance tracking",
+        "Material consumption logs",
+        "Equipment usage tracking",
+      ],
+      disabled: !canCreateOrganization,
+      disabledReason: "Organization limit reached for your plan",
+    },
+    {
+      type: "hardware" as AccountType,
+      icon: Wrench,
+      title: "Hardware Store",
+      description: "Run a hardware business with bulk pricing",
+      features: [
+        "Bulk pricing & discounts",
+        "Customer credit management",
+        "Inventory & stock tracking",
+        "Aging reports",
+      ],
+      disabled: !canCreateOrganization,
+      disabledReason: "Organization limit reached for your plan",
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {accountTypes.map((option) => {
           const Icon = option.icon;
           return (

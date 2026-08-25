@@ -22,7 +22,7 @@ import { billingApi } from "@/lib/api/billing";
 import toast from "react-hot-toast";
 import { PageLoading } from "@/components/shared/PageLoading";
 import confetti from "canvas-confetti";
-import { PERSONAL_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { PERSONAL_ACCOUNT_MODULE_IDS, CONSTRUCTION_ACCOUNT_MODULE_IDS, HARDWARE_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
 
 type OrganizationFormData = {
   name: string;
@@ -169,6 +169,12 @@ export function OnboardingOverlay() {
     if (accountType === "personal") {
       return [ACCOUNT_TYPE_STEP, PERSONAL_DETAILS_STEP, REVIEW_STEP];
     }
+    if (accountType === "construction") {
+      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
+    }
+    if (accountType === "hardware") {
+      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
+    }
     if (accountType === "organization") {
       return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, MODULES_STEP, REVIEW_STEP];
     }
@@ -232,6 +238,12 @@ export function OnboardingOverlay() {
     if (accountType === "personal") {
       setSelectedModules([...PERSONAL_ACCOUNT_MODULE_IDS]);
       setStep(3); // straight to review
+    } else if (accountType === "construction") {
+      setSelectedModules([...CONSTRUCTION_ACCOUNT_MODULE_IDS]);
+      setStep(3); // straight to review
+    } else if (accountType === "hardware") {
+      setSelectedModules([...HARDWARE_ACCOUNT_MODULE_IDS]);
+      setStep(3); // straight to review
     } else {
       setStep(3); // modules step
     }
@@ -293,7 +305,7 @@ export function OnboardingOverlay() {
     );
   }
 
-  const reviewStep = accountType === "personal" ? 3 : 4;
+  const reviewStep = accountType === "personal" || accountType === "construction" || accountType === "hardware" ? 3 : 4;
 
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto overscroll-none">
