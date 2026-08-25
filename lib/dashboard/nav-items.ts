@@ -344,6 +344,8 @@ export function filterDashboardNavItems(
         children: [
           { label: "Overview", href: "/dashboard/inventory", exact: true },
           { label: "Products", href: "/dashboard/inventory/products", createHref: "/dashboard/inventory/products/new" },
+          { label: "Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories?new=1" },
+          { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom?new=1" },
           { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment?new=1" },
         ],
       },
