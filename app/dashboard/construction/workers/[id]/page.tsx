@@ -313,40 +313,6 @@ export default function WorkerDetailPage() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              label="Daily Wage"
-              value={formatNPR(worker.daily_wage)}
-              icon={Wallet}
-              iconClass="bg-green-50 text-green-600"
-              valueClass="text-[#22C55E]"
-            />
-            <StatCard
-              label="Category"
-              value={getCategoryDisplay(worker.category)}
-              icon={HardHat}
-              iconClass="bg-blue-50 text-blue-600"
-            />
-            <StatCard
-              label="Assigned Site"
-              value={worker.assigned_site_name || "Unassigned"}
-              icon={Building2}
-              iconClass="bg-orange-50 text-orange-600"
-            />
-            <StatCard
-              label="Status"
-              value={worker.status.charAt(0).toUpperCase() + worker.status.slice(1)}
-              icon={User}
-              iconClass={
-                worker.status === "active"
-                  ? "bg-green-50 text-green-600"
-                  : "bg-gray-100 text-gray-500"
-              }
-              valueClass={worker.status === "active" ? "text-green-600" : "text-gray-500"}
-            />
-          </div>
-
           {/* Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className={`${constructionCardClass} p-6`}>

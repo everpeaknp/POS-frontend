@@ -91,13 +91,31 @@ export default function SiteForm({
       try {
         setLoading(true);
         
-        const [employeesRes, warehousesRes] = await Promise.all([
-          apiClient.get('/hr/employees/', { params: { status: 'active' } }),
-          apiClient.get('/inventory/warehouses/'),
-        ]);
+        // Fetch data with individual error handling to prevent 403 from blocking the form
+        let employeesData: any[] = [];
+        let warehousesData: any[] = [];
         
-        const employeesData = employeesRes.data.results || employeesRes.data || [];
-        const warehousesData = warehousesRes.data.results || warehousesRes.data || [];
+        try {
+          const employeesRes = await apiClient.get('/hr/employees/', { params: { status: 'active' } });
+          employeesData = employeesRes.data.results || employeesRes.data || [];
+        } catch (empError: any) {
+          if (empError.response?.status === 403) {
+            console.warn('No permission to access HR employees. Manager field will be unavailable.');
+          } else {
+            console.error('Error fetching employees:', empError);
+          }
+        }
+        
+        try {
+          const warehousesRes = await apiClient.get('/inventory/warehouses/');
+          warehousesData = warehousesRes.data.results || warehousesRes.data || [];
+        } catch (whError: any) {
+          if (whError.response?.status === 403) {
+            console.warn('No permission to access warehouses. Warehouse field will be unavailable.');
+          } else {
+            console.error('Error fetching warehouses:', whError);
+          }
+        }
         
         const managersData = employeesData.filter((emp: any) => 
           emp.designation && 
@@ -127,8 +145,10 @@ export default function SiteForm({
         }
       } catch (error: any) {
         console.error('Failed to load form data:', error);
-        console.error('Error response:', error.response);
-        toast.error('Failed to load form data. Please refresh the page.');
+        // Only show toast for unexpected errors, not 403
+        if (error.response?.status !== 403) {
+          toast.error('Failed to load some form data. You can still create a site.');
+        }
       } finally {
         setLoading(false);
       }
@@ -140,9 +160,13 @@ export default function SiteForm({
   const onSubmit = async (data: SiteFormData) => {
     try {
       // Convert allocated_budget to number for API, or set to 0 if empty
+      // Convert empty strings to null for optional foreign key fields
       const payload = {
         ...data,
         allocated_budget: data.allocated_budget ? Number(data.allocated_budget) : 0,
+        manager: data.manager || null,
+        warehouse: data.warehouse || null,
+        estimated_end_date: data.estimated_end_date || null,
       };
 
       if (isEdit && siteId) {

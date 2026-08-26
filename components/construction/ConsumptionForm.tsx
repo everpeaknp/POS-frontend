@@ -1,13 +1,12 @@
 "use client";
 
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Package, AlertCircle } from "lucide-react";
+import { Package, AlertCircle, Plus, Trash2 } from "lucide-react";
 import FormField from "@/components/shared/FormField";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { materialConsumptionAPI } from "@/lib/api/construction";
@@ -16,23 +15,20 @@ import apiClient from "@/lib/api/client";
 
 const consumptionSchema = z.object({
   site: z.string().min(1, "Site is required"),
-  product: z.string().min(1, "Product is required"),
-  quantity: z
-    .string()
-    .min(1, "Quantity is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Must be a positive number",
-    }),
-  unit_cost: z
-    .string()
-    .min(1, "Unit cost is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: "Must be a valid number",
-    }),
   notes: z.string().optional().or(z.literal("")),
 });
 
 type ConsumptionFormData = z.infer<typeof consumptionSchema>;
+
+interface ConsumptionItem {
+  id: string;
+  product: string;
+  productName: string;
+  unitName: string;
+  quantity: string;
+  unit_cost: string;
+  availableStock: number | null;
+}
 
 interface Product {
   id: number;
@@ -70,17 +66,14 @@ export default function ConsumptionForm({
   const [sites, setSites] = useState<Site[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [availableStock, setAvailableStock] = useState<number | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+  const [items, setItems] = useState<ConsumptionItem[]>([]);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
     watch,
-    setValue,
   } = useForm<ConsumptionFormData>({
     resolver: zodResolver(consumptionSchema),
     defaultValues: {
@@ -90,14 +83,6 @@ export default function ConsumptionForm({
   });
 
   const watchedSite = watch("site");
-  const watchedProduct = watch("product");
-  const watchedQuantity = watch("quantity");
-  const watchedUnitCost = watch("unit_cost");
-
-  const totalCost =
-    watchedQuantity && watchedUnitCost && !isNaN(Number(watchedQuantity)) && !isNaN(Number(watchedUnitCost))
-      ? Number(watchedQuantity) * Number(watchedUnitCost)
-      : 0;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,58 +114,6 @@ export default function ConsumptionForm({
   }, []);
 
   useEffect(() => {
-    if (!watchedProduct || products.length === 0) {
-      setSelectedProduct(null);
-      return;
-    }
-
-    const product = products.find((p) => p.id.toString() === watchedProduct);
-
-    if (product) {
-      setSelectedProduct(product);
-      setValue("unit_cost", product.cost_price || "0", {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-    } else {
-      setSelectedProduct(null);
-    }
-  }, [watchedProduct, products, setValue]);
-
-  useEffect(() => {
-    const fetchStock = async () => {
-      if (!watchedSite || !watchedProduct) {
-        setAvailableStock(null);
-        return;
-      }
-
-      try {
-        const site = sites.find((s) => s.id === watchedSite);
-        if (!site || !site.warehouse) {
-          setAvailableStock(null);
-          return;
-        }
-
-        const response = await apiClient.get("/inventory/stocks/", {
-          params: {
-            product: watchedProduct,
-            warehouse: site.warehouse,
-          },
-        });
-
-        const stocks = response.data.results || response.data || [];
-        setAvailableStock(stocks.length > 0 ? Number(stocks[0].quantity) : 0);
-      } catch (error) {
-        console.warn("Failed to fetch stock (inventory may not be available):", error);
-        // Don't show error - just proceed without stock info
-        setAvailableStock(null);
-      }
-    };
-
-    fetchStock();
-  }, [watchedSite, watchedProduct, sites]);
-
-  useEffect(() => {
     if (watchedSite) {
       const site = sites.find((s) => s.id === watchedSite);
       setSelectedSite(site || null);
@@ -189,36 +122,133 @@ export default function ConsumptionForm({
     }
   }, [watchedSite, sites]);
 
-  const onSubmit = async (data: ConsumptionFormData) => {
-    try {
-      const requestedQty = Number(data.quantity);
-      if (availableStock !== null && requestedQty > availableStock) {
-        toast.error(`Insufficient stock! Available: ${availableStock.toFixed(2)}`);
-        return;
+  const addItem = () => {
+    const newItem: ConsumptionItem = {
+      id: Date.now().toString(),
+      product: "",
+      productName: "",
+      unitName: "",
+      quantity: "",
+      unit_cost: "",
+      availableStock: null,
+    };
+    setItems([...items, newItem]);
+  };
+
+  const removeItem = (id: string) => {
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  const updateItem = async (id: string, field: keyof ConsumptionItem, value: string) => {
+    const updatedItems = items.map((item) => {
+      if (item.id !== id) return item;
+
+      const updated = { ...item, [field]: value };
+
+      // If product changed, update product details and fetch stock
+      if (field === "product" && value) {
+        const product = products.find((p) => p.id.toString() === value);
+        if (product) {
+          updated.productName = product.name;
+          updated.unitName = product.unit_name;
+          // Try cost_price first, fallback to other possible field names
+          updated.unit_cost = product.cost_price || "0";
+
+          // Fetch stock for this product
+          if (watchedSite && selectedSite?.warehouse) {
+            fetchStockForItem(id, value, selectedSite.warehouse);
+          }
+        }
       }
 
-      const payload = {
-        site: data.site,
-        product: String(data.product),
-        quantity: Number(data.quantity),
-        unit_cost: Number(data.unit_cost),
-        notes: data.notes || "",
-        daily_log: dailyLogId,
-      };
+      return updated;
+    });
 
-      await materialConsumptionAPI.create(
-        payload as Parameters<typeof materialConsumptionAPI.create>[0]
+    setItems(updatedItems);
+  };
+
+  const fetchStockForItem = async (itemId: string, productId: string, warehouseId: string) => {
+    try {
+      const response = await apiClient.get("/inventory/stocks/", {
+        params: {
+          product: productId,
+          warehouse: warehouseId,
+        },
+      });
+
+      const stocks = response.data.results || response.data || [];
+      const availableStock = stocks.length > 0 ? Number(stocks[0].quantity) : 0;
+
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, availableStock } : item
+        )
       );
+    } catch (error) {
+      console.warn("Failed to fetch stock:", error);
+    }
+  };
 
-      toast.success("Material consumption logged successfully! Stock updated.");
+  const calculateTotal = () => {
+    return items.reduce((sum, item) => {
+      const qty = parseFloat(item.quantity) || 0;
+      const cost = parseFloat(item.unit_cost) || 0;
+      return sum + qty * cost;
+    }, 0);
+  };
+
+  const onSubmit = async (data: ConsumptionFormData) => {
+    if (items.length === 0) {
+      toast.error("Please add at least one product");
+      return;
+    }
+
+    // Validate all items
+    for (const item of items) {
+      if (!item.product) {
+        toast.error("Please select a product for all items");
+        return;
+      }
+      if (!item.quantity || parseFloat(item.quantity) <= 0) {
+        toast.error(`Please enter valid quantity for ${item.productName}`);
+        return;
+      }
+      if (!item.unit_cost || parseFloat(item.unit_cost) < 0) {
+        toast.error(`Please enter valid unit cost for ${item.productName}`);
+        return;
+      }
+      if (item.availableStock !== null && parseFloat(item.quantity) > item.availableStock) {
+        toast.error(`Insufficient stock for ${item.productName}! Available: ${item.availableStock.toFixed(2)}`);
+        return;
+      }
+    }
+
+    try {
+      // Create multiple consumption records
+      const promises = items.map((item) => {
+        const payload = {
+          site: data.site,
+          product: item.product,
+          quantity: parseFloat(item.quantity),
+          unit_cost: parseFloat(item.unit_cost),
+          notes: data.notes || "",
+          daily_log: dailyLogId,
+        };
+
+        return materialConsumptionAPI.create(
+          payload as Parameters<typeof materialConsumptionAPI.create>[0]
+        );
+      });
+
+      await Promise.all(promises);
+
+      toast.success(`${items.length} material consumption(s) logged successfully! Stock updated.`);
 
       if (onSuccess) {
         onSuccess();
       } else {
         router.push(`/dashboard/construction/sites/${data.site}`);
       }
-
-      reset();
     } catch (error: unknown) {
       const err = error as { response?: { data?: Record<string, unknown> } };
       const message =
@@ -226,16 +256,6 @@ export default function ConsumptionForm({
         (err.response?.data?.message as string) ||
         "Operation failed. Please try again.";
       toast.error(message);
-
-      if (err.response?.data) {
-        Object.keys(err.response.data).forEach((field) => {
-          if (field !== "detail" && field !== "message") {
-            const fieldErrors = err.response!.data![field];
-            const errorMsg = Array.isArray(fieldErrors) ? fieldErrors[0] : fieldErrors;
-            toast.error(`${field}: ${errorMsg}`);
-          }
-        });
-      }
     }
   };
 
@@ -244,12 +264,12 @@ export default function ConsumptionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
-          Consumption Details
+          Basic Information
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             label="Construction Site"
             name="site"
@@ -267,115 +287,173 @@ export default function ConsumptionForm({
             </select>
           </FormField>
 
-          <FormField
-            label="Product/Material"
-            name="product"
-            error={errors.product}
-            required
-            hint="Select the material to consume"
-          >
-            <select {...register("product")} id="product" className={inputClass}>
-              <option value="">Select product</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name} ({product.sku}) - {product.unit_name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-
-          <FormField
-            label="Quantity"
-            name="quantity"
-            error={errors.quantity}
-            required
-            hint={selectedProduct ? `Unit: ${selectedProduct.unit_name}` : "Enter quantity to consume"}
-          >
-            <input
-              {...register("quantity")}
-              type="text"
-              id="quantity"
-              className={inputClass}
-              placeholder="0.00"
-            />
-          </FormField>
-
-          <FormField
-            label="Unit Cost (NPR)"
-            name="unit_cost"
-            error={errors.unit_cost}
-            required
-            hint="Cost per unit (auto-filled from product)"
-          >
-            <input
-              {...register("unit_cost")}
-              type="text"
-              id="unit_cost"
-              className={inputClass}
-              placeholder="0.00"
-            />
-          </FormField>
+          {selectedSite && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <Package className="w-4 h-4 text-[#22C55E] mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-green-900">
+                    Warehouse: {selectedSite.warehouse_name}
+                  </p>
+                  <p className="text-xs text-green-700 mt-0.5">
+                    Stock will be deducted from this warehouse
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {selectedSite && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 w-full">
-          <div className="flex items-start gap-3">
-            <Package className="w-5 h-5 text-[#22C55E] mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-900">
-                Warehouse: {selectedSite.warehouse_name}
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                Materials will be deducted from this warehouse inventory
-              </p>
+      {watchedSite && (
+        <>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 flex-1">
+                Products / Materials
+              </h3>
             </div>
-          </div>
-        </div>
-      )}
 
-      {watchedProduct && watchedSite && availableStock !== null && (
-        <div
-          className={`border rounded-lg p-4 ${
-            availableStock > 0 ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            {availableStock > 0 ? (
-              <Package className="w-5 h-5 text-green-600 mt-0.5" />
+            {items.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 mb-4">No products added yet</p>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="px-4 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] transition-colors inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Product
+                </button>
+              </div>
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-            )}
-            <div>
-              <p
-                className={`text-sm font-medium ${
-                  availableStock > 0 ? "text-green-900" : "text-red-900"
-                }`}
-              >
-                Available Stock: {availableStock.toFixed(2)} {selectedProduct?.unit_name || ""}
-              </p>
-              {availableStock === 0 && (
-                <p className="text-xs text-red-700 mt-1">
-                  No stock available at this warehouse. Please transfer stock first.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="space-y-3">
+                {items.map((item) => {
+                  const itemTotal =
+                    (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_cost) || 0);
+                  const hasLowStock =
+                    item.availableStock !== null &&
+                    parseFloat(item.quantity || "0") > item.availableStock;
 
-      {totalCost > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">Total Cost:</span>
-            <span className="text-lg font-bold text-gray-900">{formatNPR(totalCost)}</span>
+                  return (
+                    <div
+                      key={item.id}
+                      className={`border rounded-lg p-4 ${
+                        hasLowStock ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                          <div className="lg:col-span-2">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Product <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={item.product}
+                              onChange={(e) => updateItem(item.id, "product", e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                            >
+                              <option value="">Select product</option>
+                              {products.map((product) => (
+                                <option key={product.id} value={product.id}>
+                                  {product.name} ({product.sku})
+                                </option>
+                              ))}
+                            </select>
+                            {item.availableStock !== null && (
+                              <p className={`text-xs mt-1 ${hasLowStock ? "text-red-600 font-medium" : "text-gray-500"}`}>
+                                Stock: {item.availableStock.toFixed(2)} {item.unitName}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Quantity <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={item.quantity}
+                              onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
+                              placeholder="0.00"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                            />
+                            {item.unitName && (
+                              <p className="text-xs text-gray-500 mt-1">Unit: {item.unitName}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Unit Cost <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={item.unit_cost}
+                              onChange={(e) => updateItem(item.id, "unit_cost", e.target.value)}
+                              placeholder="0.00"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Total
+                            </label>
+                            <div className="w-full px-2 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-md font-medium">
+                              {formatNPR(itemTotal)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          className="mt-6 p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {hasLowStock && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-red-600">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Insufficient stock! Available: {item.availableStock?.toFixed(2)} {item.unitName}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#22C55E] hover:text-[#22C55E] transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Another Product
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+
+          {items.length > 0 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Grand Total:</span>
+                <span className="text-xl font-bold text-gray-900">{formatNPR(calculateTotal())}</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{items.length} product(s)</p>
+            </div>
+          )}
+        </>
       )}
 
       <div>
         <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">
-          Notes
+          Additional Notes
         </h3>
         <FormField label="Notes" name="notes" error={errors.notes}>
           <textarea
@@ -401,11 +479,10 @@ export default function ConsumptionForm({
         )}
         <button
           type="submit"
-          disabled={isSubmitting || availableStock === 0}
+          disabled={isSubmitting || items.length === 0}
           className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
-
-          {isSubmitting ? "Logging..." : "Log Consumption"}
+          {isSubmitting ? "Logging..." : `Log ${items.length || ""} Consumption${items.length !== 1 ? "s" : ""}`}
         </button>
       </div>
     </form>

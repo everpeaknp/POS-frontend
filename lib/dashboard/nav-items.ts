@@ -137,7 +137,7 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
       { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
       { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
-      { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage" },
+      { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage", createHref: "/dashboard/construction/equipment-usage?new=1" },
       { label: "Construction Reports", href: "/dashboard/construction/reports" },
     ],
   },
@@ -343,48 +343,9 @@ export function filterDashboardNavItems(
         icon: Building2,
         href: "/dashboard/construction/sites",
         requiredModule: "construction",
-      },
-      {
-        label: "Workers",
-        icon: HardHat,
-        href: "/dashboard/construction/workers",
-        requiredModule: "construction",
-      },
-      {
-        label: "Attendance",
-        icon: ClipboardCheck,
-        href: "/dashboard/construction/attendance",
-        requiredModule: "construction",
-      },
-      {
-        label: "Daily Logs",
-        icon: FileText,
-        href: "/dashboard/construction/daily-logs",
-        requiredModule: "construction",
-      },
-      {
-        label: "Material Consumption",
-        icon: Package,
-        href: "/dashboard/construction/material-consumption",
-        requiredModule: "construction",
-      },
-      {
-        label: "Equipment",
-        icon: Wrench,
-        href: "/dashboard/construction/equipment",
-        requiredModule: "construction",
-      },
-      {
-        label: "Equipment Usage",
-        icon: BarChart2,
-        href: "/dashboard/construction/equipment-usage",
-        requiredModule: "construction",
-      },
-      {
-        label: "Reports",
-        icon: BarChart2,
-        href: "/dashboard/construction/reports",
-        requiredModule: "construction",
+        children: [
+          { label: "Sites", href: "/dashboard/construction/sites", createHref: "/dashboard/construction/sites/new" },
+        ],
       },
       // Add Inventory module
       {
@@ -403,6 +364,66 @@ export function filterDashboardNavItems(
           { label: "Stock Out", href: "/dashboard/inventory/stock-out" },
           { label: "Inventory Reports", href: "/dashboard/inventory/reports" },
         ],
+      },
+      {
+        label: "Material Consumption",
+        icon: Package,
+        href: "/dashboard/construction/material-consumption",
+        requiredModule: "construction",
+        children: [
+          { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
+        ],
+      },
+      {
+        label: "Daily Logs",
+        icon: FileText,
+        href: "/dashboard/construction/daily-logs",
+        requiredModule: "construction",
+        children: [
+          { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
+        ],
+      },
+      {
+        label: "Equipment",
+        icon: Wrench,
+        href: "/dashboard/construction/equipment",
+        requiredModule: "construction",
+        children: [
+          { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
+        ],
+      },
+      {
+        label: "Equipment Usage",
+        icon: BarChart2,
+        href: "/dashboard/construction/equipment-usage",
+        requiredModule: "construction",
+        children: [
+          { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage", createHref: "/dashboard/construction/equipment-usage?new=1" },
+        ],
+      },
+      {
+        label: "Workers",
+        icon: HardHat,
+        href: "/dashboard/construction/workers",
+        requiredModule: "construction",
+        children: [
+          { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
+        ],
+      },
+      {
+        label: "Attendance",
+        icon: ClipboardCheck,
+        href: "/dashboard/construction/attendance",
+        requiredModule: "construction",
+        children: [
+          { label: "Attendance", href: "/dashboard/construction/attendance", createHref: "/dashboard/construction/attendance/mark" },
+        ],
+      },
+      {
+        label: "Reports",
+        icon: BarChart2,
+        href: "/dashboard/construction/reports",
+        requiredModule: "construction",
       },
       {
         label: "Settings",

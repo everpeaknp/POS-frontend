@@ -26,15 +26,199 @@ import type { DateCalendarSystem } from "@/lib/dates";
 import { getMediaUrl } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const BUSINESS_TYPES = [
-  { value: "construction", label: "Construction" },
-  { value: "hardware", label: "Hardware" },
-  { value: "retail", label: "Retail" },
-  { value: "wholesale", label: "Wholesale" },
+// Business type options - matching the onboarding forms
+const RETAIL_BUSINESS_TYPES = [
+  { value: "retail", label: "General Retail Store" },
+  { value: "kirana", label: "Kirana Store / General Store" },
+  { value: "grocery", label: "Grocery Store" },
+  { value: "supermarket", label: "Supermarket" },
+  { value: "convenience_store", label: "Convenience Store" },
+  { value: "departmental_store", label: "Departmental Store" },
+  { value: "mini_mart", label: "Mini Mart" },
+  { value: "provision_store", label: "Provision Store" },
+  { value: "dairy_products", label: "Dairy & Milk Products" },
+  { value: "bakery", label: "Bakery & Confectionery" },
+  { value: "sweet_shop", label: "Sweet Shop / Mithai" },
+  { value: "fruits_vegetables", label: "Fruits & Vegetables" },
+  { value: "meat_shop", label: "Meat & Poultry Shop" },
+  { value: "fish_shop", label: "Fish & Seafood" },
+  { value: "beverages", label: "Beverages & Cold Drinks" },
+  { value: "tea_coffee", label: "Tea & Coffee Shop" },
+  { value: "snacks_namkeen", label: "Snacks & Namkeen" },
+  { value: "dry_fruits", label: "Dry Fruits & Nuts" },
+  { value: "spices", label: "Spices & Masala" },
+  { value: "organic_store", label: "Organic Products Store" },
+  { value: "clothing", label: "Clothing & Apparel" },
+  { value: "footwear", label: "Footwear & Shoes" },
+  { value: "fashion_accessories", label: "Fashion Accessories" },
+  { value: "cosmetics", label: "Cosmetics & Beauty Products" },
+  { value: "pharmacy", label: "Pharmacy / Medical Store" },
+  { value: "stationery", label: "Stationery & Books" },
+  { value: "mobile_shop", label: "Mobile & Electronics" },
+  { value: "electronics", label: "Electronics & Appliances" },
+  { value: "home_decor", label: "Home Decor & Furnishing" },
+  { value: "kitchenware", label: "Kitchenware & Utensils" },
+  { value: "toys_games", label: "Toys & Games" },
+  { value: "sports_goods", label: "Sports Goods & Equipment" },
+  { value: "gift_shop", label: "Gift Shop" },
+  { value: "jewelry", label: "Jewelry & Ornaments" },
+  { value: "optical", label: "Optical / Eyewear" },
+  { value: "pet_supplies", label: "Pet Supplies" },
+  { value: "automobile_parts", label: "Automobile Parts & Accessories" },
+  { value: "other", label: "Other Retail" },
+] as const;
+
+const CONSTRUCTION_BUSINESS_TYPES = [
+  { value: "general_construction", label: "General Construction Company" },
+  { value: "building_contractor", label: "Building Contractor" },
+  { value: "civil_contractor", label: "Civil Contractor" },
+  { value: "residential_construction", label: "Residential Construction" },
+  { value: "commercial_construction", label: "Commercial Construction" },
+  { value: "infrastructure", label: "Infrastructure Development" },
+  { value: "road_construction", label: "Road & Highway Construction" },
+  { value: "bridge_construction", label: "Bridge Construction" },
+  { value: "concrete_contractor", label: "Concrete Contractor" },
+  { value: "masonry", label: "Masonry & Bricklaying" },
+  { value: "steel_structure", label: "Steel Structure Erection" },
+  { value: "roofing", label: "Roofing Contractor" },
+  { value: "excavation", label: "Excavation & Earthwork" },
+  { value: "foundation", label: "Foundation Specialist" },
+  { value: "renovation", label: "Renovation & Remodeling" },
+  { value: "interior_construction", label: "Interior Construction" },
+  { value: "electrical_contractor", label: "Electrical Contractor" },
+  { value: "plumbing", label: "Plumbing Contractor" },
+  { value: "hvac", label: "HVAC Installation" },
+  { value: "painting", label: "Painting & Finishing" },
+  { value: "flooring", label: "Flooring Specialist" },
+  { value: "tiling", label: "Tiling Contractor" },
+  { value: "carpentry", label: "Carpentry & Woodwork" },
+  { value: "demolition", label: "Demolition Contractor" },
+  { value: "landscape", label: "Landscaping & Site Work" },
+  { value: "waterproofing", label: "Waterproofing Specialist" },
+  { value: "site_development", label: "Site Development" },
+  { value: "project_management", label: "Construction Project Management" },
+  { value: "equipment_rental", label: "Construction Equipment Rental" },
+  { value: "other", label: "Other Construction" },
+] as const;
+
+const HARDWARE_BUSINESS_TYPES = [
+  { value: "general_hardware", label: "General Hardware Store" },
+  { value: "building_materials", label: "Building Materials" },
+  { value: "construction_hardware", label: "Construction Hardware" },
+  { value: "electrical_hardware", label: "Electrical Hardware & Supplies" },
+  { value: "plumbing_supplies", label: "Plumbing Supplies & Fixtures" },
+  { value: "paint_supplies", label: "Paint & Painting Supplies" },
+  { value: "tools_equipment", label: "Tools & Equipment" },
+  { value: "power_tools", label: "Power Tools & Accessories" },
+  { value: "hand_tools", label: "Hand Tools" },
+  { value: "fasteners", label: "Fasteners & Hardware Fittings" },
+  { value: "lumber_timber", label: "Lumber & Timber" },
+  { value: "cement_concrete", label: "Cement & Concrete Products" },
+  { value: "steel_iron", label: "Steel & Iron Products" },
+  { value: "roofing_materials", label: "Roofing Materials" },
+  { value: "doors_windows", label: "Doors & Windows" },
+  { value: "tiles_flooring", label: "Tiles & Flooring Materials" },
+  { value: "bathroom_fittings", label: "Bathroom Fittings & Sanitary" },
+  { value: "kitchen_fittings", label: "Kitchen Fittings & Accessories" },
+  { value: "locks_security", label: "Locks & Security Hardware" },
+  { value: "wire_cable", label: "Wire & Cable" },
+  { value: "pipes_fittings", label: "Pipes & Fittings" },
+  { value: "safety_equipment", label: "Safety Equipment" },
+  { value: "gardening_tools", label: "Gardening Tools & Supplies" },
+  { value: "industrial_supplies", label: "Industrial Supplies" },
+  { value: "automotive_parts", label: "Automotive Parts & Hardware" },
+  { value: "agricultural_tools", label: "Agricultural Tools & Equipment" },
+  { value: "welding_supplies", label: "Welding Supplies" },
+  { value: "other", label: "Other Hardware" },
+] as const;
+
+const ORGANIZATION_BUSINESS_TYPES = [
+  { value: "technology", label: "Technology & IT Services" },
+  { value: "software", label: "Software Development" },
+  { value: "consulting", label: "Consulting Services" },
+  { value: "financial_services", label: "Financial Services" },
+  { value: "accounting", label: "Accounting & Bookkeeping" },
+  { value: "legal", label: "Legal Services" },
+  { value: "marketing", label: "Marketing & Advertising" },
+  { value: "real_estate", label: "Real Estate" },
   { value: "manufacturing", label: "Manufacturing" },
-  { value: "services", label: "Services" },
+  { value: "healthcare", label: "Healthcare Services" },
+  { value: "education", label: "Education & Training" },
+  { value: "hospitality", label: "Hospitality & Tourism" },
+  { value: "restaurant", label: "Restaurant & Food Service" },
+  { value: "transportation", label: "Transportation & Logistics" },
+  { value: "construction", label: "Construction" },
+  { value: "retail", label: "Retail Business" },
+  { value: "wholesale", label: "Wholesale & Distribution" },
+  { value: "ecommerce", label: "E-commerce" },
+  { value: "agriculture", label: "Agriculture & Farming" },
+  { value: "energy", label: "Energy & Utilities" },
+  { value: "telecommunications", label: "Telecommunications" },
+  { value: "media", label: "Media & Entertainment" },
+  { value: "publishing", label: "Publishing" },
+  { value: "design", label: "Design & Creative Services" },
+  { value: "events", label: "Events & Conference Management" },
+  { value: "security", label: "Security Services" },
+  { value: "cleaning", label: "Cleaning & Facility Services" },
+  { value: "automotive", label: "Automotive Services" },
+  { value: "nonprofit", label: "Non-Profit Organization" },
+  { value: "government", label: "Government" },
   { value: "other", label: "Other" },
 ] as const;
+
+const ALL_BUSINESS_TYPES = [
+  ...ORGANIZATION_BUSINESS_TYPES,
+  ...RETAIL_BUSINESS_TYPES,
+  ...CONSTRUCTION_BUSINESS_TYPES,
+  ...HARDWARE_BUSINESS_TYPES,
+] as const;
+
+// Filter business types based on account type - matches onboarding forms
+function getBusinessTypesForAccount(accountType?: string) {
+  if (accountType === "retail") {
+    return RETAIL_BUSINESS_TYPES;
+  }
+  
+  if (accountType === "construction") {
+    return CONSTRUCTION_BUSINESS_TYPES;
+  }
+  
+  if (accountType === "hardware") {
+    return HARDWARE_BUSINESS_TYPES;
+  }
+  
+  // For organization type, show all organization business types
+  return ORGANIZATION_BUSINESS_TYPES;
+}
+
+// Check if a business type value exists in the filtered list
+function isBusinessTypeInList(businessType: string, list: readonly { value: string; label: string }[]) {
+  return list.some(item => item.value === businessType);
+}
+
+// Get all business types including the current one even if it's not in the filtered list
+function getBusinessTypesWithFallback(accountType?: string, currentBusinessType?: string) {
+  const filteredList = getBusinessTypesForAccount(accountType);
+  
+  // If current business type is already in the list, just return the filtered list
+  if (!currentBusinessType || isBusinessTypeInList(currentBusinessType, filteredList)) {
+    return filteredList;
+  }
+  
+  // If current business type is not in the filtered list, find it in ALL_BUSINESS_TYPES and add it
+  const allTypes = [...RETAIL_BUSINESS_TYPES, ...CONSTRUCTION_BUSINESS_TYPES, ...HARDWARE_BUSINESS_TYPES, ...ORGANIZATION_BUSINESS_TYPES];
+  const currentType = allTypes.find(item => item.value === currentBusinessType);
+  
+  if (currentType) {
+    // Add the current type at the top of the list with a note
+    return [
+      { ...currentType, label: `${currentType.label} (Current)` },
+      ...filteredList
+    ];
+  }
+  
+  return filteredList;
+}
 
 interface OrgFormState {
   name: string;
@@ -126,7 +310,7 @@ function OrgSettingsContent() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
   const [logoCleared, setLogoCleared] = useState(false);
-  const [tenantMeta, setTenantMeta] = useState<Pick<Tenant, "slug" | "plan_type" | "user_role"> | null>(null);
+  const [tenantMeta, setTenantMeta] = useState<Pick<Tenant, "slug" | "plan_type" | "user_role" | "account_type"> | null>(null);
   const [form, setForm] = useState<OrgFormState>(() =>
     tenantToForm({ address: "" } as Tenant, "AD")
   );
@@ -152,6 +336,7 @@ function OrgSettingsContent() {
         slug: data.slug,
         plan_type: data.plan_type,
         user_role: data.user_role,
+        account_type: data.account_type,
       });
       setExistingLogoUrl(getMediaUrl(data.logo));
       setLogoFile(null);
@@ -314,15 +499,15 @@ function OrgSettingsContent() {
               </Field>
               <Field label="Industry">
                 <Select
-                  value={form.business_type}
+                  value={form.business_type || ""}
                   onValueChange={(v) => updateField("business_type", v || "other")}
                   disabled={!canEdit || submitting}
                 >
                   <SelectTrigger className="h-9 text-sm border-gray-200">
-                    <SelectValue />
+                    <SelectValue placeholder="Select business type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {BUSINESS_TYPES.map((item) => (
+                    {getBusinessTypesWithFallback(tenantMeta?.account_type, form.business_type).map((item) => (
                       <SelectItem key={item.value} value={item.value}>
                         {item.label}
                       </SelectItem>

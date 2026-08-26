@@ -195,6 +195,20 @@ export function ConstructionForm({
     agreeToTerms: false,
   }));
 
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        organizationName: initialData.name || "",
+        businessType: initialData.business_type || "",
+        address: initialData.address || "",
+        workspaceName: initialData.workspace_name || initialData.name || "",
+        logo: null,
+        agreeToTerms: false,
+      });
+    }
+  }, [initialData]);
+
   const workspaceUrl = form.workspaceName
     ? `${form.workspaceName.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')}.khata.app`
     : "your-workspace.khata.app";

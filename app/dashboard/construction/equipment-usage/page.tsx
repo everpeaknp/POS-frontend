@@ -52,6 +52,20 @@ export default function EquipmentUsagePage() {
     notes: "",
   });
 
+  // Check for ?new=1 query parameter to auto-open dialog
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("new") === "1") {
+        setDialogOpen(true);
+        // Remove the query parameter from URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete("new");
+        window.history.replaceState({}, "", url);
+      }
+    }
+  });
+
   const { data: sitesData } = useApi(() => constructionApi.sites.list(), { deps: [] });
   const { data: equipmentData } = useApi(() => constructionApi.equipment.list(), { deps: [] });
   const sites = sitesData || [];

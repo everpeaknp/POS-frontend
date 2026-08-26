@@ -77,15 +77,29 @@ export default function AttendanceGrid() {
   useEffect(() => {
     const fetchSites = async () => {
       try {
-        const sitesData = await constructionApi.sites.list({ status: 'active' });
+        setLoading(true);
+        console.log('[AttendanceGrid] Fetching all sites (not filtering by status)');
+        // Fetch all sites, not just active ones, so planned sites can also have attendance
+        const sitesData = await constructionApi.sites.list();
+        console.log('[AttendanceGrid] Sites data received:', sitesData);
         const sitesList = Array.isArray(sitesData) ? sitesData : [];
+        console.log('[AttendanceGrid] Sites list count:', sitesList.length);
         setSites(sitesList);
         if (!initialSite && sitesList.length > 0) {
           setValue('site', String(sitesList[0].id));
         }
-      } catch (error) {
-        console.error('Failed to load sites:', error);
-        toast.error('Failed to load sites');
+        
+        // If no sites found, show a helpful message
+        if (sitesList.length === 0) {
+          console.warn('[AttendanceGrid] No construction sites found');
+          toast.error('No construction sites found. Please create a site first.');
+        }
+      } catch (error: any) {
+        console.error('[AttendanceGrid] Failed to load sites:', error);
+        console.error('[AttendanceGrid] Error response:', error.response);
+        toast.error(error.response?.data?.detail || 'Failed to load sites');
+      } finally {
+        setLoading(false);
       }
     };
     fetchSites();

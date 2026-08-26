@@ -208,7 +208,7 @@ export default function WorkersPage() {
             </div>
             <Select value={status} onValueChange={(v) => setStatus(v ?? "All")}>
               <SelectTrigger className="h-9 w-32 text-sm border-gray-200 bg-white">
-                <SelectValue />
+                <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
                 {["All", "active", "inactive"].map((s) => (

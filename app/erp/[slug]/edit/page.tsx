@@ -4,10 +4,7 @@ import { PageLoading } from "@/components/shared/PageLoading";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { KhataLogo } from "@/components/khata-logo";
 import { OrgForm } from "@/components/org-form";
 import { tenantApi, Tenant, TenantData } from "@/lib/api/tenant";
 import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
@@ -92,21 +89,6 @@ export default function EditOrganizationPage() {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <KhataLogo size="md" />
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/erp")}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Organizations
-          </Button>
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1 max-w-3xl w-full mx-auto px-6 py-8">
         <div className="mb-6">

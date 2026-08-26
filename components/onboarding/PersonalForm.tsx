@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
@@ -71,6 +71,18 @@ export function PersonalForm({
       agreeToTerms: false,
     };
   });
+
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      const registeredName = `${user?.first_name || ""} ${user?.last_name || ""}`.trim();
+      setForm({
+        address: initialData.address || "",
+        workspaceName: initialData.workspace_name || (registeredName ? `${registeredName}'s Personal` : "My Personal Account"),
+        agreeToTerms: false,
+      });
+    }
+  }, [initialData, user]);
 
   const workspaceUrl = form.workspaceName
     ? `${form.workspaceName.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')}.khata.app`
