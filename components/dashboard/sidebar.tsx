@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronDown, ChevronLeft, ChevronRight, X, Menu, Plus,
-  Search,
+  Search, ArrowLeft,
 } from "lucide-react";
 import { KhataLogo } from "@/components/khata-logo";
 import { WorkplaceSwitcher } from "@/components/dashboard/WorkplaceSwitcher";

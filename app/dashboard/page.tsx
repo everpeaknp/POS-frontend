@@ -82,22 +82,7 @@ export default function DashboardPage() {
 
   // Show loading state while redirecting
   if (isPersonal || isConstruction || isHardware || isKiranaOrRetail) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
-          <p className="mt-4 text-gray-600">
-            {isPersonal 
-              ? "Redirecting to Personal Finance..." 
-              : isConstruction
-              ? "Redirecting to Construction..."
-              : isHardware
-              ? "Redirecting to Hardware..."
-              : "Loading dashboard..."}
-          </p>
-        </div>
-      </div>
-    );
+    return null; // Let the layout handle loading, avoid double loading screens
   }
 
   // Hide Reports & Analytics from the home overview (stats/tiles stay in /dashboard/reports)
