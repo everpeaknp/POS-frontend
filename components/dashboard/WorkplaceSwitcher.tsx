@@ -187,6 +187,25 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
         {tenants.map((tenant) => {
           const active = tenant.slug === activeSlug;
           const busy = switchingSlug === tenant.slug;
+          
+          // Get display type based on active modules or account type
+          let displayType = "";
+          if (tenant.account_type === "personal") {
+            displayType = "Personal";
+          } else if (tenant.active_modules?.includes("construction")) {
+            displayType = "Construction";
+          } else if (tenant.active_modules?.includes("hardware")) {
+            displayType = "Hardware";
+          } else if (tenant.account_type === "retail") {
+            displayType = "Retail";
+          } else if (tenant.account_type === "construction") {
+            displayType = "Construction";
+          } else if (tenant.account_type === "hardware") {
+            displayType = "Hardware";
+          } else {
+            displayType = "Business";
+          }
+          
           return (
             <DropdownMenuItem
               key={tenant.id}
@@ -195,7 +214,10 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
               onClick={() => void handleSwitch(tenant)}
             >
               <TenantMark tenant={tenant} size="sm" />
-              <span className="flex-1 truncate text-sm">{tenant.name}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm truncate">{tenant.name}</div>
+                <div className="text-[10px] text-muted-foreground truncate">{displayType}</div>
+              </div>
               {active && <Check className="h-4 w-4 text-[#22C55E] shrink-0" />}
             </DropdownMenuItem>
           );

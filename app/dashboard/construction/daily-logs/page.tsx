@@ -205,7 +205,7 @@ export default function DailyLogsPage() {
             </Select>
             <Select value={reviewFilter} onValueChange={(v) => setReviewFilter(v ?? "All")}>
               <SelectTrigger className="h-9 w-32 text-sm border-gray-200 bg-white">
-                <SelectValue />
+                <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
                 {["All", "Reviewed", "Pending"].map((s) => (

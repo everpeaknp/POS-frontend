@@ -218,7 +218,7 @@ export default function SitesPage() {
             </div>
             <Select value={status} onValueChange={(v) => setStatus(v ?? "All")}>
               <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white">
-                <SelectValue />
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 {["All", "active", "planned", "on_hold", "completed"].map((s) => (

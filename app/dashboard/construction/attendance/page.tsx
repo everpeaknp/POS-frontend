@@ -398,7 +398,7 @@ export default function ConstructionAttendancePage() {
             </div>
             <Select value={site} onValueChange={(v) => setSite(v ?? "All")}>
               <SelectTrigger className="h-9 w-48 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                <SelectValue />
+                <SelectValue placeholder="All Sites" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Sites</SelectItem>
@@ -412,7 +412,7 @@ export default function ConstructionAttendancePage() {
             {dateSystem === "AD" ? (
               <Select value={adMonth} onValueChange={(v) => v && handlePeriodChange({ system: "AD", yearMonth: v })}>
                 <SelectTrigger className="h-9 w-44 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                  <SelectValue />
+                  <SelectValue placeholder={getPeriodLabel(period)} />
                 </SelectTrigger>
                 <SelectContent>
                   {getAdMonthOptions().map((opt) => (
@@ -434,7 +434,7 @@ export default function ConstructionAttendancePage() {
                   }}
                 >
                   <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
+                    <SelectValue placeholder={NEPALI_MONTHS[bsMonthIndex]} />
                   </SelectTrigger>
                   <SelectContent>
                     {NEPALI_MONTHS.map((m) => (
@@ -451,7 +451,7 @@ export default function ConstructionAttendancePage() {
                   }
                 >
                   <SelectTrigger className="h-9 w-28 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
+                    <SelectValue placeholder={String(bsYear)} />
                   </SelectTrigger>
                   <SelectContent>
                     {bsYearOptions.map((y) => (

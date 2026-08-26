@@ -565,19 +565,6 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
         <Zap className="h-6 w-6 group-hover:scale-110 transition-transform" />
       </button>
 
-      {/* Quick Action Pills */}
-      <div className="fixed bottom-6 left-6 z-40 flex flex-wrap gap-2 max-w-xs">
-        {getQuickActions().map((action, idx) => (
-          <button
-            key={idx}
-            onClick={() => router.push(action.href)}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-md hover:bg-gray-50 transition text-xs font-medium text-gray-900 whitespace-nowrap"
-          >
-            {action.label_ne}
-          </button>
-        ))}
-      </div>
-
       {/* Quick Add Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-2xl">

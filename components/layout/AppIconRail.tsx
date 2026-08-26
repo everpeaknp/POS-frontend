@@ -395,6 +395,13 @@ export function AppIconRail({
               )}
             </h1>
           </div>
+        ) : onErp ? (
+          <>
+            <div className="shrink-0">
+              <KhataLogo size="md" />
+            </div>
+            <div className="flex-1" />
+          </>
         ) : (
           <>
             {!onErp && erpBtn}

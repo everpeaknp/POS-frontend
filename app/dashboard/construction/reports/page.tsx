@@ -30,11 +30,11 @@ export default function ConstructionReportsPage() {
   const siteReportPrintRef = useRef<HTMLDivElement>(null);
   const payrollPrintRef = useRef<HTMLDivElement>(null);
   const [sites, setSites] = useState<Site[]>([]);
-  const [selectedSite, setSelectedSite] = useState<string>('');
+  const [selectedSite, setSelectedSite] = useState<string>('All');
   const [report, setReport] = useState<SiteReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
-  const [payrollSite, setPayrollSite] = useState('');
+  const [payrollSite, setPayrollSite] = useState('All');
   const [payrollMonth, setPayrollMonth] = useState(() => new Date().getMonth() + 1);
   const [payrollYear, setPayrollYear] = useState(() => new Date().getFullYear());
   const [bsYear, setBsYear] = useState(getCurrentBsYear);
@@ -112,8 +112,8 @@ export default function ConstructionReportsPage() {
   };
 
   const generateReport = async () => {
-    if (!selectedSite) {
-      toast.error('Please select a site');
+    if (!selectedSite || selectedSite === 'All') {
+      toast.error('Please select a specific site');
       return;
     }
 
@@ -130,8 +130,8 @@ export default function ConstructionReportsPage() {
   };
 
   const loadPayrollSummary = async () => {
-    if (!payrollSite) {
-      toast.error('Please select a site for payroll');
+    if (!payrollSite || payrollSite === 'All') {
+      toast.error('Please select a specific site for payroll');
       return;
     }
 
@@ -178,7 +178,7 @@ export default function ConstructionReportsPage() {
               onChange={(e) => setSelectedSite(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             >
-              <option value="">Choose a site...</option>
+              <option value="All">All Sites</option>
               {sites.map((site) => (
                 <option key={site.id} value={site.id}>
                   {site.name} - {site.location}
@@ -210,7 +210,7 @@ export default function ConstructionReportsPage() {
               onChange={(e) => setPayrollSite(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
             >
-              <option value="">Choose a site...</option>
+              <option value="All">All Sites</option>
               {sites.map((site) => (
                 <option key={site.id} value={site.id}>
                   {site.name}
