@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, AlertTriangle, ExternalLink, ShoppingCart, Building2, Wallet, HardHat, Wrench, ShoppingBag } from "lucide-react";
+import { MoreVertical, AlertTriangle, ExternalLink, Settings, Building2, Wallet, HardHat, Wrench, ShoppingBag } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Organization } from "@/lib/types";
@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { tenantApi } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
 import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
+import { KhataLoading } from "@/components/shared/KhataLoading";
 
 interface OrgCardProps {
   org: Organization;
@@ -23,7 +24,6 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
-  const [isOpeningPos, setIsOpeningPos] = useState(false);
   
   // Check if user is a member of THIS specific organization
   // user_role is set by backend if user has membership in this tenant
@@ -31,7 +31,6 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
   const isSuperAdmin = org.user_role === "super_admin" || !!org.can_delete;
   const canManageOrg = isTenantOrgAdmin(org.user_role);
   const isWorkspaceActive = org.status === "active";
-  const hasPosModule = (org.active_modules ?? []).some((m) => m.toLowerCase() === "pos");
   const isPersonalAccount = org.account_type === "personal";
   const roleLabel = isPersonalAccount
     ? "Personal"
@@ -40,22 +39,6 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
       : org.user_role
         ? org.user_role.replace(/_/g, " ")
         : null;
-
-  // Get icon based on account type
-  const getAccountIcon = () => {
-    switch (org.account_type) {
-      case "personal":
-        return <Wallet className="h-4 w-4 text-[#16A34A]" />;
-      case "construction":
-        return <HardHat className="h-4 w-4 text-[#16A34A]" />;
-      case "hardware":
-        return <Wrench className="h-4 w-4 text-[#16A34A]" />;
-      case "retail":
-        return <ShoppingBag className="h-4 w-4 text-[#16A34A]" />;
-      default:
-        return <Building2 className="h-4 w-4 text-[#16A34A]" />;
-    }
-  };
 
   // Get account type label
   const getAccountTypeLabel = () => {
@@ -76,8 +59,19 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
   const handleOpenKhata = async () => {
     try {
       setIsOpening(true);
-      await switchOrganization(org.slug, "/dashboard");
-      toast.success(`Opened ${org.workspace_name || org.name}`);
+      
+      // Show loading toast
+      toast.loading(`Opening ${org.workspace_name || org.name}...`, {
+        id: 'workspace-open',
+      });
+      
+      // Switch organization in current tab
+      await switchOrganization(org.slug, '/dashboard');
+      
+      // Show success toast
+      toast.success(`Opened ${org.workspace_name || org.name}`, {
+        id: 'workspace-open',
+      });
     } catch (error: unknown) {
       console.error("Failed to switch organization:", error);
       const err = error as { response?: { data?: { error?: string; detail?: string }; status?: number } };
@@ -85,31 +79,14 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
         err.response?.data?.error ||
         err.response?.data?.detail ||
         (err.response?.status === 404 ? "Organization not found" : "Failed to open organization. Please try again.");
-      toast.error(message);
-    } finally {
+      toast.error(message, {
+        id: 'workspace-open',
+      });
       setIsOpening(false);
     }
   };
 
-  const handleOpenPOS = async () => {
-    try {
-      setIsOpeningPos(true);
-      await switchOrganization(org.slug, "/dashboard/pos");
-      toast.success(`Opened POS for ${org.workspace_name || org.name}`);
-    } catch (error: unknown) {
-      console.error("Failed to open POS:", error);
-      const err = error as { response?: { data?: { error?: string; detail?: string }; status?: number } };
-      const message =
-        err.response?.data?.error ||
-        err.response?.data?.detail ||
-        (err.response?.status === 404 ? "Organization not found" : "Failed to open POS. Please try again.");
-      toast.error(message);
-    } finally {
-      setIsOpeningPos(false);
-    }
-  };
-
-  const handleEdit = () => {
+  const handleOpenSettings = () => {
     router.push(`/erp/${org.slug}/edit`);
   };
 
@@ -150,6 +127,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
   };
 
   return (
+    <>
     <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-[#22C55E]/30 transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -196,7 +174,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
             {canManageOrg && (
               <DropdownMenuItem 
                 className="cursor-pointer text-sm"
-                onClick={handleEdit}
+                onClick={handleOpenSettings}
               >
                 Edit
               </DropdownMenuItem>
@@ -218,10 +196,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
         )}
       </div>
       <div>
-        <div className="flex items-center gap-2">
-          {getAccountIcon()}
-          <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
-        </div>
+        <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
         <p className="text-xs text-muted-foreground mt-0.5 font-mono">Workspace URL: {org.subdomain}</p>
       </div>
       {org.status === "expired" && (
@@ -233,20 +208,21 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
       <div className="flex flex-col sm:flex-row gap-2 pt-1 mt-auto">
         {isMember && isWorkspaceActive ? (
           <>
-            <Button size="sm" className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-9 gap-1.5"
+            <Button 
+              size="sm" 
+              className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenKhata}
-              disabled={isOpening || isOpeningPos}>
-              <ExternalLink className="h-3 w-3" /> {isOpening ? "Opening..." : "Open Khata"}
+            >
+              <ExternalLink className="h-3 w-3" /> Open Khata
             </Button>
-            {hasPosModule && (
+            {canManageOrg && (
               <Button
                 size="sm"
                 variant="outline"
                 className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-[#22C55E]/10 text-xs font-semibold h-9 gap-1.5"
-                onClick={handleOpenPOS}
-                disabled={isOpeningPos || isOpening}
+                onClick={handleOpenSettings}
               >
-                <ShoppingCart className="h-3 w-3" /> {isOpeningPos ? "Opening..." : "Open POS"}
+                <Settings className="h-3 w-3" /> Settings
               </Button>
             )}
           </>
@@ -261,5 +237,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
         )}
       </div>
     </div>
+    {isOpening && <KhataLoading message={`Opening ${org.workspace_name || org.name}...`} />}
+    </>
   );
 }

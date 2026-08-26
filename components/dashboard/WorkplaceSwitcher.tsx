@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Plus, Wallet, HardHat, Wrench, ShoppingBag, Building2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
@@ -14,17 +14,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PageLoading } from "@/components/shared/PageLoading";
+import { KhataLoading } from "@/components/shared/KhataLoading";
 
 function TenantMark({
   tenant,
   size = "md",
 }: {
-  tenant: { name: string; logo?: string | null };
+  tenant: { name: string; logo?: string | null; account_type?: string };
   size?: "sm" | "md";
 }) {
   const logo = getMediaUrl(tenant.logo);
   const dim = size === "sm" ? "h-7 w-7 text-[11px]" : "h-8 w-8 text-sm";
+
+  // Get icon based on account type
+  const getAccountIcon = () => {
+    const iconClass = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+    switch (tenant.account_type) {
+      case "personal":
+        return <Wallet className={iconClass} />;
+      case "construction":
+        return <HardHat className={iconClass} />;
+      case "hardware":
+        return <Wrench className={iconClass} />;
+      case "retail":
+        return <ShoppingBag className={iconClass} />;
+      default:
+        return <Building2 className={iconClass} />;
+    }
+  };
 
   return (
     <span
@@ -36,7 +53,7 @@ function TenantMark({
       {logo ? (
         <img src={logo} alt="" className="h-full w-full object-cover" />
       ) : (
-        tenant.name.charAt(0).toUpperCase() || "O"
+        getAccountIcon()
       )}
     </span>
   );
@@ -76,6 +93,7 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
       name: user.tenant.name,
       slug: user.tenant.slug,
       logo: (user.tenant as { logo?: string | null }).logo,
+      account_type: user.tenant.account_type,
     } as Tenant);
 
   const handleSwitch = async (tenant: Tenant) => {
@@ -83,15 +101,29 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
     try {
       setSwitchingSlug(tenant.slug);
       setOpen(false);
+      
+      // Show switching toast
+      toast.loading(`Switching to ${tenant.workspace_name || tenant.name}...`, {
+        id: 'workspace-switch',
+      });
+      
       // Redirect personal accounts to personal-finance, others to dashboard
       const redirectPath = tenant.account_type === "personal" 
         ? "/dashboard/personal-finance" 
         : "/dashboard";
       await switchOrganization(tenant.slug, redirectPath);
+      
+      // Show success toast
+      toast.success(`Switched to ${tenant.workspace_name || tenant.name}`, {
+        id: 'workspace-switch',
+      });
+      
       // Clear immediately after switch completes
       setSwitchingSlug(null);
     } catch {
-      toast.error(`Could not open ${tenant.name}`);
+      toast.error(`Could not switch to ${tenant.name}`, {
+        id: 'workspace-switch',
+      });
       setSwitchingSlug(null);
     }
   };
@@ -99,11 +131,7 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
   return (
     <>
       {/* Loading overlay when switching workplaces */}
-      {switchingSlug && (
-        <div className="fixed inset-0 z-[9999]">
-          <PageLoading message="Switching workspace..." fullScreen />
-        </div>
-      )}
+      {switchingSlug && <KhataLoading message="Switching workspace..." />}
       
       <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -181,9 +209,9 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
           }}
         >
           <span className="h-7 w-7 rounded-lg border border-dashed border-border grid place-items-center shrink-0">
-            <Plus className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3.5 w-3.5" />
           </span>
-          <span className="text-sm">Manage workplaces</span>
+          <span className="text-sm">Back to workspaces</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
