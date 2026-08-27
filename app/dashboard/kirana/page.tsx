@@ -32,7 +32,7 @@ import { formatNPR } from "@/lib/utils";
 
 const quickActions = [
   {
-    href: "/dashboard/sales/invoices/new",
+    href: "/dashboard/pos/checkout",
     label: "New Sale (POS)",
     sub: "Record sale transaction",
     icon: Plus,

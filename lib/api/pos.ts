@@ -425,6 +425,18 @@ const posApi = {
     const response = await apiClient.post('/pos/refunds/', data);
     return response.data;
   },
+
+  // Settings
+  getSettings: async (): Promise<{ tax_rate: number; [key: string]: any }> => {
+    try {
+      const response = await apiClient.get('/pos/settings/');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch POS settings:', error);
+      // Return default tax rate if fetch fails
+      return { tax_rate: 13 };
+    }
+  },
 };
 
 export default posApi;
