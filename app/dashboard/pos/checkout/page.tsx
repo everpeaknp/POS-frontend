@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Minus, Trash2, Wallet, CreditCard, Receipt, X, Printer, Download } from "lucide-react";
+import { Search, Plus, Minus, Trash2, Wallet, CreditCard, Receipt, X, Printer, Download, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,7 @@ import { inventoryApi, type Product, type Warehouse } from "@/lib/api/inventory"
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import posApi, { type POSSession, type POSTransaction } from "@/lib/api/pos";
 import { downloadReceiptPDF, preparePrint, cleanupPrint } from "@/lib/utils/receipt-generator";
+import { BarcodeScannerModal } from "@/components/pos/BarcodeScannerModal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -49,6 +50,10 @@ export default function POSCheckoutPage() {
   // Receipt
   const [completedTransaction, setCompletedTransaction] = useState<POSTransaction | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  
+  // Barcode Scanner
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState("");
   
   // UI State
   const [loading, setLoading] = useState(true);
@@ -192,6 +197,43 @@ export default function POSCheckoutPage() {
     setShowReceipt(false);
   };
 
+  // Handle barcode scan - add product to cart when "Sold" is clicked
+  const handleBarcodeProductScanned = (product: Product, action: "received" | "sold") => {
+    if (action === "sold") {
+      addToCart(product);
+      toast.success(`${product.name} added to cart`);
+    }
+    setShowBarcodeScanner(false);
+  };
+
+  // Handle barcode input (Enter key press)
+  const handleBarcodeInputSubmit = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || !barcodeInput.trim()) return;
+
+    e.preventDefault();
+    const barcode = barcodeInput.trim();
+
+    try {
+      // Look up product by SKU (barcode)
+      const response = await inventoryApi.products.list({ search: barcode });
+      const productsFound = response.data?.results || [];
+      const product = productsFound.find((p: Product) => p.sku === barcode);
+
+      if (product) {
+        // Product exists - add to cart (deduct stock)
+        addToCart(product);
+        toast.success(`${product.name} added to cart`);
+        setBarcodeInput(""); // Clear input for next scan
+      } else {
+        // Product doesn't exist
+        toast.error("Product doesn't exist");
+      }
+    } catch (error) {
+      console.error("Barcode lookup error:", error);
+      toast.error("Error looking up product");
+    }
+  };
+
   // Complete sale
   const completeSale = async () => {
     if (cart.length === 0) {
@@ -324,6 +366,15 @@ export default function POSCheckoutPage() {
         <div className="bg-white border-b p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">POS Checkout</h1>
+            <Button
+              onClick={() => setShowBarcodeScanner(true)}
+              disabled={!selectedWarehouse}
+              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+              size="sm"
+            >
+              <Scan className="h-4 w-4" />
+              Scan Barcode
+            </Button>
           </div>
           
           <div className="relative">
@@ -335,6 +386,19 @@ export default function POSCheckoutPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-11"
               autoFocus
+            />
+          </div>
+
+          {/* Barcode Input Field */}
+          <div className="relative">
+            <Scan className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#22C55E]" />
+            <Input
+              type="text"
+              placeholder="Scan barcode here..."
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onKeyDown={handleBarcodeInputSubmit}
+              className="pl-10 h-11 border-[#22C55E] focus:ring-[#22C55E]"
             />
           </div>
         </div>
@@ -746,6 +810,14 @@ export default function POSCheckoutPage() {
           </Button>
         </div>
       )}
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        open={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        warehouseId={Number(selectedWarehouse)}
+        onProductScanned={handleBarcodeProductScanned}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { useApi } from "@/lib/hooks/useApi";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { formatCurrency } from "@/lib/utils";
+import { StockAdjustmentPanel } from "@/components/inventory/StockAdjustmentPanel";
 import toast from "react-hot-toast";
 
 export default function ProductsListPage() {
@@ -22,6 +23,8 @@ export default function ProductsListPage() {
   const [pageSize] = useState(10);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [categories, setCategories] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     type: 'single' | 'bulk';
@@ -50,6 +53,12 @@ export default function ProductsListPage() {
     { immediate: true }
   );
 
+  // Fetch warehouses
+  const { data: warehousesData } = useApi(
+    () => inventoryApi.warehouses.list({ limit: 100 }),
+    { immediate: true }
+  );
+
   useEffect(() => {
     if (categoriesData?.data) {
       const cats = Array.isArray(categoriesData.data) 
@@ -58,6 +67,19 @@ export default function ProductsListPage() {
       setCategories(cats);
     }
   }, [categoriesData]);
+
+  useEffect(() => {
+    if (warehousesData?.data) {
+      const whs = Array.isArray(warehousesData.data)
+        ? warehousesData.data
+        : (warehousesData.data as any).results || [];
+      setWarehouses(whs);
+      // Auto-select first warehouse
+      if (whs.length > 0 && !selectedWarehouse) {
+        setSelectedWarehouse(String(whs[0].id));
+      }
+    }
+  }, [warehousesData]);
 
   const products = productsData?.data?.results || [];
   const totalCount = productsData?.data?.count || 0;
@@ -256,6 +278,32 @@ export default function ProductsListPage() {
             </Button>
           </div>
         </div>
+
+        {/* Stock Adjustment Panel */}
+        <StockAdjustmentPanel
+          warehouseId={selectedWarehouse ? Number(selectedWarehouse) : undefined}
+          onStockUpdated={() => refetch()}
+        />
+
+        {/* Warehouse Selection */}
+        {warehouses.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-blue-900">Warehouse:</label>
+              <select
+                value={selectedWarehouse}
+                onChange={(e) => setSelectedWarehouse(e.target.value)}
+                className="h-9 rounded-md border border-blue-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {warehouses.map((wh) => (
+                  <option key={wh.id} value={String(wh.id)}>
+                    {wh.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Products Table */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

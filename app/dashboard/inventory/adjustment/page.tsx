@@ -14,6 +14,7 @@ import { SkeletonTable } from "@/components/shared/Skeleton";
 import { Pagination } from "@/components/shared/Pagination";
 import { inventoryApi } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
+import { StockAdjustmentPanel } from "@/components/inventory/StockAdjustmentPanel";
 import toast from "react-hot-toast";
 
 const ITEMS_PER_PAGE = 20;
@@ -176,7 +177,34 @@ export default function StockAdjustmentPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="Stock Adjustment" subtitle="Record stock additions and deductions" />
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 space-y-4">
+          {/* Barcode-Based Stock Adjustment Panel */}
+          <StockAdjustmentPanel
+            warehouseId={formData.warehouse ? Number(formData.warehouse) : warehouses[0]?.id}
+            onStockUpdated={() => refetchMovements()}
+          />
+
+          {/* Warehouse Selection */}
+          {warehouses.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-blue-900">Default Warehouse:</label>
+                <select
+                  value={formData.warehouse}
+                  onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
+                  className="h-9 rounded-md border border-blue-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select warehouse</option>
+                  {warehouses.map((w: any) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <EmptyState
             icon={Plus}
             title="No adjustments yet"
@@ -292,6 +320,33 @@ export default function StockAdjustmentPage() {
     <div className="flex flex-col min-h-full">
       <DashHeader title="Stock Adjustment" subtitle="Record stock additions and deductions" />
       <div className="flex-1 p-6 space-y-4">
+        {/* Barcode-Based Stock Adjustment Panel */}
+        <StockAdjustmentPanel
+          warehouseId={formData.warehouse ? Number(formData.warehouse) : warehouses[0]?.id}
+          onStockUpdated={() => refetchMovements()}
+        />
+
+        {/* Warehouse Selection */}
+        {warehouses.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-blue-900">Default Warehouse:</label>
+              <select
+                value={formData.warehouse}
+                onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
+                className="h-9 rounded-md border border-blue-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select warehouse</option>
+                {warehouses.map((w: any) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-3 items-center justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
