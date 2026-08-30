@@ -263,15 +263,37 @@ export function isRecommendedModule(module: OrgModuleDefinition): boolean {
   return Boolean(module.recommended) && !module.required && !isRequiredModule(module.id);
 }
 
-export function getModuleCatalogSections(): ModuleCatalogSection[] {
+export function getModuleCatalogSections(accountType?: string): ModuleCatalogSection[] {
+  // Filter out account-type-specific modules from the catalog
+  let filteredCatalog = ORG_MODULE_CATALOG;
+  
+  // For retail accounts, exclude construction and hardware modules
+  if (accountType === "retail") {
+    filteredCatalog = ORG_MODULE_CATALOG.filter(
+      (module) => module.id !== "construction" && module.id !== "hardware"
+    );
+  }
+  // For construction accounts, exclude hardware module
+  else if (accountType === "construction") {
+    filteredCatalog = ORG_MODULE_CATALOG.filter(
+      (module) => module.id !== "hardware"
+    );
+  }
+  // For hardware accounts, exclude construction module
+  else if (accountType === "hardware") {
+    filteredCatalog = ORG_MODULE_CATALOG.filter(
+      (module) => module.id !== "construction"
+    );
+  }
+  
   const required = sortByCatalogOrder(
-    ORG_MODULE_CATALOG.filter((module) => module.required || isRequiredModule(module.id))
+    filteredCatalog.filter((module) => module.required || isRequiredModule(module.id))
   );
   const recommended = sortByCatalogOrder(
-    ORG_MODULE_CATALOG.filter((module) => isRecommendedModule(module))
+    filteredCatalog.filter((module) => isRecommendedModule(module))
   );
   const other = sortByCatalogOrder(
-    ORG_MODULE_CATALOG.filter(
+    filteredCatalog.filter(
       (module) =>
         !(module.required || isRequiredModule(module.id)) && !isRecommendedModule(module)
     )

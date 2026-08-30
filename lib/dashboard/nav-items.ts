@@ -166,6 +166,7 @@ export const dashboardNavItems: NavItem[] = [
     requiredModule: "pos",
     children: [
       { label: "Billing", href: "/dashboard/pos" },
+      { label: "Checkout", href: "/dashboard/pos/checkout" },
       { label: "Sessions", href: "/dashboard/pos/sessions", createHref: "/dashboard/pos/sessions/new" },
       { label: "Transactions", href: "/dashboard/pos/transactions" },
       { label: "Refunds", href: "/dashboard/pos/refunds", createHref: "/dashboard/pos/refunds/new" },
@@ -571,6 +572,7 @@ export function filterDashboardNavItems(
           { label: "Overview", href: "/dashboard/sales", exact: true },
           { label: "Invoices", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
           { label: "Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
+          { label: "Checkout", href: "/dashboard/pos/checkout" },
         ],
       },
       {

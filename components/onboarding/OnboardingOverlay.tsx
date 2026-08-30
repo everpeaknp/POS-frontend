@@ -335,6 +335,7 @@ export function OnboardingOverlay() {
 
         {accountType === "organization" && step === 3 && organizationData && (
           <ModuleSelection
+            accountType={accountType}
             organizationData={organizationData}
             onBack={() => setStep(2)}
             onNext={handleModulesComplete}

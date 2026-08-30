@@ -300,7 +300,6 @@ export function ConstructionForm({
           <div className="lg:sticky lg:top-24">
             <FormSection title="Company logo (optional)">
               <CompanyLogoUpload
-                value={form.logo}
                 onChange={(file) => setForm({ ...form, logo: file })}
               />
             </FormSection>
