@@ -340,9 +340,17 @@ export default function InvoicesPage() {
         // Fetch invoices
         const invoices: Invoice[] = invoicesData?.data?.results || [];
 
-        // Fetch POS transactions
-        const posRes = await posApi.getTransactions({ page_size: 1000 });
-        const posTransactions: POSTransaction[] = posRes?.results || [];
+        // Fetch POS transactions only if POS module is enabled
+        let posTransactions: POSTransaction[] = [];
+        try {
+          const posRes = await posApi.getTransactions({ page_size: 1000 });
+          posTransactions = posRes?.results || [];
+        } catch (error: any) {
+          // If 403, POS module is not enabled - silently ignore
+          if (error?.response?.status !== 403) {
+            console.warn("Failed to load POS transactions:", error);
+          }
+        }
 
         // Merge and sort
         const merged = mergeSalesRecords(invoices, posTransactions);

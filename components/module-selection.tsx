@@ -19,6 +19,7 @@ import {
 } from "@/lib/modules/catalog";
 
 interface ModuleSelectionProps {
+  accountType?: string;
   organizationData: {
     name: string;
     business_type: string;
@@ -36,7 +37,7 @@ interface ModuleSelectionProps {
   onNext: (modules: string[]) => void;
 }
 
-export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
+export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelectionProps) {
   const [allowedModules, setAllowedModules] = useState<string[] | null>(null);
   const [planName, setPlanName] = useState("Free");
   const [selectedModules, setSelectedModules] = useState<string[]>(getDefaultSelectedModuleIds());
@@ -88,10 +89,10 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
 
   const lockedCount = useMemo(() => {
     if (!allowedModules) return 0;
-    return getModuleCatalogSections()
+    return getModuleCatalogSections(accountType)
       .flatMap((section) => section.modules)
       .filter((module) => !isModuleAllowed(module.id, allowedModules)).length;
-  }, [allowedModules]);
+  }, [allowedModules, accountType]);
 
   const renderModuleCard = (module: OrgModuleDefinition) => {
     const isSelected = selectedModules.includes(module.id);
@@ -209,7 +210,7 @@ export function ModuleSelection({ onBack, onNext }: ModuleSelectionProps) {
       </div>
 
       <div className="space-y-8">
-        {getModuleCatalogSections().map((section) => (
+        {getModuleCatalogSections(accountType).map((section) => (
           <section key={section.key} className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">

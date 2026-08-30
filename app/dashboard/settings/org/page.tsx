@@ -17,6 +17,7 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { CompanyLogoUpload } from "@/components/company-logo-upload";
 import { DateSystemPreferenceCard } from "@/components/settings/DateSystemPreferenceCard";
+import { BusinessCardGenerator } from "@/components/settings/BusinessCardGenerator";
 import { DateInput } from "@/components/shared/DateInput";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -504,7 +505,11 @@ function OrgSettingsContent() {
                   disabled={!canEdit || submitting}
                 >
                   <SelectTrigger className="h-9 text-sm border-gray-200">
-                    <SelectValue placeholder="Select business type" />
+                    <SelectValue>
+                      {form.business_type ? (
+                        ALL_BUSINESS_TYPES.find(t => t.value === form.business_type)?.label || form.business_type
+                      ) : "Select business type"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {getBusinessTypesWithFallback(tenantMeta?.account_type, form.business_type).map((item) => (
@@ -671,6 +676,9 @@ function OrgSettingsContent() {
               disabled={!canEdit || submitting}
             />
           </div>
+
+          {/* Business Card Generator */}
+          <BusinessCardGenerator tenant={form} logoUrl={existingLogoUrl} />
 
           {canEdit && (
             <div className="pt-2 border-t border-gray-100">

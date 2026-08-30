@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dom-to-image-more": "^3.10.2",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.6.2",
     "html2canvas": "^1.4.1",
