@@ -32,7 +32,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DateInput } from "@/components/shared/DateInput";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatNPR, cn } from "@/lib/utils";
-import { getLoans, setLoansForScope, useSyncedList } from "@/lib/personal-finance/store";
+import { financeLoanAPI, type FinanceLoan } from "@/lib/api/personal-finance";
+import toast from "react-hot-toast";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -125,14 +126,14 @@ export interface LoanTypeComparison {
 }
 
 export interface ExistingLoan {
-  id: string;
+  id: number;
   name: string;
   type: LoanType;
-  principal: number;
-  emi: number;
-  remainingBalance: number;
-  interestRate: number;
-  startDate: string;
+  principal: string;
+  emi: string;
+  remaining_balance: string;
+  interest_rate: string;
+  start_date: string;
 }
 
 // ============================================================================
@@ -284,11 +285,26 @@ export default function LoansPage() {
   // ============================================================================
   // STATE - Existing Loans List
   // ============================================================================
-  // Shared via lib/personal-finance/store.ts (localStorage — no backend for
-  // Personal Finance yet, see TODO at top of transactions/page.tsx)
-
-  const scope = user?.tenant?.slug ?? null;
-  const [existingLoans, setExistingLoans] = useSyncedList<ExistingLoan>(scope, getLoans, setLoansForScope);
+  
+  const [existingLoans, setExistingLoans] = useState<ExistingLoan[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Load loans from API
+  useEffect(() => {
+    const loadLoans = async () => {
+      try {
+        setLoading(true);
+        const data = await financeLoanAPI.list();
+        setExistingLoans(data);
+      } catch (error) {
+        console.error("Error loading loans:", error);
+        toast.error("Failed to load loans");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLoans();
+  }, []);
 
   const [showAddLoanForm, setShowAddLoanForm] = useState(false);
 
@@ -305,9 +321,9 @@ export default function LoansPage() {
     type: "personal" as LoanType,
     principal: "",
     emi: "",
-    remainingBalance: "",
-    interestRate: "",
-    startDate: "",
+    remaining_balance: "",
+    interest_rate: "",
+    start_date: "",
   });
 
   // ============================================================================
@@ -315,7 +331,7 @@ export default function LoansPage() {
   // ============================================================================
 
   const totalEMIsFromLoans = useMemo(() => {
-    return existingLoans.reduce((sum, loan) => sum + loan.emi, 0);
+    return existingLoans.reduce((sum, loan) => sum + parseFloat(loan.emi), 0);
   }, [existingLoans]);
 
   // Auto-populate existingEMIs when loans change, but allow manual override
@@ -364,45 +380,57 @@ export default function LoansPage() {
   // ADD LOAN HANDLER
   // ============================================================================
 
-  const handleAddLoan = () => {
+  const handleAddLoan = async () => {
     if (
       !newLoan.name ||
       !newLoan.principal ||
       !newLoan.emi ||
-      !newLoan.remainingBalance ||
-      !newLoan.interestRate ||
-      !newLoan.startDate
+      !newLoan.remaining_balance ||
+      !newLoan.interest_rate ||
+      !newLoan.start_date
     ) {
-      alert("Please fill all loan fields");
+      toast.error("Please fill all loan fields");
       return;
     }
 
-    const loan: ExistingLoan = {
-      id: Date.now().toString(),
-      name: newLoan.name,
-      type: newLoan.type,
-      principal: parseFloat(newLoan.principal),
-      emi: parseFloat(newLoan.emi),
-      remainingBalance: parseFloat(newLoan.remainingBalance),
-      interestRate: parseFloat(newLoan.interestRate),
-      startDate: newLoan.startDate,
-    };
+    try {
+      const loan = await financeLoanAPI.create({
+        name: newLoan.name,
+        type: newLoan.type,
+        principal: newLoan.principal,
+        emi: newLoan.emi,
+        remaining_balance: newLoan.remaining_balance,
+        interest_rate: newLoan.interest_rate,
+        start_date: newLoan.start_date,
+      });
 
-    setExistingLoans([...existingLoans, loan]);
-    setNewLoan({
-      name: "",
-      type: "personal",
-      principal: "",
-      emi: "",
-      remainingBalance: "",
-      interestRate: "",
-      startDate: "",
-    });
-    setShowAddLoanForm(false);
+      setExistingLoans([...existingLoans, loan]);
+      setNewLoan({
+        name: "",
+        type: "personal",
+        principal: "",
+        emi: "",
+        remaining_balance: "",
+        interest_rate: "",
+        start_date: "",
+      });
+      setShowAddLoanForm(false);
+      toast.success("Loan added successfully");
+    } catch (error) {
+      console.error("Error adding loan:", error);
+      toast.error("Failed to add loan");
+    }
   };
 
-  const handleDeleteLoan = (id: string) => {
-    setExistingLoans(existingLoans.filter((loan) => loan.id !== id));
+  const handleDeleteLoan = async (id: number) => {
+    try {
+      await financeLoanAPI.delete(id);
+      setExistingLoans(existingLoans.filter((loan) => loan.id !== id));
+      toast.success("Loan deleted successfully");
+    } catch (error) {
+      console.error("Error deleting loan:", error);
+      toast.error("Failed to delete loan");
+    }
   };
 
   // ============================================================================
@@ -813,7 +841,7 @@ export default function LoansPage() {
                           </h4>
                           <p className="text-xs text-gray-500">
                             {LOAN_DEFAULTS[loan.type].name} •{" "}
-                            {loan.interestRate}% interest
+                            {loan.interest_rate}% interest
                           </p>
                         </div>
                       </div>
@@ -837,13 +865,13 @@ export default function LoansPage() {
                             Remaining Balance
                           </p>
                           <p className="text-sm text-gray-700">
-                            {formatNPR(loan.remainingBalance)}
+                            {formatNPR(parseFloat(loan.remaining_balance))}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Start Date</p>
                           <p className="text-sm text-gray-700">
-                            {new Date(loan.startDate).toLocaleDateString()}
+                            {new Date(loan.start_date).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -917,8 +945,8 @@ export default function LoansPage() {
                   min="0"
                   className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
                   placeholder="0"
-                  value={newLoan.remainingBalance}
-                  onChange={(e) => setNewLoan({ ...newLoan, remainingBalance: e.target.value })}
+                  value={newLoan.remaining_balance}
+                  onChange={(e) => setNewLoan({ ...newLoan, remaining_balance: e.target.value })}
                 />
               </div>
             </Field>
@@ -943,15 +971,15 @@ export default function LoansPage() {
                 min="0"
                 step="0.1"
                 className="h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
-                value={newLoan.interestRate}
-                onChange={(e) => setNewLoan({ ...newLoan, interestRate: e.target.value })}
+                value={newLoan.interest_rate}
+                onChange={(e) => setNewLoan({ ...newLoan, interest_rate: e.target.value })}
               />
             </Field>
             <Field label="Start Date" required>
               <DateInput
                 className="h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-input"
-                value={newLoan.startDate}
-                onChange={(date) => setNewLoan({ ...newLoan, startDate: date })}
+                value={newLoan.start_date}
+                onChange={(date) => setNewLoan({ ...newLoan, start_date: date })}
               />
             </Field>
           </div>

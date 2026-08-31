@@ -12,42 +12,52 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MonthYearPicker } from "@/components/shared/MonthYearPicker";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
-import {
-  getCategories,
-  getTransactions,
-  getBudgets,
-  setBudgetsForScope,
-  useSyncedList,
-  type PFCategory,
-  type PFTransaction, 
-  type PFBudget,
-} from "@/lib/personal-finance/store";
+import { 
+  financeBudgetAPI, 
+  financeCategoryAPI, 
+  financeTransactionAPI,
+  type FinanceBudget,
+  type FinanceCategory,
+  type FinanceTransaction
+} from "@/lib/api/personal-finance";
 import toast from "react-hot-toast";
 
-// Categories, transactions, and budgets come from the shared Personal Finance
-// store (lib/personal-finance/store.ts) — see /new pages and the Category /
-// Transactions pages, which read/write the same store.
-// TODO: Replace with real backend API calls when endpoints are ready
-// Backend needs: GET /api/personal-finance/budgets, POST /budgets, PUT /budgets/:id
-
 type CategoryType = "income" | "expense";
-type Category = PFCategory;
-type Budget = PFBudget;
-type Transaction = PFTransaction;
+type Category = FinanceCategory;
+type Budget = FinanceBudget;
+type Transaction = FinanceTransaction;
 
 export default function BudgetPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const scope = user?.tenant?.slug ?? null;
-  const [categories, setCategories] = useState<Category[]>(() => getCategories(scope));
-  const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactions(scope));
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load data from API
   useEffect(() => {
-    setCategories(getCategories(scope));
-    setTransactions(getTransactions(scope));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope]);
-  const [budgets, setBudgets] = useSyncedList<Budget>(scope, getBudgets, setBudgetsForScope);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [categoriesData, transactionsData, budgetsData] = await Promise.all([
+          financeCategoryAPI.list(),
+          financeTransactionAPI.list(),
+          financeBudgetAPI.list()
+        ]);
+        setCategories(categoriesData);
+        setTransactions(transactionsData);
+        setBudgets(budgetsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
   const [showDialog, setShowDialog] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-08");
@@ -59,9 +69,9 @@ export default function BudgetPage() {
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
 
   // Form state
-  const [formData, setFormData] = useState<{ categoryId: string; amount: number }>({
-    categoryId: "",
-    amount: 0,
+  const [formData, setFormData] = useState<{ category: number | null; amount: string }>({
+    category: null,
+    amount: "0",
   });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -72,18 +82,20 @@ export default function BudgetPage() {
   const incomeCategories = categories.filter((c) => c.type === "income");
 
   // Get budgets for selected month
-  const monthBudgets = useMemo(() => budgets.filter((b) => b.month === selectedMonth), [budgets, selectedMonth]);
+  const monthBudgets = useMemo(() => {
+    return budgets.filter((b) => b.start_date.startsWith(selectedMonth));
+  }, [budgets, selectedMonth]);
 
   // Calculate spent amounts from transactions for selected month
   const spentByCategory = useMemo(() => {
-    const spent: Record<string, number> = {};
+    const spent: Record<number, number> = {};
     transactions.filter((t) => t.date.startsWith(selectedMonth)).forEach((t) => {
-      if (t.type === "expense") {
-        spent[t.categoryId] = (spent[t.categoryId] || 0) + t.amount;
+      if (t.type === "expense" && t.category) {
+        spent[t.category] = (spent[t.category] || 0) + parseFloat(t.amount);
       }
     });
     return spent;
-  }, [selectedMonth]);
+  }, [transactions, selectedMonth]);
 
   // Build budget data with spent info
   const budgetData = useMemo(() => {
@@ -97,9 +109,9 @@ export default function BudgetPage() {
     }
     
     return categoriesToShow.map((category) => {
-      const budget = monthBudgets.find((b) => b.categoryId === category.id);
+      const budget = monthBudgets.find((b) => b.category === category.id);
       const spent = spentByCategory[category.id] || 0;
-      const budgeted = budget?.amount || 0;
+      const budgeted = budget ? parseFloat(budget.amount) : 0;
       const remaining = budgeted - spent;
       const percentUsed = budgeted > 0 ? (spent / budgeted) * 100 : 0;
 
@@ -117,30 +129,30 @@ export default function BudgetPage() {
 
   // Summary
   const summary = useMemo(() => {
-    const totalBudgeted = monthBudgets.reduce((sum, b) => sum + b.amount, 0);
+    const totalBudgeted = monthBudgets.reduce((sum, b) => sum + parseFloat(b.amount), 0);
     const totalSpent = Object.values(spentByCategory).reduce((sum, amount) => sum + amount, 0);
     return { totalBudgeted, totalSpent, remaining: totalBudgeted - totalSpent };
   }, [monthBudgets, spentByCategory]);
 
-  const openAddDialog = (categoryId?: string) => {
+  const openAddDialog = (categoryId?: number) => {
     // Check if budget already exists for this category/month
     const existingBudget = categoryId 
-      ? budgets.find((b) => b.categoryId === categoryId && b.month === selectedMonth)
+      ? budgets.find((b) => b.category === categoryId && b.start_date.startsWith(selectedMonth))
       : null;
 
     if (existingBudget) {
       // Pre-fill with existing budget for update
       setEditingBudget(existingBudget);
       setFormData({
-        categoryId: existingBudget.categoryId,
+        category: existingBudget.category,
         amount: existingBudget.amount,
       });
     } else {
       // New budget
       setEditingBudget(null);
       setFormData({
-        categoryId: categoryId || "",
-        amount: 0,
+        category: categoryId || null,
+        amount: "0",
       });
     }
     setShowDialog(true);
@@ -157,60 +169,81 @@ export default function BudgetPage() {
   const openEditDialog = (budget: Budget) => {
     setEditingBudget(budget);
     setFormData({
-      categoryId: budget.categoryId,
+      category: budget.category,
       amount: budget.amount,
     });
     setShowDialog(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
-    if (!formData.categoryId) {
+    if (!formData.category) {
       toast.error("Please select a category");
       return;
     }
-    if (formData.amount <= 0) {
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error("Budget amount must be greater than 0");
       return;
     }
 
-    if (editingBudget) {
-      // Update existing budget
-      setBudgets((prev) =>
-        prev.map((b) => (b.id === editingBudget.id ? { ...b, amount: formData.amount } : b))
-      );
-      toast.success("Budget updated successfully");
-    } else {
-      // Check if budget already exists for this category/month (shouldn't happen due to openAddDialog logic)
-      const existingBudget = budgets.find(
-        (b) => b.categoryId === formData.categoryId && b.month === selectedMonth
-      );
+    try {
+      if (editingBudget) {
+        // Update existing budget
+        const updated = await financeBudgetAPI.update(editingBudget.id, {
+          name: editingBudget.name,
+          category: formData.category,
+          amount: formData.amount,
+          period: editingBudget.period,
+          start_date: editingBudget.start_date,
+          end_date: editingBudget.end_date,
+        });
+        setBudgets((prev) =>
+          prev.map((b) => (b.id === editingBudget.id ? updated : b))
+        );
+        toast.success("Budget updated successfully");
+      } else {
+        // Check if budget already exists for this category/month
+        const existingBudget = budgets.find(
+          (b) => b.category === formData.category && b.start_date.startsWith(selectedMonth)
+        );
 
-      if (existingBudget) {
-        toast.error("Budget already exists for this category in this month");
-        return;
+        if (existingBudget) {
+          toast.error("Budget already exists for this category in this month");
+          return;
+        }
+
+        // Add new budget
+        const category = categories.find(c => c.id === formData.category);
+        const newBudget = await financeBudgetAPI.create({
+          name: `${category?.name || 'Budget'} - ${selectedMonth}`,
+          category: formData.category,
+          amount: formData.amount,
+          period: 'monthly',
+          start_date: `${selectedMonth}-01`,
+          end_date: null,
+        });
+        setBudgets((prev) => [...prev, newBudget]);
+        toast.success("Budget added successfully");
       }
 
-      // Add new budget
-      const newBudget: Budget = {
-        id: `bud_${Date.now()}`,
-        categoryId: formData.categoryId,
-        amount: formData.amount,
-        month: selectedMonth,
-        createdAt: new Date().toISOString(),
-      };
-      setBudgets((prev) => [...prev, newBudget]);
-      toast.success("Budget added successfully");
+      setShowDialog(false);
+    } catch (error) {
+      console.error("Error saving budget:", error);
+      toast.error("Failed to save budget");
     }
-
-    setShowDialog(false);
   };
 
-  const handleDelete = (budgetId: string) => {
-    setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
-    toast.success("Budget deleted");
-    setDeleteConfirmDialog(false);
-    setBudgetToDelete(null);
+  const handleDelete = async (budgetId: number) => {
+    try {
+      await financeBudgetAPI.delete(budgetId);
+      setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+      toast.success("Budget deleted");
+      setDeleteConfirmDialog(false);
+      setBudgetToDelete(null);
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      toast.error("Failed to delete budget");
+    }
   };
 
   const openDeleteConfirm = (budget: Budget) => {
@@ -673,8 +706,8 @@ export default function BudgetPage() {
                 Category <span className="text-red-500">*</span>
               </Label>
               <select
-                value={formData.categoryId}
-                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                value={formData.category?.toString() || ""}
+                onChange={(e) => setFormData({ ...formData, category: parseInt(e.target.value) })}
                 disabled={!!editingBudget}
                 className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
               >
@@ -712,7 +745,7 @@ export default function BudgetPage() {
                   min="0"
                   step="0.01"
                   value={formData.amount || ""}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   placeholder="0.00"
                   className="pl-9 focus-visible:ring-0 focus-visible:border-input"
                 />

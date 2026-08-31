@@ -877,14 +877,14 @@ export default function PartiesPage() {
           </DialogHeader>
           
           {/* Tabs for In/Out */}
-          <div className="flex gap-2 border-b border-gray-200 pb-4">
+          <div className="flex gap-2 border-b border-gray-200 pb-2">
             <button
               onClick={() => {
                 setTransactionType("in");
                 setReceiptFile(null);
                 setReceiptPreview("");
               }}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 transactionType === "in"
                   ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-500"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -899,7 +899,7 @@ export default function PartiesPage() {
               onClick={() => {
                 setTransactionType("out");
               }}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 transactionType === "out"
                   ? "bg-red-100 text-red-700 border-2 border-red-500"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -912,7 +912,7 @@ export default function PartiesPage() {
             </button>
           </div>
           
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 py-2">
             {/* Party Selector */}
             <PartySelector
               value={transactionPartyId}
@@ -965,13 +965,12 @@ export default function PartiesPage() {
               <Label>Receipt (Image/PDF)</Label>
               <div className="mt-1">
                 {!receiptFile ? (
-                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="h-5 w-5 text-gray-400" />
-                      <span className="text-sm text-gray-600">
+                  <label className="flex items-center justify-center w-full px-3 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                    <div className="flex flex-col items-center gap-1">
+                      <Upload className="h-4 w-4 text-gray-400" />
+                      <span className="text-xs text-gray-600">
                         Click to upload
                       </span>
-                      <span className="text-xs text-gray-500">PNG, JPG, GIF or PDF (up to 10MB)</span>
                     </div>
                     <input
                       type="file"
@@ -981,15 +980,15 @@ export default function PartiesPage() {
                     />
                   </label>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {receiptPreview === "pdf" ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                          <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
                             <span className="text-xs font-bold text-red-600">PDF</span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{receiptFile.name}</p>
+                            <p className="text-xs font-medium text-gray-900">{receiptFile.name}</p>
                             <p className="text-xs text-gray-500">
                               {(receiptFile.size / 1024).toFixed(1)} KB
                             </p>
@@ -1000,24 +999,24 @@ export default function PartiesPage() {
                           variant="ghost"
                           size="sm"
                           onClick={handleRemoveReceipt}
-                          className="text-red-600 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50 h-7 px-2"
                         >
                           Remove
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <img
                           src={receiptPreview}
                           alt="Receipt preview"
-                          className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
+                          className="w-full max-h-32 object-contain rounded-lg border border-gray-200"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={handleRemoveReceipt}
-                          className="w-full text-red-600 hover:bg-red-50"
+                          className="w-full text-red-600 hover:bg-red-50 h-7 text-xs"
                         >
                           Remove Image
                         </Button>
@@ -1036,23 +1035,24 @@ export default function PartiesPage() {
                 value={transactionFormData.note}
                 onChange={(e) => setTransactionFormData({ ...transactionFormData, note: e.target.value })}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="flex justify-end gap-2 border-t pt-3">
             <Button
               variant="outline"
               onClick={() => setTransactionModalOpen(false)}
               disabled={transactionLoading}
+              className="h-8"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveTransaction}
               disabled={transactionLoading}
-              className={transactionType === "in" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"}
+              className={`h-8 ${transactionType === "in" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"}`}
             >
               {transactionLoading ? "Saving..." : "Record Transaction"}
             </Button>

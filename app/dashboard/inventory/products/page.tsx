@@ -127,29 +127,71 @@ export default function ProductsListPage() {
   const confirmDelete = async () => {
     try {
       if (confirmDialog.type === 'single' && confirmDialog.productId) {
-        await inventoryApi.products.delete(Number(confirmDialog.productId));
-        toast.success("Product deleted successfully");
+        console.log('Attempting to delete product:', confirmDialog.productId);
+        const response = await inventoryApi.products.delete(Number(confirmDialog.productId));
+        
+        // Check if response indicates product was discontinued instead of deleted
+        if (response?.data?.action === 'discontinued') {
+          toast.success(response.data.detail || "Product marked as discontinued (has existing transactions)");
+        } else {
+          toast.success("Product deleted successfully");
+        }
+        
         refetch();
         setSelectedProducts(new Set());
       } else if (confirmDialog.type === 'bulk') {
         let deleted = 0;
+        let discontinued = 0;
+        let failed = 0;
+        
         for (const id of selectedProducts) {
           try {
-            await inventoryApi.products.delete(Number(id));
-            deleted++;
-          } catch (error) {
+            const response = await inventoryApi.products.delete(Number(id));
+            
+            if (response?.data?.action === 'discontinued') {
+              discontinued++;
+            } else {
+              deleted++;
+            }
+          } catch (error: any) {
+            failed++;
             console.error(`Failed to delete product ${id}:`, error);
+            console.error('Error details:', error.response?.data);
           }
         }
-        toast.success(`Deleted ${deleted} product(s)`);
+        
+        const messages = [];
+        if (deleted > 0) messages.push(`${deleted} deleted`);
+        if (discontinued > 0) messages.push(`${discontinued} discontinued (had transactions)`);
+        if (failed > 0) messages.push(`${failed} failed`);
+        
+        if (messages.length > 0) {
+          toast.success(`Products: ${messages.join(', ')}`);
+        }
+        
         refetch();
         setSelectedProducts(new Set());
       }
     } catch (error: any) {
       console.error('Delete error:', error);
       console.error('Error response:', error.response?.data);
-      const errorMsg = error.response?.data?.detail || error.response?.data?.error || "Failed to delete product";
-      toast.error(errorMsg);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMsg = "Failed to delete product";
+      
+      if (error.response?.status === 403) {
+        errorMsg = "Permission denied. You don't have permission to delete products.";
+      } else if (error.response?.status === 404) {
+        errorMsg = "Product not found or already deleted.";
+      } else if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      toast.error(errorMsg, { duration: 5000 });
     } finally {
       setConfirmDialog({ isOpen: false, type: 'single' });
     }

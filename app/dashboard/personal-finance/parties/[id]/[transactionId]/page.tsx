@@ -231,185 +231,227 @@ export default function TransactionDetailPage() {
           </div>
 
           {/* Receipt Card */}
-          <div id="receipt-container" className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none">
-            {/* Receipt Header */}
-            <div className={`p-6 text-white ${
-              transaction.direction === 'in' 
-                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' 
-                : 'bg-gradient-to-r from-red-500 to-red-600'
-            } print:bg-none print:text-gray-900 print:border-b-2 print:border-gray-300`}>
+          <div id="receipt-container" className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden print:shadow-none print:border print:border-gray-400 print:rounded-none">
+            {/* Company Header - Professional */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b-2 border-gray-300 print:bg-white">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    {transaction.direction === 'in' ? (
-                      <ArrowDownLeft className="h-6 w-6 print:text-emerald-600" />
-                    ) : (
-                      <ArrowUpRight className="h-6 w-6 print:text-red-600" />
-                    )}
-                    <h2 className="text-xl font-bold">Payment Receipt</h2>
-                  </div>
-                  <p className="text-white/90 text-sm print:text-gray-600">{companyName}</p>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{companyName}</h1>
+                  <p className="text-sm text-gray-600">Personal Finance Management</p>
                 </div>
                 <div className="text-right">
-                  <Badge className="bg-white/20 text-white border-0 mb-2 print:bg-gray-100 print:text-gray-900 print:border print:border-gray-300">
-                    {transaction.direction === 'in' ? 'RECEIVED' : 'PAID'}
+                  <Badge className={`${
+                    transaction.direction === 'in' 
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                      : 'bg-red-100 text-red-800 border-red-300'
+                  } px-3 py-1 text-xs font-semibold uppercase tracking-wide`}>
+                    {transaction.direction === 'in' ? 'Payment Received' : 'Payment Made'}
                   </Badge>
-                  <p className="text-xs text-white/80 print:text-gray-600">Receipt #{transaction.id}</p>
+                  <p className="text-xs text-gray-500 mt-2">Receipt #{generateShortId(transaction.id)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Receipt Title Bar */}
+            <div className={`px-8 py-4 ${
+              transaction.direction === 'in' 
+                ? 'bg-emerald-50 border-b border-emerald-200' 
+                : 'bg-red-50 border-b border-red-200'
+            } print:bg-gray-50 print:border-gray-300`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${
+                    transaction.direction === 'in' 
+                      ? 'bg-emerald-100' 
+                      : 'bg-red-100'
+                  }`}>
+                    {transaction.direction === 'in' ? (
+                      <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <ArrowUpRight className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {transaction.direction === 'in' ? 'Received From' : 'Paid To'}
+                    </h2>
+                    <p className="text-xl font-bold text-gray-900">{transaction.party_name}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Amount</p>
+                  <p className={`text-3xl font-bold ${
+                    transaction.direction === 'in' ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Receipt Body */}
-            <div className="p-8 space-y-6">
-              {/* Amount Section */}
-              <div className="text-center py-6 border-b-2 border-dashed border-gray-200">
-                <p className="text-sm text-gray-500 uppercase tracking-wide mb-2">Amount</p>
-                <p className={`text-5xl font-bold ${
-                  transaction.direction === 'in' ? 'text-emerald-600' : 'text-red-600'
-                }`}>
-                  Rs. {transaction.amount.toLocaleString('en-NP')}
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <p className="text-sm text-gray-600">
-                    {transaction.direction === 'in' ? 'Payment Received' : 'Payment Made'}
-                  </p>
+            <div className="px-8 py-6 space-y-6">
+              {/* Transaction Information Grid */}
+              <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                      Transaction Date
+                    </label>
+                    <p className="text-sm font-medium text-gray-900">
+                      <FormattedDate value={transaction.date} /> ({dateSystem})
+                    </p>
+                    <p className="text-xs text-gray-500">{formatTime(transaction.date)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <CreditCard className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                      Payment Method
+                    </label>
+                    <p className="text-sm font-medium text-gray-900 capitalize">
+                      {transaction.payment_method || 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Receipt className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                      Reference ID
+                    </label>
+                    <p className="text-sm font-mono font-medium text-gray-900">
+                      TXN-{generateShortId(transaction.id)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                      Status
+                    </label>
+                    <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                      Completed
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
-              {/* Transaction Details */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    {transaction.direction === 'in' ? 'Received From' : 'Paid To'}
-                  </label>
-                  <p className="text-base font-medium text-gray-900">{transaction.party_name}</p>
+              {/* Amount Breakdown */}
+              <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium text-gray-900">Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}</span>
                 </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Transaction Type
-                  </label>
-                  <Badge className={`${
-                    transaction.direction === 'in' 
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                      : 'bg-red-50 text-red-700 border-red-200'
+                <div className="flex items-center justify-between text-sm mb-3">
+                  <span className="text-gray-600">Tax</span>
+                  <span className="font-medium text-gray-900">Rs. 0.00</span>
+                </div>
+                <div className="border-t-2 border-gray-300 pt-3 flex items-center justify-between">
+                  <span className="text-base font-semibold text-gray-900">Total Amount</span>
+                  <span className={`text-2xl font-bold ${
+                    transaction.direction === 'in' ? 'text-emerald-600' : 'text-red-600'
                   }`}>
-                    {transaction.direction === 'in' ? 'Money In' : 'Money Out'}
-                  </Badge>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Date ({dateSystem})
-                  </label>
-                  <p className="text-base text-gray-900"><FormattedDate value={transaction.date} /></p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Time
-                  </label>
-                  <p className="text-base text-gray-900">{formatTime(transaction.date)}</p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Payment Method
-                  </label>
-                  <p className="text-base text-gray-900">
-                    {transaction.payment_method ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <CreditCard className="h-4 w-4 text-gray-500" />
-                        {transaction.payment_method}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">Not specified</span>
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Transaction ID
-                  </label>
-                  <p className="text-base font-mono text-gray-900">#{generateShortId(transaction.id)}</p>
+                    Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
 
               {/* Notes */}
               {transaction.note && (
-                <div className="pt-4 border-t border-gray-200">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Notes
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                  <label className="text-xs font-semibold text-blue-800 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                    <span className="inline-block w-1 h-1 bg-blue-600 rounded-full"></span>
+                    Notes / Description
                   </label>
-                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md leading-relaxed">
+                  <p className="text-sm text-blue-900 leading-relaxed">
                     {transaction.note}
                   </p>
                 </div>
               )}
 
               {/* Receipt Attachment */}
-              <div className="pt-4 border-t border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-3 text-center">
-                  Attached Receipt
-                </label>
-                
-                {transaction.receipt_url ? (
-                  <>
-                    {/* Receipt Preview */}
-                    {transaction.receipt_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                      <div className="mb-3 flex justify-center">
+              {transaction.receipt_url && (
+                <div className="border-t border-gray-200 pt-6">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide block mb-3">
+                    Attached Receipt Document
+                  </label>
+                  
+                  {transaction.receipt_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <div className="space-y-3">
+                      <div className="relative group">
                         <img 
                           src={transaction.receipt_url} 
                           alt="Receipt" 
-                          className="max-w-full max-h-96 h-auto rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
+                          className="w-full max-h-80 object-contain rounded-lg border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition"
                           onClick={() => window.open(transaction.receipt_url, '_blank')}
                         />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <span className="bg-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
+                            Click to view full size
+                          </span>
+                        </div>
                       </div>
-                    ) : null}
-                    
-                    <div className="flex items-center justify-center gap-3 bg-gray-50 p-4 rounded-md border border-gray-200">
-                      <Receipt className="h-8 w-8 text-gray-400" />
+                      <Button
+                        onClick={() => window.open(transaction.receipt_url, '_blank')}
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-2 print:hidden"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Receipt
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div className="p-3 bg-white rounded-lg border border-gray-300">
+                        <Receipt className="h-6 w-6 text-gray-600" />
+                      </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">Receipt Document</p>
-                        <p className="text-xs text-gray-500">Click to view or download</p>
+                        <p className="text-xs text-gray-500 mt-0.5">PDF or other document format</p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => window.open(transaction.receipt_url, '_blank')}
-                          size="sm"
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          View
-                        </Button>
-                        <Button
-                          onClick={() => window.open(transaction.receipt_url, '_blank')}
-                          size="sm"
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Download
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => window.open(transaction.receipt_url, '_blank')}
+                        size="sm"
+                        className="gap-2 print:hidden"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download
+                      </Button>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8 bg-gray-50 rounded-md border border-gray-200">
-                    <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">Not uploaded</p>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Receipt Footer */}
-            <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <p>Generated on <FormattedDate value={transaction.created_at} /> at {formatTime(transaction.created_at)}</p>
-                <p className="font-mono">#{transaction.id}</p>
+            <div className="bg-gray-50 px-8 py-5 border-t-2 border-gray-200">
+              <div className="text-center space-y-2">
+                <p className="text-xs text-gray-500">
+                  Receipt generated on <FormattedDate value={transaction.created_at} /> at {formatTime(transaction.created_at)}
+                </p>
+                <p className="text-xs text-gray-400 italic">
+                  This is a computer-generated receipt and does not require a physical signature.
+                </p>
+                <div className="pt-2 border-t border-gray-200 mt-3">
+                  <p className="text-xs font-medium text-gray-600">{companyName}</p>
+                  <p className="text-xs text-gray-500">Personal Finance Management System</p>
+                </div>
               </div>
             </div>
           </div>

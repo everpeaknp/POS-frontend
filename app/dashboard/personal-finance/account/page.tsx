@@ -12,22 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
-import {
-  getAccounts,
-  setAccountsForScope,
-  useSyncedList,
-  type PFAccount,
-} from "@/lib/personal-finance/store";
+import { 
+  financeAccountAPI, 
+  type FinanceAccount 
+} from "@/lib/api/personal-finance";
 import toast from "react-hot-toast";
 
-// Accounts come from the shared Personal Finance store
-// (lib/personal-finance/store.ts) — see /new pages and the Transactions page,
-// which reads from the same store.
-// TODO: Replace with real backend API calls when endpoints are ready
-// Backend needs: GET /api/personal-finance/accounts, POST /accounts, PUT /accounts/:id, DELETE /accounts/:id
-
 type AccountType = "bank" | "cash" | "credit_card" | "loan" | "investment";
-type Account = PFAccount;
+type Account = FinanceAccount;
 
 // Nepali banks list
 const NEPALI_BANKS = [
@@ -64,24 +56,41 @@ export default function AccountPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const scope = user?.tenant?.slug ?? null;
-  const [accounts, setAccounts] = useSyncedList<Account>(scope, getAccounts, setAccountsForScope);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Load accounts from API
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        setLoading(true);
+        const data = await financeAccountAPI.list();
+        setAccounts(data);
+      } catch (error) {
+        console.error("Error loading accounts:", error);
+        toast.error("Failed to load accounts");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAccounts();
+  }, []);
+  
   const [showDialog, setShowDialog] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   // Form state
-  const [formData, setFormData] = useState<Omit<Account, "id" | "createdAt">>({
+  const [formData, setFormData] = useState<Partial<Account>>({
     name: "",
     type: "bank",
-    balance: 0,
+    balance: "0",
     description: "",
     bankName: "",
     accountNumber: "",
-    isSystem: false,
   });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -90,11 +99,11 @@ export default function AccountPage() {
   // Calculate totals
   const summary = useMemo(() => {
     const assets = accounts
-      .filter((a) => a.balance >= 0)
-      .reduce((sum, a) => sum + a.balance, 0);
+      .filter((a) => parseFloat(a.balance) >= 0)
+      .reduce((sum, a) => sum + parseFloat(a.balance), 0);
     const liabilities = accounts
-      .filter((a) => a.balance < 0)
-      .reduce((sum, a) => sum + Math.abs(a.balance), 0);
+      .filter((a) => parseFloat(a.balance) < 0)
+      .reduce((sum, a) => sum + Math.abs(parseFloat(a.balance)), 0);
     return { assets, liabilities, netWorth: assets - liabilities };
   }, [accounts]);
 
@@ -142,11 +151,10 @@ export default function AccountPage() {
     setFormData({
       name: "",
       type: "bank",
-      balance: 0,
+      balance: "0",
       description: "",
       bankName: "",
       accountNumber: "",
-      isSystem: false,
     });
     setShowDialog(true);
   };
@@ -167,19 +175,18 @@ export default function AccountPage() {
     setEditingAccount(account);
     setFormData({
       name: account.name,
-      type: account.type,
-      balance: account.balance,
+      type: account.type as AccountType,
+      balance: account.current_balance,
       description: account.description || "",
-      bankName: account.bankName || "",
-      accountNumber: account.accountNumber || "",
-      isSystem: account.isSystem,
+      bankName: account.bank_name || "",
+      accountNumber: account.account_number || "",
     });
     setShowDialog(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       toast.error("Please enter an account name");
       return;
     }
@@ -190,39 +197,42 @@ export default function AccountPage() {
       return;
     }
 
-    if (editingAccount) {
-      // Update existing account
-      setAccounts((prev) =>
-        prev.map((a) =>
-          a.id === editingAccount.id
-            ? { 
-                ...a, 
-                name: formData.name, 
-                type: formData.type,
-                balance: formData.balance,
-                description: formData.description,
-                bankName: formData.bankName,
-                accountNumber: formData.accountNumber,
-              }
-            : a
-        )
-      );
-      toast.success("Account updated successfully");
-    } else {
-      // Add new account
-      const newAccount: Account = {
-        id: `acc_${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
+    try {
+      const payload = {
+        name: formData.name,
+        type: formData.type as AccountType,
+        opening_balance: formData.balance || "0",
+        description: formData.description || "",
+        bank_name: formData.bankName || "",
+        account_number: formData.accountNumber || "",
       };
-      setAccounts((prev) => [...prev, newAccount]);
-      toast.success("Account added successfully");
-    }
+      
+      console.log('Account payload being sent:', payload);
+      
+      if (editingAccount) {
+        // Update existing account
+        const updated = await financeAccountAPI.update(editingAccount.id, payload);
+        console.log('Account updated response:', updated);
+        setAccounts((prev) =>
+          prev.map((a) => (a.id === editingAccount.id ? updated : a))
+        );
+        toast.success("Account updated successfully");
+      } else {
+        // Add new account
+        const newAccount = await financeAccountAPI.create(payload);
+        console.log('Account created response:', newAccount);
+        setAccounts((prev) => [...prev, newAccount]);
+        toast.success("Account added successfully");
+      }
 
-    setShowDialog(false);
+      setShowDialog(false);
+    } catch (error) {
+      console.error("Error saving account:", error);
+      toast.error("Failed to save account");
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: number) => {
     const account = accounts.find((a) => a.id === id);
     if (account?.isSystem) {
       toast.error("System accounts cannot be deleted");
@@ -230,9 +240,21 @@ export default function AccountPage() {
       return;
     }
 
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
-    setDeleteConfirmId(null);
-    toast.success("Account deleted successfully");
+    try {
+      await financeAccountAPI.delete(id);
+      setAccounts((prev) => prev.filter((a) => a.id !== id));
+      setDeleteConfirmId(null);
+      toast.success("Account deleted successfully");
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      // Check if the error is because account has transactions
+      if (error.response?.data?.detail?.includes("transactions")) {
+        toast.error("Cannot delete an account that has transactions");
+      } else {
+        toast.error("Failed to delete account");
+      }
+      setDeleteConfirmId(null);
+    }
   };
 
   const getAccountIcon = (type: AccountType) => {
@@ -247,9 +269,10 @@ export default function AccountPage() {
 
   const renderAccountCard = (account: Account) => {
     const Icon = getAccountIcon(account.type);
-    const isLiability = account.balance < 0;
-    const displayBalance = Math.abs(account.balance);
-    const last4Digits = account.accountNumber ? account.accountNumber.slice(-4) : null;
+    const balanceNum = parseFloat(account.current_balance);
+    const isLiability = balanceNum < 0;
+    const displayBalance = Math.abs(balanceNum);
+    const last4Digits = account.account_number ? account.account_number.slice(-4) : null;
 
     return (
       <div
@@ -271,8 +294,8 @@ export default function AccountPage() {
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-0.5">{getAccountTypeLabel(account.type)}</p>
-              {account.type === "bank" && account.bankName && (
-                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bankName}</p>
+              {account.type === "bank" && account.bank_name && (
+                <p className="text-xs text-gray-600 mt-0.5 font-medium">{account.bank_name}</p>
               )}
               {account.type === "bank" && last4Digits && (
                 <p className="text-xs text-gray-400 mt-0.5">•••• {last4Digits}</p>
@@ -377,9 +400,10 @@ export default function AccountPage() {
           <tbody className="divide-y divide-gray-200">
             {filteredAccounts.map((account) => {
               const Icon = getAccountIcon(account.type);
-              const isLiability = account.balance < 0;
-              const displayBalance = Math.abs(account.balance);
-              const last4Digits = account.accountNumber ? account.accountNumber.slice(-4) : null;
+              const balanceNum = parseFloat(account.current_balance);
+              const isLiability = balanceNum < 0;
+              const displayBalance = Math.abs(balanceNum);
+              const last4Digits = account.account_number ? account.account_number.slice(-4) : null;
 
               return (
                 <tr key={account.id} className="hover:bg-gray-50">
@@ -407,7 +431,7 @@ export default function AccountPage() {
                     {getAccountTypeLabel(account.type)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {account.type === "bank" && account.bankName ? account.bankName : "-"}
+                    {account.type === "bank" && account.bank_name ? account.bank_name : "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-400">
                     {last4Digits ? `•••• ${last4Digits}` : "-"}
@@ -778,8 +802,8 @@ export default function AccountPage() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.balance || ""}
-                  onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
+                  value={formData.balance || "0"}
+                  onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
                   placeholder="0.00"
                   className="pl-9 focus-visible:ring-0 focus-visible:border-input"
                 />

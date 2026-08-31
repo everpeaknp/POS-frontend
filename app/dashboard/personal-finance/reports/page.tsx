@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react";
 import {
   AreaChart,
@@ -21,89 +21,40 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
-
-// MOCK DATA - Pulls from same structure as Transactions, Category, and Account pages
-// TODO: Replace with real backend API calls when endpoints are ready
+import { 
+  financeTransactionAPI, 
+  financeCategoryAPI,
+  financeAccountAPI,
+  type FinanceTransaction,
+  type FinanceCategory,
+  type FinanceAccount
+} from "@/lib/api/personal-finance";
+import toast from "react-hot-toast";
 
 type CategoryType = "income" | "expense";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
   type: CategoryType;
 }
 
 interface Transaction {
-  id: string;
+  id: number;
   date: string;
   type: CategoryType;
   amount: number;
-  categoryId: string;
-  accountId: string;
+  category: number;
+  account: number | null;
   description: string;
 }
 
 interface Account {
-  id: string;
+  id: number;
   name: string;
   type: string;
   balance: number;
 }
-
-// Mock categories - matches Category page exactly
-const MOCK_CATEGORIES: Category[] = [
-  { id: "cat_1", name: "Salary", type: "income" },
-  { id: "cat_2", name: "Freelance", type: "income" },
-  { id: "cat_3", name: "Investment Returns", type: "income" },
-  { id: "cat_4", name: "Other Income", type: "income" },
-  { id: "cat_5", name: "Groceries", type: "expense" },
-  { id: "cat_6", name: "Rent", type: "expense" },
-  { id: "cat_7", name: "Utilities", type: "expense" },
-  { id: "cat_8", name: "Dining", type: "expense" },
-  { id: "cat_9", name: "Entertainment", type: "expense" },
-  { id: "cat_10", name: "Transportation", type: "expense" },
-  { id: "cat_11", name: "Health", type: "expense" },
-  { id: "cat_12", name: "Shopping", type: "expense" },
-  { id: "cat_13", name: "Education", type: "expense" },
-  { id: "cat_14", name: "Other Expenses", type: "expense" },
-];
-
-// Mock transactions - matches Transactions page (extended with more data for trends)
-const MOCK_TRANSACTIONS: Transaction[] = [
-  // August 2026
-  { id: "txn_1", date: "2026-08-01", type: "income", amount: 85000, categoryId: "cat_1", accountId: "acc_1", description: "Monthly salary" },
-  { id: "txn_2", date: "2026-08-02", type: "expense", amount: 18000, categoryId: "cat_6", accountId: "acc_1", description: "Monthly rent" },
-  { id: "txn_3", date: "2026-08-05", type: "expense", amount: 4500, categoryId: "cat_5", accountId: "acc_3", description: "Groceries" },
-  { id: "txn_4", date: "2026-08-07", type: "expense", amount: 2200, categoryId: "cat_8", accountId: "acc_4", description: "Dining" },
-  { id: "txn_5", date: "2026-08-10", type: "income", amount: 15000, categoryId: "cat_2", accountId: "acc_2", description: "Freelance" },
-  { id: "txn_6", date: "2026-08-12", type: "expense", amount: 3500, categoryId: "cat_10", accountId: "acc_1", description: "Transportation" },
-  { id: "txn_7", date: "2026-08-15", type: "expense", amount: 2500, categoryId: "cat_7", accountId: "acc_1", description: "Utilities" },
-  { id: "txn_8", date: "2026-08-20", type: "expense", amount: 5000, categoryId: "cat_12", accountId: "acc_4", description: "Shopping" },
-  
-  // July 2026
-  { id: "txn_9", date: "2026-07-01", type: "income", amount: 85000, categoryId: "cat_1", accountId: "acc_1", description: "Monthly salary" },
-  { id: "txn_10", date: "2026-07-02", type: "expense", amount: 18000, categoryId: "cat_6", accountId: "acc_1", description: "Monthly rent" },
-  { id: "txn_11", date: "2026-07-10", type: "expense", amount: 8000, categoryId: "cat_5", accountId: "acc_3", description: "Groceries" },
-  { id: "txn_12", date: "2026-07-15", type: "expense", amount: 3000, categoryId: "cat_8", accountId: "acc_4", description: "Dining" },
-  { id: "txn_13", date: "2026-07-20", type: "expense", amount: 4000, categoryId: "cat_10", accountId: "acc_1", description: "Transportation" },
-  
-  // June 2026
-  { id: "txn_14", date: "2026-06-01", type: "income", amount: 85000, categoryId: "cat_1", accountId: "acc_1", description: "Monthly salary" },
-  { id: "txn_15", date: "2026-06-02", type: "expense", amount: 18000, categoryId: "cat_6", accountId: "acc_1", description: "Monthly rent" },
-  { id: "txn_16", date: "2026-06-05", type: "income", amount: 20000, categoryId: "cat_2", accountId: "acc_2", description: "Freelance" },
-  { id: "txn_17", date: "2026-06-10", type: "expense", amount: 7000, categoryId: "cat_5", accountId: "acc_3", description: "Groceries" },
-  { id: "txn_18", date: "2026-06-15", type: "expense", amount: 4000, categoryId: "cat_9", accountId: "acc_4", description: "Entertainment" },
-];
-
-// Mock accounts - matches Account page
-const MOCK_ACCOUNTS: Account[] = [
-  { id: "acc_1", name: "Checking Account", type: "bank", balance: 125000 },
-  { id: "acc_2", name: "Savings Account", type: "bank", balance: 350000 },
-  { id: "acc_3", name: "Cash Wallet", type: "cash", balance: 15000 },
-  { id: "acc_4", name: "Credit Card", type: "credit_card", balance: -25000 },
-  { id: "acc_5", name: "Investment Account", type: "investment", balance: 500000 },
-  { id: "acc_6", name: "Personal Loan", type: "loan", balance: -180000 },
-];
 
 const CHART_COLORS = {
   income: "#22C55E",
@@ -119,6 +70,55 @@ export default function ReportsPage() {
   const { user } = useAuth();
   const dateSystem = useDateSystemStore((state) => state.dateSystem);
   const formatDate = useDateSystemStore((state) => state.formatDate);
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load data from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [txns, cats, accs] = await Promise.all([
+          financeTransactionAPI.list(),
+          financeCategoryAPI.list(),
+          financeAccountAPI.list()
+        ]);
+        
+        // Convert API data to local format
+        setTransactions(txns.map(t => ({
+          id: t.id,
+          date: t.date,
+          type: t.type as CategoryType,
+          amount: parseFloat(t.amount),
+          category: t.category,
+          account: t.account,
+          description: t.description
+        })));
+        
+        setCategories(cats.map(c => ({
+          id: c.id,
+          name: c.name,
+          type: c.type as CategoryType
+        })));
+        
+        setAccounts(accs.map(a => ({
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          balance: parseFloat(a.current_balance)
+        })));
+      } catch (error) {
+        console.error("Error loading reports data:", error);
+        toast.error("Failed to load reports data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Financial reports and analytics`;
@@ -135,7 +135,7 @@ export default function ReportsPage() {
   const monthlyTrend = useMemo(() => {
     const months: Record<string, { income: number; expense: number }> = {};
 
-    MOCK_TRANSACTIONS.forEach((t) => {
+    transactions.forEach((t) => {
       const month = t.date.substring(0, 7); // YYYY-MM
       if (!months[month]) {
         months[month] = { income: 0, expense: 0 };
@@ -155,29 +155,29 @@ export default function ReportsPage() {
         expense: data.expense,
         net: data.income - data.expense,
       }));
-  }, [dateSystem]);
+  }, [transactions, dateSystem]);
 
   // Category Spending Breakdown (Expenses only)
   const categoryBreakdown = useMemo(() => {
     const spending: Record<string, number> = {};
 
-    MOCK_TRANSACTIONS.filter((t) => t.type === "expense").forEach((t) => {
-      spending[t.categoryId] = (spending[t.categoryId] || 0) + t.amount;
+    transactions.filter((t) => t.type === "expense").forEach((t) => {
+      spending[t.category] = (spending[t.category] || 0) + t.amount;
     });
 
     return Object.entries(spending)
       .map(([categoryId, amount]) => ({
-        category: MOCK_CATEGORIES.find((c) => c.id === categoryId)?.name || "Unknown",
+        category: categories.find((c) => c.id === parseInt(categoryId))?.name || "Unknown",
         amount,
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, []);
+  }, [transactions, categories]);
 
   // Net Worth Over Time (simplified - using current account balances as snapshot)
   const netWorthData = useMemo(() => {
     // Calculate net worth from accounts
-    const assets = MOCK_ACCOUNTS.filter((a) => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0);
-    const liabilities = Math.abs(MOCK_ACCOUNTS.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0));
+    const assets = accounts.filter((a) => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0);
+    const liabilities = Math.abs(accounts.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0));
     const currentNetWorth = assets - liabilities;
 
     // Simulate historical data (in real app, this would come from historical snapshots)
@@ -186,20 +186,20 @@ export default function ReportsPage() {
       { month: formatMonthYear("2026-07"), netWorth: currentNetWorth - 20000 },
       { month: formatMonthYear("2026-08"), netWorth: currentNetWorth },
     ];
-  }, [dateSystem]);
+  }, [transactions, dateSystem]);
 
   // Summary Stats
   const summary = useMemo(() => {
-    const totalIncome = MOCK_TRANSACTIONS.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-    const totalExpense = MOCK_TRANSACTIONS.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const totalExpense = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
     const netSavings = totalIncome - totalExpense;
     
-    const assets = MOCK_ACCOUNTS.filter((a) => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0);
-    const liabilities = Math.abs(MOCK_ACCOUNTS.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0));
+    const assets = accounts.filter((a) => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0);
+    const liabilities = Math.abs(accounts.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0));
     const netWorth = assets - liabilities;
 
     return { totalIncome, totalExpense, netSavings, netWorth };
-  }, []);
+  }, [transactions, accounts]);
 
   return (
     <div className="flex flex-col min-h-full">

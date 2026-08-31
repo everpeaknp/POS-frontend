@@ -178,6 +178,9 @@ export function usePOSCheckout() {
         ]);
 
         const allProducts = productsRes.data?.results || [];
+        console.log('POS Checkout: Loaded products:', allProducts.length);
+        console.log('First 5 product IDs:', allProducts.slice(0, 5).map((p: Product) => ({ id: p.id, name: p.name, sku: p.sku })));
+        
         setProducts(allProducts);
         setFilteredProducts(allProducts);
         setWarehouses(warehousesRes.data?.results || []);
@@ -684,15 +687,33 @@ export function usePOSCheckout() {
         discount_amount: formatDecimal(discountValue),
         tax_amount: formatDecimal(taxAmount),
         total: formatDecimal(total),
-        lines: cart.map((item) => ({
-          product: parseInt(item.product.id),
-          quantity: item.quantity,
-          unit_price: formatDecimal(Number(item.product.selling_price)),
-          discount_amount: 0,
-        })),
+        lines: cart.map((item) => {
+          // Ensure we're sending only the product ID as an integer
+          const productId = parseInt(String(item.product.id));
+          console.log('Product ID type:', typeof productId, 'Value:', productId);
+          
+          return {
+            product: productId,  // Send as integer, not string
+            quantity: item.quantity,
+            unit_price: formatDecimal(Number(item.product.selling_price)),
+            discount_amount: 0,
+          };
+        }),
       };
 
       console.log('Transaction data being sent:', JSON.stringify(transactionData, null, 2));
+      console.log('First line product:', transactionData.lines[0]?.product, 'Type:', typeof transactionData.lines[0]?.product);
+      console.log('Full lines array:', transactionData.lines);
+      
+      // Double-check the lines before sending
+      transactionData.lines.forEach((line, idx) => {
+        console.log(`Line ${idx}:`, {
+          product: line.product,
+          productType: typeof line.product,
+          quantity: line.quantity,
+          unit_price: line.unit_price
+        });
+      });
 
       const response = await posApi.createTransaction(transactionData);
       setCompletedTransaction(response);
@@ -723,22 +744,30 @@ export function usePOSCheckout() {
           
           // Check for product not found error
           if (errors.lines && Array.isArray(errors.lines)) {
-            const productError = errors.lines.find((line: any) => 
-              line.product && line.product[0]?.includes('does not exist')
-            );
-            if (productError) {
-              const productId = productError.product[0].match(/pk "(\d+)"/)?.[1];
-              errorMsg = `Product ID ${productId || 'unknown'} no longer exists. Removing from cart...`;
-              toast.error(errorMsg);
-              // Auto-remove invalid products from cart
-              if (productId) {
-                setCart(prevCart => {
-                  const filtered = prevCart.filter(item => String(item.product.id) !== String(productId));
-                  console.log(`Removed product ${productId} from cart. Cart size: ${prevCart.length} -> ${filtered.length}`);
-                  return filtered;
-                });
-                toast.info(`Product ${productId} removed from cart. Please try again.`);
+            const invalidProducts: string[] = [];
+            
+            errors.lines.forEach((lineError: any, index: number) => {
+              if (lineError.product && lineError.product[0]?.includes('does not exist')) {
+                const match = lineError.product[0].match(/pk "(\d+)"/);
+                if (match) {
+                  invalidProducts.push(match[1]);
+                }
               }
+            });
+            
+            if (invalidProducts.length > 0) {
+              errorMsg = `${invalidProducts.length} product(s) no longer exist in your inventory. Removing from cart...`;
+              toast.error(errorMsg);
+              
+              // Auto-remove all invalid products from cart
+              setCart(prevCart => {
+                const filtered = prevCart.filter(item => !invalidProducts.includes(String(item.product.id)));
+                console.log(`Removed ${invalidProducts.length} invalid product(s) from cart. Cart size: ${prevCart.length} -> ${filtered.length}`);
+                console.log('Removed product IDs:', invalidProducts);
+                return filtered;
+              });
+              
+              toast.info(`Removed ${invalidProducts.length} invalid product(s) from cart. Please review and try again.`, { duration: 5000 });
               setProcessing(false);
               return;
             }

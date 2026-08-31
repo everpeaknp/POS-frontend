@@ -9,31 +9,32 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/utils";
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
-import {
-  getTransactions,
-  getCategories,
-  type PFTransaction,
-  type PFCategory,
-} from "@/lib/personal-finance/store";
+import { 
+  financeTransactionAPI, 
+  financeCategoryAPI,
+  type FinanceTransaction,
+  type FinanceCategory 
+} from "@/lib/api/personal-finance";
+import toast from "react-hot-toast";
 
 interface IncomeEntry {
-  id: string;
+  id: number;
   date: string;
   description: string;
   amount: number;
   categoryName: string;
 }
 
-function toIncomeEntries(transactions: PFTransaction[], categories: PFCategory[]): IncomeEntry[] {
-  const categoryName = (id: string) => categories.find((c) => c.id === id)?.name || "Uncategorized";
+function toIncomeEntries(transactions: FinanceTransaction[], categories: FinanceCategory[]): IncomeEntry[] {
+  const categoryName = (id: number) => categories.find((c) => c.id === id)?.name || "Uncategorized";
   return transactions
     .filter((t) => t.type === "income")
     .map((t) => ({
       id: t.id,
       date: t.date,
-      description: t.description || categoryName(t.categoryId),
-      amount: t.amount,
-      categoryName: categoryName(t.categoryId),
+      description: t.description || categoryName(t.category),
+      amount: parseFloat(t.amount),
+      categoryName: categoryName(t.category),
     }));
 }
 
@@ -78,20 +79,31 @@ function calculateTax(totalIncome: number) {
 
 export default function TaxPage() {
   const { user } = useAuth();
-  const scope = user?.tenant?.slug ?? null;
   const { dateSystem } = useDateSystemStore();
   const [selectedPeriod, setSelectedPeriod] = useState<"ytd" | "fy2026" | "fy2025">("ytd");
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>(() =>
-    toIncomeEntries(getTransactions(scope), getCategories(scope))
-  );
+  const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Transactions/categories live in the shared Personal Finance store — reload
-  // whenever the scope (tenant) changes so this stays in sync with what was
-  // actually recorded on the Transactions page.
+  // Load transactions and categories from API
   useEffect(() => {
-    setIncomeEntries(toIncomeEntries(getTransactions(scope), getCategories(scope)));
-  }, [scope]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [transactions, categories] = await Promise.all([
+          financeTransactionAPI.list(),
+          financeCategoryAPI.list()
+        ]);
+        setIncomeEntries(toIncomeEntries(transactions, categories));
+      } catch (error) {
+        console.error("Error loading tax data:", error);
+        toast.error("Failed to load tax data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Tax calculation based on income`;
@@ -366,6 +378,22 @@ export default function TaxPage() {
             Note: This is a simplified calculation. Actual tax may vary based on deductions, exemptions, and other factors. 
             Consult a tax professional for accurate filing.
           </p>
+        </div>
+
+        {/* Bottom Disclaimer */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-lg p-5">
+          <div className="flex items-start gap-3">
+            <Calculator className="h-6 w-6 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-900 mb-2">Auto-calculated Tax Estimate</h4>
+              <p className="text-sm text-amber-800 leading-relaxed">
+                Tax is automatically calculated based on your income entries (Transaction In). Nepal tax slabs for individuals are applied. 
+                <strong className="font-semibold"> This is an estimate only.</strong> Actual tax liability may differ based on various factors including 
+                deductions, exemptions, tax credits, and specific circumstances. Please consult with a qualified tax professional or chartered accountant 
+                for accurate tax planning and filing.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -554,21 +554,6 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Transaction ID - Read Only */}
-            {!editingTransaction && (
-              <div>
-                <Label>Transaction ID</Label>
-                <Input
-                  type="text"
-                  value={transactionId}
-                  readOnly
-                  className="mt-1 bg-gray-50 text-gray-600 font-mono"
-                  placeholder="Auto-generated"
-                />
-                <p className="text-xs text-gray-500 mt-1">Auto-generated unique identifier</p>
-              </div>
-            )}
-
             {/* Direction Tabs */}
             <div>
               <Label>Transaction Type</Label>

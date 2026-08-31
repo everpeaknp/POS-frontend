@@ -242,7 +242,18 @@ const posApi = {
   },
 
   createTransaction: async (data: POSTransaction): Promise<POSTransaction> => {
-    const response = await apiClient.post('/pos/transactions/', data);
+    // Ensure product IDs in lines are integers, not objects
+    const sanitizedData = {
+      ...data,
+      lines: data.lines.map(line => ({
+        ...line,
+        product: typeof line.product === 'object' ? (line.product as any).id : line.product,
+        product_id: undefined, // Remove if accidentally included
+      }))
+    };
+    
+    console.log('Sanitized transaction data:', JSON.stringify(sanitizedData, null, 2));
+    const response = await apiClient.post('/pos/transactions/', sanitizedData);
     return response.data;
   },
 

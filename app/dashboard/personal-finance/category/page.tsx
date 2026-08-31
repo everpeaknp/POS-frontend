@@ -11,43 +11,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/context/AuthContext";
-import {
-  getCategories,
-  setCategoriesForScope,
-  useSyncedList,
-  type PFCategory,
-} from "@/lib/personal-finance/store";
+import { 
+  financeCategoryAPI,
+  type FinanceCategory
+} from "@/lib/api/personal-finance";
 import toast from "react-hot-toast";
 
-// Categories come from the shared Personal Finance store
-// (lib/personal-finance/store.ts) — see /new pages and the Transactions /
-// Budget pages, which read from the same store.
-// TODO: Replace with real backend API calls when endpoints are ready
-// Backend needs: GET /api/personal-finance/categories, POST /categories, PUT /categories/:id, DELETE /categories/:id
-
 type CategoryType = "income" | "expense";
-type Category = PFCategory;
+type Category = FinanceCategory;
 
 export default function CategoryPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const scope = user?.tenant?.slug ?? null;
-  const [categories, setCategories] = useSyncedList<Category>(scope, getCategories, setCategoriesForScope);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Load categories from API
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await financeCategoryAPI.list();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Failed to load categories");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
+  }, []);
+  
   const [showDialog, setShowDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string>("all"); // "all" | "expense" | "income"
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterParent, setFilterParent] = useState<string>("all");
 
   // Form state
-  const [formData, setFormData] = useState<Omit<Category, "id" | "createdAt">>({
+  const [formData, setFormData] = useState<Partial<Category>>({
     name: "",
     type: "expense",
     description: "",
-    isSystem: false,
-    parentId: undefined,
   });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -74,15 +81,8 @@ export default function CategoryPage() {
       );
     }
     
-    // Parent filter
-    if (filterParent === "top") {
-      filtered = filtered.filter((c) => !c.parentId);
-    } else if (filterParent === "sub") {
-      filtered = filtered.filter((c) => !!c.parentId);
-    }
-    
     return filtered;
-  }, [categories, filterType, searchTerm, filterParent]);
+  }, [categories, filterType, searchTerm]);
 
   const incomeCategories = useMemo(() =>
     categories.filter((c) => c.type === "income"),
@@ -94,31 +94,18 @@ export default function CategoryPage() {
     [categories]
   );
 
-  const hasActiveFilters = Boolean(searchTerm || filterParent !== "all" || filterType !== "all");
+  const hasActiveFilters = Boolean(searchTerm || filterType !== "all");
   const clearFilters = () => {
     setSearchTerm("");
-    setFilterParent("all");
     setFilterType("all");
   };
-
-  // Only top-level categories of the current form type can be picked as a parent
-  // (keeps the hierarchy to two levels: category → sub-category)
-  const topLevelCategoriesForType = useMemo(
-    () =>
-      categories.filter(
-        (c) => c.type === formData.type && !c.parentId && c.id !== editingCategory?.id
-      ),
-    [categories, formData.type, editingCategory]
-  );
 
   const openAddDialog = () => {
     setEditingCategory(null);
     setFormData({
       name: "",
-      type: filterType === "income" || filterType === "expense" ? filterType : "expense",
+      type: filterType === "income" || filterType === "expense" ? (filterType as "income" | "expense") : "expense",
       description: "",
-      isSystem: false,
-      parentId: undefined,
     });
     setShowDialog(true);
   };
@@ -132,66 +119,71 @@ export default function CategoryPage() {
   }, [searchParams, router]);
 
   const openEditDialog = (category: Category) => {
-    if (category.isSystem) {
-      toast.error("System categories cannot be edited");
-      return;
-    }
     setEditingCategory(category);
     setFormData({
       name: category.name,
       type: category.type,
       description: category.description || "",
-      isSystem: category.isSystem,
-      parentId: category.parentId,
     });
     setShowDialog(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       toast.error("Please enter a category name");
       return;
     }
 
-    if (editingCategory) {
-      // Update existing category
-      setCategories((prev) =>
-        prev.map((c) =>
-          c.id === editingCategory.id
-            ? { ...c, name: formData.name, description: formData.description, parentId: formData.parentId }
-            : c
-        )
-      );
-      toast.success("Category updated successfully");
-    } else {
-      // Add new category
-      const newCategory: Category = {
-        id: `cat_${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
-      };
-      setCategories((prev) => [...prev, newCategory]);
-      toast.success("Category added successfully");
-    }
+    try {
+      if (editingCategory) {
+        // Update existing category
+        const updated = await financeCategoryAPI.update(editingCategory.id, {
+          name: formData.name,
+          type: formData.type as "income" | "expense",
+          description: formData.description || "",
+        });
+        setCategories((prev) =>
+          prev.map((c) => (c.id === editingCategory.id ? updated : c))
+        );
+        toast.success("Category updated successfully");
+      } else {
+        // Add new category
+        const newCategory = await financeCategoryAPI.create({
+          name: formData.name,
+          type: formData.type as "income" | "expense",
+          description: formData.description || "",
+        });
+        setCategories((prev) => [...prev, newCategory]);
+        toast.success("Category added successfully");
+      }
 
-    setShowDialog(false);
+      setShowDialog(false);
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast.error("Failed to save category");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    const category = categories.find((c) => c.id === id);
-    if (category?.isSystem) {
-      toast.error("System categories cannot be deleted");
+  const handleDelete = async (id: number) => {
+    try {
+      await financeCategoryAPI.delete(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
       setDeleteConfirmId(null);
-      return;
+      toast.success("Category deleted successfully");
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      // Check if the error is because category has transactions
+      if (error.response?.data?.detail?.includes("transactions")) {
+        toast.error("Cannot delete a category that has transactions");
+      } else {
+        toast.error("Failed to delete category");
+      }
+      setDeleteConfirmId(null);
     }
-
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    setDeleteConfirmId(null);
-    toast.success("Category deleted successfully");
   };
 
-  const renderCategoryList = (categoryList: Category[]) => {
+  const CategoryListRenderer = (categoryList: Category[]) => {
     if (categoryList.length === 0) {
       if (hasActiveFilters) {
         return (
@@ -216,21 +208,7 @@ export default function CategoryPage() {
       );
     }
 
-    // Build table rows — show parent categories followed by their children
-    const topLevel = categoryList.filter((c) => !c.parentId);
-    const orphaned = categoryList.filter(
-      (c) => c.parentId && !categoryList.some((p) => p.id === c.parentId)
-    );
-
-    const rows: { category: Category; isChild: boolean }[] = [];
-    [...topLevel, ...orphaned].forEach((parent) => {
-      rows.push({ category: parent, isChild: false });
-      categoryList
-        .filter((c) => c.parentId === parent.id)
-        .forEach((child) => {
-          rows.push({ category: child, isChild: true });
-        });
-    });
+    // Use the passed categoryList directly
 
     return (
       <div className="overflow-x-auto">
@@ -244,9 +222,6 @@ export default function CategoryPage() {
                 Type
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Parent
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Description
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -258,19 +233,12 @@ export default function CategoryPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {rows.map(({ category, isChild }) => {
-              const parentCategory = category.parentId
-                ? categories.find((c) => c.id === category.parentId)
-                : null;
-
+            {categoryList.map((category) => {
               return (
                 <tr key={category.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    <div className={`flex items-center gap-2 ${isChild ? "pl-6" : ""}`}>
-                      {isChild && (
-                        <span className="text-gray-400">└─</span>
-                      )}
-                      <span className={isChild ? "text-gray-700" : "font-medium"}>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
                         {category.name}
                       </span>
                     </div>
@@ -291,9 +259,6 @@ export default function CategoryPage() {
                       )}
                       {category.type === "income" ? "Income" : "Expense"}
                     </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {parentCategory ? parentCategory.name : "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {category.description || "-"}
@@ -412,17 +377,6 @@ export default function CategoryPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={filterParent} onValueChange={(v) => setFilterParent(v ?? "all")}>
-                <SelectTrigger className="h-9 w-40 shrink-0 text-sm border-gray-200 bg-white">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="top">Top-level only</SelectItem>
-                  <SelectItem value="sub">Sub-categories only</SelectItem>
-                </SelectContent>
-              </Select>
-
               {hasActiveFilters && (
                 <Button
                   variant="outline"
@@ -446,7 +400,7 @@ export default function CategoryPage() {
 
         {/* Categories Table */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {renderCategoryList(filteredCategories)}
+          {CategoryListRenderer(filteredCategories)}
         </div>
 
         {/* Info Note */}
@@ -477,7 +431,7 @@ export default function CategoryPage() {
                 <button
                   type="button"
                   disabled={!!editingCategory}
-                  onClick={() => setFormData({ ...formData, type: "expense", parentId: undefined })}
+                  onClick={() => setFormData({ ...formData, type: "expense" })}
                   className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     formData.type === "expense"
                       ? "border-red-300 bg-red-50 text-red-700"
@@ -490,7 +444,7 @@ export default function CategoryPage() {
                 <button
                   type="button"
                   disabled={!!editingCategory}
-                  onClick={() => setFormData({ ...formData, type: "income", parentId: undefined })}
+                  onClick={() => setFormData({ ...formData, type: "income" })}
                   className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     formData.type === "income"
                       ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
@@ -507,36 +461,13 @@ export default function CategoryPage() {
             </div>
 
             <div>
-              <Label>Parent Category (optional)</Label>
-              <Select
-                value={formData.parentId || "none"}
-                onValueChange={(value) => setFormData({ ...formData, parentId: value === "none" ? undefined : value ?? undefined })}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="None — this is a new top-level category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None — this is a new top-level category</SelectItem>
-                  {topLevelCategoriesForType.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Leave as None to create a new Category, or pick one to add a Sub Category under it
-              </p>
-            </div>
-
-            <div>
               <Label>
-                {formData.parentId ? "Sub Category" : "Category"} <span className="text-red-500">*</span>
+                Category Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder={formData.parentId ? "e.g., Fast Food, Coffee" : "e.g., Groceries, Salary, Rent"}
+                placeholder="e.g., Groceries, Salary, Rent"
                 className="mt-1 focus-visible:ring-0 focus-visible:border-input"
               />
             </div>
