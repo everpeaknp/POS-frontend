@@ -33,62 +33,76 @@ import { formatNPR } from "@/lib/utils";
 const quickActions = [
   {
     href: "/dashboard/pos/checkout",
-    label: "New Sale (POS)",
-    sub: "Record sale transaction",
+    label: "POS Checkout",
+    sub: "Start selling now",
     icon: Plus,
     color: "bg-green-50 text-green-600",
   },
   {
-    href: "/dashboard/inventory/products",
-    label: "Add Stock",
-    sub: "Add/update products",
-    icon: Package,
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    href: "/dashboard/sales/invoices/new",
-    label: "Add Udhaaro",
-    sub: "Credit sale entry",
+    href: "/dashboard/pos/transactions",
+    label: "View Transactions",
+    sub: "See all sales",
     icon: TrendingUp,
-    color: "bg-green-50 text-green-600",
+    color: "bg-blue-50 text-blue-600",
   },
   {
-    href: "/dashboard/purchase/invoices/new",
-    label: "Add Expense",
-    sub: "Record purchase/expense",
+    href: "/dashboard/inventory/products",
+    label: "Manage Products",
+    sub: "Add/update inventory",
+    icon: Package,
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    href: "/dashboard/pos/refunds/new",
+    label: "Process Refund",
+    sub: "Handle returns",
     icon: ShoppingCart,
-    color: "bg-green-50 text-green-600",
+    color: "bg-orange-50 text-orange-600",
   },
 ];
 
 const moduleLinks = [
   {
+    href: "/dashboard/pos/checkout",
+    label: "POS Checkout",
+    sub: "Make sales quickly",
+    icon: DollarSign,
+    color: "bg-green-50 text-green-600",
+  },
+  {
+    href: "/dashboard/pos/transactions",
+    label: "Transactions",
+    sub: "View all sales",
+    icon: TrendingUp,
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    href: "/dashboard/pos/sessions",
+    label: "POS Sessions",
+    sub: "Manage cash sessions",
+    icon: Clock,
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
     href: "/dashboard/inventory",
     label: "Inventory",
     sub: "Stock & products",
     icon: Package,
-    color: "bg-green-50 text-green-600",
+    color: "bg-orange-50 text-orange-600",
   },
   {
-    href: "/dashboard/sales",
-    label: "Sales & Udhaaro",
-    sub: "Sales & credit sales",
-    icon: TrendingUp,
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    href: "/dashboard/purchase",
-    label: "Purchases",
-    sub: "Supplier & purchases",
-    icon: ShoppingCart,
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    href: "/dashboard/reports",
-    label: "Reports",
-    sub: "Business analytics",
+    href: "/dashboard/pos/reports",
+    label: "POS Reports",
+    sub: "Sales analytics",
     icon: Activity,
-    color: "bg-green-50 text-green-600",
+    color: "bg-indigo-50 text-indigo-600",
+  },
+  {
+    href: "/dashboard/sales/customers",
+    label: "Customers",
+    sub: "Manage customers",
+    icon: ShoppingCart,
+    color: "bg-pink-50 text-pink-600",
   },
 ];
 
@@ -144,8 +158,8 @@ export default function KiranaOverviewPage() {
   return (
     <div className="w-full">
       <DashHeader
-        title="Kirana Dashboard"
-        subtitle="Manage your shop inventory, sales & credit"
+        title="Retail Dashboard"
+        subtitle="Point of Sale & Inventory Management"
       />
 
       {/* Stat Cards */}

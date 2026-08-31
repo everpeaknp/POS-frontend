@@ -1,330 +1,181 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Minus, Trash2, Wallet, CreditCard, Receipt, X, Printer, Download, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Receipt, Wallet, CreditCard, Smartphone, Eye, Plus, CheckCircle, FileText, Printer, Download, Tags, X, Pause, Play, DollarSign } from "lucide-react";
+import { DashHeader } from "@/components/dashboard/dash-header";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
-import { inventoryApi, type Product, type Warehouse } from "@/lib/api/inventory";
-import { customerAPI, type Customer } from "@/lib/api/sales";
-import posApi, { type POSSession, type POSTransaction } from "@/lib/api/pos";
-import { downloadReceiptPDF, preparePrint, cleanupPrint } from "@/lib/utils/receipt-generator";
-import { BarcodeScannerModal } from "@/components/pos/BarcodeScannerModal";
+import { POSProductGrid } from "@/components/pos/checkout/POSProductGrid";
+import { POSCartPanel } from "@/components/pos/checkout/POSCartPanel";
+import { POSCheckoutDialogs } from "@/components/pos/checkout/POSCheckoutDialogs";
+import POSInvoice from "@/components/pos/POSInvoice";
+import { usePOSCheckout } from "@/hooks/usePOSCheckout";
+import { useReactToPrint } from "react-to-print";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
+import { useState, useRef, useEffect } from "react";
 
 export default function POSCheckoutPage() {
-  const router = useRouter();
-  
-  // Data
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [openSession, setOpenSession] = useState<POSSession | null>(null);
-  const [taxRate, setTaxRate] = useState<number>(0.13); // Default 13%, will be overridden
-  
-  // Cart
-  const [cart, setCart] = useState<CartItem[]>([]);
-  
-  // Search & Selection
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "digital" | "credit">("cash");
-  const [cashAmount, setCashAmount] = useState("");
-  const [discountAmount, setDiscountAmount] = useState("");
-  
-  // Receipt
-  const [completedTransaction, setCompletedTransaction] = useState<POSTransaction | null>(null);
-  const [showReceipt, setShowReceipt] = useState(false);
-  
-  // Barcode Scanner
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [barcodeInput, setBarcodeInput] = useState("");
-  
-  // UI State
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const checkout = usePOSCheckout();
+  const [sidebarWidth, setSidebarWidth] = useState(340);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
-  // Load initial data
+  // Handle resize
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsRes, warehousesRes, customersRes, sessionRes, settingsRes] = await Promise.all([
-          inventoryApi.products.list({ limit: 1000, status: "active" }),
-          inventoryApi.warehouses.list({ limit: 100 }),
-          customerAPI.list({ status: "active", page_size: 500 }),
-          posApi.getOpenSession(),
-          posApi.getSettings(),
-        ]);
-
-        const allProducts = productsRes.data?.results || [];
-        setProducts(allProducts);
-        setFilteredProducts(allProducts);
-        setWarehouses(warehousesRes.data?.results || []);
-        setCustomers(customersRes.data?.results || []);
-        setOpenSession(sessionRes);
-        
-        // Set tax rate from settings (convert from percentage to decimal)
-        if (settingsRes && settingsRes.tax_rate !== undefined) {
-          setTaxRate(settingsRes.tax_rate / 100);
-        }
-
-        // Auto-select first warehouse or session warehouse
-        if (sessionRes?.warehouse) {
-          setSelectedWarehouse(String(sessionRes.warehouse));
-        } else if (warehousesRes.data?.results && warehousesRes.data.results.length > 0) {
-          setSelectedWarehouse(String(warehousesRes.data.results[0].id));
-        }
-      } catch (error) {
-        console.error("Failed to load data:", error);
-        toast.error("Failed to load data");
-      } finally {
-        setLoading(false);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = window.innerWidth - e.clientX;
+      // Constrain between 280px and 600px
+      if (newWidth >= 280 && newWidth <= 600) {
+        setSidebarWidth(newWidth);
       }
     };
 
-    loadData();
-  }, []);
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
 
-  // Filter products by search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredProducts(products);
-      return;
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.sku.toLowerCase().includes(query) ||
-        p.category_name?.toLowerCase().includes(query)
-    );
-    setFilteredProducts(filtered);
-  }, [searchQuery, products]);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
-  // Add to cart
-  const addToCart = useCallback((product: Product) => {
-    const stock = product.total_stock || 0;
-    
-    if (stock <= 0) {
-      toast.error(`${product.name} is out of stock`);
-      return;
-    }
+  // Print invoice handler
+  const handlePrintInvoice = useReactToPrint({
+    contentRef: checkout.invoiceRef,
+    documentTitle: `Invoice_${checkout.completedTransaction?.transaction_number || 'Receipt'}`,
+  });
 
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.product.id === product.id);
-      
-      if (existing) {
-        const newQty = existing.quantity + 1;
-        if (newQty > stock) {
-          toast.error(`Only ${stock} units available`);
-          return prevCart;
-        }
-        return prevCart.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: newQty }
-            : item
-        );
-      }
-      
-      return [...prevCart, { product, quantity: 1 }];
-    });
-  }, []);
-
-  // Update quantity
-  const updateQuantity = useCallback((productId: string, delta: number) => {
-    setCart((prevCart) => {
-      return prevCart
-        .map((item) => {
-          if (item.product.id !== productId) return item;
-          
-          const newQty = item.quantity + delta;
-          const stock = item.product.total_stock || 0;
-          
-          if (newQty <= 0) return null;
-          if (newQty > stock) {
-            toast.error(`Only ${stock} units available`);
-            return item;
-          }
-          
-          return { ...item, quantity: newQty };
-        })
-        .filter((item): item is CartItem => item !== null);
-    });
-  }, []);
-
-  // Remove from cart
-  const removeFromCart = useCallback((productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
-  }, []);
-
-  // Calculate totals
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.quantity * Number(item.product.selling_price),
-    0
-  );
-  const discountValue = discountAmount ? parseFloat(discountAmount) || 0 : 0;
-  const netAmount = Math.max(0, subtotal - discountValue);
-  const taxAmount = netAmount * taxRate;
-  const total = netAmount + taxAmount;
-  const cashGiven = cashAmount ? parseFloat(cashAmount) || 0 : 0;
-  const changeAmount = Math.max(0, cashGiven - total);
-
-  // Reset form for next sale
-  const resetForm = () => {
-    setCart([]);
-    setSelectedCustomer("");
-    setPaymentMethod("cash");
-    setCashAmount("");
-    setDiscountAmount("");
-    setSearchQuery("");
-    setCompletedTransaction(null);
-    setShowReceipt(false);
-  };
-
-  // Handle barcode scan - add product to cart when "Sold" is clicked
-  const handleBarcodeProductScanned = (product: Product, action: "received" | "sold") => {
-    if (action === "sold") {
-      addToCart(product);
-      toast.success(`${product.name} added to cart`);
-    }
-    setShowBarcodeScanner(false);
-  };
-
-  // Handle barcode input (Enter key press)
-  const handleBarcodeInputSubmit = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter" || !barcodeInput.trim()) return;
-
-    e.preventDefault();
-    const barcode = barcodeInput.trim();
+  // Download PDF handler
+  const handleDownloadPDF = async () => {
+    if (!checkout.invoiceRef.current || !checkout.completedTransaction) return;
 
     try {
-      // Look up product by SKU (barcode)
-      const response = await inventoryApi.products.list({ search: barcode });
-      const productsFound = response.data?.results || [];
-      const product = productsFound.find((p: Product) => p.sku === barcode);
+      toast.loading("Generating PDF...");
+      
+      const canvas = await html2canvas(checkout.invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
 
-      if (product) {
-        // Product exists - add to cart (deduct stock)
-        addToCart(product);
-        toast.success(`${product.name} added to cart`);
-        setBarcodeInput(""); // Clear input for next scan
-      } else {
-        // Product doesn't exist
-        toast.error("Product doesn't exist");
-      }
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`Invoice_${checkout.completedTransaction.transaction_number}.pdf`);
+      
+      toast.dismiss();
+      toast.success("PDF downloaded successfully");
     } catch (error) {
-      console.error("Barcode lookup error:", error);
-      toast.error("Error looking up product");
+      console.error("PDF generation error:", error);
+      toast.dismiss();
+      toast.error("Failed to generate PDF");
     }
   };
 
-  // Complete sale
-  const completeSale = async () => {
-    if (cart.length === 0) {
-      toast.error("Cart is empty");
-      return;
-    }
-
-    if (!openSession) {
-      toast.error("No active POS session. Please start a session first.");
-      return;
-    }
-
-    if (!selectedWarehouse) {
-      toast.error("Please select a warehouse");
-      return;
-    }
-
-    if (paymentMethod === "credit" && !selectedCustomer) {
-      toast.error("Please select a customer for credit sales");
-      return;
-    }
-
-    if (paymentMethod === "cash" && cashGiven < total) {
-      toast.error(`Cash received (Rs. ${cashGiven.toFixed(2)}) must be ≥ total (Rs. ${total.toFixed(2)})`);
-      return;
-    }
-
-    setProcessing(true);
-
-    try {
-      const transactionData = {
-        warehouse: selectedWarehouse,
-        customer: paymentMethod === "credit" ? selectedCustomer : null,
-        payment_method: paymentMethod === "digital" ? "card" : paymentMethod,
-        amount_paid: paymentMethod === "cash" ? cashGiven : total,
-        change_given: paymentMethod === "cash" ? changeAmount : 0,
-        subtotal: subtotal,
-        discount_amount: discountValue,
-        tax_amount: taxAmount,
-        total: total,
-        lines: cart.map((item) => ({
-          product: item.product.id,
-          quantity: item.quantity,
-          unit_price: Number(item.product.selling_price),
-          discount_amount: 0,
-          line_total: item.quantity * Number(item.product.selling_price),
-        })),
-      };
-
-      const response = await posApi.createTransaction(transactionData);
-      
-      // Store transaction data for receipt viewing
-      setCompletedTransaction(response);
-
-      // Show success message with change if cash payment
-      if (paymentMethod === "cash" && changeAmount > 0) {
-        toast.success(
-          <div className="space-y-1">
-            <div className="font-bold text-lg">Sale Complete!</div>
-            <div className="text-sm">Receipt #{response.transaction_number}</div>
-            <div className="text-lg font-bold text-green-600">Change: Rs. {changeAmount.toFixed(2)}</div>
-          </div>,
-          { duration: 3000 }
-        );
-      } else {
-        toast.success(
-          <div>
-            <div className="font-semibold">Sale Complete!</div>
-            <div className="text-sm">Receipt #{response.transaction_number}</div>
-          </div>,
-          { duration: 2000 }
-        );
-      }
-
-      // Reset form immediately for next customer
-      resetForm();
-      
-    } catch (error: any) {
-      console.error("Transaction error:", error);
-      const errorMsg =
-        error.response?.data?.detail ||
-        error.response?.data?.lines ||
-        error.response?.data?.message ||
-        "Failed to complete sale";
-      toast.error(errorMsg);
-    } finally {
-      setProcessing(false);
+  // Dialog change handler
+  const handleDialogChange = (dialog: string, open: boolean) => {
+    switch (dialog) {
+      case 'checkout':
+        checkout.setShowCheckoutDialog(open);
+        break;
+      case 'qr':
+        checkout.setShowQRDialog(open);
+        break;
+      case 'thankYou':
+        checkout.setShowThankYouDialog(open);
+        break;
+      case 'receipt':
+        checkout.setShowReceipt(open);
+        break;
+      case 'coupon':
+        checkout.setShowCouponDialog(open);
+        if (open) {
+          checkout.loadActiveDiscounts();
+        }
+        break;
+      case 'customer':
+        checkout.setShowCustomerDialog(open);
+        if (!open) {
+          checkout.setNewCustomerName("");
+          checkout.setNewCustomerPhone("");
+          checkout.setNewCustomerEmail("");
+          checkout.setNewCustomerAddress("");
+          checkout.setNewCustomerType("Individual");
+        }
+        break;
+      case 'barcodeScanner':
+        checkout.setShowBarcodeScanner(open);
+        break;
+      case 'heldOrders':
+        checkout.setShowHeldOrders(open);
+        break;
+      case 'cashMovement':
+        checkout.setShowCashMovement(open);
+        break;
+      case 'splitPayment':
+        checkout.setShowSplitPayment(open);
+        break;
+      case 'cameFromCheckout':
+        checkout.setCameFromCheckout(open);
+        break;
     }
   };
 
-  if (loading) {
+  // Customer field change handler
+  const handleCustomerFieldChange = (field: string, value: string) => {
+    switch (field) {
+      case 'name':
+        checkout.setNewCustomerName(value);
+        break;
+      case 'phone':
+        checkout.setNewCustomerPhone(value);
+        break;
+      case 'email':
+        checkout.setNewCustomerEmail(value);
+        break;
+      case 'address':
+        checkout.setNewCustomerAddress(value);
+        break;
+      case 'type':
+        checkout.setNewCustomerType(value as "Individual" | "Business");
+        break;
+    }
+  };
+
+  // Select discount handler
+  const handleSelectDiscount = (discount: any) => {
+    checkout.setAppliedCoupon(discount);
+    checkout.setDiscountAmount('');
+    checkout.setShowCouponDialog(false);
+    toast.success(`Coupon "${discount.name}" applied!`);
+  };
+
+  if (checkout.loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -336,488 +187,982 @@ export default function POSCheckoutPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Panel - Products */}
-      <div className="flex-1 flex flex-col">
-        {/* No Session Warning Banner */}
-        {!openSession && (
-          <div className="bg-amber-50 border-b border-amber-200 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-amber-100 p-2 rounded-full">
-                  <Receipt className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-amber-900">No Active POS Session</div>
-                  <div className="text-sm text-amber-700">You need to start a POS session before making sales</div>
-                </div>
-              </div>
-              <Button
-                onClick={() => router.push("/dashboard/pos/sessions/new")}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                Start Session
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Header with Search */}
-        <div className="bg-white border-b p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">POS Checkout</h1>
-            <Button
-              onClick={() => setShowBarcodeScanner(true)}
-              disabled={!selectedWarehouse}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
-              size="sm"
-            >
-              <Scan className="h-4 w-4" />
-              Scan Barcode
-            </Button>
-          </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11"
-              autoFocus
-            />
-          </div>
-
-          {/* Barcode Input Field */}
-          <div className="relative">
-            <Scan className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#22C55E]" />
-            <Input
-              type="text"
-              placeholder="Scan barcode here..."
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              onKeyDown={handleBarcodeInputSubmit}
-              className="pl-10 h-11 border-[#22C55E] focus:ring-[#22C55E]"
-            />
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {filteredProducts.map((product) => {
-              const stock = product.total_stock || 0;
-              const isOutOfStock = stock <= 0;
-              const inCart = cart.find(item => item.product.id === product.id);
-
-              return (
-                <button
-                  key={product.id}
-                  onClick={() => !isOutOfStock && addToCart(product)}
-                  disabled={isOutOfStock}
-                  className={`
-                    relative text-left p-3 rounded-lg border-2 transition-all
-                    ${
-                      isOutOfStock
-                        ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-50"
-                        : inCart
-                          ? "bg-green-50 border-green-500 hover:shadow-md"
-                          : "bg-white border-gray-200 hover:border-green-400 hover:shadow-md active:scale-95"
-                    }
-                  `}
-                >
-                  {inCart && (
-                    <div className="absolute top-1 right-1 bg-green-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {inCart.quantity}
-                    </div>
-                  )}
-                  <div className="font-semibold text-sm truncate">{product.name}</div>
-                  <div className="text-lg font-bold text-green-600 mt-1">
-                    Rs. {Number(product.selling_price).toFixed(0)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {isOutOfStock ? "Out of stock" : `Stock: ${stock}`}
-                  </div>
-                </button>
-              );
-            })}
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full text-center py-12 text-gray-500">
-                {searchQuery ? "No products found" : "No products available"}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Cart */}
-      <div className="w-96 bg-white border-l flex flex-col">
-        {/* Cart Header */}
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Cart</h2>
-            {cart.length > 0 && (
-              <button
-                onClick={resetForm}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {cart.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Cart is empty</p>
-            </div>
-          ) : (
-            cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">
-                    {item.product.name}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Rs. {Number(item.product.selling_price).toFixed(2)} × {item.quantity}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-7 w-7"
-                    onClick={() => updateQuantity(item.product.id, -1)}
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-8 text-center text-sm font-semibold">
-                    {item.quantity}
-                  </span>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-7 w-7"
-                    onClick={() => updateQuantity(item.product.id, 1)}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-
-                <div className="text-sm font-bold w-16 text-right">
-                  Rs. {(item.quantity * Number(item.product.selling_price)).toFixed(0)}
-                </div>
-
+    <div className="flex h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Dashboard Header with Action Buttons */}
+      <div style={{ paddingRight: `${sidebarWidth}px` }}>
+        <DashHeader 
+          title="Point of Sale" 
+          subtitle="Scan or search products to add to cart"
+          actions={
+            checkout.openSession && checkout.cart.length > 0 ? (
+              <div className="flex items-center gap-2">
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => removeFromCart(item.product.id)}
+                  size="sm"
+                  variant="outline"
+                  onClick={checkout.handleHoldOrder}
+                  className="gap-1 h-9"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Pause className="h-4 w-4" />
+                  Hold Order
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => checkout.setShowHeldOrders(true)}
+                  className="gap-1 h-9"
+                >
+                  <Play className="h-4 w-4" />
+                  Held Orders
+                  {checkout.heldOrders.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                      {checkout.heldOrders.length}
+                    </span>
+                  )}
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => checkout.setShowCashMovement(true)}
+                  className="gap-1 h-9"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Cash In/Out
                 </Button>
               </div>
-            ))
+            ) : null
+          }
+        />
+      </div>
+      
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden" style={{ paddingRight: `${sidebarWidth}px` }}>
+        {/* Left Panel - Products */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* No Session Warning Banner */}
+          {!checkout.openSession && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 p-4 shadow-sm">
+              <div className="flex items-center justify-between max-w-7xl mx-auto">
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-500 p-2.5 rounded-xl shadow-md">
+                    <Receipt className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-amber-900">No Active POS Session</div>
+                    <div className="text-sm text-amber-700">Start a session to begin making sales</div>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => checkout.router.push("/dashboard/pos/sessions/new")}
+                  className="bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  Start Session
+                </Button>
+              </div>
+            </div>
           )}
+
+          {/* Product Grid with Search and Categories */}
+          <POSProductGrid
+            products={checkout.products}
+            filteredProducts={checkout.filteredProducts}
+            cart={checkout.cart}
+            searchQuery={checkout.searchQuery}
+            selectedCategory={checkout.selectedCategory}
+            showOnlyAvailable={checkout.showOnlyAvailable}
+            selectedWarehouse={checkout.selectedWarehouse}
+            onSearchChange={checkout.setSearchQuery}
+            onCategoryChange={checkout.setSelectedCategory}
+            onToggleAvailable={() => checkout.setShowOnlyAvailable(!checkout.showOnlyAvailable)}
+            onAddToCart={checkout.addToCart}
+            onShowBarcodeScanner={() => checkout.setShowBarcodeScanner(true)}
+            searchInputRef={checkout.searchInputRef}
+          />
         </div>
 
-        {/* Cart Footer - Payment */}
-        {cart.length > 0 && (
-          <div className="border-t p-4 space-y-4">
-            {/* Totals */}
-            <div className="space-y-2">
+        {/* Right Panel - Cart */}
+        <POSCartPanel
+          cart={checkout.cart}
+          subtotal={checkout.subtotal}
+          discountValue={checkout.discountValue}
+          taxAmount={checkout.taxAmount}
+          taxRate={checkout.taxRate}
+          total={checkout.total}
+          appliedCoupon={checkout.appliedCoupon}
+          discountAmount={checkout.discountAmount}
+          openSession={checkout.openSession}
+          width={sidebarWidth}
+          onUpdateQuantity={checkout.updateQuantity}
+          onRemoveFromCart={checkout.removeFromCart}
+          onResetForm={checkout.resetForm}
+          onShowCouponDialog={() => {
+            checkout.setShowCouponDialog(true);
+            checkout.loadActiveDiscounts();
+          }}
+          onRemoveCoupon={checkout.removeCoupon}
+          onDiscountAmountChange={checkout.setDiscountAmount}
+          onShowCheckoutDialog={() => checkout.setShowCheckoutDialog(true)}
+          onResizeStart={() => setIsResizing(true)}
+        />
+      </div>
+
+      {/* Dialogs */}
+      <POSCheckoutDialogs
+        showBarcodeScanner={checkout.showBarcodeScanner}
+        showHeldOrders={checkout.showHeldOrders}
+        showCashMovement={checkout.showCashMovement}
+        showSplitPayment={checkout.showSplitPayment}
+        selectedWarehouse={checkout.selectedWarehouse}
+        heldOrders={checkout.heldOrders}
+        total={checkout.total}
+        onDialogChange={handleDialogChange}
+        onResumeOrder={checkout.handleResumeOrder}
+        onDeleteHeldOrder={checkout.handleDeleteHeldOrder}
+        onSplitPaymentConfirm={checkout.handleSplitPaymentConfirm}
+        onBarcodeProductScanned={checkout.handleBarcodeProductScanned}
+      />
+
+      {/* Checkout Confirmation Dialog */}
+      <Dialog open={checkout.showCheckoutDialog} onOpenChange={(open) => handleDialogChange('checkout', open)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">Complete Sale</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5 py-4">
+            {/* Order Summary */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-5 space-y-2.5 border border-green-200">
               <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>Rs. {subtotal.toFixed(2)}</span>
+                <span className="text-gray-700 font-medium">Subtotal</span>
+                <span className="font-semibold text-gray-900">Rs. {checkout.subtotal.toFixed(2)}</span>
               </div>
-              
-              {/* Discount Input */}
-              <div className="flex justify-between items-center text-sm">
-                <label className="font-medium">Discount</label>
-                <div className="flex items-center gap-2">
-                  <span>Rs.</span>
-                  <Input
-                    type="number"
-                    value={discountAmount}
-                    onChange={(e) => setDiscountAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-20 h-8 text-right text-sm"
-                    min="0"
-                    step="10"
+              {checkout.discountValue > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-700 font-medium">
+                    Discount {checkout.appliedCoupon && `(${checkout.appliedCoupon.code})`}
+                  </span>
+                  <span className="font-semibold text-red-600">- Rs. {Number(checkout.discountValue).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-700 font-medium">Tax ({(checkout.taxRate * 100).toFixed(1)}%)</span>
+                <span className="font-semibold text-gray-900">Rs. {checkout.taxAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-green-300">
+                <span className="text-gray-900">Total</span>
+                <span className="text-green-600">Rs. {checkout.total.toFixed(0)}</span>
+              </div>
+            </div>
+
+            {/* Customer Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-900">
+                Customer 
+                {checkout.paymentMethod === "credit" ? (
+                  <span className="text-red-500 ml-1">*</span>
+                ) : (
+                  <span className="text-gray-400 font-normal ml-1">(Optional)</span>
+                )}
+              </label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Combobox
+                    options={checkout.customers.map((customer) => ({
+                      value: customer.id,
+                      label: customer.name,
+                      subtitle: [
+                        customer.phone,
+                        customer.email,
+                        customer.type
+                      ].filter(Boolean).join(' • ')
+                    }))}
+                    value={checkout.selectedCustomer}
+                    onValueChange={checkout.setSelectedCustomer}
+                    placeholder="Search by name, phone, email..."
+                    searchPlaceholder="Search customers..."
+                    emptyText="No customer found."
+                    className="h-11 text-sm w-full"
+                    dropdownWidth={600}
                   />
                 </div>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <span>Tax ({(taxRate * 100).toFixed(1)}%)</span>
-                <span>Rs. {taxAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-2xl font-bold pt-2 border-t">
-                <span>Total</span>
-                <span className="text-green-600">Rs. {total.toFixed(0)}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    handleDialogChange('cameFromCheckout', true);
+                    handleDialogChange('checkout', false);
+                    handleDialogChange('customer', true);
+                  }}
+                  className="h-11 w-11 p-0 border flex-shrink-0"
+                  title="Add new customer"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
             {/* Payment Method */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Payment</label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant={paymentMethod === "cash" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("cash")}
-                  className={paymentMethod === "cash" ? "bg-green-600" : ""}
+              <label className="text-sm font-semibold text-gray-900">
+                Payment Method <span className="text-red-500">*</span>
+              </label>
+              
+              {/* Row 1: Cash, eSewa, FonePay, Khalti */}
+              <div className="grid grid-cols-4 gap-2">
+                {/* Cash */}
+                <button
+                  type="button"
+                  onClick={() => checkout.setPaymentMethod("cash")}
+                  className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
+                    checkout.paymentMethod === "cash"
+                      ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
                 >
-                  <Wallet className="h-4 w-4 mr-1" />
-                  Cash
-                </Button>
-                <Button
-                  variant={paymentMethod === "digital" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("digital")}
-                  className={paymentMethod === "digital" ? "bg-green-600" : ""}
-                >
-                  <CreditCard className="h-4 w-4 mr-1" />
-                  Card
-                </Button>
-                <Button
-                  variant={paymentMethod === "credit" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("credit")}
-                  className={paymentMethod === "credit" ? "bg-green-600" : ""}
-                >
-                  Credit
-                </Button>
-              </div>
-            </div>
-
-            {/* Credit Customer Selection */}
-            {paymentMethod === "credit" && (
-              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Cash Amount */}
-            {paymentMethod === "cash" && (
-              <div className="space-y-2">
-                <Input
-                  type="number"
-                  value={cashAmount}
-                  onChange={(e) => setCashAmount(e.target.value)}
-                  placeholder="Cash received"
-                  className="h-11 text-lg text-right font-semibold"
-                  min={total}
-                  step="10"
-                  autoFocus
-                />
-                {cashGiven >= total && changeAmount > 0 && (
-                  <div className="text-center p-2 bg-green-50 rounded">
-                    <div className="text-sm text-gray-600">Change</div>
-                    <div className="text-xl font-bold text-green-600">
-                      Rs. {changeAmount.toFixed(2)}
-                    </div>
+                  <Wallet className="h-5 w-5" />
+                  <span>Cash</span>
+                </button>
+                
+                {/* eSewa */}
+                {checkout.paymentSettings.esewa_enabled ? (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => checkout.setPaymentMethod("esewa")}
+                      className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
+                        checkout.paymentMethod === "esewa"
+                          ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Smartphone className="h-5 w-5" />
+                      <span>eSewa</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkout.showQRCodeDialog("esewa");
+                      }}
+                      title="View QR Code"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Complete Sale Button */}
-            <Button
-              onClick={completeSale}
-              disabled={
-                processing ||
-                !openSession ||
-                (paymentMethod === "cash" && cashGiven < total) ||
-                (paymentMethod === "credit" && !selectedCustomer)
-              }
-              className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700"
-            >
-              {processing ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Processing...
-                </>
-              ) : (
-                `Complete Sale`
-              )}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Receipt Modal */}
-      {showReceipt && completedTransaction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div id="receipt-modal" className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Receipt Header */}
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Receipt #{completedTransaction.transaction_number}</h2>
-              <button
-                onClick={() => setShowReceipt(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Receipt Content */}
-            <div id="receipt-content" className="p-6 space-y-4 print:p-10">
-              {/* Store & Date Info */}
-              <div className="text-center border-b pb-4">
-                <div className="text-sm font-semibold">📋 RECEIPT</div>
-                <div className="text-xs text-gray-600 mt-2">
-                  {new Date(completedTransaction.created_at || new Date()).toLocaleString()}
-                </div>
-              </div>
-
-              {/* Line Items */}
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-gray-600 uppercase">Items</div>
-                {completedTransaction.lines && completedTransaction.lines.length > 0 ? (
-                  completedTransaction.lines.map((line, idx) => (
-                    <div key={idx} className="flex justify-between text-sm py-1 border-b">
-                      <div className="flex-1">
-                        <div className="font-medium">{line.product_name || 'Product'}</div>
-                        <div className="text-xs text-gray-600">
-                          {line.quantity} × Rs. {Number(line.unit_price).toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="text-right font-medium">
-                        Rs. {Number(line.line_total || line.quantity * line.unit_price).toFixed(2)}
-                      </div>
-                    </div>
-                  ))
                 ) : (
-                  <div className="text-xs text-gray-500">No items</div>
-                )}
-              </div>
-
-              {/* Totals */}
-              <div className="border-t pt-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span>Rs. {Number(completedTransaction.subtotal).toFixed(2)}</span>
-                </div>
-                {completedTransaction.discount_amount > 0 && (
-                  <div className="flex justify-between text-sm text-red-600">
-                    <span>Discount</span>
-                    <span>-Rs. {Number(completedTransaction.discount_amount).toFixed(2)}</span>
+                  <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <span className="text-xs text-gray-400">eSewa</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span>Tax</span>
-                  <span>Rs. {Number(completedTransaction.tax_amount).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total</span>
-                  <span>Rs. {Number(completedTransaction.total).toFixed(2)}</span>
-                </div>
-              </div>
 
-              {/* Payment Info */}
-              <div className="bg-gray-50 p-3 rounded text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span>Payment Method</span>
-                  <span className="font-medium capitalize">{completedTransaction.payment_method}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Amount Paid</span>
-                  <span className="font-medium">Rs. {Number(completedTransaction.amount_paid).toFixed(2)}</span>
-                </div>
-                {completedTransaction.change_given > 0 && (
-                  <div className="flex justify-between text-green-600 font-semibold">
-                    <span>Change</span>
-                    <span>Rs. {Number(completedTransaction.change_given).toFixed(2)}</span>
+                {/* FonePay */}
+                {checkout.paymentSettings.fonepay_enabled ? (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => checkout.setPaymentMethod("fonepay")}
+                      className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
+                        checkout.paymentMethod === "fonepay"
+                          ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <CreditCard className="h-5 w-5" />
+                      <span>FonePay</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkout.showQRCodeDialog("fonepay");
+                      }}
+                      title="View QR Code"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <span className="text-xs text-gray-400">FonePay</span>
+                  </div>
+                )}
+
+                {/* Khalti */}
+                {checkout.paymentSettings.khalti_enabled ? (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => checkout.setPaymentMethod("khalti")}
+                      className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
+                        checkout.paymentMethod === "khalti"
+                          ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Wallet className="h-5 w-5" />
+                      <span>Khalti</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkout.showQRCodeDialog("khalti");
+                      }}
+                      title="View QR Code"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <span className="text-xs text-gray-400">Khalti</span>
                   </div>
                 )}
               </div>
 
-              {/* Cashier Info */}
-              {completedTransaction.cashier_name && (
-                <div className="text-xs text-gray-600 text-center border-t pt-3">
-                  Cashier: {completedTransaction.cashier_name}
-                </div>
-              )}
+              {/* Row 2: Bank, Card, Credit */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* Bank Transfer */}
+                {checkout.paymentSettings.bank_transfer_enabled ? (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => checkout.setPaymentMethod("bank_transfer")}
+                      className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
+                        checkout.paymentMethod === "bank_transfer"
+                          ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <CreditCard className="h-5 w-5" />
+                      <span>Bank</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkout.showQRCodeDialog("bank_transfer");
+                      }}
+                      title="View Bank Details"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <span className="text-xs text-gray-400">Bank</span>
+                  </div>
+                )}
+
+                {/* Card */}
+                <button
+                  type="button"
+                  onClick={() => checkout.setPaymentMethod("card")}
+                  className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
+                    checkout.paymentMethod === "card"
+                      ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>Card</span>
+                </button>
+
+                {/* Credit */}
+                <button
+                  type="button"
+                  onClick={() => checkout.setPaymentMethod("credit")}
+                  className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
+                    checkout.paymentMethod === "credit"
+                      ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <Wallet className="h-5 w-5" />
+                  <span>Credit</span>
+                </button>
+              </div>
             </div>
+
+            {/* Cash Amount Input */}
+            {checkout.paymentMethod === "cash" && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-900">Cash Received <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                    Rs.
+                  </span>
+                  <Input
+                    type="number"
+                    value={checkout.cashAmount}
+                    onChange={(e) => checkout.setCashAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-9 h-12 text-lg text-right font-semibold"
+                    min={checkout.total}
+                    step="10"
+                    autoFocus
+                  />
+                </div>
+                {checkout.cashGiven >= checkout.total && checkout.changeAmount > 0 && (
+                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-300">
+                    <div className="text-sm font-semibold text-gray-700">Change to Return</div>
+                    <div className="text-2xl font-bold text-green-600 mt-1">
+                      Rs. {checkout.changeAmount.toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Action Buttons */}
-            <div id="receipt-print-actions" className="border-t p-4 flex gap-2 justify-end print:hidden bg-gray-50">
+            <div className="flex gap-3 pt-2 border-t">
               <Button
-                onClick={() => {
-                  preparePrint();
-                  window.print();
-                  cleanupPrint();
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    await downloadReceiptPDF("receipt-content", completedTransaction.transaction_number);
-                    toast.success("Receipt downloaded successfully");
-                  } catch (error) {
-                    console.error("PDF generation error:", error);
-                    toast.error("Failed to download receipt PDF");
-                  }
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
-              </Button>
-              <Button
-                onClick={() => setShowReceipt(false)}
+                type="button"
                 variant="outline"
+                onClick={() => handleDialogChange('checkout', false)}
+                className="flex-1 h-11"
+                disabled={checkout.processing}
               >
-                Close
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  handleDialogChange('checkout', false);
+                  checkout.completeSale();
+                }}
+                disabled={
+                  checkout.processing ||
+                  !checkout.openSession ||
+                  (checkout.paymentMethod === "cash" && checkout.cashGiven < checkout.total) ||
+                  (checkout.paymentMethod === "credit" && !checkout.selectedCustomer)
+                }
+                className="flex-1 h-11 bg-green-600 hover:bg-green-700"
+              >
+                {checkout.processing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Confirm Sale
+                  </>
+                )}
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Receipt Button - shown after transaction completes */}
-      {completedTransaction && !showReceipt && (
-        <div id="receipt-floating-button" className="fixed bottom-6 right-6 z-40">
-          <Button
-            onClick={() => setShowReceipt(true)}
-            className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg"
-            size="lg"
-          >
-            <Receipt className="h-5 w-5 mr-2" />
-            View Receipt
-          </Button>
-        </div>
-      )}
+      {/* QR Code Payment Dialog */}
+      <Dialog open={checkout.showQRDialog} onOpenChange={(open) => handleDialogChange('qr', open)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">
+              {checkout.qrPaymentMethod} Payment
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="text-center bg-emerald-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+              <p className="text-3xl font-bold text-emerald-600">
+                Rs. {(checkout.subtotal - checkout.discountValue + checkout.taxAmount).toFixed(2)}
+              </p>
+            </div>
 
-      {/* Barcode Scanner Modal */}
-      <BarcodeScannerModal
-        open={showBarcodeScanner}
-        onClose={() => setShowBarcodeScanner(false)}
-        warehouseId={Number(selectedWarehouse)}
-        onProductScanned={handleBarcodeProductScanned}
-      />
+            {checkout.qrPaymentNumber === "Not configured" ? (
+              <div className="text-center p-8 bg-amber-50 rounded-lg border-2 border-amber-200">
+                <p className="text-amber-800 font-medium mb-2">Payment method not configured</p>
+                <p className="text-sm text-amber-600">
+                  Please configure {checkout.qrPaymentMethod} in POS Settings
+                </p>
+              </div>
+            ) : (
+              <>
+                {checkout.qrImageUrl ? (
+                  <div className="flex justify-center bg-white p-6 rounded-lg border-2 border-gray-200">
+                    <img 
+                      src={checkout.qrImageUrl} 
+                      alt={`${checkout.qrPaymentMethod} QR Code`}
+                      className="w-64 h-64 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex justify-center bg-white p-6 rounded-lg border-2 border-amber-200">
+                    <div className="text-center">
+                      <p className="text-amber-700 font-medium mb-2">No QR Code Uploaded</p>
+                      <p className="text-sm text-amber-600">
+                        Upload a QR code in POS Settings for easier payments
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    {checkout.qrPaymentMethod === "Bank Transfer" ? "Bank Details" : "Merchant Information"}
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    {checkout.qrPaymentMethod === "Bank Transfer" ? (
+                      <div className="space-y-1 text-sm">
+                        {checkout.qrPaymentNumber.split('|').map((info, idx) => {
+                          const labels = ['Bank Name:', 'Account Number:', 'Account Name:'];
+                          return info ? (
+                            <p key={idx} className="text-gray-900">
+                              <span className="font-semibold">{labels[idx]}</span> {info}
+                            </p>
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-lg font-mono text-gray-900">
+                        {checkout.qrPaymentNumber}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {checkout.qrPaymentMethod === "Bank Transfer" 
+                      ? "Use these details for bank transfer"
+                      : checkout.qrImageUrl 
+                        ? "Scan QR code with payment app" 
+                        : "Enter merchant ID in payment app"}
+                  </p>
+                </div>
+              </>
+            )}
+
+            <Button
+              onClick={() => handleDialogChange('qr', false)}
+              className="w-full bg-[#22C55E] hover:bg-[#22C55E]/90"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Thank You Success Dialog */}
+      <Dialog open={checkout.showThankYouDialog} onOpenChange={(open) => handleDialogChange('thankYou', open)}>
+        <DialogContent className="sm:max-w-md">
+          <div className="text-center space-y-6 py-6">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-12 h-12 text-green-600" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-gray-900">Thank You!</h2>
+              <p className="text-gray-600">Your transaction was completed successfully</p>
+              {checkout.completedTransaction && (
+                <div className="bg-gray-50 rounded-lg p-3 mt-3">
+                  <p className="text-sm text-gray-600">Receipt Number</p>
+                  <p className="text-lg font-bold text-gray-900">#{checkout.completedTransaction.transaction_number}</p>
+                  <p className="text-2xl font-bold text-green-600 mt-2">
+                    Rs. {Number(checkout.completedTransaction.total).toFixed(2)}
+                  </p>
+                  {checkout.completedTransaction.change_given > 0 && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-sm text-gray-600">Change Given</p>
+                      <p className="text-lg font-bold text-green-600">
+                        Rs. {Number(checkout.completedTransaction.change_given).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => {
+                  handleDialogChange('receipt', true);
+                }}
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              >
+                <Printer className="h-5 w-5 mr-2" />
+                Print Receipt
+              </Button>
+
+              <Button
+                onClick={() => {
+                  if (checkout.completedTransaction) {
+                    checkout.router.push(`/dashboard/pos/transactions/${checkout.completedTransaction.id}`);
+                  }
+                  handleDialogChange('thankYou', false);
+                }}
+                variant="outline"
+                className="w-full h-12 border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 font-semibold"
+              >
+                <Eye className="h-5 w-5 mr-2" />
+                View Transaction
+              </Button>
+
+              <Button
+                onClick={() => {
+                  if (checkout.completedTransaction) {
+                    checkout.router.push(`/dashboard/pos/transactions/${checkout.completedTransaction.id}`);
+                  }
+                  handleDialogChange('thankYou', false);
+                }}
+                variant="outline"
+                className="w-full h-12 border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 font-semibold"
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                View Invoice
+              </Button>
+
+              <Button
+                onClick={() => {
+                  handleDialogChange('thankYou', false);
+                  checkout.resetForm();
+                }}
+                variant="ghost"
+                className="w-full h-12 text-gray-600 hover:text-gray-900 font-semibold"
+              >
+                New Sale
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply Coupon Dialog */}
+      <Dialog open={checkout.showCouponDialog} onOpenChange={(open) => handleDialogChange('coupon', open)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">Apply Coupon</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Enter a coupon code or select from available offers
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-gray-900">Enter Coupon Code</label>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={checkout.couponCode}
+                  onChange={(e) => checkout.setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code (e.g., SAVE10)"
+                  className="flex-1 h-12 text-base font-mono uppercase"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      checkout.applyCouponCode();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={checkout.applyCouponCode}
+                  className="h-12 px-6 bg-green-600 hover:bg-green-700"
+                >
+                  Apply
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500 font-medium">OR CHOOSE FROM AVAILABLE COUPONS</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {checkout.loadingDiscounts ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                  Loading coupons...
+                </div>
+              ) : checkout.availableDiscounts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Tags className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                  <p className="font-medium">No active coupons available</p>
+                  <p className="text-sm">Check back later for offers</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 max-h-96 overflow-y-auto">
+                  {checkout.availableDiscounts.map((discount) => {
+                    const isExpired = discount.valid_until && new Date(discount.valid_until) < new Date();
+                    const isNotYetValid = discount.valid_from && new Date(discount.valid_from) > new Date();
+                    const isBelowMinimum = discount.min_order_amount && checkout.subtotal < discount.min_order_amount;
+                    const isDisabled = isExpired || isNotYetValid || isBelowMinimum;
+
+                    return (
+                      <button
+                        key={discount.id}
+                        onClick={() => !isDisabled && handleSelectDiscount(discount)}
+                        disabled={isDisabled}
+                        className={`text-left p-4 rounded-lg border-2 transition-all ${
+                          isDisabled
+                            ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : 'border-green-200 bg-green-50 hover:border-green-400 hover:shadow-md cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Tags className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : 'text-green-600'}`} />
+                              <span className="font-bold text-base text-gray-900">{discount.name}</span>
+                            </div>
+                            
+                            {discount.description && (
+                              <p className="text-sm text-gray-600 mb-2">{discount.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2 text-xs">
+                              <Badge variant="outline" className="bg-white">
+                                Code: <span className="font-mono font-bold ml-1">{discount.code}</span>
+                              </Badge>
+                              
+                              {discount.min_order_amount && (
+                                <Badge variant="outline" className={isBelowMinimum ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white'}>
+                                  Min: Rs. {discount.min_order_amount}
+                                </Badge>
+                              )}
+                              
+                              {discount.valid_until && (
+                                <Badge variant="outline" className={isExpired ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white'}>
+                                  {isExpired ? 'Expired' : `Valid until ${new Date(discount.valid_until).toLocaleDateString()}`}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {isDisabled && (
+                              <div className="mt-2 text-xs text-red-600 font-medium">
+                                {isExpired && '⚠️ This coupon has expired'}
+                                {isNotYetValid && '⚠️ This coupon is not yet valid'}
+                                {isBelowMinimum && `⚠️ Minimum order of Rs. ${discount.min_order_amount} required (Current: Rs. ${checkout.subtotal.toFixed(2)})`}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-green-600'}`}>
+                              {discount.discount_type === 'percentage' 
+                                ? `${discount.discount_value}%` 
+                                : `Rs. ${discount.discount_value}`}
+                            </div>
+                            <div className="text-xs text-gray-500">OFF</div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {checkout.availableDiscounts.length > 0 && (
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Current Order</h4>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-semibold text-gray-900">Rs. {checkout.subtotal.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleDialogChange('coupon', false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Customer Dialog */}
+      <Dialog open={checkout.showCustomerDialog} onOpenChange={(open) => {
+        handleDialogChange('customer', open);
+        if (!open && checkout.cameFromCheckout) {
+          handleDialogChange('checkout', true);
+          handleDialogChange('cameFromCheckout', false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Customer</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700">
+                Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="customer-name"
+                type="text"
+                value={checkout.newCustomerName}
+                onChange={(e) => handleCustomerFieldChange('name', e.target.value)}
+                placeholder="Customer name"
+                className="h-9"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && checkout.newCustomerName.trim() && checkout.newCustomerPhone.trim()) {
+                    checkout.quickAddCustomer();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700">
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="customer-phone"
+                type="text"
+                value={checkout.newCustomerPhone}
+                onChange={(e) => handleCustomerFieldChange('phone', e.target.value)}
+                placeholder="Phone number"
+                className="h-9"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && checkout.newCustomerName.trim() && checkout.newCustomerPhone.trim()) {
+                    checkout.quickAddCustomer();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <Input
+                id="customer-email"
+                type="email"
+                value={checkout.newCustomerEmail}
+                onChange={(e) => handleCustomerFieldChange('email', e.target.value)}
+                placeholder="email@example.com"
+                className="h-9"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="customer-address" className="block text-sm font-medium text-gray-700">
+                Address
+              </label>
+              <Input
+                id="customer-address"
+                type="text"
+                value={checkout.newCustomerAddress}
+                onChange={(e) => handleCustomerFieldChange('address', e.target.value)}
+                placeholder="Customer address"
+                className="h-9"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="customer-type" className="block text-sm font-medium text-gray-700">
+                Type
+              </label>
+              <Select
+                value={checkout.newCustomerType}
+                onValueChange={(v) => handleCustomerFieldChange('type', v)}
+              >
+                <SelectTrigger id="customer-type" className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Individual">Individual</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => handleDialogChange('customer', false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={checkout.quickAddCustomer}
+                disabled={!checkout.newCustomerName.trim() || !checkout.newCustomerPhone.trim()}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Customer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice View Dialog */}
+      <Dialog open={checkout.showReceipt} onOpenChange={(open) => handleDialogChange('receipt', open)}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Invoice: {checkout.completedTransaction?.transaction_number}</span>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handlePrintInvoice}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
+                <Button
+                  onClick={handleDownloadPDF}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {checkout.completedTransaction && (
+            <div className="mt-4">
+              <POSInvoice
+                ref={checkout.invoiceRef}
+                transaction={checkout.completedTransaction}
+                businessName={checkout.user?.tenant?.name || "Your Business"}
+                businessAddress={checkout.user?.tenant?.address || ""}
+                businessPhone={checkout.user?.tenant?.phone || ""}
+                businessEmail={checkout.user?.tenant?.email || ""}
+                businessPAN={checkout.user?.tenant?.pan || ""}
+              />
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+            <Button
+              onClick={() => {
+                handleDialogChange('receipt', false);
+                checkout.resetForm();
+              }}
+              variant="outline"
+            >
+              Close & New Sale
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

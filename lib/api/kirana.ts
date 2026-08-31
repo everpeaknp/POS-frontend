@@ -35,7 +35,7 @@ export const kiranaDashboardAPI = {
   get: async (): Promise<KiranaDashboardData> => {
     try {
       // Fetch all required data in parallel
-      const [salesRes, inventoryRes, bankAccountsRes, chartAccountRes] =
+      const [salesRes, inventoryRes, bankAccountsRes, chartAccountRes, posTransactionsRes] =
         await Promise.all([
           salesDashboardAPI.get('today').catch(() => ({
             summary: { total_sales: 0 },
@@ -47,6 +47,8 @@ export const kiranaDashboardAPI = {
           })),
           bankAccountsAPI.list().catch(() => []),
           accountsAPI.list({ account_type: 'asset' }).catch(() => []),
+          // Fetch recent POS transactions
+          apiClient.get('/pos/transactions/', { params: { limit: 10, ordering: '-created_at' } }).catch(() => ({ data: { results: [] } })),
         ]);
 
       // Extract cash in hand from chart of accounts (1000 = Cash in Hand)
@@ -61,12 +63,13 @@ export const kiranaDashboardAPI = {
 
       // Extract inventory data
       const totalStockValue = inventoryRes.valuation?.total_stock_value || 0;
-      const lowStockCount = inventoryRes.lowStockItems?.length || 0;
+      const lowStockItems = inventoryRes.lowStockItems || [];
+      const lowStockCount = lowStockItems.length;
 
       // Extract today's sales
       const todaySales = salesRes.summary?.total_sales || 0;
 
-      // Generate sales trend for the week (mock data for now)
+      // Generate sales trend for the week (mock data for now - TODO: implement real trend data)
       const today = new Date();
       const salesTrend = Array.from({ length: 7 }, (_, i) => {
         const date = new Date(today);
@@ -77,43 +80,59 @@ export const kiranaDashboardAPI = {
         };
       });
 
-      // Mock recent activities and alerts for now
-      const recentActivities = [
-        {
-          id: '1',
-          action: 'Sold 5x Wai Wai',
-          timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        },
-        {
-          id: '2',
-          action: 'Stocked 20x Rice 10kg',
-          timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: '3',
-          action: 'Purchased from Supplier',
-          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
+      // Build real recent activities from POS transactions
+      const transactions = posTransactionsRes.data?.results || [];
+      const recentActivities = transactions.slice(0, 5).map((txn: any, idx: number) => ({
+        id: txn.id || `${idx}`,
+        action: `Sale #${txn.transaction_number || 'N/A'} - Rs. ${Number(txn.total || 0).toFixed(2)}`,
+        timestamp: txn.created_at || new Date().toISOString(),
+      }));
 
-      const alerts = [
-        {
-          id: '1',
-          message: 'Rice stock running low',
-          type: 'warning' as const,
-        },
-        {
-          id: '2',
-          message: 'Udhaaro from Raja pending',
-          type: 'info' as const,
-        },
-      ];
+      // Build real alerts from low stock items
+      const alerts: Array<{ id: string; message: string; type: 'warning' | 'info' | 'error' }> = [];
+      
+      // Add low stock alerts
+      lowStockItems.slice(0, 3).forEach((item: any, idx: number) => {
+        alerts.push({
+          id: `low-stock-${idx}`,
+          message: `${item.name || 'Product'} stock is low (${item.current_stock || 0} remaining)`,
+          type: 'warning',
+        });
+      });
 
-      const topSellingItems = [
-        { name: 'Wai Wai Noodles', quantity: 45, sales: 2700 },
-        { name: 'Rice (1kg)', quantity: 32, sales: 1920 },
-        { name: 'Dal (1kg)', quantity: 28, sales: 1960 },
-      ];
+      // If no alerts, add a success message
+      if (alerts.length === 0) {
+        alerts.push({
+          id: 'all-good',
+          message: 'All systems running smoothly',
+          type: 'info',
+        });
+      }
+
+      // Calculate top selling items from transactions
+      const itemSales: Record<string, { name: string; quantity: number; sales: number }> = {};
+      
+      transactions.forEach((txn: any) => {
+        if (txn.items && Array.isArray(txn.items)) {
+          txn.items.forEach((item: any) => {
+            const productName = item.product_name || item.product?.name || 'Unknown Product';
+            const quantity = item.quantity || 0;
+            const total = item.total || 0;
+            
+            if (!itemSales[productName]) {
+              itemSales[productName] = { name: productName, quantity: 0, sales: 0 };
+            }
+            
+            itemSales[productName].quantity += quantity;
+            itemSales[productName].sales += total;
+          });
+        }
+      });
+
+      // Convert to array and sort by sales
+      const topSellingItems = Object.values(itemSales)
+        .sort((a, b) => b.sales - a.sales)
+        .slice(0, 5);
 
       return {
         summary: {

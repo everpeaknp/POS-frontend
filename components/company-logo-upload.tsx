@@ -97,29 +97,29 @@ export function CompanyLogoUpload({
       <h4 className="text-sm font-semibold text-gray-700">Company logo</h4>
       <div
         className={cn(
-          "border-2 border-dashed border-gray-200 rounded-xl p-5 text-center bg-white transition-colors",
+          "border-2 border-dashed border-gray-200 rounded-xl p-3 text-center bg-white transition-colors",
           !disabled && "hover:border-[#22C55E]/40"
         )}
       >
         {displayUrl ? (
-          <div className="space-y-4">
-            <div className="w-full aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="space-y-3">
+            <div className="w-32 h-32 mx-auto border-2 border-gray-200 rounded-lg overflow-hidden bg-white">
               <img src={displayUrl} alt="Company logo" className="w-full h-full object-cover" />
             </div>
             {!disabled && (
               <button
                 type="button"
                 onClick={handleRemove}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
+                className="text-xs text-red-600 hover:text-red-700 font-medium"
               >
                 Remove Logo
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="w-20 h-20 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
-              <ImageIcon className="w-10 h-10 text-gray-400" />
+          <div className="space-y-2">
+            <div className="w-16 h-16 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
+              <ImageIcon className="w-8 h-8 text-gray-400" />
             </div>
             {!disabled && (
               <div>
@@ -140,13 +140,11 @@ export function CompanyLogoUpload({
             <p className="text-xs text-gray-500">
               JPG, PNG or GIF
               <br />
-              Min 300x300px
-              <br />
-              Max 5MB
+              Min 300x300px, Max 5MB
             </p>
           </div>
         )}
-        {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
+        {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
       </div>
     </div>
   );

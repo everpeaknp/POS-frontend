@@ -73,7 +73,6 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Sales Invoice", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
       { label: "Credit Notes", href: "/dashboard/sales/credit-notes", createHref: "/dashboard/sales/credit-notes/new" },
       { label: "Payments", href: "/dashboard/sales/payments", createHref: "/dashboard/sales/payments/new" },
-      { label: "Customer Credit", href: "/dashboard/sales/credit" },
       { label: "Sales Reports", href: "/dashboard/sales/reports" },
     ],
   },
@@ -119,7 +118,6 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Customers", href: "/dashboard/hardware/customers", createHref: "/dashboard/hardware/customers/new" },
       { label: "Orders", href: "/dashboard/hardware/orders", createHref: "/dashboard/hardware/orders/new" },
       { label: "Payments", href: "/dashboard/hardware/payments", createHref: "/dashboard/hardware/payments/new" },
-      { label: "Customer Credit", href: "/dashboard/hardware/credit" },
       { label: "Aging Report", href: "/dashboard/hardware/aging" },
       { label: "Bulk Pricing", href: "/dashboard/hardware/bulk-pricing", createHref: "/dashboard/hardware/bulk-pricing/new" },
       { label: "Reports", href: "/dashboard/hardware/reports" },
@@ -164,14 +162,15 @@ export const dashboardNavItems: NavItem[] = [
     label: "POS",
     icon: Monitor,
     requiredModule: "pos",
+    hideForPersonal: true,
     children: [
-      { label: "Billing", href: "/dashboard/pos" },
       { label: "Checkout", href: "/dashboard/pos/checkout" },
       { label: "Sessions", href: "/dashboard/pos/sessions", createHref: "/dashboard/pos/sessions/new" },
       { label: "Transactions", href: "/dashboard/pos/transactions" },
       { label: "Refunds", href: "/dashboard/pos/refunds", createHref: "/dashboard/pos/refunds/new" },
       { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts?new=1" },
       { label: "Daily Reports", href: "/dashboard/pos/reports" },
+      { label: "Settings", href: "/dashboard/pos/settings" },
     ],
   },
   {
@@ -563,16 +562,33 @@ export function filterDashboardNavItems(
   // If kirana, return only kirana navigation
   if (isKirana) {
     const kiranaItems: NavItem[] = [
-      { label: "Overview", icon: LayoutDashboard, href: "/dashboard/kirana", hideForPersonal: true },
       {
-        label: "Sales/POS",
-        icon: TrendingUp,
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        href: "/dashboard/kirana",
+        requiredModule: "pos",
+      },
+      {
+        label: "POS",
+        icon: Monitor,
+        requiredModule: "pos",
+        children: [
+          { label: "Checkout", href: "/dashboard/pos/checkout" },
+          { label: "Transactions", href: "/dashboard/pos/transactions" },
+          { label: "Reports", href: "/dashboard/pos/reports" },
+          { label: "Discounts", href: "/dashboard/pos/discounts", createHref: "/dashboard/pos/discounts?new=1" },
+          { label: "Refunds", href: "/dashboard/pos/refunds", createHref: "/dashboard/pos/refunds/new" },
+          { label: "Sessions", href: "/dashboard/pos/sessions", createHref: "/dashboard/pos/sessions/new" },
+          { label: "Settings", href: "/dashboard/pos/settings" },
+        ],
+      },
+      {
+        label: "Customers",
+        icon: Users,
+        href: "/dashboard/sales/customers",
         requiredModule: "sales",
         children: [
-          { label: "Overview", href: "/dashboard/sales", exact: true },
-          { label: "Invoices", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
           { label: "Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
-          { label: "Checkout", href: "/dashboard/pos/checkout" },
         ],
       },
       {
@@ -585,16 +601,6 @@ export function filterDashboardNavItems(
           { label: "Categories", href: "/dashboard/inventory/categories", createHref: "/dashboard/inventory/categories?new=1" },
           { label: "Units of Measure", href: "/dashboard/inventory/uom", createHref: "/dashboard/inventory/uom?new=1" },
           { label: "Stock Adjustment", href: "/dashboard/inventory/adjustment", createHref: "/dashboard/inventory/adjustment?new=1" },
-        ],
-      },
-      {
-        label: "Udhaaro",
-        icon: CreditCard,
-        requiredModule: "sales",
-        children: [
-          { label: "Overview", href: "/dashboard/sales", exact: true },
-          { label: "Credit Customers", href: "/dashboard/sales/customers", createHref: "/dashboard/sales/customers/new" },
-          { label: "Credit Sales", href: "/dashboard/sales/invoices", createHref: "/dashboard/sales/invoices/new" },
         ],
       },
       {

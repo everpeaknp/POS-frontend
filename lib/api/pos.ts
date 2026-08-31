@@ -73,7 +73,7 @@ export interface POSTransaction {
   discount_amount: number;
   tax_amount: number;
   total: number;
-  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'credit';
+  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'bank_transfer' | 'credit';
   amount_paid: number;
   change_given?: number;
   status?: 'completed' | 'cancelled' | 'refunded';
@@ -190,7 +190,7 @@ export interface POSRefundLine {
 }
 
 export interface POSPaymentEntry {
-  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'credit';
+  payment_method: 'cash' | 'card' | 'esewa' | 'khalti' | 'fonepay' | 'bank_transfer' | 'credit';
   amount: number;
 }
 
@@ -407,9 +407,14 @@ const posApi = {
   },
 
   // Refunds
-  getRefunds: async (): Promise<POSRefund[]> => {
-    const response = await apiClient.get('/pos/refunds/', { params: POS_LIST_PARAMS });
-    return unwrapList(response.data);
+  getRefunds: async (params?: any): Promise<any> => {
+    const response = await apiClient.get('/pos/refunds/', { params: { ...POS_LIST_PARAMS, ...params } });
+    return response.data;
+  },
+
+  getRefund: async (id: string): Promise<POSRefund> => {
+    const response = await apiClient.get(`/pos/refunds/${id}/`);
+    return response.data;
   },
 
   createRefund: async (data: {
@@ -436,6 +441,11 @@ const posApi = {
       // Return default tax rate if fetch fails
       return { tax_rate: 13 };
     }
+  },
+
+  updateSettings: async (data: any): Promise<any> => {
+    const response = await apiClient.patch('/pos/settings/update/', data);
+    return response.data;
   },
 };
 

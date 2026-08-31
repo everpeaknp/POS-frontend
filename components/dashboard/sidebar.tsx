@@ -620,27 +620,24 @@ export function Sidebar({
           compact={compact}
           searchFocusNonce={desktopFocusNonce}
         />
+        
+        {/* Toggle button - positioned at the edge of sidebar */}
+        {!forceDesktop && (
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[#22C55E] transition-all duration-200 shadow-lg"
+            aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+            title={compact ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {compact ? (
+              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            ) : (
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+            )}
+          </button>
+        )}
       </aside>
-      
-      {/* Toggle button - positioned outside sidebar */}
-      {!forceDesktop && (
-        <button
-          type="button"
-          onClick={toggleCollapse}
-          className={cn(
-            "hidden lg:block absolute top-1/2 z-20 -translate-y-1/2 !text-gray-400 hover:!text-white transition-all duration-200",
-            compact ? "left-[72px]" : "left-64"
-          )}
-          aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
-          title={compact ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {compact ? (
-            <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
-          ) : (
-            <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
-          )}
-        </button>
-      )}
     </>
   );
 }

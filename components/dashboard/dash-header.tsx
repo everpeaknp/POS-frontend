@@ -49,7 +49,7 @@ export function DashHeader({
   return (
     <header
       data-tour="topbar"
-      className="bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm gap-4 h-14 min-h-14 max-h-14 overflow-hidden shrink-0"
+      className="bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm gap-4 h-14 min-h-14 max-h-14 overflow-hidden shrink-0"
     >
       <div
         data-tour="topbar-title"

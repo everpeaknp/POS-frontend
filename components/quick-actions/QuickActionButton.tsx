@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Plus, ChevronUp, DollarSign, TrendingDown, CreditCard, BarChart3 } from "@/lib/icons/lucide-react-shim";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
+import { DraggableFab } from "@/components/ui/draggable-fab";
 
 interface QuickAction {
   id: string;
@@ -102,49 +103,58 @@ export function QuickActionButton({
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-40">
-      {/* Expanded menu */}
-      {isOpen && (
-        <>
-          {/* Overlay (tap to close) */}
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setIsOpen(false)}
-            onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
-            role="button"
-            tabIndex={-1}
-          />
+    <DraggableFab
+      storageKey="quick-action-menu"
+      defaultPosition={{ x: window.innerWidth - 80, y: window.innerHeight - 80 }}
+    >
+      <div className="relative">
+        {/* Expanded menu */}
+        {isOpen && (
+          <>
+            {/* Overlay (tap to close) */}
+            <div
+              className="fixed inset-0 z-30"
+              onClick={() => setIsOpen(false)}
+              onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
+              role="button"
+              tabIndex={-1}
+            />
 
-          {/* Action buttons */}
-          <div className="absolute bottom-20 right-0 flex flex-col gap-3">
-            {actualActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.id}
-                  onClick={() => handleAction(action.href)}
-                  className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-50 transition whitespace-nowrap"
-                >
-                  <Icon className="h-5 w-5 text-[#22C55E]" />
-                  <span className="text-sm font-medium text-gray-900">
-                    {language === "en" ? action.label_en : action.label_ne}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
+            {/* Action buttons */}
+            <div className="absolute bottom-20 right-0 flex flex-col gap-3 z-50">
+              {actualActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.id}
+                    onClick={() => handleAction(action.href)}
+                    className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-50 transition whitespace-nowrap"
+                  >
+                    <Icon className="h-5 w-5 text-[#22C55E]" />
+                    <span className="text-sm font-medium text-gray-900">
+                      {language === "en" ? action.label_en : action.label_ne}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
-      {/* Main FAB button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center h-14 w-14 rounded-full bg-[#22C55E] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-        aria-label={isOpen ? "Close menu" : "Open quick actions"}
-        onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
-      >
-        <Plus className="h-6 w-6" style={{ transform: isOpen ? "rotate(45deg)" : "rotate(0)" }} />
-      </button>
-    </div>
+        {/* Main FAB button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="flex items-center justify-center h-14 w-14 rounded-full bg-[#22C55E] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+          aria-label={isOpen ? "Close menu" : "Open quick actions"}
+          onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
+          title="Quick Actions (drag to move)"
+        >
+          <Plus className="h-6 w-6" style={{ transform: isOpen ? "rotate(45deg)" : "rotate(0)", transition: "transform 0.2s" }} />
+        </button>
+      </div>
+    </DraggableFab>
   );
 }
