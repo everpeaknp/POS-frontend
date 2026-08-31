@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { POS_PAYMENT_METHODS, getPosPaymentMethodLabel, type PosPaymentMethod } from "@/lib/pos/payment-methods";
 import { type POSPaymentEntry } from "@/lib/api/pos";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Wallet, CreditCard, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface SplitPaymentDialogProps {

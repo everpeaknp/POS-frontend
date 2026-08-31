@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
-import { Plus, Upload, X, ChevronDownIcon } from "lucide-react";
+import { Plus, Upload, X, ChevronDownIcon, Scan } from "lucide-react";
 
 import FormField from '@/components/shared/FormField';
 import { inventoryApi } from '@/lib/api/inventory';
@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateInput } from '@/components/shared/DateInput';
 import { cn } from '@/lib/utils';
+import BarcodeScanner from './BarcodeScanner';
+import { BarcodeScannerModal } from '@/components/pos/BarcodeScannerModal';
 
 const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300';
 
@@ -121,6 +123,7 @@ export default function ProductForm({
   });
 
   const [imagePreview, setImagePreview] = useState<string | undefined>();
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   
   const [categorySearch, setCategorySearch] = useState('');
   const [unitSearch, setUnitSearch] = useState('');
@@ -155,13 +158,30 @@ export default function ProductForm({
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     mode: 'onBlur',
-    defaultValues: {
-      ...emptyDefaults,
-      ...initialData,
-      category: initialData?.category ? String(initialData.category) : null,
-      unit: initialData?.unit ? String(initialData.unit) : null,
-      warehouse: initialData?.warehouse ? String(initialData.warehouse) : null,
-      status: initialData?.status ?? 'active',
+    defaultValues: isEdit && initialData ? {
+      name: initialData.name || '',
+      sku: initialData.sku || '',
+      category: initialData.category ? String(initialData.category) : null,
+      unit: initialData.unit ? String(initialData.unit) : null,
+      cost_price: initialData.cost_price || '',
+      selling_price: initialData.selling_price || '',
+      opening_stock: initialData.opening_stock || '0',
+      warehouse: initialData.warehouse ? String(initialData.warehouse) : null,
+      expiry_date: initialData.expiry_date || '',
+      description: initialData.description || '',
+      status: initialData.status || 'active',
+    } : {
+      name: '',
+      sku: '',
+      category: null,
+      unit: null,
+      cost_price: '',
+      selling_price: '',
+      opening_stock: '0',
+      warehouse: null,
+      expiry_date: '',
+      description: '',
+      status: 'active', // Default to active for new products
     },
   });
 
@@ -208,10 +228,34 @@ export default function ProductForm({
         setUnits(unitsData);
         setWarehouses(warehousesData);
 
-        // Auto-select first warehouse if available and not editing
-        if (!isEdit && warehousesData.length > 0 && !initialData?.warehouse) {
-          setValue('warehouse', String(warehousesData[0].id), { shouldValidate: true });
+        // Set default warehouse for new products after data loads
+        if (!isEdit && warehousesData.length > 0) {
+          // Try to find warehouse named "Main" (case-insensitive)
+          const mainWarehouse = warehousesData.find((w: any) => 
+            w.name.toLowerCase().includes('main')
+          );
+          
+          // Use Main warehouse if found, otherwise use first warehouse
+          const defaultWarehouse = mainWarehouse || warehousesData[0];
+          const warehouseId = String(defaultWarehouse.id);
+          
+          console.log('Setting default warehouse:', {
+            warehouseName: defaultWarehouse.name,
+            warehouseId,
+            isEdit,
+          });
+          
+          setValue('warehouse', warehouseId);
+          
+          // Verify it was set
+          setTimeout(() => {
+            const currentValue = form.getValues('warehouse');
+            console.log('Warehouse value after setValue:', currentValue);
+          }, 100);
         }
+
+        // Verify status default
+        console.log('Status value on load:', form.getValues('status'));
 
         // Load existing image if editing
         if (initialData?.image) {
@@ -596,12 +640,24 @@ export default function ProductForm({
           </FormField>
 
           <FormField label="SKU" name="sku" error={errors.sku} hint="Unique code, e.g. PROD-001 (optional)">
-            <Input
-              {...register('sku')}
-              id="sku"
-              className={cn(inputClass, errors.sku && 'border-red-500')}
-              placeholder="PROD-001"
-            />
+            <div className="flex gap-2">
+              <Input
+                {...register('sku')}
+                id="sku"
+                className={cn(inputClass, errors.sku && 'border-red-500')}
+                placeholder="PROD-001"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                onClick={() => setShowBarcodeScanner(true)}
+                title="Scan Barcode"
+              >
+                <Scan className="h-4 w-4" />
+              </Button>
+            </div>
           </FormField>
 
           <FormField label="Opening Stock" name="opening_stock" error={errors.opening_stock} hint="Initial stock quantity">
@@ -622,8 +678,8 @@ export default function ProductForm({
               control={control}
               render={({ field }) => (
                 <Select 
-                  key={field.value || 'no-warehouse'} 
-                  value={field.value || undefined} 
+                  key={field.value || 'empty'} 
+                  value={field.value || ''} 
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger className={cn(inputClass, errors.warehouse && 'border-red-500')}>
@@ -885,6 +941,25 @@ export default function ProductForm({
                 'Create Unit'
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Barcode Scanner Dialog - Enhanced with AI Scanner */}
+      <Dialog open={showBarcodeScanner} onOpenChange={setShowBarcodeScanner}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan Product Barcode</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <BarcodeScanner
+              onScanSuccess={(barcode) => {
+                setValue('sku', barcode, { shouldValidate: true });
+                setShowBarcodeScanner(false);
+                toast.success(`Barcode ${barcode} added to SKU field`);
+              }}
+              onClose={() => setShowBarcodeScanner(false)}
+            />
           </div>
         </DialogContent>
       </Dialog>

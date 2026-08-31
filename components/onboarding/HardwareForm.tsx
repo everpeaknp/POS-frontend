@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CompanyLogoUpload } from "@/components/company-logo-upload";
@@ -45,6 +46,9 @@ interface HardwareFormData {
   organizationName: string;
   businessType: string;
   address: string;
+  accountingStartDate: string;
+  vatRegistered: boolean;
+  panVatNumber: string;
   workspaceName: string;
   logo: File | null;
   agreeToTerms: boolean;
@@ -188,6 +192,9 @@ export function HardwareForm({
     organizationName: initialData?.name || "",
     businessType: initialData?.business_type || "",
     address: initialData?.address || "",
+    accountingStartDate: initialData?.accounting_start_date || new Date().toISOString().split('T')[0],
+    vatRegistered: initialData?.vat_registered || false,
+    panVatNumber: initialData?.pan_vat_number || "",
     workspaceName: initialData?.workspace_name || initialData?.name || "",
     logo: null,
     agreeToTerms: false,
@@ -200,6 +207,9 @@ export function HardwareForm({
         organizationName: initialData.name || "",
         businessType: initialData.business_type || "",
         address: initialData.address || "",
+        accountingStartDate: initialData.accounting_start_date || new Date().toISOString().split('T')[0],
+        vatRegistered: initialData.vat_registered || false,
+        panVatNumber: initialData.pan_vat_number || "",
         workspaceName: initialData.workspace_name || initialData.name || "",
         logo: null,
         agreeToTerms: false,
@@ -215,8 +225,10 @@ export function HardwareForm({
     form.organizationName.trim() !== "" &&
     form.businessType !== "" &&
     form.address.trim() !== "" &&
+    form.accountingStartDate !== "" &&
     form.workspaceName.trim() !== "" &&
-    form.agreeToTerms;
+    form.agreeToTerms &&
+    (!form.vatRegistered || form.panVatNumber.trim() !== "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,8 +239,9 @@ export function HardwareForm({
       account_type: "hardware" as const,
       business_type: form.businessType,
       address: form.address,
-      accounting_start_date: new Date().toISOString().split('T')[0],
-      vat_registered: false,
+      accounting_start_date: form.accountingStartDate,
+      vat_registered: form.vatRegistered,
+      pan_vat_number: form.vatRegistered ? form.panVatNumber.trim() : undefined,
       workspace_name: form.workspaceName,
     };
 
@@ -241,14 +254,25 @@ export function HardwareForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
-      <div className="grid grid-cols-1 gap-8 lg:gap-10 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-6 lg:gap-5 lg:grid-cols-3 lg:items-start">
+        {/* Column 1: Store Details */}
+        <div className="space-y-6">
           <FormSection title="Store details">
             <FieldGroup label="Store / Business Name" required>
               <Input
                 placeholder="e.g. Shiva Hardware Store"
                 value={form.organizationName}
                 onChange={(e) => setForm({ ...form, organizationName: e.target.value })}
+                required
+                className={inputCls}
+              />
+            </FieldGroup>
+
+            <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
+              <Input
+                placeholder="e.g. Shiva Hardware Main Workspace"
+                value={form.workspaceName}
+                onChange={(e) => setForm({ ...form, workspaceName: e.target.value })}
                 required
                 className={inputCls}
               />
@@ -274,35 +298,69 @@ export function HardwareForm({
               />
             </FieldGroup>
           </FormSection>
+        </div>
 
-          <FormSection title="Workspace setup">
-            <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
-              <Input
-                placeholder="e.g. Shiva Hardware Main Workspace"
-                value={form.workspaceName}
-                onChange={(e) => setForm({ ...form, workspaceName: e.target.value })}
+        {/* Column 2: Accounting Details */}
+        <div className="space-y-6">
+          <FormSection title="Accounting details">
+            <FieldGroup label="Accounting Start Date" required hint="When your business records begin">
+              <DateInput
+                value={form.accountingStartDate}
+                onChange={(date) => setForm({ ...form, accountingStartDate: date })}
                 required
                 className={inputCls}
               />
             </FieldGroup>
 
-            <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-              <p className="text-xs font-medium text-green-800 mb-1">Your workspace URL</p>
-              <p className="text-sm font-mono text-[#16A34A] break-all">{workspaceUrl}</p>
-            </div>
+            <FieldGroup label="Registered with VAT?" required>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, vatRegistered: true })}
+                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
+                    form.vatRegistered
+                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, vatRegistered: false, panVatNumber: "" })}
+                  className={`h-11 rounded-lg border font-medium text-sm transition-all ${
+                    !form.vatRegistered
+                      ? "border-[#22C55E] bg-green-50 text-[#16A34A] shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </FieldGroup>
+
+            {form.vatRegistered && (
+              <FieldGroup label="VAT Number" required hint="Your IRD VAT / PAN registration number">
+                <Input
+                  placeholder="e.g. 601234567"
+                  value={form.panVatNumber}
+                  onChange={(e) => setForm({ ...form, panVatNumber: e.target.value })}
+                  required
+                  className={inputCls}
+                />
+              </FieldGroup>
+            )}
           </FormSection>
         </div>
 
-        {/* Logo Upload Column */}
-        <div className="lg:col-span-1 order-first lg:order-last">
-          <div className="lg:sticky lg:top-24">
-            <FormSection title="Company logo (optional)">
-              <CompanyLogoUpload
-                value={form.logo}
-                onChange={(file) => setForm({ ...form, logo: file })}
-              />
-            </FormSection>
-          </div>
+        {/* Column 3: Logo */}
+        <div className="space-y-6">
+          <FormSection title="Company logo (optional)">
+            <CompanyLogoUpload
+              value={form.logo}
+              onChange={(file) => setForm({ ...form, logo: file })}
+            />
+          </FormSection>
         </div>
       </div>
 

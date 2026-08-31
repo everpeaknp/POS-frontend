@@ -3,16 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Printer, X, Calendar, User, CreditCard, Package, Receipt } from "lucide-react";
+import { ArrowLeft, Printer, X, Calendar, User, CreditCard, Package, Receipt, FileText, RotateCcw } from "lucide-react";
 
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { PosPageShell, posCardClass, posTableWrapClass } from "@/components/dashboard/PosPageShell";
+import POSInvoice from "@/components/pos/POSInvoice";
+import POSProfessionalInvoice from "@/components/pos/POSProfessionalInvoice";
 import {
   PosPaymentMethodBadge,
   PosTransactionStatusBadge,
 } from "@/components/pos/PosTransactionStatusBadge";
 import posApi, { type POSTransaction } from "@/lib/api/pos";
+import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -22,13 +25,16 @@ export default function TransactionDetailPage() {
   const transactionId = params.id as string;
 
   const [transaction, setTransaction] = useState<POSTransaction | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (transactionId) {
       loadTransaction();
+      loadTenant();
     }
   }, [transactionId]);
 
@@ -42,6 +48,15 @@ export default function TransactionDetailPage() {
       router.push("/dashboard/pos/transactions");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTenant = async () => {
+    try {
+      const response = await tenantApi.getCurrent();
+      setTenant(response);
+    } catch (error) {
+      console.error("Error loading tenant:", error);
     }
   };
 
@@ -126,6 +141,11 @@ export default function TransactionDetailPage() {
     documentTitle: `${transaction?.transaction_number || "Receipt"}_${new Date().toISOString().split("T")[0]}`,
   });
 
+  const handlePrintInvoice = useReactToPrint({
+    contentRef: invoiceRef,
+    documentTitle: `Invoice_${transaction?.transaction_number || "Receipt"}_${new Date().toISOString().split("T")[0]}`,
+  });
+
   if (loading) {
     return (
       <PosPageShell
@@ -188,21 +208,33 @@ export default function TransactionDetailPage() {
             <Printer className="h-3.5 w-3.5" />
             Print Receipt
           </Button>
+          <Button variant="outline" size="sm" onClick={handlePrintInvoice} className="gap-1.5 h-8">
+            <FileText className="h-3.5 w-3.5" />
+            Print Invoice
+          </Button>
           {transaction.status === "completed" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-              disabled={cancelling}
-              className="gap-1.5 h-8 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10"
-            >
-              {cancelling ? "Cancelling..." : (
-                <>
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </>
-              )}
-            </Button>
+            <>
+              <Link href={`/dashboard/pos/refunds/new?pos=${transaction.transaction_number}`}>
+                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Create Refund
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="gap-1.5 h-8 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10"
+              >
+                {cancelling ? "Cancelling..." : (
+                  <>
+                    <X className="h-3.5 w-3.5" />
+                    Cancel
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
 
@@ -322,10 +354,16 @@ export default function TransactionDetailPage() {
               </div>
             )}
 
-            <div className="text-xs text-gray-400 dark:text-muted-foreground px-1 space-y-0.5">
-              <div>Transaction ID: {transaction.id}</div>
+            <div className="text-xs text-gray-500 dark:text-muted-foreground px-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <span>Transaction ID:</span>
+                <span className="font-mono font-semibold text-gray-700 dark:text-foreground">{transaction.id}</span>
+              </div>
               {transaction.created_at && (
-                <div>Created: {new Date(transaction.created_at).toLocaleString("en-GB")}</div>
+                <div className="flex items-center justify-between">
+                  <span>Created:</span>
+                  <span>{new Date(transaction.created_at).toLocaleString("en-GB")}</span>
+                </div>
               )}
             </div>
           </div>
@@ -489,6 +527,20 @@ export default function TransactionDetailPage() {
             <p className="mt-2">Status: {transaction.status?.toUpperCase()}</p>
           </div>
         </div>
+      </div>
+
+      {/* Hidden printable invoice */}
+      <div className="hidden">
+        <POSProfessionalInvoice
+          ref={invoiceRef}
+          transaction={transaction}
+          businessName={tenant?.name || "Business Name"}
+          businessAddress={tenant?.address || ""}
+          businessPhone={tenant?.phone || ""}
+          businessEmail={tenant?.email || ""}
+          businessPAN={tenant?.pan_vat_number || ""}
+          businessWebsite={tenant?.website || ""}
+        />
       </div>
     </PosPageShell>
   );

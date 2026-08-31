@@ -320,7 +320,7 @@ function ErpPageContent() {
                     items={filteredOrgs.map((org) => org.id)}
                     strategy={rectSortingStrategy}
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+                    <div className="grid grid-cols-5 gap-4 sm:gap-5">
                       {filteredOrgs.map((org) => (
                         <SortableOrgCard key={org.id} org={org} onDelete={fetchTenants} />
                       ))}

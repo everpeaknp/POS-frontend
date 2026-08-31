@@ -15,6 +15,7 @@ import { inventoryApi } from "@/lib/api/inventory";
 import type { Product } from "@/lib/api/inventory";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/context/AuthContext";
+import { DraggableFab } from "@/components/ui/draggable-fab";
 
 interface ParsedTransaction {
   type: 'income' | 'expense';
@@ -556,14 +557,19 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
 
   return (
     <>
-      {/* Floating Quick Add Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-24 z-40 bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 group"
-        title="Quick Add Transaction (type or speak)"
+      {/* Floating Quick Add Button - Now Draggable! */}
+      <DraggableFab
+        storageKey="quick-add-transaction"
+        defaultPosition={{ x: window.innerWidth - 120, y: window.innerHeight - 80 }}
       >
-        <Zap className="h-6 w-6 group-hover:scale-110 transition-transform" />
-      </button>
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 group"
+          title="Quick Add Transaction (drag to move, click to open)"
+        >
+          <Zap className="h-6 w-6 group-hover:scale-110 transition-transform" />
+        </button>
+      </DraggableFab>
 
       {/* Quick Add Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

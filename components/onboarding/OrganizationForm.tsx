@@ -256,14 +256,25 @@ export function OrganizationForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
-      <div className="grid grid-cols-1 gap-8 lg:gap-10 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-6 lg:gap-5 lg:grid-cols-3 lg:items-start">
+        {/* Column 1: Organization Details */}
+        <div className="space-y-6">
           <FormSection title="Organization details">
             <FieldGroup label="Organization Name" required>
               <Input
                 placeholder="e.g. ABC Technologies Pvt. Ltd."
                 value={form.organizationName}
                 onChange={(e) => setForm({ ...form, organizationName: e.target.value })}
+                required
+                className={inputCls}
+              />
+            </FieldGroup>
+
+            <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
+              <Input
+                placeholder="e.g. ABC Technologies Main Workspace"
+                value={form.workspaceName}
+                onChange={(e) => setForm({ ...form, workspaceName: e.target.value })}
                 required
                 className={inputCls}
               />
@@ -289,7 +300,10 @@ export function OrganizationForm({
               />
             </FieldGroup>
           </FormSection>
+        </div>
 
+        {/* Column 2: Accounting Details */}
+        <div className="space-y-6">
           <FormSection title="Accounting details">
             <FieldGroup label="Accounting Start Date" required hint="When your business records begin">
               <DateInput
@@ -339,35 +353,16 @@ export function OrganizationForm({
               </FieldGroup>
             )}
           </FormSection>
-
-          <FormSection title="Workspace setup">
-            <FieldGroup label="Workspace Name" required hint="A friendly name for your workspace">
-              <Input
-                placeholder="e.g. ABC Technologies Main Workspace"
-                value={form.workspaceName}
-                onChange={(e) => setForm({ ...form, workspaceName: e.target.value })}
-                required
-                className={inputCls}
-              />
-            </FieldGroup>
-
-            <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-              <p className="text-xs font-medium text-green-800 mb-1">Your workspace URL</p>
-              <p className="text-sm font-mono text-[#16A34A] break-all">{workspaceUrl}</p>
-            </div>
-          </FormSection>
         </div>
 
-        {/* Logo Upload Column */}
-        <div className="lg:col-span-1 order-first lg:order-last">
-          <div className="lg:sticky lg:top-24">
-            <FormSection title="Company logo (optional)">
-              <CompanyLogoUpload
-                value={form.logo}
-                onChange={(file) => setForm({ ...form, logo: file })}
-              />
-            </FormSection>
-          </div>
+        {/* Column 3: Logo */}
+        <div className="space-y-6">
+          <FormSection title="Company logo (optional)">
+            <CompanyLogoUpload
+              value={form.logo}
+              onChange={(file) => setForm({ ...form, logo: file })}
+            />
+          </FormSection>
         </div>
       </div>
 

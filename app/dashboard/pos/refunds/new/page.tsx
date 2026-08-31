@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Search, Plus, Minus, RotateCcw, Receipt, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,27 +26,54 @@ interface RefundLine {
 
 export default function NewRefundPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [totalRefunds, setTotalRefunds] = useState(0);
   
   // Form state
   const [transactionNumber, setTransactionNumber] = useState("");
   const [transaction, setTransaction] = useState<POSTransaction | null>(null);
   const [refundLines, setRefundLines] = useState<RefundLine[]>([]);
   const [reason, setReason] = useState("");
+  const [refundMethod, setRefundMethod] = useState("");
   const [notes, setNotes] = useState("");
-  
-  // Search for transaction
-  const handleSearchTransaction = async () => {
-    if (!transactionNumber.trim()) {
-      toast.error("Enter transaction number");
-      return;
+
+  // Load stats
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const refunds = await posApi.getRefunds({ page_size: 1 });
+      setTotalRefunds(refunds.count || 0);
+    } catch (error) {
+      console.error("Failed to load stats:", error);
+    } finally {
+      setStatsLoading(false);
     }
-    
+  };
+
+  // Load transaction from URL parameter
+  useEffect(() => {
+    const posNumber = searchParams?.get('pos');
+    if (posNumber) {
+      setTransactionNumber(posNumber);
+      loadTransactionByNumber(posNumber);
+    }
+  }, [searchParams]);
+
+  // Load transaction by transaction number
+  const loadTransactionByNumber = async (number: string) => {
     setLoading(true);
     try {
-      const txn = await posApi.getTransactionByNumber(transactionNumber);
+      const txn = await posApi.getTransactionByNumber(number);
       setTransaction(txn);
+      
+      // Set refund method to match original payment method
+      setRefundMethod(txn.payment_method || "");
       
       // Initialize refund lines from transaction
       setRefundLines(txn.lines.map((line: any) => ({
@@ -67,6 +94,16 @@ export default function NewRefundPage() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Search for transaction
+  const handleSearchTransaction = async () => {
+    if (!transactionNumber.trim()) {
+      toast.error("Enter transaction number");
+      return;
+    }
+    
+    await loadTransactionByNumber(transactionNumber);
   };
   
   // Update refund line quantity
@@ -109,7 +146,7 @@ export default function NewRefundPage() {
       await posApi.createRefund({
         original_transaction: transaction.id,
         reason: reason,
-        refund_method: transaction.payment_method,
+        refund_method: refundMethod || transaction.payment_method,
         lines: linesToRefund.map(line => ({
           original_line: line.original_line,
           quantity: line.quantity,
@@ -143,6 +180,51 @@ export default function NewRefundPage() {
       
       <div className="flex-1 p-6">
         <div className="max-w-4xl mx-auto space-y-6">
+          {/* Stats Summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <RotateCcw className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/80">Total Refunds</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? "..." : totalRefunds}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Receipt className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/80">Current Transaction</p>
+                  <p className="text-lg font-bold">
+                    {transaction ? transaction.transaction_number : "None"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <DollarSign className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/80">Refund Amount</p>
+                  <p className="text-2xl font-bold">
+                    Rs. {totalRefundAmount.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Transaction Search */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
             <h3 className="font-semibold mb-4">1. Find Transaction</h3>
@@ -167,7 +249,7 @@ export default function NewRefundPage() {
             
             {transaction && (
               <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Transaction:</span>
                     <span className="ml-2 font-semibold">{transaction.transaction_number}</span>
@@ -183,7 +265,7 @@ export default function NewRefundPage() {
                     <span className="ml-2 font-semibold">Rs. {transaction.total.toLocaleString()}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Payment:</span>
+                    <span className="text-gray-600">Payment Method:</span>
                     <span className="ml-2 font-semibold capitalize">{transaction.payment_method}</span>
                   </div>
                 </div>
@@ -273,21 +355,44 @@ export default function NewRefundPage() {
               <h3 className="font-semibold mb-4">3. Refund Details</h3>
               
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="reason">Reason for Refund *</Label>
-                  <Select value={reason} onValueChange={(value) => setReason(value || "")}>
-                    <SelectTrigger id="reason" className="mt-1">
-                      <SelectValue placeholder="Select reason" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="defective">Defective Product</SelectItem>
-                      <SelectItem value="wrong_item">Wrong Item</SelectItem>
-                      <SelectItem value="customer_request">Customer Request</SelectItem>
-                      <SelectItem value="damaged">Damaged During Delivery</SelectItem>
-                      <SelectItem value="expired">Expired Product</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="reason">Reason for Refund *</Label>
+                    <Select value={reason} onValueChange={(value) => setReason(value || "")}>
+                      <SelectTrigger id="reason" className="mt-1">
+                        <SelectValue placeholder="Select reason" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="defective">Defective Product</SelectItem>
+                        <SelectItem value="wrong_item">Wrong Item</SelectItem>
+                        <SelectItem value="customer_request">Customer Request</SelectItem>
+                        <SelectItem value="damaged">Damaged During Delivery</SelectItem>
+                        <SelectItem value="expired">Expired Product</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="refundMethod">Refund Method *</Label>
+                    <Select value={refundMethod} onValueChange={(value) => setRefundMethod(value || "")}>
+                      <SelectTrigger id="refundMethod" className="mt-1">
+                        <SelectValue placeholder="Select refund method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="card">Card</SelectItem>
+                        <SelectItem value="esewa">eSewa</SelectItem>
+                        <SelectItem value="khalti">Khalti</SelectItem>
+                        <SelectItem value="fonepay">FonePay</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="credit">Credit Note</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Original payment: {transaction.payment_method}
+                    </p>
+                  </div>
                 </div>
                 
                 <div>
