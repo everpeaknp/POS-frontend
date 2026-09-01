@@ -244,7 +244,11 @@ export function OnboardingOverlay() {
     } else if (accountType === "hardware") {
       setSelectedModules([...HARDWARE_ACCOUNT_MODULE_IDS]);
       setStep(3); // straight to review
+    } else if (accountType === "retail" || accountType === "kirana") {
+      // Show module selection for retail/kirana with POS pre-selected
+      setStep(3); // modules step
     } else {
+      // Organization type - show full module selection
       setStep(3); // modules step
     }
   };
@@ -333,7 +337,7 @@ export function OnboardingOverlay() {
           />
         )}
 
-        {accountType === "organization" && step === 3 && organizationData && (
+        {(accountType === "organization" || accountType === "retail" || accountType === "kirana") && step === 3 && organizationData && (
           <ModuleSelection
             accountType={accountType}
             organizationData={organizationData}

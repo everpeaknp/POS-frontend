@@ -109,10 +109,13 @@ export function OrgReview({
     onCreationStart();
 
     try {
-      const tenant = await tenantApi.create({
+      const result = await tenantApi.create({
         ...organizationData,
         active_modules: selectedModules,
       });
+
+      // Extract tenant from response (new format returns { tenant, tokens })
+      const tenant = result.tenant || result;
 
       // Show success first so plan-limit checks after refreshUser cannot redirect away
       onCreationSuccess(tenant.name);

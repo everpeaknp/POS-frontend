@@ -163,6 +163,7 @@ export default function OrganizationModulesPage() {
               tenantSlug={tenantMeta.slug}
               activeModules={activeModules}
               allowedModules={allowedModules}
+              accountType={user?.tenant?.account_type}
               planName={planLabel}
               canEdit={canEdit}
               onUpdated={handleModulesUpdated}

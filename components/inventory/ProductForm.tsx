@@ -367,6 +367,11 @@ export default function ProductForm({
     }
 
     try {
+      // Debug logging
+      console.log('Form data before submit:', data);
+      console.log('Image field:', data.image);
+      console.log('Image is File?:', data.image instanceof File);
+      
       const formData = new FormData();
       
       formData.append('name', data.name.trim());
@@ -384,9 +389,18 @@ export default function ProductForm({
       formData.append('description', data.description?.trim() || '');
       formData.append('status', data.status);
 
-      // Handle image upload
-      if (data.image instanceof File) {
+      // Handle image upload - ONLY append if it's a new File object
+      if (data.image && data.image instanceof File) {
+        console.log('Appending image to formData:', data.image.name, data.image.type, data.image.size);
         formData.append('image', data.image);
+      } else {
+        console.log('No image to append or not a File object');
+      }
+
+      // Debug: Log all formData entries
+      console.log('FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value instanceof File ? `File(${value.name})` : value);
       }
 
       if (isEdit && productId) {
@@ -400,6 +414,9 @@ export default function ProductForm({
       }
       onSuccess?.();
     } catch (error: any) {
+      console.error('Submit error:', error);
+      console.error('Error response:', error.response?.data);
+      
       if (isValidationError(error)) {
         mapDjangoErrorsToForm(error.response.data, setError, toast.error);
         const errorData = error.response.data;
@@ -408,6 +425,11 @@ export default function ProductForm({
           if (String(skuError).includes('already exists') || String(skuError).includes('unique')) {
             setError('sku', { message: 'This SKU is already in use' });
           }
+        }
+        // Log image error for debugging
+        if (errorData.image) {
+          console.error('Image upload error:', errorData.image);
+          toast.error(`Image error: ${JSON.stringify(errorData.image)}`);
         }
       } else {
         toast.error(getErrorMessage(error));

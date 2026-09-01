@@ -307,11 +307,12 @@ function SidebarContent({
     if (typeof window !== 'undefined') {
       console.log('Sidebar - Account Type:', user?.tenant?.account_type);
       console.log('Sidebar - Business Type:', user?.tenant?.business_type);
+      console.log('Sidebar - Active Modules:', user?.tenant?.active_modules);
       console.log('Sidebar - Filtered Nav Items:', items.map(i => i.label));
     }
     
     return items;
-  }, [permissions.canView, user?.role, user?.tenant?.account_type, user?.tenant?.business_type]);
+  }, [permissions.canView, user?.role, user?.tenant?.account_type, user?.tenant?.business_type, user?.tenant?.active_modules?.join(',')]);
 
   const searchedNavItems = filterNavByQuery(filteredNavItems, navQuery);
   const isSearching = navQuery.trim().length > 0;

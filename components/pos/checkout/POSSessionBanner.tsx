@@ -1,16 +1,11 @@
-"use client";
-
-import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Receipt } from "lucide-react";
 
 interface POSSessionBannerProps {
-  hasSession: boolean;
   onStartSession: () => void;
 }
 
-export function POSSessionBanner({ hasSession, onStartSession }: POSSessionBannerProps) {
-  if (hasSession) return null;
-
+export function POSSessionBanner({ onStartSession }: POSSessionBannerProps) {
   return (
     <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 p-4 shadow-sm">
       <div className="flex items-center justify-between max-w-7xl mx-auto">

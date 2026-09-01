@@ -24,7 +24,7 @@ export interface OrgModuleDefinition {
   required?: boolean;
 }
 
-export const REQUIRED_MODULE_IDS = ["settings", "dashboard"] as const;
+export const REQUIRED_MODULE_IDS = [] as const;
 
 /** Modules a Personal account gets — no business/org modules, ever. */
 export const PERSONAL_ACCOUNT_MODULE_IDS = [
@@ -102,7 +102,7 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
     description: "Organization overview with snapshots from all enabled modules",
     icon: LayoutDashboard,
     defaultEnabled: true,
-    required: true,
+    recommended: true,
   },
   {
     id: "accounting",
@@ -112,7 +112,14 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
     icon: BarChart3,
     defaultEnabled: true,
     recommended: true,
-    required: true,
+  },
+  {
+    id: "customers",
+    name: "Customers",
+    description: "Customer relationship management, contact details, and customer tracking",
+    icon: Users,
+    defaultEnabled: true,
+    recommended: true,
   },
   {
     id: "inventory",
@@ -152,7 +159,7 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
       "Organization settings, user management, permissions, and system configuration",
     icon: Settings,
     defaultEnabled: true,
-    required: true,
+    recommended: true,
   },
   {
     id: "pos",
@@ -218,6 +225,37 @@ export function getDefaultSelectedModuleIds(): string[] {
   return ORG_MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.id);
 }
 
+/**
+ * Get default modules based on account/workplace type
+ */
+export function getDefaultModulesByAccountType(accountType?: string): string[] {
+  const type = accountType?.toLowerCase();
+  
+  switch (type) {
+    case "personal":
+      // Personal Finance only
+      return ["settings", "personal_finance"];
+    
+    case "retail":
+    case "kirana":
+      // POS + Inventory + Sales for retail/kirana stores
+      return ["dashboard", "accounting", "settings", "customers", "inventory", "sales", "pos", "reports"];
+    
+    case "construction":
+      // Construction + Inventory + Reports
+      return ["dashboard", "accounting", "settings", "construction", "inventory", "reports", "hr"];
+    
+    case "hardware":
+      // Hardware + Both POS and Sales + Inventory + Purchase
+      return ["dashboard", "accounting", "settings", "customers", "hardware", "pos", "sales", "inventory", "purchase", "reports"];
+    
+    case "organization":
+    default:
+      // Full suite for general organization
+      return ["dashboard", "accounting", "settings", "customers", "inventory", "sales", "purchase", "reports"];
+  }
+}
+
 export function normalizeModuleList(modules: string[]): string[] {
   const withRequired = new Set(modules.map((m) => m.toLowerCase()));
   REQUIRED_MODULE_IDS.forEach((id) => withRequired.add(id));
@@ -244,7 +282,7 @@ export function isModuleActive(activeModules: string[] | undefined, moduleId: st
   return isModuleInActiveList(activeModules, moduleId);
 }
 
-export type ModuleCatalogSectionKey = "required" | "recommended" | "other";
+export type ModuleCatalogSectionKey = "core" | "primary" | "optional";
 
 export interface ModuleCatalogSection {
   key: ModuleCatalogSectionKey;
@@ -263,45 +301,120 @@ export function isRecommendedModule(module: OrgModuleDefinition): boolean {
   return Boolean(module.recommended) && !module.required && !isRequiredModule(module.id);
 }
 
+/**
+ * Get module sections organized by workplace relevance
+ * Returns modules grouped as: Core (always on), Primary (workplace-specific), Optional (additional)
+ */
 export function getModuleCatalogSections(accountType?: string): ModuleCatalogSection[] {
-  // Filter out account-type-specific modules from the catalog
-  let filteredCatalog = ORG_MODULE_CATALOG;
+  const type = (accountType || 'organization').toLowerCase();
   
-  // For retail accounts, exclude construction and hardware modules
-  if (accountType === "retail") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "construction" && module.id !== "hardware"
-    );
-  }
-  // For construction accounts, exclude hardware module
-  else if (accountType === "construction") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "hardware"
-    );
-  }
-  // For hardware accounts, exclude construction module
-  else if (accountType === "hardware") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "construction"
-    );
+  // Core modules (always required, always on)
+  const coreModules = ORG_MODULE_CATALOG.filter(
+    (module) => module.required || isRequiredModule(module.id)
+  );
+  
+  // Define primary and optional modules based on workspace type
+  let primaryModuleIds: string[] = [];
+  let optionalModuleIds: string[] = [];
+  
+  switch (type) {
+    case 'retail':
+    case 'kirana':
+      // Retail: POS is primary, everything else optional
+      primaryModuleIds = ['customers', 'pos', 'inventory', 'sales'];
+      optionalModuleIds = ['purchase', 'reports', 'hr'];
+      break;
+      
+    case 'construction':
+      // Construction: Construction module is primary
+      primaryModuleIds = ['construction', 'inventory', 'hr'];
+      optionalModuleIds = ['customers', 'purchase', 'sales', 'reports', 'pos'];
+      break;
+      
+    case 'hardware':
+      // Hardware: Hardware module is primary
+      primaryModuleIds = ['customers', 'hardware', 'inventory', 'sales', 'purchase'];
+      optionalModuleIds = ['reports', 'hr', 'pos'];
+      break;
+      
+    case 'organization':
+    default:
+      // General organization: All business modules are primary
+      primaryModuleIds = ['customers', 'inventory', 'sales', 'purchase', 'reports'];
+      optionalModuleIds = ['pos', 'hr', 'construction', 'hardware'];
+      break;
   }
   
-  const required = sortByCatalogOrder(
-    filteredCatalog.filter((module) => module.required || isRequiredModule(module.id))
-  );
-  const recommended = sortByCatalogOrder(
-    filteredCatalog.filter((module) => isRecommendedModule(module))
-  );
-  const other = sortByCatalogOrder(
-    filteredCatalog.filter(
-      (module) =>
-        !(module.required || isRequiredModule(module.id)) && !isRecommendedModule(module)
+  // Filter out modules not relevant to this workspace type
+  const excludeIds: string[] = [];
+  if (type === 'retail' || type === 'kirana') {
+    excludeIds.push('construction', 'hardware');
+  } else if (type === 'construction') {
+    excludeIds.push('hardware');
+  } else if (type === 'hardware') {
+    excludeIds.push('construction');
+  }
+  
+  const primaryModules = sortByCatalogOrder(
+    ORG_MODULE_CATALOG.filter(
+      (module) => 
+        primaryModuleIds.includes(module.id) && 
+        !excludeIds.includes(module.id) &&
+        !coreModules.includes(module)
     )
   );
+  
+  const optionalModules = sortByCatalogOrder(
+    ORG_MODULE_CATALOG.filter(
+      (module) => 
+        optionalModuleIds.includes(module.id) && 
+        !excludeIds.includes(module.id) &&
+        !coreModules.includes(module) &&
+        !primaryModules.includes(module)
+    )
+  );
+  
+  const sections: ModuleCatalogSection[] = [
+    { 
+      key: "core" as const, 
+      label: "Core Modules", 
+      modules: coreModules 
+    },
+  ];
+  
+  if (primaryModules.length > 0) {
+    sections.push({
+      key: "primary" as const,
+      label: getWorkplaceSpecificLabel(type),
+      modules: primaryModules
+    });
+  }
+  
+  if (optionalModules.length > 0) {
+    sections.push({
+      key: "optional" as const,
+      label: "Additional Modules",
+      modules: optionalModules
+    });
+  }
+  
+  return sections.filter((section) => section.modules.length > 0);
+}
 
-  return [
-    { key: "required" as const, label: "Required", modules: required },
-    { key: "recommended" as const, label: "Recommended", modules: recommended },
-    { key: "other" as const, label: "Other modules", modules: other },
-  ].filter((section) => section.modules.length > 0);
+/**
+ * Get workplace-specific label for primary modules section
+ */
+function getWorkplaceSpecificLabel(accountType: string): string {
+  switch (accountType) {
+    case 'retail':
+    case 'kirana':
+      return 'Retail & Store Operations';
+    case 'construction':
+      return 'Construction Management';
+    case 'hardware':
+      return 'Hardware Store Operations';
+    case 'organization':
+    default:
+      return 'Business Operations';
+  }
 }

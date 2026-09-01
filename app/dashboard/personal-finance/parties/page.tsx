@@ -505,7 +505,7 @@ export default function PartiesPage() {
               />
             </div>
 
-            <Select value={balanceFilter} onValueChange={(value: "all" | "receivable" | "payable") => setBalanceFilter(value)}>
+            <Select value={balanceFilter} onValueChange={(value) => setBalanceFilter(value as "all" | "receivable" | "payable")}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Parties" />
               </SelectTrigger>
@@ -520,14 +520,12 @@ export default function PartiesPage() {
               <DateInput
                 value={dateFrom}
                 onChange={setDateFrom}
-                placeholder="From date"
                 className="w-[150px] h-9"
               />
               <span className="text-sm text-gray-400">to</span>
               <DateInput
                 value={dateTo}
                 onChange={setDateTo}
-                placeholder="To date"
                 className="w-[150px] h-9"
               />
             </div>

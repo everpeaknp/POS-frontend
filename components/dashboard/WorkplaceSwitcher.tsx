@@ -131,7 +131,11 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
   return (
     <>
       {/* Loading overlay when switching workplaces */}
-      {switchingSlug && <KhataLoading message="Switching workspace..." />}
+      {switchingSlug && (
+        <div className="fixed inset-0 z-[9999] bg-[#f3f4f6] dark:bg-background">
+          <KhataLoading message="Switching workspace..." fullScreen={true} />
+        </div>
+      )}
       
       <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger

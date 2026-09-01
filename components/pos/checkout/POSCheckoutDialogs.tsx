@@ -18,7 +18,7 @@ interface POSCheckoutDialogsProps {
   onResumeOrder: (order: POSHeldOrder) => void;
   onDeleteHeldOrder: (orderId: string) => void;
   onSplitPaymentConfirm: (payments: POSPaymentEntry[]) => void;
-  onBarcodeProductScanned: (product: Product, action: string) => void;
+  onBarcodeProductScanned: (product: Product, action: "received" | "sold") => void;
 }
 
 export function POSCheckoutDialogs({

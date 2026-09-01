@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BillingDialog } from "@/components/settings/BillingDialog";
+import { useAuth } from "@/lib/context/AuthContext";
 import {
   getModuleCatalogSections,
   isModuleActive,
@@ -20,6 +20,7 @@ interface OrganizationModulePickerProps {
   tenantSlug: string;
   activeModules: string[];
   allowedModules: string[];
+  accountType?: string;
   planName?: string;
   canEdit: boolean;
   onUpdated: (modules: string[]) => void | Promise<void>;
@@ -29,28 +30,20 @@ export function OrganizationModulePicker({
   tenantSlug,
   activeModules,
   allowedModules,
-  planName = "Free",
+  accountType,
+  planName = "Unlimited",
   canEdit,
   onUpdated,
 }: OrganizationModulePickerProps) {
+  const { refreshUser } = useAuth();
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [billingOpen, setBillingOpen] = useState(false);
 
-  const lockedCount = useMemo(
-    () =>
-      ORG_MODULE_CATALOG.filter(
-        (module) =>
-          !isRequiredModule(module.id) && !isModuleAllowed(module.id, allowedModules)
-      ).length,
-    [allowedModules]
-  );
+  const lockedCount = 0; // No restrictions
 
   const selectedCount = useMemo(
     () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id)).length,
     [activeModules]
   );
-
-  const openBilling = () => setBillingOpen(true);
 
   const toggleModule = async (moduleId: string) => {
     if (!canEdit) {
@@ -60,15 +53,9 @@ export function OrganizationModulePicker({
 
     const enabled = isModuleInActiveList(activeModules, moduleId);
     const isRequired = isRequiredModule(moduleId);
-    const isAllowed = isModuleAllowed(moduleId, allowedModules);
 
     if (isRequired) {
       toast.error("Core modules are always included");
-      return;
-    }
-
-    if (!isAllowed && !enabled) {
-      openBilling();
       return;
     }
 
@@ -83,7 +70,12 @@ export function OrganizationModulePicker({
         toast.success("Module enabled");
       }
 
+      // Refresh tenant data
       const tenant = await tenantApi.getCurrent();
+      
+      // Refresh user auth context to update sidebar
+      await refreshUser();
+      
       await onUpdated(tenant.active_modules || []);
     } catch (error: unknown) {
       const data = (error as { response?: { data?: { error?: string; detail?: string } } })
@@ -103,48 +95,33 @@ export function OrganizationModulePicker({
     const isLoading = togglingId === module.id;
     const IconComponent = module.icon;
     const isRequired = isRequiredModule(module.id) || module.required;
-    const isAllowed = isModuleAllowed(module.id, allowedModules);
-    const isLocked = !isRequired && !isAllowed;
-    const canToggle = canEdit && !isRequired && !isLoading && (!isLocked || isSelected);
-    const showLock = isLocked && !isSelected;
+    const canToggle = canEdit && !isRequired && !isLoading;
 
     return (
       <div
         key={module.id}
         onClick={() => {
-          if (showLock) {
-            openBilling();
-            return;
-          }
           if (canToggle) toggleModule(module.id);
         }}
         className={`group relative flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-all ${
-          showLock
-            ? "border-amber-200/70 bg-amber-50/40 dark:bg-amber-500/5 cursor-pointer hover:border-amber-300"
-            : isSelected
-              ? "border-[#22C55E]/40 bg-[#22C55E]/[0.06] dark:bg-green-500/10"
-              : "border-gray-100 dark:border-border bg-white dark:bg-card hover:border-gray-200 dark:hover:border-border/80"
-        } ${canToggle || showLock ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
+          isSelected
+            ? "border-[#22C55E]/40 bg-[#22C55E]/[0.06] dark:bg-green-500/10"
+            : "border-gray-100 dark:border-border bg-white dark:bg-card hover:border-gray-200 dark:hover:border-border/80"
+        } ${canToggle ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""}`}
       >
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
-            showLock
-              ? "bg-gray-100 dark:bg-muted text-gray-400"
-              : isSelected
-                ? "bg-[#22C55E]/15 text-[#22C55E]"
-                : "bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground"
+            isSelected
+              ? "bg-[#22C55E]/15 text-[#22C55E]"
+              : "bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground"
           }`}
         >
-          {showLock ? <Lock className="h-[18px] w-[18px]" /> : <IconComponent className="h-[18px] w-[18px]" />}
+          <IconComponent className="h-[18px] w-[18px]" />
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3
-              className={`text-sm font-medium ${
-                showLock ? "text-gray-500" : "text-gray-900 dark:text-foreground"
-              }`}
-            >
+            <h3 className="text-sm font-medium text-gray-900 dark:text-foreground">
               {module.name}
             </h3>
             {isRequired && (
@@ -152,19 +129,14 @@ export function OrganizationModulePicker({
                 Always on
               </span>
             )}
-            {!isRequired && module.recommended && !showLock && (
+            {!isRequired && module.recommended && (
               <span className="rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
                 Recommended
               </span>
             )}
-            {showLock && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
-                {planName} plan
-              </span>
-            )}
           </div>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-muted-foreground line-clamp-1">
-            {showLock ? "Upgrade your subscription to unlock this module" : module.description}
+            {module.description}
           </p>
         </div>
 
@@ -176,15 +148,6 @@ export function OrganizationModulePicker({
             >
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
             </div>
-          ) : showLock ? (
-            <button
-              type="button"
-              onClick={openBilling}
-              className="text-amber-600"
-              aria-label={`Upgrade to unlock ${module.name}`}
-            >
-              <Lock className="h-4 w-4" />
-            </button>
           ) : (
             <Checkbox
               checked={isSelected}
@@ -199,48 +162,16 @@ export function OrganizationModulePicker({
   };
 
   return (
-    <div className="space-y-8">
-      {lockedCount > 0 && (
-        <button
-          type="button"
-          onClick={openBilling}
-          className="w-full rounded-lg border border-amber-200/80 bg-amber-50/80 dark:bg-amber-500/5 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 text-left hover:bg-amber-100/80 transition-colors"
-        >
-          <strong className="font-semibold">{planName} plan:</strong> {lockedCount} module
-          {lockedCount === 1 ? "" : "s"} require an upgrade.{" "}
-          <span className="font-medium text-[#16A34A] underline">View billing plans</span>
-        </button>
+    <div className="space-y-2">
+      {/* Render all modules without section grouping */}
+      {getModuleCatalogSections(accountType).flatMap((section) =>
+        section.modules.map((module) => renderModuleCard(module))
       )}
 
-      {getModuleCatalogSections().map((section) => (
-        <section key={section.key} className="space-y-3">
-          <div className="flex items-baseline justify-between gap-3 border-b border-gray-100 dark:border-border pb-2">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
-              {section.label}
-            </h3>
-            <span className="text-xs text-gray-400 dark:text-muted-foreground tabular-nums">
-              {section.modules.filter((m) => isModuleActive(activeModules, m.id)).length}/
-              {section.modules.length}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-            {section.modules.map((module) => renderModuleCard(module))}
-          </div>
-        </section>
-      ))}
-
-      <p className="text-xs text-gray-500 dark:text-muted-foreground text-center pt-2">
+      <p className="text-xs text-gray-500 dark:text-muted-foreground text-center pt-4">
         {selectedCount} of {ORG_MODULE_CATALOG.length} modules enabled · Disabled modules are hidden
         from the sidebar
       </p>
-
-      <BillingDialog
-        open={billingOpen}
-        onOpenChange={setBillingOpen}
-        billingHref="/dashboard/settings/billing"
-        title="Upgrade to unlock modules"
-        description={`Your ${planName} plan locks some modules. Upgrade your account subscription to enable them.`}
-      />
     </div>
   );
 }

@@ -209,14 +209,7 @@ export default function UsersPage() {
       toast.error("You don't have permission to invite users");
       return;
     }
-    if (userLimits && !userLimits.can_invite) {
-      toast.error(
-        userLimits.max_users != null
-          ? `Your ${userLimits.plan_name} plan allows up to ${userLimits.max_users} users. Upgrade to invite more.`
-          : "You cannot invite more users on your current plan."
-      );
-      return;
-    }
+    // No plan restrictions - all users can invite
     setInviteData({
       invited_user_email: "",
       role: "viewer",
@@ -225,7 +218,7 @@ export default function UsersPage() {
     setSelectedEmployee("");
     setErrors({});
     setShowInviteModal(true);
-  }, [canInvite, userLimits]);
+  }, [canInvite]);
 
   useEffect(() => {
     if (searchParams.get("invite") !== "1") return;
@@ -762,8 +755,7 @@ export default function UsersPage() {
             <Button
               size="sm"
               onClick={handleInvite}
-              disabled={userLimits != null && !userLimits.can_invite}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 disabled:opacity-60"
+              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
             >
               <Mail className="h-4 w-4" /> Invite User
             </Button>

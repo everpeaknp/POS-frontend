@@ -75,8 +75,16 @@ export const tenantApi = {
   },
 
   // Create a new tenant
-  create: async (data: TenantData): Promise<Tenant> => {
+  create: async (data: TenantData): Promise<{ tenant: Tenant; tokens?: { access: string; refresh: string } }> => {
     const response = await apiClient.post('/tenants/', data);
+    
+    // If new tokens are returned, update them in localStorage
+    if (response.data.tokens) {
+      localStorage.setItem('accessToken', response.data.tokens.access);
+      localStorage.setItem('refreshToken', response.data.tokens.refresh);
+      console.log('✅ Updated JWT tokens with new tenant_id');
+    }
+    
     return response.data;
   },
 

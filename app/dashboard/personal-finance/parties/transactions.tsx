@@ -296,6 +296,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
         const shareData = {
           share_type: type,
           party: partyId,
+          is_active: true,
         };
         const share = await partyTransactionShareAPI.create(shareData);
         const shareUrl = `${window.location.origin}/shares/${share.token}`;
@@ -325,7 +326,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
-      <div className="flex flex-wrap items-center gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <div className="flex flex-wrap items-center gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200 print:hidden">
         {/* Search */}
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
@@ -345,7 +346,6 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
           <DateInput
             value={dateFrom}
             onChange={(date) => setDateFrom(date)}
-            placeholder="From date"
             className="h-10"
           />
         </div>
@@ -353,7 +353,6 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
           <DateInput
             value={dateTo}
             onChange={(date) => setDateTo(date)}
-            placeholder="To date"
             className="h-10"
           />
         </div>
@@ -407,7 +406,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
             {transactions.length === 0 ? (
               <>
                 <p className="text-gray-500 mb-4">No transactions yet</p>
-                <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
                   <Plus className="h-4 w-4 mr-2" />
                   Add First Transaction
                 </Button>
@@ -446,7 +445,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:hidden">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -509,7 +508,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                      <td className="px-4 py-3 text-sm text-right print:hidden">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             size="sm"

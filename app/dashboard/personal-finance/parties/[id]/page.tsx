@@ -20,15 +20,15 @@ import { partyLenderAPI } from "@/lib/api/personal-finance";
 interface Party {
   id: number;
   name: string;
-  pan?: string;
-  mobile?: string;
-  email?: string;
-  photo?: string;
-  photo_url?: string;
+  pan?: string | null;
+  mobile?: string | null;
+  email?: string | null;
+  photo?: string | null;
+  photo_url?: string | null;
   total_given: number;
   total_received: number;
   net_balance: number;
-  share_token?: string;
+  share_token?: string | null;
   createdAt: string;
 }
 
@@ -73,11 +73,11 @@ export default function PartyDetailPage() {
       const mappedParty: Party = {
         id: data.id,
         name: data.name,
-        pan: data.pan || undefined,
-        mobile: data.mobile || undefined,
-        email: data.email || undefined,
-        photo: data.photo || undefined,
-        photo_url: data.photo_url || undefined,
+        pan: data.pan,
+        mobile: data.mobile,
+        email: data.email,
+        photo: typeof data.photo === 'string' ? data.photo : null,
+        photo_url: data.photo_url,
         total_given: data.total_given,
         total_received: data.total_received,
         net_balance: data.net_balance,
@@ -136,54 +136,86 @@ export default function PartyDetailPage() {
           margin: 15mm;
         }
         
-        body * {
-          visibility: hidden;
+        /* Force hide everything except printable content */
+        html, body {
+          height: auto !important;
+          overflow: visible !important;
         }
         
-        #printable-ledger, #printable-ledger * {
-          visibility: visible;
-        }
-        
-        #printable-ledger {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          background: white;
-        }
-        
-        .print\\:hidden {
+        body > div:first-child {
           display: none !important;
         }
         
-        .print\\:block {
+        body > #__next {
+          display: none !important;
+        }
+        
+        /* Show only printable ledger */
+        #printable-ledger {
           display: block !important;
-        }
-        
-        .print\\:table-row {
-          display: table-row !important;
-        }
-        
-        /* Remove shadows and backgrounds for print */
-        .shadow-sm, .shadow-md, .shadow-lg {
-          box-shadow: none !important;
-        }
-        
-        .bg-gradient-to-br, .bg-gradient-to-r {
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
           background: white !important;
-          color: black !important;
-        }
-        
-        /* Ensure borders are visible */
-        .border {
-          border-color: #000 !important;
+          padding: 20px !important;
         }
       }
     `;
     document.head.appendChild(style);
     
+    // Better approach: Listen for beforeprint event
+    const handleBeforePrint = () => {
+      // Hide everything except printable ledger
+      const body = document.body;
+      const printable = document.getElementById('printable-ledger');
+      
+      if (printable) {
+        // Save original parent
+        const originalParent = printable.parentElement;
+        const originalNextSibling = printable.nextSibling;
+        
+        // Move printable ledger to body root
+        document.body.appendChild(printable);
+        
+        // Hide all other children of body
+        Array.from(body.children).forEach((child) => {
+          if (child !== printable && child.id !== 'printable-ledger') {
+            (child as HTMLElement).style.display = 'none';
+          }
+        });
+        
+        // Store cleanup function
+        (window as any).__printCleanup = () => {
+          // Restore printable ledger to original position
+          if (originalNextSibling && originalParent) {
+            originalParent.insertBefore(printable, originalNextSibling);
+          } else if (originalParent) {
+            originalParent.appendChild(printable);
+          }
+          
+          // Show all children again
+          Array.from(body.children).forEach((child) => {
+            (child as HTMLElement).style.display = '';
+          });
+        };
+      }
+    };
+    
+    const handleAfterPrint = () => {
+      if ((window as any).__printCleanup) {
+        (window as any).__printCleanup();
+        delete (window as any).__printCleanup;
+      }
+    };
+    
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    
     return () => {
       document.head.removeChild(style);
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
     };
   }, []);
 
@@ -431,7 +463,7 @@ export default function PartyDetailPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Transaction History</h2>
                 <p className="text-xs text-gray-600 mt-0.5">Complete ledger of all transactions</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 print:hidden">
                 <Button
                   onClick={() => window.print()}
                   size="sm"

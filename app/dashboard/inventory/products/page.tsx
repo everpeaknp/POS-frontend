@@ -443,7 +443,7 @@ export default function ProductsListPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-gray-500 hover:text-[#22C55E] hover:bg-green-50"
-                            onClick={() => router.push(`/dashboard/inventory/products/${product.id}`)}
+                            onClick={() => router.push(`/dashboard/inventory/products/new?edit=${product.id}`)}
                             title="Edit"
                           >
                             <Edit2 className="h-4 w-4" />

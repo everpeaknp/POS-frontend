@@ -14,20 +14,43 @@ import posApi, {
   type POSPaymentEntry 
 } from "@/lib/api/pos";
 import { toast } from "sonner";
+import {
+  type CartItem,
+  calculateTotals,
+  calculateChange,
+  addProductToCart,
+  updateCartQuantity,
+  removeFromCart as removeCartItem,
+  clearCart as clearCartHelper,
+  createQuickCustomer,
+  createTransaction,
+  loadActiveDiscounts as loadDiscounts,
+  validateAndApplyCoupon,
+  getQRPaymentInfo,
+  holdOrder,
+  resumeHeldOrder,
+  deleteHeldOrder,
+} from "@/lib/pos";
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
+// Type definitions
+export type PaymentMethod = "cash" | "esewa" | "khalti" | "fonepay" | "bank_transfer" | "card" | "credit";
+
+// Re-export CartItem for backward compatibility
+export type { CartItem };
 
 export function usePOSCheckout() {
+  // ============================================================================
+  // REFS & CONTEXT
+  // ============================================================================
   const router = useRouter();
   const { refreshUser, user } = useAuth();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  // Data
+  // ============================================================================
+  // STATE - DATA & SETTINGS
+  // ============================================================================
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -41,16 +64,20 @@ export function usePOSCheckout() {
     bank_transfer_enabled: true,
   });
   
-  // Cart
+  // ============================================================================
+  // STATE - CART
+  // ============================================================================
   const [cart, setCart] = useState<CartItem[]>([]);
   
-  // Search & Selection
+  // ============================================================================
+  // STATE - SEARCH & SELECTION
+  // ============================================================================
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "esewa" | "khalti" | "fonepay" | "bank_transfer" | "card" | "credit">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [cashAmount, setCashAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
   const [showCustomerDialog, setShowCustomerDialog] = useState(false);
@@ -60,6 +87,9 @@ export function usePOSCheckout() {
   const [newCustomerAddress, setNewCustomerAddress] = useState("");
   const [newCustomerType, setNewCustomerType] = useState<"Individual" | "Business">("Individual");
   
+  // ============================================================================
+  // STATE - DIALOGS & UI
+  // ============================================================================
   // Checkout confirmation dialog
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
   const [cameFromCheckout, setCameFromCheckout] = useState(false);
@@ -111,6 +141,9 @@ export function usePOSCheckout() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
+  // ============================================================================
+  // EFFECTS - KEYBOARD SHORTCUTS & LISTENERS
+  // ============================================================================
   // Add keyboard shortcut to refresh user (Ctrl/Cmd + Shift + R)
   useEffect(() => {
     const handleKeyPress = async (e: KeyboardEvent) => {
@@ -163,12 +196,25 @@ export function usePOSCheckout() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
   
+  // ============================================================================
+  // EFFECTS - DATA LOADING
+  // ============================================================================
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
       try {
+        // FORCE CLEAR: Remove any persisted cart data from localStorage
+        try {
+          localStorage.removeItem('pos-cart');
+          localStorage.removeItem('pos-checkout-cart');
+          localStorage.removeItem('cart');
+          console.log('Force cleared all cart data from localStorage');
+        } catch (e) {
+          console.warn('Could not clear localStorage:', e);
+        }
+        
         const [productsRes, warehousesRes, customersRes, sessionRes, settingsRes, heldRes, loyaltyRes] = await Promise.all([
-          inventoryApi.products.list({ limit: 1000, status: "active" }),
+          inventoryApi.products.list({ limit: 1000, status: "active", _t: Date.now() } as any),
           inventoryApi.warehouses.list({ limit: 100 }),
           customerAPI.list({ status: "active", page_size: 500 }),
           posApi.getOpenSession(),
@@ -183,6 +229,21 @@ export function usePOSCheckout() {
         
         setProducts(allProducts);
         setFilteredProducts(allProducts);
+        
+        // CRITICAL: Clear cart completely - remove ALL items to force fresh start
+        console.log('Clearing entire cart to ensure clean state');
+        setCart([]);
+        
+        // Also clean up cart from any products that don't exist in current product list
+        const validProductIds = new Set(allProducts.map((p: Product) => String(p.id)));
+        const validWarehouseIds = new Set((warehousesRes.data?.results || []).map((w: any) => String(w.id)));
+        
+        // If warehouse in state doesn't exist, clear it
+        if (selectedWarehouse && !validWarehouseIds.has(selectedWarehouse)) {
+          console.warn(`Clearing invalid warehouse: ${selectedWarehouse}`);
+          setSelectedWarehouse('');
+        }
+        
         setWarehouses(warehousesRes.data?.results || []);
         setCustomers(customersRes.data?.results || []);
         setOpenSession(sessionRes);
@@ -261,94 +322,38 @@ export function usePOSCheckout() {
     setFilteredProducts(filtered);
   }, [searchQuery, products, selectedCategory, showOnlyAvailable]);
 
+  // ============================================================================
+  // HANDLERS - CART OPERATIONS
+  // ============================================================================
   // Add to cart
   const addToCart = useCallback((product: Product) => {
-    // Validate product has valid ID and name
-    if (!product || !product.id || !product.name) {
-      toast.error("Invalid product - cannot add to cart");
-      console.error("Invalid product:", product);
-      return;
-    }
-
-    const stock = product.total_stock || 0;
-    
-    if (stock <= 0) {
-      toast.error(`${product.name} is out of stock`);
-      return;
-    }
-
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.product.id === product.id);
-      
-      if (existing) {
-        const newQty = existing.quantity + 1;
-        if (newQty > stock) {
-          toast.error(`Only ${stock} units available`);
-          return prevCart;
-        }
-        return prevCart.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: newQty }
-            : item
-        );
-      }
-      
-      return [...prevCart, { product, quantity: 1 }];
-    });
+    setCart((prevCart) => addProductToCart(prevCart, product));
   }, []);
 
   // Update quantity
   const updateQuantity = useCallback((productId: string, delta: number) => {
-    setCart((prevCart) => {
-      return prevCart
-        .map((item) => {
-          if (item.product.id !== productId) return item;
-          
-          const newQty = item.quantity + delta;
-          const stock = item.product.total_stock || 0;
-          
-          if (newQty <= 0) return null;
-          if (newQty > stock) {
-            toast.error(`Only ${stock} units available`);
-            return item;
-          }
-          
-          return { ...item, quantity: newQty };
-        })
-        .filter((item): item is CartItem => item !== null);
-    });
+    setCart((prevCart) => updateCartQuantity(prevCart, productId, delta));
   }, []);
 
   // Remove from cart
   const removeFromCart = useCallback((productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+    setCart((prevCart) => removeCartItem(prevCart, productId));
   }, []);
 
+  // ============================================================================
+  // HANDLERS - CUSTOMER OPERATIONS
+  // ============================================================================
   // Quick add customer
   const quickAddCustomer = async () => {
-    if (!newCustomerName.trim()) {
-      toast.error("Customer name is required");
-      return;
-    }
-
-    if (!newCustomerPhone.trim()) {
-      toast.error("Phone number is required");
-      return;
-    }
-
-    try {
-      const customerData = {
-        name: newCustomerName.trim(),
-        phone: newCustomerPhone.trim(),
-        email: newCustomerEmail.trim() || undefined,
-        address: newCustomerAddress.trim() || undefined,
-        type: newCustomerType,
-        credit_limit: 0,
-        payment_terms: "Net 30",
-        status: "active",
-      };
-
-      const newCustomer = await customerAPI.create(customerData);
+    const newCustomer = await createQuickCustomer(
+      newCustomerName,
+      newCustomerPhone,
+      newCustomerEmail,
+      newCustomerAddress,
+      newCustomerType
+    );
+    
+    if (newCustomer) {
       setCustomers((prev) => [newCustomer, ...prev]);
       setSelectedCustomer(String(newCustomer.id));
       setShowCustomerDialog(false);
@@ -357,135 +362,56 @@ export function usePOSCheckout() {
       setNewCustomerEmail("");
       setNewCustomerAddress("");
       setNewCustomerType("Individual");
-      toast.success(`Customer "${newCustomer.name}" added successfully`);
-    } catch (error: any) {
-      console.error("Failed to add customer:", error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message || 
-                          "Failed to add customer";
-      toast.error(errorMessage);
     }
   };
 
+  // ============================================================================
+  // HANDLERS - PAYMENT & DISCOUNTS
+  // ============================================================================
   // Show QR code for digital payments
   const showQRCodeDialog = (method: string) => {
-    let qrImageUrl = "";
-    let paymentInfo = "";
-    let methodName = "";
-
-    switch (method) {
-      case "esewa":
-        qrImageUrl = paymentSettings.esewa_qr || "";
-        paymentInfo = paymentSettings.esewa_number || "Not configured";
-        methodName = "eSewa";
-        break;
-      case "khalti":
-        qrImageUrl = paymentSettings.khalti_qr || "";
-        paymentInfo = paymentSettings.khalti_number || "Not configured";
-        methodName = "Khalti";
-        break;
-      case "fonepay":
-        qrImageUrl = paymentSettings.fonepay_qr || "";
-        paymentInfo = paymentSettings.fonepay_number || "Not configured";
-        methodName = "FonePay";
-        break;
-      case "bank_transfer":
-        qrImageUrl = paymentSettings.bank_qr || "";
-        if (paymentSettings.bank_name && paymentSettings.bank_account_number) {
-          paymentInfo = `${paymentSettings.bank_name}|${paymentSettings.bank_account_number}|${paymentSettings.bank_account_name || ""}`;
-        } else {
-          paymentInfo = "Not configured";
-        }
-        methodName = "Bank Transfer";
-        break;
-      default:
-        return;
+    const result = getQRPaymentInfo(method, paymentSettings);
+    if (result) {
+      setQRPaymentMethod(result.methodName);
+      setQRPaymentNumber(result.paymentInfo);
+      setQRImageUrl(result.qrImageUrl);
+      setShowQRDialog(true);
     }
-
-    setQRPaymentMethod(methodName);
-    setQRPaymentNumber(paymentInfo);
-    setQRImageUrl(qrImageUrl);
-    setShowQRDialog(true);
   };
 
+  // ============================================================================
+  // CALCULATED VALUES
+  // ============================================================================
   // Calculate totals
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.quantity * Number(item.product.selling_price),
-    0
-  );
-  
-  let discountValue = 0;
-  if (appliedCoupon) {
-    if (appliedCoupon.discount_type === 'percentage') {
-      discountValue = (subtotal * appliedCoupon.discount_value) / 100;
-    } else {
-      discountValue = appliedCoupon.discount_value;
-    }
-  } else if (discountAmount) {
-    discountValue = parseFloat(discountAmount) || 0;
-  }
-  
-  const netAmount = Math.max(0, subtotal - discountValue);
-  const taxAmount = netAmount * taxRate;
-  const total = netAmount + taxAmount;
-  const cashGiven = cashAmount ? parseFloat(cashAmount) || 0 : 0;
-  const changeAmount = Math.max(0, cashGiven - total);
+  const totals = calculateTotals(cart, taxRate, appliedCoupon, discountAmount);
+  const { subtotal, discountValue, netAmount, taxAmount, total } = totals;
+  const { cashGiven, changeAmount } = calculateChange(cashAmount, total);
 
+  // ============================================================================
+  // HANDLERS - COUPONS & DISCOUNTS
+  // ============================================================================
   // Load active discounts when coupon dialog opens
   const loadActiveDiscounts = async () => {
-    try {
-      setLoadingDiscounts(true);
-      const discounts = await posApi.getActiveDiscounts();
-      setAvailableDiscounts(discounts);
-    } catch (error) {
-      console.error('Failed to load discounts:', error);
-      toast.error('Failed to load available coupons');
-    } finally {
-      setLoadingDiscounts(false);
-    }
+    setLoadingDiscounts(true);
+    const discounts = await loadDiscounts();
+    setAvailableDiscounts(discounts);
+    setLoadingDiscounts(false);
   };
 
   // Apply coupon by code
   const applyCouponCode = () => {
-    if (!couponCode.trim()) {
-      toast.error('Please enter a coupon code');
+    const result = validateAndApplyCoupon(couponCode, availableDiscounts, subtotal);
+    
+    if (!result.success) {
+      toast.error(result.error!);
       return;
     }
 
-    const discount = availableDiscounts.find(
-      d => d.code.toLowerCase() === couponCode.trim().toLowerCase()
-    );
-
-    if (!discount) {
-      toast.error('Invalid coupon code');
-      return;
-    }
-
-    if (!discount.is_active) {
-      toast.error('This coupon is no longer active');
-      return;
-    }
-
-    const now = new Date();
-    if (discount.valid_from && new Date(discount.valid_from) > now) {
-      toast.error('This coupon is not yet valid');
-      return;
-    }
-    if (discount.valid_until && new Date(discount.valid_until) < now) {
-      toast.error('This coupon has expired');
-      return;
-    }
-
-    if (discount.min_order_amount && subtotal < discount.min_order_amount) {
-      toast.error(`Minimum order amount of Rs. ${discount.min_order_amount} required`);
-      return;
-    }
-
-    setAppliedCoupon(discount);
+    setAppliedCoupon(result.discount!);
     setDiscountAmount('');
     setCouponCode('');
     setShowCouponDialog(false);
-    toast.success(`Coupon "${discount.name}" applied!`);
+    toast.success(`Coupon "${result.discount!.name}" applied!`);
   };
 
   // Remove applied coupon
@@ -494,6 +420,9 @@ export function usePOSCheckout() {
     toast.info('Coupon removed');
   };
 
+  // ============================================================================
+  // HANDLERS - FORM & UI OPERATIONS
+  // ============================================================================
   // Reset form for next sale
   const resetForm = () => {
     setCart([]);
@@ -515,12 +444,14 @@ export function usePOSCheckout() {
 
   // Clear cart only
   const clearCart = () => {
-    setCart([]);
-    toast.info("Cart cleared");
+    setCart(clearCartHelper());
   };
 
+  // ============================================================================
+  // HANDLERS - BARCODE OPERATIONS
+  // ============================================================================
   // Handle barcode scan
-  const handleBarcodeProductScanned = (product: Product, action: "received" | "sold") => {
+  const handleBarcodeProductScanned = (product: Product, action: "received" | "sold"): void => {
     if (action === "sold") {
       addToCart(product);
       toast.success(`${product.name} added to cart`);
@@ -553,73 +484,38 @@ export function usePOSCheckout() {
     }
   };
 
+  // ============================================================================
+  // HANDLERS - HELD ORDERS
+  // ============================================================================
   // Hold Order
   const handleHoldOrder = async () => {
-    if (cart.length === 0) {
-      toast.error("Cart is empty");
-      return;
-    }
-    
-    try {
-      await posApi.createHeldOrder({
-        customer: selectedCustomer || null,
-        items: cart.map(item => ({
-          product: item.product.id,
-          product_name: item.product.name,
-          product_sku: item.product.sku || '',
-          quantity: item.quantity,
-          unit_price: Number(item.product.selling_price),
-          discount_amount: 0,
-          line_total: item.quantity * Number(item.product.selling_price),
-        })),
-        notes: undefined,
-      });
-      toast.success("Order held successfully");
-      
+    const updated = await holdOrder(cart, selectedCustomer);
+    if (updated) {
       setCart([]);
       setSelectedCustomer("");
-      
-      const updated = await posApi.getHeldOrders();
       setHeldOrders(updated);
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to hold order");
     }
   };
 
   // Resume Order
   const handleResumeOrder = (order: POSHeldOrder) => {
-    const resumedCart: CartItem[] = order.items.map((item: any) => {
-      const product = products.find(p => p.id === item.product);
-      return {
-        product: product || {
-          id: item.product,
-          name: item.product_name,
-          sku: item.product_sku,
-          selling_price: item.unit_price,
-          total_stock: 999,
-        } as Product,
-        quantity: item.quantity,
-      };
-    });
-    
+    const resumedCart = resumeHeldOrder(order, products);
     setCart(resumedCart);
     setSelectedCustomer(order.customer || "");
-    toast.success("Order resumed");
     setShowHeldOrders(false);
   };
 
   // Delete Held Order
   const handleDeleteHeldOrder = async (orderId: string) => {
-    try {
-      await posApi.deleteHeldOrder(orderId);
-      const updated = await posApi.getHeldOrders();
+    const updated = await deleteHeldOrder(orderId);
+    if (updated) {
       setHeldOrders(updated);
-      toast.success("Held order deleted");
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to delete held order");
     }
   };
 
+  // ============================================================================
+  // HANDLERS - SPLIT PAYMENT
+  // ============================================================================
   // Split Payment
   const handleSplitPaymentConfirm = (paymentEntries: POSPaymentEntry[]) => {
     setPayments(paymentEntries);
@@ -628,193 +524,103 @@ export function usePOSCheckout() {
     toast.success(`Split payment configured: ${paymentEntries.length} methods`);
   };
 
+  // ============================================================================
+  // HANDLERS - TRANSACTION COMPLETION
+  // ============================================================================
   // Complete sale
   const completeSale = async () => {
-    if (cart.length === 0) {
-      toast.error("Cart is empty");
-      return;
-    }
-
+    // Validate session exists
     if (!openSession) {
       toast.error("No active POS session. Please start a session first.");
+      router.push("/dashboard/pos/sessions/new");
       return;
     }
 
+    // Validate cart has items
+    if (cart.length === 0) {
+      toast.error("Cart is empty. Add items before completing sale.");
+      return;
+    }
+
+    // Validate warehouse is selected
     if (!selectedWarehouse) {
-      toast.error("Please select a warehouse");
+      toast.error("Please select a warehouse.");
+      return;
+    }
+    
+    // CRITICAL: Validate all products in cart actually exist in products list
+    const validProductIds = new Set(products.map(p => String(p.id)));
+    const invalidItems = cart.filter(item => !validProductIds.has(String(item.product.id)));
+    
+    if (invalidItems.length > 0) {
+      console.error('Invalid products in cart:', invalidItems.map(i => ({ id: i.product.id, name: i.product.name })));
+      toast.error(`Cart contains ${invalidItems.length} invalid product(s). Removing them...`);
+      setCart(prevCart => prevCart.filter(item => validProductIds.has(String(item.product.id))));
+      return;
+    }
+    
+    // CRITICAL: Validate warehouse exists in warehouse list
+    const validWarehouseIds = new Set(warehouses.map(w => String(w.id)));
+    if (!validWarehouseIds.has(selectedWarehouse)) {
+      console.error('Invalid warehouse:', selectedWarehouse);
+      toast.error('Invalid warehouse selected. Please select a valid warehouse.');
+      setSelectedWarehouse('');
+      return;
+    }
+
+    // Validate payment method specific requirements
+    if (paymentMethod === "cash" && cashGiven < total) {
+      toast.error("Cash given is less than total amount.");
       return;
     }
 
     if (paymentMethod === "credit" && !selectedCustomer) {
-      toast.error("Please select a customer for credit sales");
+      toast.error("Customer is required for credit sales.");
       return;
     }
-
-    if (paymentMethod === "cash" && cashGiven < total) {
-      toast.error(`Cash received (Rs. ${cashGiven.toFixed(2)}) must be ≥ total (Rs. ${total.toFixed(2)})`);
-      return;
-    }
-
-    // Validate all products in cart still exist
-    const invalidProducts = cart.filter(item => !item.product || !item.product.id);
-    if (invalidProducts.length > 0) {
-      toast.error("Some products in your cart are invalid. Please remove them and try again.");
-      setProcessing(false);
-      return;
-    }
-
-    console.log("Cart items:", cart.map(item => ({
-      id: item.product.id,
-      name: item.product.name,
-      quantity: item.quantity
-    })));
 
     setProcessing(true);
-
+    
     try {
-      // Helper function to safely format decimal values (max 12 digits total, 2 decimal places)
-      const formatDecimal = (value: number): number => {
-        return Math.round(value * 100) / 100;
-      };
-
-      const transactionData = {
-        warehouse: parseInt(selectedWarehouse),
-        customer: selectedCustomer ? parseInt(selectedCustomer) : null,
-        payment_method: paymentMethod,
-        amount_paid: formatDecimal(paymentMethod === "cash" ? cashGiven : total),
-        change_given: formatDecimal(paymentMethod === "cash" ? changeAmount : 0),
-        subtotal: formatDecimal(subtotal),
-        discount_amount: formatDecimal(discountValue),
-        tax_amount: formatDecimal(taxAmount),
-        total: formatDecimal(total),
-        lines: cart.map((item) => {
-          // Ensure we're sending only the product ID as an integer
-          const productId = parseInt(String(item.product.id));
-          console.log('Product ID type:', typeof productId, 'Value:', productId);
-          
-          return {
-            product: productId,  // Send as integer, not string
-            quantity: item.quantity,
-            unit_price: formatDecimal(Number(item.product.selling_price)),
-            discount_amount: 0,
-          };
-        }),
-      };
-
-      console.log('Transaction data being sent:', JSON.stringify(transactionData, null, 2));
-      console.log('First line product:', transactionData.lines[0]?.product, 'Type:', typeof transactionData.lines[0]?.product);
-      console.log('Full lines array:', transactionData.lines);
-      
-      // Double-check the lines before sending
-      transactionData.lines.forEach((line, idx) => {
-        console.log(`Line ${idx}:`, {
-          product: line.product,
-          productType: typeof line.product,
-          quantity: line.quantity,
-          unit_price: line.unit_price
-        });
-      });
-
-      const response = await posApi.createTransaction(transactionData);
-      setCompletedTransaction(response);
-      setShowThankYouDialog(true);
-      
-    } catch (error: any) {
-      console.error("Transaction error:", error);
-      console.error("Error response:", error.response?.data);
-      console.error("Full error object:", JSON.stringify({
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-      }, null, 2));
-      
-      // Immediate feedback
-      toast.error("Transaction failed - analyzing error...");
-      
-      let errorMsg = "Failed to complete sale";
-      
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        // Check for specific error patterns
-        if (errorData.errors) {
-          const errors = errorData.errors;
-          
-          // Check for product not found error
-          if (errors.lines && Array.isArray(errors.lines)) {
-            const invalidProducts: string[] = [];
-            
-            errors.lines.forEach((lineError: any, index: number) => {
-              if (lineError.product && lineError.product[0]?.includes('does not exist')) {
-                const match = lineError.product[0].match(/pk "(\d+)"/);
-                if (match) {
-                  invalidProducts.push(match[1]);
-                }
-              }
-            });
-            
-            if (invalidProducts.length > 0) {
-              errorMsg = `${invalidProducts.length} product(s) no longer exist in your inventory. Removing from cart...`;
-              toast.error(errorMsg);
-              
-              // Auto-remove all invalid products from cart
-              setCart(prevCart => {
-                const filtered = prevCart.filter(item => !invalidProducts.includes(String(item.product.id)));
-                console.log(`Removed ${invalidProducts.length} invalid product(s) from cart. Cart size: ${prevCart.length} -> ${filtered.length}`);
-                console.log('Removed product IDs:', invalidProducts);
-                return filtered;
-              });
-              
-              toast.info(`Removed ${invalidProducts.length} invalid product(s) from cart. Please review and try again.`, { duration: 5000 });
-              setProcessing(false);
-              return;
-            }
-          }
-          
-          // Check for decimal precision errors
-          if (errors.tax_amount || errors.total || errors.amount_paid) {
-            errorMsg = "Transaction amount is too large. Please contact support.";
-            toast.error(errorMsg);
-            setProcessing(false);
-            return;
-          }
-          
-          // Generic error parsing
-          const errorMessages = Object.entries(errors)
-            .map(([field, messages]: [string, any]) => {
-              if (Array.isArray(messages)) {
-                return `${field}: ${messages.join(', ')}`;
-              } else if (typeof messages === 'object') {
-                return `${field}: ${JSON.stringify(messages)}`;
-              }
-              return `${field}: ${messages}`;
-            });
-          errorMsg = errorMessages.length > 0 
-            ? errorMessages.join('; ')
-            : 'Validation failed';
-        } else if (errorData.detail) {
-          errorMsg = errorData.detail;
-        } else if (errorData.message) {
-          errorMsg = errorData.message;
-        } else {
-          errorMsg = `Validation failed: ${JSON.stringify(errorData)}`;
+      const transaction = await createTransaction(
+        {
+          cart,
+          selectedWarehouse,
+          selectedCustomer,
+          paymentMethod,
+          subtotal,
+          discountValue,
+          taxAmount,
+          total,
+          cashGiven,
+          changeAmount,
+        },
+        openSession,
+        // Callback to handle invalid products
+        (invalidProductIds: string[]) => {
+          setCart(prevCart => 
+            prevCart.filter(item => !invalidProductIds.includes(String(item.product.id)))
+          );
         }
-      } else if (error.response?.status === 403) {
-        errorMsg = "You don't have permission to complete sales.";
-      } else if (error.response?.status === 500) {
-        errorMsg = "Server error. Please try again or contact support.";
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
+      );
       
-      toast.error(errorMsg, { duration: 10000 });
+      if (transaction) {
+        setCompletedTransaction(transaction);
+        setShowThankYouDialog(true);
+      } else {
+        toast.error("Failed to complete sale. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Complete sale error:", error);
+      toast.error(error.message || "Failed to complete sale");
     } finally {
       setProcessing(false);
     }
   };
 
+  // ============================================================================
+  // RETURN - EXPOSED API
+  // ============================================================================
   return {
     // Refs
     invoiceRef,

@@ -242,6 +242,8 @@ const posApi = {
   },
 
   createTransaction: async (data: POSTransaction): Promise<POSTransaction> => {
+    console.log('createTransaction called with data:', JSON.stringify(data, null, 2));
+    
     // Ensure product IDs in lines are integers, not objects
     const sanitizedData = {
       ...data,
@@ -253,8 +255,17 @@ const posApi = {
     };
     
     console.log('Sanitized transaction data:', JSON.stringify(sanitizedData, null, 2));
-    const response = await apiClient.post('/pos/transactions/', sanitizedData);
-    return response.data;
+    
+    try {
+      const response = await apiClient.post('/pos/transactions/', sanitizedData);
+      console.log('Transaction created successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('API createTransaction error:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      throw error;
+    }
   },
 
   cancelTransaction: async (id: string): Promise<POSTransaction> => {
@@ -401,7 +412,7 @@ const posApi = {
   // Loyalty
   getLoyaltyProgram: async (): Promise<POSLoyaltyProgram | null> => {
     try {
-      const response = await apiClient.get('/pos/loyalty/program/');
+      const response = await apiClient.get('/pos/loyalty-program/');
       return response.data;
     } catch {
       return null;
@@ -410,7 +421,7 @@ const posApi = {
 
   getCustomerLoyalty: async (customerId: string): Promise<POSCustomerLoyalty | null> => {
     try {
-      const response = await apiClient.get(`/pos/loyalty/customers/${customerId}/`);
+      const response = await apiClient.get(`/pos/loyalty/${customerId}/`);
       return response.data;
     } catch {
       return null;

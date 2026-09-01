@@ -21,6 +21,15 @@ import toast from "react-hot-toast";
 type AccountType = "bank" | "cash" | "credit_card" | "loan" | "investment";
 type Account = FinanceAccount;
 
+interface AccountFormData {
+  name: string;
+  type: string;
+  balance: string;
+  description: string;
+  bankName: string;
+  accountNumber: string;
+}
+
 // Nepali banks list
 const NEPALI_BANKS = [
   "Nabil Bank",
@@ -84,7 +93,7 @@ export default function AccountPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   // Form state
-  const [formData, setFormData] = useState<Partial<Account>>({
+  const [formData, setFormData] = useState<AccountFormData>({
     name: "",
     type: "bank",
     balance: "0",
@@ -99,11 +108,11 @@ export default function AccountPage() {
   // Calculate totals
   const summary = useMemo(() => {
     const assets = accounts
-      .filter((a) => parseFloat(a.balance) >= 0)
-      .reduce((sum, a) => sum + parseFloat(a.balance), 0);
+      .filter((a) => parseFloat(a.current_balance) >= 0)
+      .reduce((sum, a) => sum + parseFloat(a.current_balance), 0);
     const liabilities = accounts
-      .filter((a) => parseFloat(a.balance) < 0)
-      .reduce((sum, a) => sum + Math.abs(parseFloat(a.balance)), 0);
+      .filter((a) => parseFloat(a.current_balance) < 0)
+      .reduce((sum, a) => sum + Math.abs(parseFloat(a.current_balance)), 0);
     return { assets, liabilities, netWorth: assets - liabilities };
   }, [accounts]);
 
@@ -115,7 +124,7 @@ export default function AccountPage() {
       filtered = filtered.filter(
         (a) =>
           a.name.toLowerCase().includes(lower) ||
-          (a.bankName || "").toLowerCase().includes(lower) ||
+          (a.bank_name || "").toLowerCase().includes(lower) ||
           (a.description || "").toLowerCase().includes(lower)
       );
     }
@@ -168,7 +177,7 @@ export default function AccountPage() {
   }, [searchParams, router]);
 
   const openEditDialog = (account: Account) => {
-    if (account.isSystem) {
+    if ((account as any).isSystem) {
       toast.error("System accounts cannot be edited");
       return;
     }
@@ -234,7 +243,7 @@ export default function AccountPage() {
 
   const handleDelete = async (id: number) => {
     const account = accounts.find((a) => a.id === id);
-    if (account?.isSystem) {
+    if ((account as any)?.isSystem) {
       toast.error("System accounts cannot be deleted");
       setDeleteConfirmId(null);
       return;
@@ -287,7 +296,7 @@ export default function AccountPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-gray-900">{account.name}</h3>
-                {account.isSystem && (
+                {(account as any).isSystem && (
                   <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
                     System
                   </Badge>
@@ -307,9 +316,9 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => openEditDialog(account)}
-              disabled={account.isSystem}
+              disabled={(account as any).isSystem}
               className="h-8 w-8 p-0"
-              title={account.isSystem ? "System accounts cannot be edited" : "Edit account"}
+              title={(account as any).isSystem ? "System accounts cannot be edited" : "Edit account"}
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -317,9 +326,9 @@ export default function AccountPage() {
               variant="ghost"
               size="sm"
               onClick={() => setDeleteConfirmId(account.id)}
-              disabled={account.isSystem}
+              disabled={(account as any).isSystem}
               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-              title={account.isSystem ? "System accounts cannot be deleted" : "Delete account"}
+              title={(account as any).isSystem ? "System accounts cannot be deleted" : "Delete account"}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -415,7 +424,7 @@ export default function AccountPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-gray-900">{account.name}</span>
-                          {account.isSystem && (
+                          {(account as any).isSystem && (
                             <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
                               System
                             </Badge>
@@ -451,9 +460,9 @@ export default function AccountPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openEditDialog(account)}
-                        disabled={account.isSystem}
+                        disabled={(account as any).isSystem}
                         className="h-8 w-8 p-0"
-                        title={account.isSystem ? "System accounts cannot be edited" : "Edit account"}
+                        title={(account as any).isSystem ? "System accounts cannot be edited" : "Edit account"}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -461,9 +470,9 @@ export default function AccountPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteConfirmId(account.id)}
-                        disabled={account.isSystem}
+                        disabled={(account as any).isSystem}
                         className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title={account.isSystem ? "System accounts cannot be deleted" : "Delete account"}
+                        title={(account as any).isSystem ? "System accounts cannot be deleted" : "Delete account"}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -51,8 +51,15 @@ export default function TransactionDetailPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   
-  const [editFormData, setEditFormData] = useState({
-    type: 'expense' as 'income' | 'expense',
+  const [editFormData, setEditFormData] = useState<{
+    type: 'income' | 'expense' | 'transfer';
+    amount: number;
+    date: string;
+    categoryId: string;
+    accountId: string;
+    description: string;
+  }>({
+    type: 'expense' as 'income' | 'expense' | 'transfer',
     amount: 0,
     date: '',
     categoryId: '',
@@ -575,7 +582,12 @@ export default function TransactionDetailPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Category</Label>
-                <Select value={editFormData.categoryId} onValueChange={(value) => setEditFormData({ ...editFormData, categoryId: value })}>
+                <Select 
+                  value={editFormData.categoryId || undefined} 
+                  onValueChange={(value) => {
+                    setEditFormData({ ...editFormData, categoryId: value as string });
+                  }}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -591,7 +603,12 @@ export default function TransactionDetailPage() {
 
               <div>
                 <Label>Account</Label>
-                <Select value={editFormData.accountId} onValueChange={(value) => setEditFormData({ ...editFormData, accountId: value })}>
+                <Select 
+                  value={editFormData.accountId || undefined} 
+                  onValueChange={(value) => {
+                    setEditFormData({ ...editFormData, accountId: value as string });
+                  }}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select account" />
                   </SelectTrigger>
