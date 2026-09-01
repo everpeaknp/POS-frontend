@@ -14,7 +14,7 @@ import { OrgCreationLoading } from "@/components/org-creation-loading";
 import { OrgCreationSuccess } from "@/components/org-creation-success";
 import { billingApi } from "@/lib/api/billing";
 import { PageLoading } from "@/components/shared/PageLoading";
-import { PERSONAL_ACCOUNT_MODULE_IDS, CONSTRUCTION_ACCOUNT_MODULE_IDS, HARDWARE_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { PERSONAL_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
 
 const ACCOUNT_TYPE_STEP: WizardStepMeta = {
   eyebrow: "Welcome",
@@ -50,10 +50,7 @@ export default function NewOrgPage() {
     if (accountType === "personal") {
       return [ACCOUNT_TYPE_STEP, PERSONAL_DETAILS_STEP, ORG_WIZARD_STEPS[3]];
     }
-    if (accountType === "construction" || accountType === "hardware") {
-      return [ACCOUNT_TYPE_STEP, ORG_WIZARD_STEPS[1], ORG_WIZARD_STEPS[3]];
-    }
-    if (accountType === "retail" || accountType === "organization") {
+    if (accountType) {
       return [ACCOUNT_TYPE_STEP, ORG_WIZARD_STEPS[1], ORG_WIZARD_STEPS[2], ORG_WIZARD_STEPS[3]];
     }
     return [ACCOUNT_TYPE_STEP];
@@ -109,17 +106,8 @@ export default function NewOrgPage() {
     if (accountType === "personal") {
       setSelectedModules([...PERSONAL_ACCOUNT_MODULE_IDS]);
       setStep(3); // straight to review — no module picker for Personal
-    } else if (accountType === "construction") {
-      setSelectedModules([...CONSTRUCTION_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review — no module picker for Construction
-    } else if (accountType === "hardware") {
-      setSelectedModules([...HARDWARE_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review — no module picker for Hardware
-    } else if (accountType === "retail") {
-      // Retail uses kirana modules (already set via business_type='retail')
-      setStep(3); // module picker
     } else {
-      setStep(3); // module picker for organization
+      setStep(3); // module picker — retail, organization, construction, hardware all pick modules
     }
   };
 
@@ -137,7 +125,7 @@ export default function NewOrgPage() {
   }
 
   if (isLoading) {
-    return <OrgCreationLoading />;
+    return <OrgCreationLoading accountType={accountType} />;
   }
 
   if (limitsLoading) {
@@ -149,10 +137,10 @@ export default function NewOrgPage() {
   }
 
   if (isSuccess) {
-    return <OrgCreationSuccess organizationName={createdOrgName} />;
+    return <OrgCreationSuccess organizationName={createdOrgName} accountType={accountType} />;
   }
 
-  const reviewStep = accountType === "personal" || accountType === "construction" || accountType === "hardware" ? 3 : 4;
+  const reviewStep = accountType === "personal" ? 3 : 4;
 
   return (
     <OrgWizardShell
@@ -187,7 +175,7 @@ export default function NewOrgPage() {
         />
       )}
 
-      {(accountType === "organization" || accountType === "retail") && step === 3 && organizationData && (
+      {accountType && accountType !== "personal" && step === 3 && organizationData && (
         <ModuleSelection
           accountType={accountType ?? "organization"}
           organizationData={organizationData}
@@ -201,7 +189,7 @@ export default function NewOrgPage() {
           accountType={accountType ?? "organization"}
           organizationData={organizationData}
           selectedModules={selectedModules}
-          onBack={() => setStep(accountType === "personal" || accountType === "construction" || accountType === "hardware" ? 2 : 3)}
+          onBack={() => setStep(accountType === "personal" ? 2 : 3)}
           onEdit={() => setStep(2)}
           onCreationStart={() => setIsLoading(true)}
           onCreationSuccess={(orgName) => {

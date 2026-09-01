@@ -40,28 +40,28 @@ import { formatNPR } from "@/lib/utils";
 
 const quickActions = [
   {
-    href: "/dashboard/personal-finance/transactions?new=1",
+    href: "/dashboard/finance/transactions?new=1",
     label: "Add Transaction",
     sub: "Record income/expense",
     icon: Plus,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/account?new=1",
+    href: "/dashboard/finance/account?new=1",
     label: "Add Account",
     sub: "Bank/wallet/cash",
     icon: Building2,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/account?new=1",
+    href: "/dashboard/finance/account?new=1",
     label: "Add Investment",
     sub: "Track holdings",
     icon: TrendingUp,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/bills?new=1",
+    href: "/dashboard/finance/bills?new=1",
     label: "Add Loan",
     sub: "Record debt",
     icon: CreditCard,
@@ -71,28 +71,28 @@ const quickActions = [
 
 const moduleLinks = [
   {
-    href: "/dashboard/personal-finance/budget",
+    href: "/dashboard/finance/budget",
     label: "Budgeting & Saving",
     sub: "Track budgets & goals",
     icon: Banknote,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/account",
+    href: "/dashboard/finance/account",
     label: "Banking",
     sub: "Accounts & transactions",
     icon: Building2,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/account",
+    href: "/dashboard/finance/account",
     label: "Investing",
     sub: "Portfolio management",
     icon: TrendingUp,
     color: "bg-gray-50 text-gray-600",
   },
   {
-    href: "/dashboard/personal-finance/bills",
+    href: "/dashboard/finance/bills",
     label: "Loans & Credit",
     sub: "Debt tracking",
     icon: CreditCard,
@@ -378,7 +378,7 @@ export default function PersonalFinanceDashboardPage() {
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700">Recent Activities</h3>
               <Link
-                href="/dashboard/personal-finance/activities"
+                href="/dashboard/finance/activities"
                 className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all
@@ -478,7 +478,7 @@ export default function PersonalFinanceDashboardPage() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-semibold text-gray-700">Top Accounts by Balance</h3>
               <Link
-                href="/dashboard/personal-finance/account"
+                href="/dashboard/finance/account"
                 className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all

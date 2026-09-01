@@ -191,7 +191,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     openAddDialog();
-    router.replace("/dashboard/personal-finance/transactions", { scroll: false });
+    router.replace("/dashboard/finance/transactions", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
@@ -440,7 +440,7 @@ export default function TransactionsPage() {
         <TransactionTable
           transactions={filteredTransactions}
           hasActiveFilters={hasActiveFilters}
-          onRowClick={(transaction) => router.push(`/dashboard/personal-finance/transactions/${transaction.transaction_number}`)}
+          onRowClick={(transaction) => router.push(`/dashboard/finance/transactions/${transaction.transaction_number}`)}
           onEdit={openEditDialog}
           onDelete={(id) => setDeleteConfirmId(id)}
           onAddTransaction={openAddDialog}

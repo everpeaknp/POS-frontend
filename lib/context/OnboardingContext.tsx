@@ -229,7 +229,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }
       }
       const homeRoute =
-        user.tenant?.account_type === "personal" ? "/dashboard/personal-finance" : "/dashboard";
+        user.tenant?.account_type === "personal" ? "/dashboard/finance" : "/dashboard";
       if (opts?.startTour !== false) {
         setPhaseSafe("tour");
         router.push(homeRoute);
@@ -250,7 +250,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sessionStorage.setItem(tourPendingKey(user.id), "1");
     }
     setPhaseSafe("tour");
-    router.push(user.tenant?.account_type === "personal" ? "/dashboard/personal-finance" : "/dashboard");
+    router.push(user.tenant?.account_type === "personal" ? "/dashboard/finance" : "/dashboard");
   }, [user, router, setPhaseSafe, clearHelpMode]);
 
   const replayWizard = useCallback(() => {

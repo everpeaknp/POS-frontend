@@ -62,7 +62,7 @@ export function useRegisterErpNav(nav: ErpNavState, enabled: boolean) {
 }
 
 export const ERP_TABS = [
-  { id: "organizations", label: "Organizations" },
+  { id: "organizations", label: "Workplaces" },
   { id: "requests", label: "Requests" },
   { id: "invitation", label: "Invitations" },
 ] as const;

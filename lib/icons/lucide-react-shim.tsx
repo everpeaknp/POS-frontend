@@ -105,6 +105,25 @@ export const Fingerprint: IconType = Hi.HiOutlineFingerPrint;
 export const FolderTree: IconType = Hi.HiOutlineFolder;
 export const Gift: IconType = Hi.HiOutlineGift;
 export const Globe: IconType = Hi.HiOutlineGlobeAlt;
+export const GripVertical: IconType = ({ size = 24, className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="none"
+    className={className}
+    {...props}
+  >
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="19" r="1" />
+  </svg>
+);
 export const HardHat: IconType = Hi.HiOutlineWrenchScrewdriver;
 export const History: IconType = Hi.HiOutlineClock;
 export const Home: IconType = Hi.HiOutlineHome;

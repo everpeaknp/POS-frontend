@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { getModuleById } from "@/lib/modules/catalog";
 
 interface OrgReviewProps {
-  accountType?: "organization" | "personal";
+  accountType?: "organization" | "personal" | "construction" | "hardware" | "retail";
   organizationData: {
     name: string;
     business_type: string;
@@ -111,6 +111,7 @@ export function OrgReview({
     try {
       const result = await tenantApi.create({
         ...organizationData,
+        account_type: accountType,
         active_modules: selectedModules,
       });
 

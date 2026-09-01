@@ -37,7 +37,7 @@ export function EmptyState({
     }
   };
 
-  const buttonText = actionLabel || "Add New Organization";
+  const buttonText = actionLabel || "Add New Workplace";
   const displayDescription = description || subtitle;
   
   // Show button if explicitly set to true, or if action props are provided

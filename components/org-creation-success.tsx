@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ArrowRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
+import type { AccountType } from "@/components/account-type-selection";
+import { getCreationCopy } from "@/lib/onboarding/creation-copy";
 
 interface OrgCreationSuccessProps {
   organizationName: string;
+  accountType?: AccountType | null;
 }
 
-export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps) {
+export function OrgCreationSuccess({ organizationName, accountType }: OrgCreationSuccessProps) {
   const router = useRouter();
+  const copy = getCreationCopy(accountType);
 
   useEffect(() => {
     // Trigger confetti animation
@@ -53,7 +57,7 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
   };
 
   const handleGoToAccount = () => {
-    router.push("/dashboard/settings/org");
+    router.push(copy.secondaryHref);
   };
 
   return (
@@ -67,7 +71,7 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
         </div>
 
         <h2 className="text-3xl font-bold text-gray-900 dark:text-foreground mb-3 tracking-tight">
-          Your workspace is ready
+          {copy.successHeading}
         </h2>
 
         <p className="text-gray-500 dark:text-muted-foreground text-base mb-2 leading-relaxed">
@@ -89,12 +93,12 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
             className="w-full h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold text-base gap-2 shadow-none"
           >
             <User className="h-5 w-5" />
-            Organization settings
+            {copy.secondaryLabel}
           </Button>
         </div>
 
         <p className="text-xs text-gray-500 mt-8">
-          You can access your organization anytime from the dashboard
+          You can access your workspace anytime from the dashboard
         </p>
       </div>
       </main>

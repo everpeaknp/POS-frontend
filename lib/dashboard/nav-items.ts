@@ -214,88 +214,88 @@ const PERSONAL_NAV_ITEMS: NavItem[] = [
   {
     label: "Overview",
     icon: LayoutDashboard,
-    href: "/dashboard/personal-finance",
+    href: "/dashboard/finance",
     requiredModule: "personal_finance",
     personalOnly: true,
   },
   {
     label: "Transactions",
     icon: TrendingUp,
-    href: "/dashboard/personal-finance/transactions",
+    href: "/dashboard/finance/transactions",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Transactions", href: "/dashboard/personal-finance/transactions", createHref: "/dashboard/personal-finance/transactions?new=1" },
+      { label: "Transactions", href: "/dashboard/finance/transactions", createHref: "/dashboard/finance/transactions?new=1" },
     ],
   },
   {
     label: "Parties / Lenders",
     icon: Users,
-    href: "/dashboard/personal-finance/parties",
+    href: "/dashboard/finance/parties",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Add Transaction", href: "/dashboard/personal-finance/parties?action=add-transaction", createHref: "/dashboard/personal-finance/parties?action=add-transaction" },
+      { label: "Add Transaction", href: "/dashboard/finance/parties?action=add-transaction", createHref: "/dashboard/finance/parties?action=add-transaction" },
     ],
   },
   {
     label: "Budget",
     icon: Wallet,
-    href: "/dashboard/personal-finance/budget",
+    href: "/dashboard/finance/budget",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Budget", href: "/dashboard/personal-finance/budget", createHref: "/dashboard/personal-finance/budget?new=1" },
+      { label: "Budget", href: "/dashboard/finance/budget", createHref: "/dashboard/finance/budget?new=1" },
     ],
   },
   {
     label: "Category",
     icon: Package,
-    href: "/dashboard/personal-finance/category",
+    href: "/dashboard/finance/category",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Category", href: "/dashboard/personal-finance/category", createHref: "/dashboard/personal-finance/category?new=1" },
+      { label: "Category", href: "/dashboard/finance/category", createHref: "/dashboard/finance/category?new=1" },
     ],
   },
   {
     label: "Account",
     icon: BookOpen,
-    href: "/dashboard/personal-finance/account",
+    href: "/dashboard/finance/account",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Account", href: "/dashboard/personal-finance/account", createHref: "/dashboard/personal-finance/account?new=1" },
+      { label: "Account", href: "/dashboard/finance/account", createHref: "/dashboard/finance/account?new=1" },
     ],
   },
   {
     label: "Bills",
     icon: ShoppingCart,
-    href: "/dashboard/personal-finance/bills",
+    href: "/dashboard/finance/bills",
     requiredModule: "personal_finance",
     personalOnly: true,
     children: [
-      { label: "Bills", href: "/dashboard/personal-finance/bills", createHref: "/dashboard/personal-finance/bills?new=1" },
+      { label: "Bills", href: "/dashboard/finance/bills", createHref: "/dashboard/finance/bills?new=1" },
     ],
   },
   {
     label: "Tax",
     icon: BarChart2,
-    href: "/dashboard/personal-finance/tax",
+    href: "/dashboard/finance/tax",
     requiredModule: "personal_finance",
     personalOnly: true,
   },
   {
     label: "Reports & Analytics",
     icon: BarChart2,
-    href: "/dashboard/personal-finance/reports",
+    href: "/dashboard/finance/reports",
     requiredModule: "personal_finance",
     personalOnly: true,
   },
   {
     label: "Settings",
     icon: Settings,
-    href: "/dashboard/personal-finance/settings",
+    href: "/dashboard/finance/settings",
     requiredModule: "personal_finance",
     personalOnly: true,
   },
@@ -306,7 +306,7 @@ const RETAIL_NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/dashboard/kirana",
+    href: "/dashboard/retail",
     requiredModule: "pos",
   },
   POS_NAV,
@@ -517,6 +517,10 @@ export function filterDashboardNavItems(
     role?: string | null;
     accountType?: string | null;
     businessType?: string | null;
+    /** Sub-feature hrefs turned off from Settings → Modules (Tenant.disabled_features). */
+    disabledFeatures?: string[] | null;
+    /** Per-module drag-and-drop order of sub-feature hrefs, keyed by module id. */
+    featureOrder?: Record<string, string[]> | null;
   }
 ): NavItem[] {
   const isPersonal = opts.accountType === "personal";
@@ -539,28 +543,118 @@ export function filterDashboardNavItems(
     navItems = ORGANIZATION_NAV_ITEMS;
   }
 
-  const filterChildren = (children?: NavSubItem[]) =>
-    children?.filter((child) => {
+  const disabledFeatures = opts.disabledFeatures ?? [];
+  const featureOrder = opts.featureOrder ?? {};
+
+  const filterChildren = (children: NavSubItem[] | undefined, moduleId?: string) => {
+    const visible = children?.filter((child) => {
       if (child.hideForPersonal && isPersonal) return false;
       if (child.personalOnly && !isPersonal) return false;
+      if (disabledFeatures.includes(child.href)) return false;
       return true;
     });
+    if (!visible) return visible;
+
+    const order = moduleId ? featureOrder[moduleId] : undefined;
+    if (!order?.length) return visible;
+
+    return [...visible].sort((a, b) => {
+      const indexA = order.indexOf(a.href);
+      const indexB = order.indexOf(b.href);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0;
+    });
+  };
 
   return navItems
     .filter((item) => {
       if (item.personalOnly && !isPersonal) return false;
       if (item.hideForPersonal && isPersonal) return false;
       if (item.requiredModule && !opts.canView(item.requiredModule)) return false;
-      
+
       if (item.requiredRoles && opts.role) {
         if (opts.role === "admin" || opts.role === "super_admin") return true;
         if (!item.requiredRoles.includes(opts.role)) return false;
       }
-      
+
       return true;
     })
     .map((item) =>
-      item.children ? { ...item, children: filterChildren(item.children) } : item
+      item.children
+        ? { ...item, children: filterChildren(item.children, item.requiredModule) }
+        : item
     )
     .filter((item) => !item.children || item.children.length > 0);
+}
+
+// =============================================================================
+// CUSTOM SIDEBAR ORDER (drag-and-drop from Settings → Modules)
+// =============================================================================
+
+/** localStorage key holding the user's drag-and-drop module order (array of module ids). */
+export const SIDEBAR_MODULE_ORDER_KEY = "khata-sidebar-module-order";
+/** localStorage key holding per-module drag-and-drop feature order: `{ [moduleId]: hrefs[] }`. */
+export const SIDEBAR_FEATURE_ORDER_KEY = "khata-sidebar-feature-order";
+/** Fired on the saving tab so the always-mounted sidebar re-reads localStorage immediately. */
+export const SIDEBAR_ORDER_CHANGED_EVENT = "khata-sidebar-order-changed";
+/** localStorage key holding module ids whose sidebar menu stays permanently expanded (no accordion), set per-module from Settings → Modules. */
+export const SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY = "khata-sidebar-always-expanded-modules";
+
+/**
+ * Sidebar layout prefs (order, feature order, always-expanded) are per-workplace,
+ * but localStorage is shared across the whole browser origin — so every
+ * `SIDEBAR_*_KEY` above must be scoped by tenant slug, or switching workplaces
+ * bleeds one tenant's sidebar customization into every other tenant.
+ */
+export function scopedSidebarKey(baseKey: string, tenantSlug: string | null | undefined): string {
+  return tenantSlug ? `${baseKey}:${tenantSlug}` : baseKey;
+}
+
+/**
+ * Reorders top-level nav items to match a saved module order, keyed by
+ * `requiredModule` (which matches ORG_MODULE_CATALOG ids). Items with no
+ * `requiredModule`, or not present in `order`, keep their existing relative
+ * order (stable sort) rather than jumping to the front or back.
+ */
+export function sortNavItemsByModuleOrder(items: NavItem[], order: string[]): NavItem[] {
+  if (!order.length) return items;
+  return [...items].sort((a, b) => {
+    const indexA = a.requiredModule ? order.indexOf(a.requiredModule) : -1;
+    const indexB = b.requiredModule ? order.indexOf(b.requiredModule) : -1;
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return 0;
+  });
+}
+
+// =============================================================================
+// PER-MODULE FEATURES (Settings → Modules feature enable/disable dropdown)
+// =============================================================================
+
+/**
+ * The sidebar sub-items (children) that belong to a given ORG_MODULE_CATALOG
+ * module id, sourced directly from the real organization sidebar definition
+ * so "features" shown in Settings → Modules always match actual sidebar
+ * entries one-to-one — no separate feature catalog to keep in sync.
+ */
+export function getOrganizationModuleFeatures(moduleId: string): NavSubItem[] {
+  return ORGANIZATION_NAV_ITEMS
+    .filter((item) => item.requiredModule === moduleId)
+    .flatMap((item) => item.children ?? []);
+}
+
+/** Applies a saved per-module feature order (see SIDEBAR_FEATURE_ORDER_KEY) to a features list. */
+export function sortFeaturesByOrder(features: NavSubItem[], order: string[] | undefined): NavSubItem[] {
+  if (!order?.length) return features;
+  return [...features].sort((a, b) => {
+    const indexA = order.indexOf(a.href);
+    const indexB = order.indexOf(b.href);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return 0;
+  });
 }

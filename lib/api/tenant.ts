@@ -14,6 +14,7 @@ export interface TenantData {
   email?: string;
   phone?: string;
   active_modules?: string[];
+  disabled_features?: string[];
   logo?: File | null;
 }
 
@@ -46,6 +47,7 @@ export interface Tenant {
   is_active: boolean;
   plan_type: string;
   active_modules: string[];
+  disabled_features?: string[];
   allowed_modules?: string[];
   created_at: string;
   updated_at: string;

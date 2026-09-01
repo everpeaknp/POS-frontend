@@ -453,7 +453,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
                     <tr 
                       key={txn.id} 
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}/${generateShortId(txn.id)}`)}
+                      onClick={() => router.push(`/dashboard/finance/parties/${generatePartySlug(party)}/${generateShortId(txn.id)}`)}
                     >
                       <td className="px-4 py-3 text-sm">
                         <span className="font-mono text-xs text-gray-900">#{generateShortId(txn.id)}</span>

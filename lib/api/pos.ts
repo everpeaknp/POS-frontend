@@ -169,15 +169,16 @@ export interface POSRefund {
   refund_number: string;
   original_transaction: string;
   original_transaction_number?: string;
-  refund_transaction?: string;
-  refund_transaction_number?: string;
   reason: string;
+  notes?: string;
   refund_method: string;
-  total_refund_amount: number;
-  status: string;
+  subtotal_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  refunded_by?: string;
+  refunded_by_name?: string;
+  refunded_at?: string;
   created_at: string;
-  created_by?: string;
-  created_by_name?: string;
   lines: POSRefundLine[];
 }
 

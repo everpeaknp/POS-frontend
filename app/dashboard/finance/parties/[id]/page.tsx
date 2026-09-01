@@ -88,7 +88,7 @@ export default function PartyDetailPage() {
     } catch (error) {
       console.error("Failed to load party:", error);
       toast.error("Failed to load party details");
-      router.push("/dashboard/personal-finance/parties");
+      router.push("/dashboard/finance/parties");
     } finally {
       setLoading(false);
     }

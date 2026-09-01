@@ -18,6 +18,12 @@ import {
   dashboardNavItems,
   filterDashboardNavItems,
   matchesNavChild,
+  sortNavItemsByModuleOrder,
+  SIDEBAR_MODULE_ORDER_KEY,
+  SIDEBAR_FEATURE_ORDER_KEY,
+  SIDEBAR_ORDER_CHANGED_EVENT,
+  SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY,
+  scopedSidebarKey,
   type NavItem,
 } from "@/lib/dashboard/nav-items";
 
@@ -27,15 +33,17 @@ function SidebarItem({
   onToggle,
   compact = false,
   onQuickAction,
+  alwaysExpanded = false,
 }: {
   item: NavItem;
   openKey: string | null;
   onToggle: (label: string) => void;
   compact?: boolean;
   onQuickAction?: (item: NavItem) => void;
+  alwaysExpanded?: boolean;
 }) {
   const pathname = usePathname();
-  const isOpen = openKey === item.label;
+  const isOpen = alwaysExpanded ? true : openKey === item.label;
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
 
@@ -180,12 +188,13 @@ function SidebarItem({
     <div data-tour={`nav-${item.label.toLowerCase()}`}>
       <button
         type="button"
-        onClick={() => onToggle(item.label)}
+        onClick={() => !alwaysExpanded && onToggle(item.label)}
         title={item.label}
         data-tour={`nav-${item.label.toLowerCase()}-toggle`}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
           compact && "justify-center px-2",
+          alwaysExpanded && "cursor-default",
           isParentActive && !isOpen
             ? "bg-[#22C55E] text-white"
             : isOpen
@@ -204,13 +213,15 @@ function SidebarItem({
         {!compact && (
           <>
             <span className="flex-1 text-left">{item.label}</span>
-            <ChevronDown
-              size={14}
-              className={cn(
-                "shrink-0 transition-transform duration-200",
-                isOpen && "rotate-180"
-              )}
-            />
+            {!alwaysExpanded && (
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "shrink-0 transition-transform duration-200",
+                  isOpen && "rotate-180"
+                )}
+              />
+            )}
           </>
         )}
       </button>
@@ -295,24 +306,59 @@ function SidebarContent({
   const [modKey, setModKey] = useState("Ctrl");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag-and-drop module order, set from Settings → Modules. Stored in
+  // localStorage (not per-request state), so we read it once on mount and
+  // then listen for the custom event that page dispatches on save — a plain
+  // `storage` event only fires in *other* tabs, never the one that wrote it.
+  const [moduleOrder, setModuleOrder] = useState<string[]>([]);
+  const [featureOrder, setFeatureOrder] = useState<Record<string, string[]>>({});
+  const [alwaysExpandedModules, setAlwaysExpandedModules] = useState<string[]>([]);
+  const tenantSlug = user?.tenant?.slug;
+
+  useEffect(() => {
+    const readOrder = () => {
+      try {
+        const raw = localStorage.getItem(scopedSidebarKey(SIDEBAR_MODULE_ORDER_KEY, tenantSlug));
+        setModuleOrder(raw ? JSON.parse(raw) : []);
+      } catch {
+        setModuleOrder([]);
+      }
+      try {
+        const raw = localStorage.getItem(scopedSidebarKey(SIDEBAR_FEATURE_ORDER_KEY, tenantSlug));
+        setFeatureOrder(raw ? JSON.parse(raw) : {});
+      } catch {
+        setFeatureOrder({});
+      }
+      try {
+        const raw = localStorage.getItem(
+          scopedSidebarKey(SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY, tenantSlug)
+        );
+        setAlwaysExpandedModules(raw ? JSON.parse(raw) : []);
+      } catch {
+        setAlwaysExpandedModules([]);
+      }
+    };
+    readOrder();
+    window.addEventListener(SIDEBAR_ORDER_CHANGED_EVENT, readOrder);
+    window.addEventListener("storage", readOrder);
+    return () => {
+      window.removeEventListener(SIDEBAR_ORDER_CHANGED_EVENT, readOrder);
+      window.removeEventListener("storage", readOrder);
+    };
+  }, [tenantSlug]);
+
   const filteredNavItems = useMemo(() => {
     const items = filterDashboardNavItems(dashboardNavItems, {
       canView: permissions.canView,
       role: user?.role,
       accountType: user?.tenant?.account_type,
       businessType: user?.tenant?.business_type,
+      disabledFeatures: user?.tenant?.disabled_features,
+      featureOrder,
     });
-    
-    // Debug logging
-    if (typeof window !== 'undefined') {
-      console.log('Sidebar - Account Type:', user?.tenant?.account_type);
-      console.log('Sidebar - Business Type:', user?.tenant?.business_type);
-      console.log('Sidebar - Active Modules:', user?.tenant?.active_modules);
-      console.log('Sidebar - Filtered Nav Items:', items.map(i => i.label));
-    }
-    
-    return items;
-  }, [permissions.canView, user?.role, user?.tenant?.account_type, user?.tenant?.business_type, user?.tenant?.active_modules?.join(',')]);
+
+    return sortNavItemsByModuleOrder(items, moduleOrder);
+  }, [permissions.canView, user?.role, user?.tenant?.account_type, user?.tenant?.business_type, user?.tenant?.active_modules?.join(','), user?.tenant?.disabled_features?.join(','), moduleOrder, featureOrder]);
 
   const searchedNavItems = filterNavByQuery(filteredNavItems, navQuery);
   const isSearching = navQuery.trim().length > 0;
@@ -483,6 +529,11 @@ function SidebarContent({
               onToggle={handleToggle}
               onQuickAction={handleQuickAction}
               compact={compact}
+              alwaysExpanded={
+                !isSearching &&
+                !!item.requiredModule &&
+                alwaysExpandedModules.includes(item.requiredModule)
+              }
             />
           ))
         )}

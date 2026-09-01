@@ -302,7 +302,7 @@ function OrgSettingsContent() {
   // Redirect personal accounts to their dedicated settings
   useEffect(() => {
     if (user?.tenant?.account_type === "personal") {
-      router.replace("/dashboard/personal-finance/settings");
+      router.replace("/dashboard/finance/settings");
     }
   }, [user?.tenant?.account_type, router]);
 

@@ -34,13 +34,13 @@ export default function DashboardPage() {
   // Redirect accounts to their specific dashboards
   useEffect(() => {
     if (isPersonal) {
-      router.replace("/dashboard/personal-finance");
+      router.replace("/dashboard/finance");
     } else if (isConstruction) {
       router.replace("/dashboard/construction");
     } else if (isHardware) {
       router.replace("/dashboard/hardware");
     } else if (isKiranaOrRetail) {
-      router.replace("/dashboard/kirana");
+      router.replace("/dashboard/retail");
     }
   }, [isPersonal, isConstruction, isHardware, isKiranaOrRetail, router]);
 

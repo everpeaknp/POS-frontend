@@ -39,6 +39,7 @@ function toAuthTenant(tenant: Tenant): NonNullable<User['tenant']> {
     is_active: tenant.is_active,
     plan_type: tenant.plan_type,
     active_modules: tenant.active_modules,
+    disabled_features: tenant.disabled_features,
   };
 }
 

@@ -116,10 +116,10 @@ export default function TransactionDetailPage() {
       if (txnById) {
         setTransaction(txnById);
         // Update URL to use display ID
-        router.replace(`/dashboard/personal-finance/transactions/${generateDisplayId(txnById.id)}`);
+        router.replace(`/dashboard/finance/transactions/${generateDisplayId(txnById.id)}`);
       } else {
         toast.error("Transaction not found");
-        router.push("/dashboard/personal-finance/transactions");
+        router.push("/dashboard/finance/transactions");
       }
     }
     setLoading(false);
@@ -166,7 +166,7 @@ export default function TransactionDetailPage() {
     
     setTransactions((prev) => prev.filter((t) => t.id !== transaction.id));
     toast.success("Transaction deleted successfully");
-    router.push("/dashboard/personal-finance/transactions");
+    router.push("/dashboard/finance/transactions");
   };
 
   const handlePrint = () => {

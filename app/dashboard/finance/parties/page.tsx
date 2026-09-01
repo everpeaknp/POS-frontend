@@ -136,7 +136,7 @@ export default function PartiesPage() {
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       openAddDialog();
-      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+      router.replace("/dashboard/finance/parties", { scroll: false });
     }
     
     // Handle edit query parameter
@@ -145,7 +145,7 @@ export default function PartiesPage() {
       const partyToEdit = parties.find(p => p.id === Number(editId));
       if (partyToEdit) {
         openEditDialog(partyToEdit);
-        router.replace("/dashboard/personal-finance/parties", { scroll: false });
+        router.replace("/dashboard/finance/parties", { scroll: false });
       }
     }
     
@@ -153,13 +153,13 @@ export default function PartiesPage() {
     const action = searchParams.get("action");
     if (action === "money-in") {
       openTransactionModal("in");
-      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+      router.replace("/dashboard/finance/parties", { scroll: false });
     } else if (action === "money-out") {
       openTransactionModal("out");
-      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+      router.replace("/dashboard/finance/parties", { scroll: false });
     } else if (action === "add-transaction") {
       openTransactionModal("in");
-      router.replace("/dashboard/personal-finance/parties", { scroll: false });
+      router.replace("/dashboard/finance/parties", { scroll: false });
     }
   }, [searchParams, router, parties]);
 
@@ -602,7 +602,7 @@ export default function PartiesPage() {
                     {filteredParties.map((party) => (
                       <tr 
                         key={party.id} 
-                        onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}`)}
+                        onClick={() => router.push(`/dashboard/finance/parties/${generatePartySlug(party)}`)}
                         className="hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-3">
@@ -687,7 +687,7 @@ export default function PartiesPage() {
               filteredParties.map((party) => (
                 <div key={party.id} className="bg-white border border-gray-200 rounded-lg p-4">
                   <button
-                    onClick={() => router.push(`/dashboard/personal-finance/parties/${generatePartySlug(party)}`)}
+                    onClick={() => router.push(`/dashboard/finance/parties/${generatePartySlug(party)}`)}
                     className="flex items-start gap-3 mb-4 w-full text-left hover:opacity-80 transition-opacity"
                   >
                     {party.photo_url ? (

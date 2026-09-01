@@ -172,7 +172,7 @@ export default function AccountPage() {
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     openAddDialog();
-    router.replace("/dashboard/personal-finance/account", { scroll: false });
+    router.replace("/dashboard/finance/account", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 

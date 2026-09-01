@@ -78,7 +78,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
       const message =
         err.response?.data?.error ||
         err.response?.data?.detail ||
-        (err.response?.status === 404 ? "Organization not found" : "Failed to open organization. Please try again.");
+        (err.response?.status === 404 ? "Workplace not found" : "Failed to open workplace. Please try again.");
       toast.error(message, {
         id: 'workspace-open',
       });
@@ -100,7 +100,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
       setIsDeleting(true);
       const slug = org.slug;
       await tenantApi.delete(slug);
-      toast.success("Organization deleted successfully");
+      toast.success("Workplace deleted successfully");
       setShowDeleteConfirm(false);
       if (onDelete) {
         onDelete();
@@ -113,11 +113,11 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
           "Only the Super Admin who created this business can delete it";
         toast.error(errorMsg);
       } else if (error.response?.status === 404) {
-        toast.error("Organization not found");
+        toast.error("Workplace not found");
       } else if (error.response?.status === 500) {
         toast.error("Server error. Please ensure you're an admin and try again.");
       } else {
-        toast.error(error.response?.data?.detail || "Failed to delete organization");
+        toast.error(error.response?.data?.detail || "Failed to delete workplace");
       }
       
       setShowDeleteConfirm(false);
@@ -228,7 +228,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
           </>
         ) : !isMember ? (
           <div className="flex-1 text-center py-2 px-3 bg-muted border border-border rounded-lg">
-            <p className="text-xs text-muted-foreground">Accept invitation to access this organization</p>
+            <p className="text-xs text-muted-foreground">Accept invitation to access this workplace</p>
           </div>
         ) : (
           <div className="flex-1 text-center py-2 px-3 bg-muted border border-border rounded-lg">

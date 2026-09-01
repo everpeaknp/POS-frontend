@@ -24,7 +24,10 @@ export interface OrgModuleDefinition {
   required?: boolean;
 }
 
-export const REQUIRED_MODULE_IDS = [] as const;
+// Mirrors backend's `TenantViewSet.CORE_MODULES` — these three can never be
+// deactivated (the backend rejects it), so the frontend must treat them as
+// required everywhere too, instead of silently omitting them from pickers.
+export const REQUIRED_MODULE_IDS = ["dashboard", "settings", "accounting"] as const;
 
 /** Modules a Personal account gets — no business/org modules, ever. */
 export const PERSONAL_ACCOUNT_MODULE_IDS = [
@@ -32,23 +35,6 @@ export const PERSONAL_ACCOUNT_MODULE_IDS = [
   "personal_finance",
 ] as const;
 
-/** Modules a Construction account gets */
-export const CONSTRUCTION_ACCOUNT_MODULE_IDS = [
-  "settings",
-  "dashboard",
-  "construction",
-  "inventory",
-  "reports",
-] as const;
-
-/** Modules a Hardware account gets */
-export const HARDWARE_ACCOUNT_MODULE_IDS = [
-  "settings",
-  "dashboard",
-  "hardware",
-  "inventory",
-  "reports",
-] as const;
 
 /**
  * Personal Finance is only ever assigned to Personal accounts, never offered
@@ -238,17 +224,20 @@ export function getDefaultModulesByAccountType(accountType?: string): string[] {
     
     case "retail":
     case "kirana":
-      // POS + Inventory + Sales for retail/kirana stores
-      return ["dashboard", "accounting", "settings", "customers", "inventory", "sales", "pos", "reports"];
-    
+      return [
+        "dashboard", "accounting", "settings",
+        "pos", "customers", "purchase", "inventory", "sales", "reports", "hr",
+      ];
+
     case "construction":
-      // Construction + Inventory + Reports
-      return ["dashboard", "accounting", "settings", "construction", "inventory", "reports", "hr"];
-    
+      return ["dashboard", "accounting", "settings", "construction", "inventory", "reports"];
+
     case "hardware":
-      // Hardware + Both POS and Sales + Inventory + Purchase
-      return ["dashboard", "accounting", "settings", "customers", "hardware", "pos", "sales", "inventory", "purchase", "reports"];
-    
+      return [
+        "dashboard", "accounting", "settings",
+        "hardware", "pos", "sales", "purchase", "inventory", "customers", "hr", "reports",
+      ];
+
     case "organization":
     default:
       // Full suite for general organization
@@ -290,11 +279,10 @@ export interface ModuleCatalogSection {
   modules: OrgModuleDefinition[];
 }
 
-function sortByCatalogOrder(modules: OrgModuleDefinition[]): OrgModuleDefinition[] {
-  const order = new Map(ORG_MODULE_CATALOG.map((module, index) => [module.id, index]));
-  return [...modules].sort(
-    (a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)
-  );
+/** Sorts modules to match the given id sequence, not the master catalog's fixed order — lets each workplace type present its own dedicated module order. */
+function sortByIdOrder(modules: OrgModuleDefinition[], idOrder: string[]): OrgModuleDefinition[] {
+  const order = new Map(idOrder.map((id, index) => [id, index]));
+  return [...modules].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 }
 
 export function isRecommendedModule(module: OrgModuleDefinition): boolean {
@@ -313,65 +301,53 @@ export function getModuleCatalogSections(accountType?: string): ModuleCatalogSec
     (module) => module.required || isRequiredModule(module.id)
   );
   
-  // Define primary and optional modules based on workspace type
+  // Define primary and optional modules based on workspace type. Each type
+  // lists only the modules relevant to it (a dedicated, curated set) rather
+  // than every catalog module with irrelevant ones marked "optional" —
+  // Retail/Construction/Hardware get a focused list; Organization sees
+  // everything, with the niche vertical modules kept as optional add-ons.
   let primaryModuleIds: string[] = [];
   let optionalModuleIds: string[] = [];
-  
+
   switch (type) {
     case 'retail':
     case 'kirana':
-      // Retail: POS is primary, everything else optional
-      primaryModuleIds = ['customers', 'pos', 'inventory', 'sales'];
-      optionalModuleIds = ['purchase', 'reports', 'hr'];
+      primaryModuleIds = ['pos', 'customers', 'purchase', 'inventory', 'sales', 'reports', 'hr'];
+      optionalModuleIds = [];
       break;
-      
+
     case 'construction':
-      // Construction: Construction module is primary
-      primaryModuleIds = ['construction', 'inventory', 'hr'];
-      optionalModuleIds = ['customers', 'purchase', 'sales', 'reports', 'pos'];
+      primaryModuleIds = ['construction', 'inventory', 'reports'];
+      optionalModuleIds = [];
       break;
-      
+
     case 'hardware':
-      // Hardware: Hardware module is primary
-      primaryModuleIds = ['customers', 'hardware', 'inventory', 'sales', 'purchase'];
-      optionalModuleIds = ['reports', 'hr', 'pos'];
+      primaryModuleIds = ['hardware', 'pos', 'sales', 'purchase', 'inventory', 'customers', 'hr', 'reports'];
+      optionalModuleIds = [];
       break;
-      
+
     case 'organization':
     default:
-      // General organization: All business modules are primary
-      primaryModuleIds = ['customers', 'inventory', 'sales', 'purchase', 'reports'];
-      optionalModuleIds = ['pos', 'hr', 'construction', 'hardware'];
+      primaryModuleIds = ['customers', 'inventory', 'sales', 'purchase', 'reports', 'pos', 'hr'];
+      optionalModuleIds = ['construction', 'hardware'];
       break;
   }
-  
-  // Filter out modules not relevant to this workspace type
-  const excludeIds: string[] = [];
-  if (type === 'retail' || type === 'kirana') {
-    excludeIds.push('construction', 'hardware');
-  } else if (type === 'construction') {
-    excludeIds.push('hardware');
-  } else if (type === 'hardware') {
-    excludeIds.push('construction');
-  }
-  
-  const primaryModules = sortByCatalogOrder(
+
+  const primaryModules = sortByIdOrder(
     ORG_MODULE_CATALOG.filter(
-      (module) => 
-        primaryModuleIds.includes(module.id) && 
-        !excludeIds.includes(module.id) &&
-        !coreModules.includes(module)
-    )
+      (module) => primaryModuleIds.includes(module.id) && !coreModules.includes(module)
+    ),
+    primaryModuleIds
   );
-  
-  const optionalModules = sortByCatalogOrder(
+
+  const optionalModules = sortByIdOrder(
     ORG_MODULE_CATALOG.filter(
-      (module) => 
-        optionalModuleIds.includes(module.id) && 
-        !excludeIds.includes(module.id) &&
+      (module) =>
+        optionalModuleIds.includes(module.id) &&
         !coreModules.includes(module) &&
         !primaryModules.includes(module)
-    )
+    ),
+    optionalModuleIds
   );
   
   const sections: ModuleCatalogSection[] = [

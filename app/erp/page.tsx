@@ -119,7 +119,7 @@ function ErpPageContent() {
       setTenants(data);
     } catch (error) {
       console.error("[ERP] Failed to fetch tenants:", error);
-      toast.error("Failed to load organizations");
+      toast.error("Failed to load workplaces");
     } finally {
       setLoading(false);
     }
@@ -164,7 +164,7 @@ function ErpPageContent() {
     if (accountLimits && !accountLimits.can_create_org) {
       const limit = accountLimits.max_orgs ?? 0;
       toast.error(
-        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} organization${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
+        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} workplace${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
       );
       return;
     }
@@ -174,7 +174,7 @@ function ErpPageContent() {
   const handleAcceptInvitation = async (id: number) => {
     try {
       const response = await invitationApi.respond(id, "accept");
-      toast.success("Invitation accepted! You've joined the organization.");
+      toast.success("Invitation accepted! You've joined the workplace.");
       await fetchInvitations();
       const updatedTenants = await tenantApi.getAll();
       setTenants(updatedTenants);
@@ -210,12 +210,12 @@ function ErpPageContent() {
       const newOrder = arrayMove(organizations, oldIndex, newIndex).map((org) => org.id);
       setOrgOrder(newOrder);
       localStorage.setItem("khata-org-order", JSON.stringify(newOrder));
-      toast.success("Organization order saved");
+      toast.success("Workplace order saved");
     }
   };
 
   if (authLoading || !user || loading) {
-    return <PageLoading fullScreen message="Loading organizations…" />;
+    return <PageLoading fullScreen message="Loading workplaces…" />;
   }
 
   const organizations = tenants.map((tenant) => mapTenantToOrganization(tenant, user.id));
@@ -252,19 +252,19 @@ function ErpPageContent() {
   const pageMeta =
     {
       organizations: {
-        title: "Your organizations",
+        title: "Your workplaces",
         subtitle: "Open a Khata workspace or create a new one",
       },
       requests: {
         title: "Requests",
-        subtitle: "Organization join requests will appear here",
+        subtitle: "Workplace join requests will appear here",
       },
       invitation: {
         title: "Invitations",
-        subtitle: "Accept invites to join other organizations",
+        subtitle: "Accept invites to join other workplaces",
       },
     }[activeTab] ?? {
-      title: "Organizations",
+      title: "Workplaces",
       subtitle: "Manage your Khata workspaces",
     };
 
@@ -288,7 +288,7 @@ function ErpPageContent() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search organizations..."
+                  placeholder="Search workplaces..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/20"
@@ -304,7 +304,7 @@ function ErpPageContent() {
                 <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={Building2}
-                    title="No organization yet"
+                    title="No workplace yet"
                     subtitle="Get started by creating your first Khata workspace"
                     showButton={accountLimits?.can_create_org ?? true}
                     onAction={handleCreateOrganization}
@@ -331,7 +331,7 @@ function ErpPageContent() {
                 <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={SearchX}
-                    title="No organizations found"
+                    title="No workplaces found"
                     subtitle="Try adjusting your search"
                     showButton={false}
                   />
@@ -345,7 +345,7 @@ function ErpPageContent() {
               <EmptyState
                 icon={ClipboardList}
                 title="No pending requests"
-                subtitle="Organization join requests will appear here"
+                subtitle="Workplace join requests will appear here"
                 showButton={false}
               />
             </div>
@@ -357,7 +357,7 @@ function ErpPageContent() {
                 <EmptyState
                   icon={Mail}
                   title="No invitations"
-                  subtitle="Invitations to join other organizations will appear here"
+                  subtitle="Invitations to join other workplaces will appear here"
                   showButton={false}
                 />
               </div>
@@ -443,7 +443,7 @@ function ErpPageContent() {
           type="button"
           onClick={handleCreateOrganization}
           className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
-          aria-label="Add new organization"
+          aria-label="Add new workplace"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -454,7 +454,7 @@ function ErpPageContent() {
 
 export default function ErpPage() {
   return (
-    <Suspense fallback={<PageLoading fullScreen message="Loading organizations…" />}>
+    <Suspense fallback={<PageLoading fullScreen message="Loading workplaces…" />}>
       <ErpPageContent />
     </Suspense>
   );

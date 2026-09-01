@@ -137,7 +137,7 @@ export default function TransactionDetailPage() {
     } catch (error) {
       console.error("Failed to load transaction:", error);
       toast.error("Failed to load transaction details");
-      router.push(`/dashboard/personal-finance/parties/${partyId}`);
+      router.push(`/dashboard/finance/parties/${partyId}`);
     } finally {
       setLoading(false);
     }
@@ -201,7 +201,7 @@ export default function TransactionDetailPage() {
           {/* Action Buttons */}
           <div className="flex items-center justify-between print:hidden">
             <Button
-              onClick={() => router.push(`/dashboard/personal-finance/parties/${partyId}`)}
+              onClick={() => router.push(`/dashboard/finance/parties/${partyId}`)}
               variant="outline"
               size="sm"
               className="gap-2"
@@ -221,7 +221,7 @@ export default function TransactionDetailPage() {
                 Print
               </Button>
               <Button
-                onClick={() => router.push(`/dashboard/personal-finance/parties/${partyId}?edit-transaction=${transactionId}`)}
+                onClick={() => router.push(`/dashboard/finance/parties/${partyId}?edit-transaction=${transactionId}`)}
                 size="sm"
                 className="bg-[#22C55E] hover:bg-[#22C55E]/90"
               >

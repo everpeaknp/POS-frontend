@@ -22,7 +22,8 @@ import { billingApi } from "@/lib/api/billing";
 import toast from "react-hot-toast";
 import { PageLoading } from "@/components/shared/PageLoading";
 import confetti from "canvas-confetti";
-import { PERSONAL_ACCOUNT_MODULE_IDS, CONSTRUCTION_ACCOUNT_MODULE_IDS, HARDWARE_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { PERSONAL_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { getCreationCopy } from "@/lib/onboarding/creation-copy";
 
 type OrganizationFormData = {
   name: string;
@@ -92,11 +93,14 @@ function SkipLink({ onClick }: { onClick: () => void }) {
 
 function OnboardingSuccess({
   organizationName,
+  accountType,
   onContinue,
 }: {
   organizationName: string;
+  accountType: AccountType | null;
   onContinue: () => void;
 }) {
+  const copy = getCreationCopy(accountType);
   useEffect(() => {
     const duration = 2500;
     const animationEnd = Date.now() + duration;
@@ -132,7 +136,7 @@ function OnboardingSuccess({
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-foreground mb-3 tracking-tight">
-            Your workspace is ready
+            {copy.successHeading}
           </h2>
           <p className="text-gray-500 dark:text-muted-foreground leading-relaxed mb-8">
             {organizationName || "Your account"} is ready. We'll show you around the dashboard next.
@@ -169,13 +173,7 @@ export function OnboardingOverlay() {
     if (accountType === "personal") {
       return [ACCOUNT_TYPE_STEP, PERSONAL_DETAILS_STEP, REVIEW_STEP];
     }
-    if (accountType === "construction") {
-      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
-    }
-    if (accountType === "hardware") {
-      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
-    }
-    if (accountType === "organization") {
+    if (accountType) {
       return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, MODULES_STEP, REVIEW_STEP];
     }
     return [ACCOUNT_TYPE_STEP];
@@ -237,19 +235,9 @@ export function OnboardingOverlay() {
     setOrganizationData(data);
     if (accountType === "personal") {
       setSelectedModules([...PERSONAL_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
-    } else if (accountType === "construction") {
-      setSelectedModules([...CONSTRUCTION_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
-    } else if (accountType === "hardware") {
-      setSelectedModules([...HARDWARE_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
-    } else if (accountType === "retail" || accountType === "kirana") {
-      // Show module selection for retail/kirana with POS pre-selected
-      setStep(3); // modules step
+      setStep(3); // straight to review — no module picker for Personal
     } else {
-      // Organization type - show full module selection
-      setStep(3); // modules step
+      setStep(3); // modules step — retail, organization, construction, hardware all pick modules
     }
   };
 
@@ -293,7 +281,7 @@ export function OnboardingOverlay() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[100] overflow-y-auto">
-        <OrgCreationLoading />
+        <OrgCreationLoading accountType={accountType} />
       </div>
     );
   }
@@ -303,13 +291,14 @@ export function OnboardingOverlay() {
       <div className="fixed inset-0 z-[100] overflow-y-auto">
         <OnboardingSuccess
           organizationName={createdOrgName}
+          accountType={accountType}
           onContinue={() => void handleEnterDashboard()}
         />
       </div>
     );
   }
 
-  const reviewStep = accountType === "personal" || accountType === "construction" || accountType === "hardware" ? 3 : 4;
+  const reviewStep = accountType === "personal" ? 3 : 4;
 
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto overscroll-none">
@@ -337,7 +326,7 @@ export function OnboardingOverlay() {
           />
         )}
 
-        {(accountType === "organization" || accountType === "retail" || accountType === "kirana") && step === 3 && organizationData && (
+        {accountType && accountType !== "personal" && step === 3 && organizationData && (
           <ModuleSelection
             accountType={accountType}
             organizationData={organizationData}

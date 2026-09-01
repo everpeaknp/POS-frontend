@@ -162,7 +162,7 @@ export default function BudgetPage() {
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     openAddDialog();
-    router.replace("/dashboard/personal-finance/budget", { scroll: false });
+    router.replace("/dashboard/finance/budget", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 

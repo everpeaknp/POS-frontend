@@ -206,7 +206,7 @@ export function AppIconRail({
       setSwitchingSlug(tenant.slug);
       // Redirect personal accounts to personal-finance, others to dashboard
       const redirectPath = tenant.account_type === "personal" 
-        ? "/dashboard/personal-finance" 
+        ? "/dashboard/finance" 
         : "/dashboard";
       await switchOrganization(tenant.slug, redirectPath);
     } catch {

@@ -146,10 +146,10 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
   const getQuickActions = () => {
     if (isPersonal) {
       return [
-        { label_en: "Add Expense", label_ne: "खर्च जोड्नुहोस्", href: "/dashboard/personal-finance/transactions?new=1&type=expense" },
-        { label_en: "Add Income", label_ne: "आय जोड्नुहोस्", href: "/dashboard/personal-finance/transactions?new=1&type=income" },
-        { label_en: "Pay a Bill", label_ne: "बिल तिर्नुहोस्", href: "/dashboard/personal-finance/bills?new=1" },
-        { label_en: "Check Tax Estimate", label_ne: "कर अनुमान जाँच्नुहोस्", href: "/dashboard/personal-finance/tax" },
+        { label_en: "Add Expense", label_ne: "खर्च जोड्नुहोस्", href: "/dashboard/finance/transactions?new=1&type=expense" },
+        { label_en: "Add Income", label_ne: "आय जोड्नुहोस्", href: "/dashboard/finance/transactions?new=1&type=income" },
+        { label_en: "Pay a Bill", label_ne: "बिल तिर्नुहोस्", href: "/dashboard/finance/bills?new=1" },
+        { label_en: "Check Tax Estimate", label_ne: "कर अनुमान जाँच्नुहोस्", href: "/dashboard/finance/tax" },
       ];
     } else {
       // Organization/Retail

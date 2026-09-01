@@ -29,6 +29,7 @@ export interface Tenant {
   is_active: boolean;
   plan_type: string;
   active_modules: string[];
+  disabled_features?: string[];
   created_by?: number | null;
 }
 

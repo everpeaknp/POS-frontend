@@ -312,7 +312,7 @@ export default function LoansPage() {
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     setShowAddLoanForm(true);
-    router.replace("/dashboard/personal-finance/bills", { scroll: false });
+    router.replace("/dashboard/finance/bills", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 

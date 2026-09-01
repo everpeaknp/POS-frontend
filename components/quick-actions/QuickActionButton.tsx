@@ -20,28 +20,28 @@ const personalFinanceActions: QuickAction[] = [
     label_en: "Add Expense",
     label_ne: "खर्च जोड्नुहोस्",
     icon: TrendingDown,
-    href: "/dashboard/personal-finance/transactions?new=1&type=expense",
+    href: "/dashboard/finance/transactions?new=1&type=expense",
   },
   {
     id: "add-income",
     label_en: "Add Income",
     label_ne: "आय जोड्नुहोस्",
     icon: TrendingDown,
-    href: "/dashboard/personal-finance/transactions?new=1&type=income",
+    href: "/dashboard/finance/transactions?new=1&type=income",
   },
   {
     id: "pay-bill",
     label_en: "Pay a Bill",
     label_ne: "बिल तिर्नुहोस्",
     icon: CreditCard,
-    href: "/dashboard/personal-finance/bills?new=1",
+    href: "/dashboard/finance/bills?new=1",
   },
   {
     id: "check-tax",
     label_en: "Check Tax Estimate",
     label_ne: "कर अनुमान जाँच्नुहोस्",
     icon: BarChart3,
-    href: "/dashboard/personal-finance/tax",
+    href: "/dashboard/finance/tax",
   },
 ];
 
