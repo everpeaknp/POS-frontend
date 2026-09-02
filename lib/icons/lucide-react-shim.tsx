@@ -157,6 +157,7 @@ export const MoreVertical: IconType = Hi.HiOutlineEllipsisVertical;
 export const Package: IconType = Hi.HiOutlineCube;
 export const PackageCheck: IconType = Hi.HiOutlineCube;
 export const PackageMinus: IconType = Hi.HiOutlineCube;
+export const PackagePlus: IconType = Hi.HiOutlineCube;
 export const Palette: IconType = Hi.HiOutlineSwatch;
 export const PanelLeft: IconType = Hi.HiOutlineViewColumns;
 export const PanelLeftClose: IconType = Hi.HiOutlineBars3BottomLeft;

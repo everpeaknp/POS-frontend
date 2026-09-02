@@ -629,6 +629,7 @@ export function usePOSCheckout() {
     
     // Data
     products,
+    setProducts,
     filteredProducts,
     customers,
     warehouses,

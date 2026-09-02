@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight, RotateCcw, Filter, Scan, Package } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, RotateCcw, Filter, Scan, Package, PackagePlus } from "lucide-react";
 import type { Product } from "@/lib/api/inventory";
 import { useRef, useState } from "react";
 import Image from "next/image";
@@ -23,6 +23,7 @@ interface POSProductGridProps {
   onToggleAvailable: () => void;
   onAddToCart: (product: Product) => void;
   onShowBarcodeScanner: () => void;
+  onQuickAddProduct: () => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
 }
 
@@ -39,6 +40,7 @@ export function POSProductGrid({
   onToggleAvailable,
   onAddToCart,
   onShowBarcodeScanner,
+  onQuickAddProduct,
   searchInputRef,
 }: POSProductGridProps) {
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -124,6 +126,15 @@ export function POSProductGrid({
               <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
             
+            <Button
+              onClick={onQuickAddProduct}
+              variant="outline"
+              className="gap-2 h-12 flex-shrink-0 border-gray-300 dark:border-gray-700"
+            >
+              <PackagePlus className="h-4 w-4" />
+              Quick Add Product
+            </Button>
+
             <Button
               onClick={onShowBarcodeScanner}
               disabled={!selectedWarehouse}

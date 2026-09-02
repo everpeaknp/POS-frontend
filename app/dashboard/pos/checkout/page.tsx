@@ -11,6 +11,7 @@ import { POSCustomerDialog } from "@/components/pos/checkout/POSCustomerDialog";
 import { POSInvoiceDialog } from "@/components/pos/checkout/POSInvoiceDialog";
 import { POSHeader } from "@/components/pos/checkout/POSHeader";
 import { POSSessionBanner } from "@/components/pos/checkout/POSSessionBanner";
+import { POSQuickAddProductDialog } from "@/components/pos/checkout/POSQuickAddProductDialog";
 import { usePOSCheckout } from "@/hooks/usePOSCheckout";
 import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
@@ -22,6 +23,7 @@ export default function POSCheckoutPage() {
   const checkout = usePOSCheckout();
   const [sidebarWidth, setSidebarWidth] = useState(340);
   const [isResizing, setIsResizing] = useState(false);
+  const [showQuickAddProduct, setShowQuickAddProduct] = useState(false);
 
   // Handle resize
   useEffect(() => {
@@ -216,6 +218,7 @@ export default function POSCheckoutPage() {
             onToggleAvailable={() => checkout.setShowOnlyAvailable(!checkout.showOnlyAvailable)}
             onAddToCart={checkout.addToCart}
             onShowBarcodeScanner={() => checkout.setShowBarcodeScanner(true)}
+            onQuickAddProduct={() => setShowQuickAddProduct(true)}
             searchInputRef={checkout.searchInputRef as React.RefObject<HTMLInputElement>}
           />
         </div>
@@ -357,6 +360,17 @@ export default function POSCheckoutPage() {
         onReturnToCheckout={() => {
           checkout.setShowCheckoutDialog(true);
           checkout.setCameFromCheckout(false);
+        }}
+      />
+
+      {/* Quick Add Product Dialog */}
+      <POSQuickAddProductDialog
+        open={showQuickAddProduct}
+        onOpenChange={setShowQuickAddProduct}
+        warehouseId={checkout.selectedWarehouse}
+        onProductCreated={(product) => {
+          checkout.setProducts((prev) => [product, ...prev]);
+          checkout.addToCart(product);
         }}
       />
 

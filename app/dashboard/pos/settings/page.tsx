@@ -14,6 +14,9 @@ import { toast } from "sonner";
 
 type PaymentMethod = "tax" | "esewa" | "khalti" | "fonepay" | "bank";
 
+// Backend ImageFields — see handleSave for why these need special handling.
+const QR_FIELD_KEYS = ["esewa_qr", "khalti_qr", "fonepay_qr", "bank_qr"];
+
 export default function POSSettingsPage() {
   const [settings, setSettings] = useState<any>({
     tax_rate: 13,
@@ -58,10 +61,21 @@ export default function POSSettingsPage() {
     try {
       // Use FormData for file uploads
       const formData = new FormData();
-      
-      // Add all text fields
+
+      // Add all text fields. The QR fields are backend ImageFields — once one
+      // is uploaded, `settings` holds it as a URL string (from the GET
+      // response), not a File. Resending that string as this field's value
+      // makes DRF reject it ("submitted data was not a file"), so these are
+      // only included when the user picked a new file; otherwise they're left
+      // out of the (partial) update entirely, keeping the existing image.
       Object.keys(settings).forEach(key => {
         const value = settings[key];
+        if (QR_FIELD_KEYS.includes(key)) {
+          if (value instanceof File) {
+            formData.append(key, value);
+          }
+          return;
+        }
         if (value instanceof File) {
           formData.append(key, value);
         } else if (value !== null && value !== undefined && typeof value !== 'object') {
@@ -71,10 +85,14 @@ export default function POSSettingsPage() {
 
       // Import apiClient dynamically
       const apiClient = (await import('@/lib/api/client')).default;
-      
-      // Use apiClient.patch with FormData
-      // DO NOT set Content-Type header - let browser set it with boundary
-      const response = await apiClient.patch('/pos/settings/update/', formData);
+
+      // apiClient defaults to Content-Type: application/json, which makes
+      // axios JSON-stringify this FormData instead of sending it as
+      // multipart — it must be overridden per-request so axios (and then the
+      // browser) can set the correct multipart boundary instead.
+      const response = await apiClient.patch('/pos/settings/update/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       if (response.data) {
         setSettings(response.data);
