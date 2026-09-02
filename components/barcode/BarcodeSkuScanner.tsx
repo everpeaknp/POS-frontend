@@ -40,6 +40,10 @@ export function BarcodeSkuScanner({
   const imageProcessorRef = useRef<ImageProcessor | null>(null);
   const detectionLoopRef = useRef<number | null>(null);
   const isProcessingRef = useRef(false);
+  // Last frame's barcode region — feeds the fast region-of-interest crop and,
+  // once misses pile up, the image-enhancement fallback (see detectSmart).
+  const lastKnownBoxRef = useRef<DetectedBarcode["boundingBox"] | null>(null);
+  const consecutiveMissesRef = useRef(0);
 
   useEffect(() => {
     if (open) {
@@ -47,6 +51,8 @@ export function BarcodeSkuScanner({
       barcodeDetectorRef.current = new BarcodeDetector("all");
       trackerRef.current = new BarcodeTracker(5, 2000);
       imageProcessorRef.current = new ImageProcessor();
+      lastKnownBoxRef.current = null;
+      consecutiveMissesRef.current = 0;
 
       const strategies = barcodeDetectorRef.current.getAvailableStrategies();
       console.log("Available detection strategies:", strategies);
@@ -120,11 +126,22 @@ export function BarcodeSkuScanner({
       isProcessingRef.current = true;
 
       try {
-        const result = await barcodeDetectorRef.current!.detect(videoRef.current);
+        // Detect barcode — a fast crop around last frame's region first, a
+        // full-frame pass if that misses, and (once misses pile up) enhanced
+        // grayscale/contrast/sharpen variants of that region as a last resort.
+        const result = await barcodeDetectorRef.current!.detectSmart(videoRef.current, {
+          lastKnownBox: lastKnownBoxRef.current ?? undefined,
+          allowEnhancement: consecutiveMissesRef.current >= 3,
+          imageProcessor: imageProcessorRef.current ?? undefined,
+        });
 
         if (result.success && result.barcode) {
           const barcode = result.barcode;
-          
+          consecutiveMissesRef.current = 0;
+          if (barcode.boundingBox) {
+            lastKnownBoxRef.current = barcode.boundingBox;
+          }
+
           setDetectedBarcode(barcode);
 
           const isStable = trackerRef.current!.track(barcode);
@@ -154,10 +171,18 @@ export function BarcodeSkuScanner({
             }
           }
         } else {
+          consecutiveMissesRef.current++;
+          // The tracked region is only worth cropping to for a couple of
+          // seconds — past that the barcode has likely moved or left frame,
+          // so drop it and go back to scanning the whole picture.
+          if (consecutiveMissesRef.current > 20) {
+            lastKnownBoxRef.current = null;
+          }
+
           if (frameCount % 30 === 0) {
             setDetectionInfo("Searching for barcode...");
           }
-          
+
           if (detectedBarcode) {
             setDetectedBarcode(null);
             setScannerState("searching");
@@ -227,11 +252,17 @@ export function BarcodeSkuScanner({
       const imageUrl = URL.createObjectURL(file);
 
       img.onload = async () => {
-        URL.revokeObjectURL(imageUrl);
+        if (!barcodeDetectorRef.current) {
+          URL.revokeObjectURL(imageUrl);
+          return;
+        }
 
-        if (!barcodeDetectorRef.current) return;
-
+        // The Quagga2 fallback strategy re-fetches the image via `img.src`
+        // internally, so the blob URL must stay valid until detection fully
+        // completes — revoking it before detect() left Quagga loading a
+        // dead URL, producing NaN image dimensions.
         const result = await barcodeDetectorRef.current.detect(img);
+        URL.revokeObjectURL(imageUrl);
 
         if (result.success && result.barcode) {
           captureBarcode(result.barcode.rawValue);
@@ -296,29 +327,29 @@ export function BarcodeSkuScanner({
       <div className="fixed inset-0 bg-black/70 z-40" onClick={handleClose} />
 
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Camera className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Scan Barcode</h2>
-                <p className="text-xs text-gray-600">{detectionInfo}</p>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Scan Barcode</h2>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{detectionInfo}</p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-1 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
             >
-              <X className="h-5 w-5 text-gray-400" />
+              <X className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </button>
           </div>
 
           <div className="p-6 space-y-4">
             {cameraError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
-                <p className="text-sm text-red-800">{cameraError}</p>
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 space-y-3">
+                <p className="text-sm text-red-800 dark:text-red-200">{cameraError}</p>
                 <Button
                   onClick={startScanning}
                   size="sm"
@@ -333,7 +364,7 @@ export function BarcodeSkuScanner({
               <div className="space-y-3">
                 <div
                   className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative"
-                  style={{ minHeight: "300px" }}
+                  style={{ height: "400px" }}
                 >
                   <video
                     ref={videoRef}
@@ -341,7 +372,6 @@ export function BarcodeSkuScanner({
                     playsInline
                     muted
                     className="w-full h-full object-cover"
-                    style={{ maxHeight: "400px" }}
                   />
 
                   <BarcodeDetectionOverlay
@@ -389,8 +419,8 @@ export function BarcodeSkuScanner({
                 </div>
 
                 {scannerState === "searching" && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                    <p className="text-sm text-blue-900 dark:text-blue-100">
                       <strong>Point camera at barcode</strong> - detection happens automatically!
                     </p>
                   </div>
@@ -398,10 +428,10 @@ export function BarcodeSkuScanner({
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
+                    <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">or</span>
+                    <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">or</span>
                   </div>
                 </div>
 
@@ -409,7 +439,7 @@ export function BarcodeSkuScanner({
                   onClick={handleGalleryUpload}
                   disabled={scannerState === "scanning"}
                   variant="outline"
-                  className="w-full gap-2"
+                  className="w-full gap-2 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-gray-100"
                 >
                   <Package className="h-4 w-4" />
                   Upload from Gallery

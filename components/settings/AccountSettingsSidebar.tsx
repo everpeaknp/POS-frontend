@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  LogOut,
   Menu,
   Search,
   X,
@@ -30,11 +31,19 @@ function AccountSidebarContent({
   searchFocusNonce?: number;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [planName, setPlanName] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
   const [modKey, setModKey] = useState("Ctrl");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const displayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
@@ -252,18 +261,37 @@ function AccountSidebarContent({
             })}
 
             {showBack && (
-              <Link
-                href="/erp"
-                title="Back"
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
-                  compact && "justify-center px-2"
-                )}
-              >
-                <ArrowLeft size={17} className="shrink-0" />
-                {!compact && "Back"}
-              </Link>
+              <>
+                <Link
+                  href="/erp"
+                  title="Back"
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
+                    compact && "justify-center px-2"
+                  )}
+                >
+                  <ArrowLeft size={17} className="shrink-0" />
+                  {!compact && "Back"}
+                </Link>
+
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout();
+                    onClose?.();
+                  }}
+                  title="Logout"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all",
+                    compact && "justify-center px-2"
+                  )}
+                >
+                  <LogOut size={17} className="shrink-0" />
+                  {!compact && "Logout"}
+                </button>
+              </>
             )}
           </>
         )}

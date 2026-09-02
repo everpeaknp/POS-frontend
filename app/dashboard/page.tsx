@@ -29,7 +29,12 @@ export default function DashboardPage() {
   const isPersonal = user?.tenant?.account_type === "personal";
   const isConstruction = user?.tenant?.account_type === "construction";
   const isHardware = user?.tenant?.account_type === "hardware";
-  const isKiranaOrRetail = user?.tenant?.business_type === "kirana" || user?.tenant?.business_type === "retail";
+  // account_type is authoritative; business_type is checked too only for
+  // older tenants predating account_type (see nav-items.ts's isKirana).
+  const isKiranaOrRetail =
+    user?.tenant?.account_type === "retail" ||
+    user?.tenant?.business_type === "kirana" ||
+    user?.tenant?.business_type === "retail";
 
   // Redirect accounts to their specific dashboards
   useEffect(() => {

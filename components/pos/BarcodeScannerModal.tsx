@@ -19,6 +19,15 @@ interface BarcodeScannerModalProps {
   onClose: () => void;
   warehouseId: number;
   onProductScanned?: (product: Product, action: "received" | "sold") => void;
+  /**
+   * When set, a found product is confirmed with this action automatically —
+   * no quantity/action buttons shown, the modal just closes right after.
+   * Used by checkout, where scanning should behave like typing a barcode
+   * into the search box: instant add-to-cart. Left unset (the default) for
+   * stock-adjustment callers, where a quantity and an explicit
+   * received/sold choice are the point of scanning in the first place.
+   */
+  autoConfirmAction?: "received" | "sold";
 }
 
 export function BarcodeScannerModal({
@@ -26,6 +35,7 @@ export function BarcodeScannerModal({
   onClose,
   warehouseId,
   onProductScanned,
+  autoConfirmAction,
 }: BarcodeScannerModalProps) {
   const router = useRouter();
   
@@ -50,6 +60,10 @@ export function BarcodeScannerModal({
   const imageProcessorRef = useRef<ImageProcessor | null>(null);
   const detectionLoopRef = useRef<number | null>(null);
   const isProcessingRef = useRef(false);
+  // Last frame's barcode region — feeds the fast region-of-interest crop and,
+  // once misses pile up, the image-enhancement fallback (see detectSmart).
+  const lastKnownBoxRef = useRef<DetectedBarcode["boundingBox"] | null>(null);
+  const consecutiveMissesRef = useRef(0);
 
   // Initialize services
   useEffect(() => {
@@ -58,6 +72,8 @@ export function BarcodeScannerModal({
       barcodeDetectorRef.current = new BarcodeDetector("all");
       trackerRef.current = new BarcodeTracker(5, 2000); // 5 frames, 2s timeout
       imageProcessorRef.current = new ImageProcessor();
+      lastKnownBoxRef.current = null;
+      consecutiveMissesRef.current = 0;
 
       // Log available detection strategies
       const strategies = barcodeDetectorRef.current.getAvailableStrategies();
@@ -148,12 +164,22 @@ export function BarcodeScannerModal({
       isProcessingRef.current = true;
 
       try {
-        // Detect barcode
-        const result = await barcodeDetectorRef.current!.detect(videoRef.current);
+        // Detect barcode — a fast crop around last frame's region first, a
+        // full-frame pass if that misses, and (once misses pile up) enhanced
+        // grayscale/contrast/sharpen variants of that region as a last resort.
+        const result = await barcodeDetectorRef.current!.detectSmart(videoRef.current, {
+          lastKnownBox: lastKnownBoxRef.current ?? undefined,
+          allowEnhancement: consecutiveMissesRef.current >= 3,
+          imageProcessor: imageProcessorRef.current ?? undefined,
+        });
 
         if (result.success && result.barcode) {
           const barcode = result.barcode;
-          
+          consecutiveMissesRef.current = 0;
+          if (barcode.boundingBox) {
+            lastKnownBoxRef.current = barcode.boundingBox;
+          }
+
           // Update detected barcode for overlay
           setDetectedBarcode(barcode);
 
@@ -192,11 +218,19 @@ export function BarcodeScannerModal({
           }
         } else {
           // No barcode detected
+          consecutiveMissesRef.current++;
+          // The tracked region is only worth cropping to for a couple of
+          // seconds — past that the barcode has likely moved or left frame,
+          // so drop it and go back to scanning the whole picture.
+          if (consecutiveMissesRef.current > 30) {
+            lastKnownBoxRef.current = null;
+          }
+
           if (frameCount % 45 === 0) {
             // Log every 3 seconds (45 frames at 15 FPS)
             setDetectionInfo("Searching for barcode at any position...");
           }
-          
+
           // Clear detection if no barcode for a while
           if (detectedBarcode) {
             setDetectedBarcode(null);
@@ -263,6 +297,14 @@ export function BarcodeScannerModal({
         setScannerState("success");
         setDetectionInfo(`✓ Product found: ${product.name}`);
         toast.success(`Product found: ${product.name}`);
+
+        if (autoConfirmAction) {
+          // Give the "product found" state a beat on screen so the scan
+          // doesn't feel like it vanished, then confirm and close on its own —
+          // no quantity/action buttons to click for the common one-at-a-time
+          // checkout scan.
+          setTimeout(() => finalizeAction(product, autoConfirmAction), 500);
+        }
       } else {
         // Product not found
         setScannerState("error");
@@ -296,64 +338,98 @@ export function BarcodeScannerModal({
     setDetectionInfo("Processing image...");
     stopDetectionLoop();
 
+    let imageUrl: string | null = null;
     try {
-      const img = new Image();
-      const imageUrl = URL.createObjectURL(file);
+      imageUrl = URL.createObjectURL(file);
 
-      img.onload = async () => {
-        URL.revokeObjectURL(imageUrl);
+      // Create image element with proper error handling
+      const img = document.createElement('img');
 
-        if (!barcodeDetectorRef.current) return;
+      // Use promise-based loading to ensure proper error handling
+      const loadImage = new Promise<HTMLImageElement>((resolve, reject) => {
+        img.onload = () => {
+          // Ensure dimensions are properly set
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+            resolve(img);
+          } else {
+            reject(new Error("Invalid image dimensions"));
+          }
+        };
 
-        // Try to detect barcode from image
-        const result = await barcodeDetectorRef.current.detect(img);
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
+        };
 
-        if (result.success && result.barcode) {
-          await captureBarcode(result.barcode.rawValue);
-        } else {
-          setDetectionInfo("No barcode found in image");
-          toast.error("Couldn't read a barcode from this image");
-        }
-      };
+        // Set cross-origin to avoid tainted canvas issues
+        img.crossOrigin = "anonymous";
+        img.src = imageUrl!;
+      });
 
-      img.onerror = () => {
-        URL.revokeObjectURL(imageUrl);
-        setDetectionInfo("Failed to load image");
-        toast.error("Failed to load image");
-      };
+      const loadedImg = await loadImage;
 
-      img.src = imageUrl;
+      if (!barcodeDetectorRef.current) {
+        setDetectionInfo("Scanner not initialized");
+        return;
+      }
+
+      // Try to detect barcode from image. The Quagga2 fallback strategy
+      // re-fetches the image via `source.src` internally, so the blob URL
+      // must stay valid until detection fully completes — revoking it
+      // earlier left Quagga loading a dead URL, producing NaN dimensions.
+      const result = await barcodeDetectorRef.current.detect(loadedImg);
+
+      if (result.success && result.barcode) {
+        await captureBarcode(result.barcode.rawValue);
+      } else {
+        setDetectionInfo("No barcode found in image");
+        toast.error("Couldn't read a barcode from this image");
+        setScannerState("searching");
+        
+        // Restart camera for another scan
+        setTimeout(() => {
+          startScanning();
+        }, 1500);
+      }
     } catch (error: any) {
       console.error("Gallery upload error:", error);
-      toast.error("Failed to process image");
+      setDetectionInfo("Failed to process image");
+      toast.error(error.message || "Failed to process image");
+      setScannerState("searching");
+      
+      // Restart camera for another scan
+      setTimeout(() => {
+        startScanning();
+      }, 1500);
+    } finally {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      // Clear file input
+      event.target.value = "";
     }
-
-    event.target.value = "";
   };
 
   /**
-   * Handle action (received/sold)
+   * Confirm a scanned product for the given action. Shared by the manual
+   * quantity/action buttons and the auto-confirm path (`autoConfirmAction`),
+   * so both go through the same stock-in call / onProductScanned handoff.
    */
-  const handleAction = async (action: "received" | "sold") => {
-    if (!scannedProduct) return;
-
+  const finalizeAction = async (product: Product, action: "received" | "sold", qty = quantity) => {
     setProcessing(true);
     try {
       if (action === "received") {
         // Stock IN
         await inventoryApi.operations.stockIn({
-          product: Number(scannedProduct.id),
+          product: Number(product.id),
           warehouse: warehouseId,
-          quantity: quantity.toString(),
+          quantity: qty.toString(),
           reason: "Barcode scan - received",
-          notes: `Scanned barcode: ${scannedProduct.sku}`,
+          notes: `Scanned barcode: ${product.sku}`,
         });
-        toast.success(`Added ${quantity} unit(s) of ${scannedProduct.name} to inventory`);
+        toast.success(`Added ${qty} unit(s) of ${product.name} to inventory`);
         handleClose();
       } else {
         // Stock OUT (or pass to checkout for sale)
         if (onProductScanned) {
-          onProductScanned(scannedProduct, action);
+          onProductScanned(product, action);
           handleClose();
         }
       }
@@ -367,6 +443,14 @@ export function BarcodeScannerModal({
     } finally {
       setProcessing(false);
     }
+  };
+
+  /**
+   * Handle action (received/sold) from the manual quantity/action buttons.
+   */
+  const handleAction = async (action: "received" | "sold") => {
+    if (!scannedProduct) return;
+    await finalizeAction(scannedProduct, action, quantity);
   };
 
   /**
@@ -452,23 +536,23 @@ export function BarcodeScannerModal({
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Camera className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">AI Barcode Scanner</h2>
-                <p className="text-xs text-gray-600">{detectionInfo}</p>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Barcode Scanner</h2>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{detectionInfo}</p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-1 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
             >
-              <X className="h-5 w-5 text-gray-400" />
+              <X className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </button>
           </div>
 
@@ -476,8 +560,8 @@ export function BarcodeScannerModal({
           <div className="p-6 space-y-4">
             {/* Camera Error */}
             {cameraError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
-                <p className="text-sm text-red-800">{cameraError}</p>
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 space-y-3">
+                <p className="text-sm text-red-800 dark:text-red-200">{cameraError}</p>
                 <Button
                   onClick={startScanning}
                   size="sm"
@@ -491,14 +575,13 @@ export function BarcodeScannerModal({
             {/* Camera View */}
             {!cameraError && !scannedProduct && (
               <div className="space-y-3">
-                <div className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative" style={{ minHeight: "300px" }}>
+                <div className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative" style={{ height: "400px" }}>
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
                     className="w-full h-full object-cover"
-                    style={{ maxHeight: "400px" }}
                   />
                   
                   {/* Detection Overlay */}
@@ -547,8 +630,8 @@ export function BarcodeScannerModal({
                 </div>
 
                 {scannerState === "searching" && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                    <p className="text-sm text-blue-900 dark:text-blue-100">
                       <strong>Point camera at barcode</strong> - Auto-zoom and detection happen automatically at any position!
                     </p>
                   </div>
@@ -557,10 +640,10 @@ export function BarcodeScannerModal({
                 {/* Gallery Upload Option */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
+                    <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">or</span>
+                    <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">or</span>
                   </div>
                 </div>
 
@@ -568,7 +651,7 @@ export function BarcodeScannerModal({
                   onClick={handleGalleryUpload}
                   disabled={scannerState === "scanning"}
                   variant="outline"
-                  className="w-full gap-2"
+                  className="w-full gap-2 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-gray-100"
                 >
                   <Package className="h-4 w-4" />
                   Upload from Gallery
@@ -586,16 +669,16 @@ export function BarcodeScannerModal({
 
             {/* Product Not Found Dialog */}
             {showAddProductDialog && !scannedProduct && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+              <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <Package className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <Package className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-yellow-900">Product doesn't exist</h3>
-                    <p className="text-sm text-yellow-800 mt-1">
+                    <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">Product doesn't exist</h3>
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
                       No product found for barcode:{" "}
                       <span className="font-mono font-semibold">{scannedBarcodeValue}</span>
                     </p>
-                    <p className="text-sm text-yellow-800 mt-2">Would you like to add it?</p>
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-2">Would you like to add it?</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -617,62 +700,70 @@ export function BarcodeScannerModal({
             {/* Scanned Product */}
             {scannedProduct && (
               <div className="space-y-4">
-                <div className="border border-gray-200 rounded-lg p-4 bg-green-50">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-green-50 dark:bg-green-950">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Package className="h-5 w-5 text-green-600" />
+                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                      <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{scannedProduct.name}</h3>
-                      <p className="text-sm text-gray-600">SKU: {scannedProduct.sku}</p>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{scannedProduct.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">SKU: {scannedProduct.sku}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         Current Stock: {scannedProduct.current_stock || 0}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Quantity Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Quantity</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full"
-                  />
-                </div>
+                {autoConfirmAction ? (
+                  <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                    Adding to cart…
+                  </p>
+                ) : (
+                  <>
+                    {/* Quantity Input */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full"
+                      />
+                    </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => handleAction("received")}
-                    disabled={processing}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    Received
-                  </Button>
-                  <Button
-                    onClick={() => handleAction("sold")}
-                    disabled={processing}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
-                  >
-                    <TrendingDown className="h-4 w-4" />
-                    Sold
-                  </Button>
-                </div>
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleAction("received")}
+                        disabled={processing}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        Received
+                      </Button>
+                      <Button
+                        onClick={() => handleAction("sold")}
+                        disabled={processing}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+                      >
+                        <TrendingDown className="h-4 w-4" />
+                        Sold
+                      </Button>
+                    </div>
 
-                {/* Rescan Button */}
-                <Button
-                  onClick={handleRescan}
-                  disabled={processing}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Scan Another
-                </Button>
+                    {/* Rescan Button */}
+                    <Button
+                      onClick={handleRescan}
+                      disabled={processing}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Scan Another
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>

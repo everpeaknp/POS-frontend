@@ -48,3 +48,20 @@ export function getCreationCopy(accountType: AccountType | null | undefined): Cr
       };
   }
 }
+
+/** Each workplace type's dedicated dashboard route — where "Go to dashboard" should land right after creation, instead of the generic `/dashboard` (which then has to client-redirect). */
+export function getDashboardHref(accountType: AccountType | null | undefined): string {
+  switch (accountType) {
+    case "personal":
+      return "/dashboard/finance";
+    case "retail":
+      return "/dashboard/retail";
+    case "construction":
+      return "/dashboard/construction";
+    case "hardware":
+      return "/dashboard/hardware";
+    case "organization":
+    default:
+      return "/dashboard";
+  }
+}

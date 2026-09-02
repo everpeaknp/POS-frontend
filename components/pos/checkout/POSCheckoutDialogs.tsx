@@ -43,6 +43,7 @@ export function POSCheckoutDialogs({
         onClose={() => onDialogChange('barcodeScanner', false)}
         warehouseId={Number(selectedWarehouse)}
         onProductScanned={onBarcodeProductScanned}
+        autoConfirmAction="sold"
       />
 
       {/* Held Orders Dialog */}

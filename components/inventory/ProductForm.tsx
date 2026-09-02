@@ -17,8 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateInput } from '@/components/shared/DateInput';
 import { cn } from '@/lib/utils';
-import BarcodeScanner from './BarcodeScanner';
-import { BarcodeScannerModal } from '@/components/pos/BarcodeScannerModal';
+import { BarcodeSkuScanner } from '@/components/barcode/BarcodeSkuScanner';
 
 const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300';
 
@@ -86,6 +85,8 @@ type ProductFormData = z.infer<typeof productSchema>;
 interface ProductFormProps {
   productId?: string;
   initialData?: Partial<ProductFormData>;
+  /** Pre-fills the SKU field, e.g. when arriving from a "barcode not found" scan. */
+  initialSku?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -102,6 +103,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function ProductForm({
   productId,
   initialData,
+  initialSku,
   onSuccess,
   onCancel,
 }: ProductFormProps) {
@@ -172,7 +174,7 @@ export default function ProductForm({
       status: initialData.status || 'active',
     } : {
       name: '',
-      sku: '',
+      sku: initialSku || '',
       category: null,
       unit: null,
       cost_price: '',
@@ -967,24 +969,16 @@ export default function ProductForm({
         </DialogContent>
       </Dialog>
 
-      {/* Barcode Scanner Dialog - Enhanced with AI Scanner */}
-      <Dialog open={showBarcodeScanner} onOpenChange={setShowBarcodeScanner}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Scan Product Barcode</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <BarcodeScanner
-              onScanSuccess={(barcode) => {
-                setValue('sku', barcode, { shouldValidate: true });
-                setShowBarcodeScanner(false);
-                toast.success(`Barcode ${barcode} added to SKU field`);
-              }}
-              onClose={() => setShowBarcodeScanner(false)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Barcode Scanner - same scanner modal used in POS checkout */}
+      <BarcodeSkuScanner
+        open={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onBarcodeScanned={(barcode) => {
+          setValue('sku', barcode, { shouldValidate: true });
+          setShowBarcodeScanner(false);
+          toast.success(`Barcode ${barcode} added to SKU field`);
+        }}
+      />
     </form>
   );
 }

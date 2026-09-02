@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { cn, getMediaUrl } from "@/lib/utils";
+import { getDashboardHref } from "@/lib/onboarding/creation-copy";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,10 +108,7 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
         id: 'workspace-switch',
       });
       
-      // Redirect personal accounts to personal-finance, others to dashboard
-      const redirectPath = tenant.account_type === "personal" 
-        ? "/dashboard/finance" 
-        : "/dashboard";
+      const redirectPath = getDashboardHref(tenant.account_type);
       await switchOrganization(tenant.slug, redirectPath);
       
       // Show success toast

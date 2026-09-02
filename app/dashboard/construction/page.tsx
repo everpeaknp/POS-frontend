@@ -35,7 +35,12 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { useAuth } from '@/lib/context/AuthContext';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
+import { useEnabledModuleLinks } from '@/lib/dashboard/useEnabledModuleLinks';
 import toast from 'react-hot-toast';
+
+// Already covered by this page's own quick actions / module links above —
+// left out of the dynamic "Explore Modules" list so they don't duplicate.
+const CONSTRUCTION_COVERED_MODULE_IDS = ['construction', 'accounting', 'reports'];
 
 interface DashboardStats {
   total_sites: number;
@@ -134,6 +139,7 @@ export default function ConstructionDashboardPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const enabledModuleLinks = useEnabledModuleLinks(CONSTRUCTION_COVERED_MODULE_IDS);
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || 'Workspace';
@@ -320,7 +326,7 @@ export default function ConstructionDashboardPage() {
           <div className={`${constructionCardClass} p-5`}>
             <h3 className="text-sm font-semibold text-gray-700 dark:text-foreground mb-4">Module Navigation</h3>
             <div className="space-y-2">
-              {moduleLinks.map((link) => (
+              {[...moduleLinks, ...enabledModuleLinks].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

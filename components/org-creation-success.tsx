@@ -6,7 +6,7 @@ import { CheckCircle2, ArrowRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
 import type { AccountType } from "@/components/account-type-selection";
-import { getCreationCopy } from "@/lib/onboarding/creation-copy";
+import { getCreationCopy, getDashboardHref } from "@/lib/onboarding/creation-copy";
 
 interface OrgCreationSuccessProps {
   organizationName: string;
@@ -53,7 +53,7 @@ export function OrgCreationSuccess({ organizationName, accountType }: OrgCreatio
   }, []);
 
   const handleGoToDashboard = () => {
-    router.push("/dashboard");
+    router.push(getDashboardHref(accountType));
   };
 
   const handleGoToAccount = () => {

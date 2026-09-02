@@ -29,6 +29,11 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { kiranaDashboardAPI } from "@/lib/api/kirana";
 import { formatNPR } from "@/lib/utils";
+import { useEnabledModuleLinks } from "@/lib/dashboard/useEnabledModuleLinks";
+
+// Already covered by this page's own quick actions / stat cards above —
+// left out of the dynamic "Explore Modules" list so they don't duplicate.
+const RETAIL_COVERED_MODULE_IDS = ["pos", "inventory", "customers"];
 
 const quickActions = [
   {
@@ -112,6 +117,7 @@ export default function KiranaOverviewPage() {
     () => kiranaDashboardAPI.get(),
     { immediate: true }
   );
+  const enabledModuleLinks = useEnabledModuleLinks(RETAIL_COVERED_MODULE_IDS);
 
   const stats = [
     {
@@ -344,7 +350,7 @@ export default function KiranaOverviewPage() {
       <div className="px-6 py-4">
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Explore Modules</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {moduleLinks.map((module, idx) => {
+          {[...moduleLinks, ...enabledModuleLinks].map((module, idx) => {
             const Icon = module.icon;
             return (
               <Link key={idx} href={module.href}>

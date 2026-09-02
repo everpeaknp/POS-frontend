@@ -151,7 +151,7 @@ export default function POSSettingsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#22C55E] border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading settings...</p>
+          <p className="mt-4 text-muted-foreground">Loading settings...</p>
         </div>
       </div>
     );
@@ -170,20 +170,20 @@ export default function POSSettingsPage() {
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            className="border border-gray-200 hover:border-[#22C55E] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
+            className="border border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
             onClick={() => setSelectedMethod(method.id)}
           >
             <CardContent className="p-4">
               {/* Logo Section */}
-              <div className={`w-full h-16 flex items-center justify-center rounded-lg mb-3 ${method.color}`}>
+              <div className={`w-full h-16 flex items-center justify-center rounded-lg mb-3 ${method.color} dark:opacity-80`}>
                 {method.textLogo ? (
-                  <div className={`px-4 py-2 rounded-md ${method.textLogo.bgColor}`}>
-                    <span className={`text-xl font-bold ${method.textLogo.color}`}>
+                  <div className={`px-4 py-2 rounded-md ${method.textLogo.bgColor} dark:opacity-90`}>
+                    <span className={`text-xl font-bold ${method.textLogo.color} dark:brightness-110`}>
                       {method.textLogo.text}
                     </span>
                   </div>
                 ) : method.icon ? (
-                  <method.icon className="h-8 w-8 text-gray-600" />
+                  <method.icon className="h-8 w-8 text-gray-600 dark:text-gray-400" />
                 ) : null}
               </div>
 
@@ -193,8 +193,8 @@ export default function POSSettingsPage() {
                   <div
                     className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       method.enabled
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-gray-100 text-gray-600"
+                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                     }`}
                   >
                     {method.enabled ? "Enabled" : "Disabled"}
@@ -203,11 +203,11 @@ export default function POSSettingsPage() {
               )}
 
               {/* Name */}
-              <h3 className="text-center text-sm font-semibold text-gray-900 mb-1">{method.name}</h3>
-              <p className="text-center text-xs text-gray-500 mb-3">{method.description}</p>
+              <h3 className="text-center text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">{method.name}</h3>
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-3">{method.description}</p>
 
               {/* Configure Button */}
-              <div className="flex items-center justify-center text-[#22C55E] text-xs font-medium group-hover:gap-0.5 transition-all">
+              <div className="flex items-center justify-center text-[#22C55E] dark:text-green-400 text-xs font-medium group-hover:gap-0.5 transition-all">
                 Configure
                 <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -241,7 +241,7 @@ export default function POSSettingsPage() {
                     step="0.01"
                     className="h-10"
                   />
-                  <p className="text-sm text-gray-500">VAT rate applied to all sales</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">VAT rate applied to all sales</p>
                 </div>
               </div>
             )}
@@ -250,10 +250,10 @@ export default function POSSettingsPage() {
             {selectedMethod === "esewa" && (
               <>
                 <div className="col-span-2">
-                  <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">Enable eSewa</p>
-                      <p className="text-sm text-gray-600">Accept eSewa payments</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Enable eSewa</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Accept eSewa payments</p>
                     </div>
                     <Switch
                       checked={settings.esewa_enabled}
@@ -276,7 +276,7 @@ export default function POSSettingsPage() {
                           placeholder="Enter account holder name"
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Name displayed on receipts</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Name displayed on receipts</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="esewa_number">eSewa Merchant ID</Label>
@@ -287,7 +287,7 @@ export default function POSSettingsPage() {
                           placeholder="98XXXXXXXX"
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Your eSewa merchant number</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Your eSewa merchant number</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="esewa_qr">eSewa QR Code (Optional)</Label>
@@ -303,7 +303,7 @@ export default function POSSettingsPage() {
                           }}
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Upload your eSewa payment QR code image</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Upload your eSewa payment QR code image</p>
                       </div>
                     </div>
 
@@ -311,8 +311,8 @@ export default function POSSettingsPage() {
                     <div className="flex items-center justify-center">
                       {settings.esewa_qr ? (
                         <div className="w-full">
-                          <p className="text-sm font-medium text-gray-700 mb-3 text-center">QR Code Preview</p>
-                          <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-xl border-2 border-emerald-200 shadow-lg">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">QR Code Preview</p>
+                          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 p-6 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 shadow-lg">
                             <img 
                               src={typeof settings.esewa_qr === 'string' ? settings.esewa_qr : URL.createObjectURL(settings.esewa_qr)} 
                               alt="eSewa QR" 
@@ -321,8 +321,8 @@ export default function POSSettingsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-64 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
-                          <div className="text-center text-gray-400">
+                        <div className="w-full h-64 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                          <div className="text-center text-gray-400 dark:text-gray-600">
                             <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -340,10 +340,10 @@ export default function POSSettingsPage() {
             {selectedMethod === "khalti" && (
               <>
                 <div className="col-span-2">
-                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">Enable Khalti</p>
-                      <p className="text-sm text-gray-600">Accept Khalti payments</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Enable Khalti</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Accept Khalti payments</p>
                     </div>
                     <Switch
                       checked={settings.khalti_enabled}
@@ -366,7 +366,7 @@ export default function POSSettingsPage() {
                           placeholder="Enter account holder name"
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Name displayed on receipts</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Name displayed on receipts</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="khalti_number">Khalti Merchant ID</Label>
@@ -377,7 +377,7 @@ export default function POSSettingsPage() {
                           placeholder="98XXXXXXXX"
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Your Khalti merchant number</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Your Khalti merchant number</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="khalti_qr">Khalti QR Code (Optional)</Label>
@@ -393,7 +393,7 @@ export default function POSSettingsPage() {
                           }}
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Upload your Khalti payment QR code image</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Upload your Khalti payment QR code image</p>
                       </div>
                     </div>
 
@@ -401,8 +401,8 @@ export default function POSSettingsPage() {
                     <div className="flex items-center justify-center">
                       {settings.khalti_qr ? (
                         <div className="w-full">
-                          <p className="text-sm font-medium text-gray-700 mb-3 text-center">QR Code Preview</p>
-                          <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-xl border-2 border-purple-200 shadow-lg">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">QR Code Preview</p>
+                          <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 p-6 rounded-xl border-2 border-purple-200 dark:border-purple-800 shadow-lg">
                             <img 
                               src={typeof settings.khalti_qr === 'string' ? settings.khalti_qr : URL.createObjectURL(settings.khalti_qr)} 
                               alt="Khalti QR" 
@@ -411,8 +411,8 @@ export default function POSSettingsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-64 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
-                          <div className="text-center text-gray-400">
+                        <div className="w-full h-64 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                          <div className="text-center text-gray-400 dark:text-gray-600">
                             <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -430,10 +430,10 @@ export default function POSSettingsPage() {
             {selectedMethod === "fonepay" && (
               <>
                 <div className="col-span-2">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">Enable FonePay</p>
-                      <p className="text-sm text-gray-600">Accept FonePay payments</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Enable FonePay</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Accept FonePay payments</p>
                     </div>
                     <Switch
                       checked={settings.fonepay_enabled}
@@ -456,7 +456,7 @@ export default function POSSettingsPage() {
                           placeholder="98XXXXXXXX"
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Your FonePay merchant number</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Your FonePay merchant number</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="fonepay_qr">FonePay QR Code (Optional)</Label>
@@ -472,7 +472,7 @@ export default function POSSettingsPage() {
                           }}
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Upload your FonePay payment QR code image</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Upload your FonePay payment QR code image</p>
                       </div>
                     </div>
 
@@ -480,8 +480,8 @@ export default function POSSettingsPage() {
                     <div className="flex items-center justify-center">
                       {settings.fonepay_qr ? (
                         <div className="w-full">
-                          <p className="text-sm font-medium text-gray-700 mb-3 text-center">QR Code Preview</p>
-                          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border-2 border-blue-200 shadow-lg">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">QR Code Preview</p>
+                          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-lg">
                             <img 
                               src={typeof settings.fonepay_qr === 'string' ? settings.fonepay_qr : URL.createObjectURL(settings.fonepay_qr)} 
                               alt="FonePay QR" 
@@ -490,8 +490,8 @@ export default function POSSettingsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-64 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
-                          <div className="text-center text-gray-400">
+                        <div className="w-full h-64 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                          <div className="text-center text-gray-400 dark:text-gray-600">
                             <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -509,10 +509,10 @@ export default function POSSettingsPage() {
             {selectedMethod === "bank" && (
               <>
                 <div className="col-span-2">
-                  <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-950 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">Enable Bank Transfer</p>
-                      <p className="text-sm text-gray-600">Accept bank transfers</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Enable Bank Transfer</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Accept bank transfers</p>
                     </div>
                     <Switch
                       checked={settings.bank_transfer_enabled}
@@ -574,7 +574,7 @@ export default function POSSettingsPage() {
                           }}
                           className="h-10"
                         />
-                        <p className="text-sm text-gray-500">Upload your bank payment QR code image</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Upload your bank payment QR code image</p>
                       </div>
                     </div>
 
@@ -582,8 +582,8 @@ export default function POSSettingsPage() {
                     <div className="flex items-center justify-center">
                       {settings.bank_qr ? (
                         <div className="w-full">
-                          <p className="text-sm font-medium text-gray-700 mb-3 text-center">QR Code Preview</p>
-                          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-xl border-2 border-indigo-200 shadow-lg">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">QR Code Preview</p>
+                          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 p-6 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 shadow-lg">
                             <img 
                               src={typeof settings.bank_qr === 'string' ? settings.bank_qr : URL.createObjectURL(settings.bank_qr)} 
                               alt="Bank Transfer QR" 
@@ -592,8 +592,8 @@ export default function POSSettingsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-64 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
-                          <div className="text-center text-gray-400">
+                        <div className="w-full h-64 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                          <div className="text-center text-gray-400 dark:text-gray-600">
                             <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>

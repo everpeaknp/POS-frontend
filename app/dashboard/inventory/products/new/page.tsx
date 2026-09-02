@@ -51,10 +51,11 @@ export default function NewProductPage() {
         subtitle={isEdit ? "Update product details" : "Add a new product to your inventory"} 
       />
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full min-h-full">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 lg:p-8 w-full min-h-full">
           <ProductForm
             productId={isEdit ? editId : undefined}
             initialData={isEdit ? productData : undefined}
+            initialSku={!isEdit ? skuFromBarcode : undefined}
             onSuccess={() => router.push("/dashboard/inventory/products")}
             onCancel={() => router.back()}
           />

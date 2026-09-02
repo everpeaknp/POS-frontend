@@ -19,6 +19,28 @@ import {
   type OnboardingState,
 } from "@/lib/onboarding/storage";
 
+/**
+ * Each workplace type's dedicated dashboard route, so entering the app after
+ * onboarding/tour lands directly on it instead of the generic `/dashboard`
+ * (which then has to client-redirect there anyway). Mirrors the same
+ * account_type/business_type checks as app/dashboard/page.tsx's redirect
+ * and nav-items.ts's isKirana — business_type is checked too only for older
+ * tenants predating the account_type field.
+ */
+function getHomeRoute(
+  tenant: { account_type?: string | null; business_type?: string | null } | null | undefined
+): string {
+  const accountType = tenant?.account_type;
+  const businessType = tenant?.business_type;
+  if (accountType === "personal") return "/dashboard/finance";
+  if (accountType === "construction") return "/dashboard/construction";
+  if (accountType === "hardware") return "/dashboard/hardware";
+  if (accountType === "retail" || businessType === "kirana" || businessType === "retail") {
+    return "/dashboard/retail";
+  }
+  return "/dashboard";
+}
+
 type OnboardingPhase = "idle" | "overlay" | "tour" | "done";
 
 type OnboardingContextValue = {
@@ -228,8 +250,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           sessionStorage.removeItem(tourPendingKey(user.id));
         }
       }
-      const homeRoute =
-        user.tenant?.account_type === "personal" ? "/dashboard/finance" : "/dashboard";
+      const homeRoute = getHomeRoute(user.tenant);
       if (opts?.startTour !== false) {
         setPhaseSafe("tour");
         router.push(homeRoute);
@@ -250,7 +271,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sessionStorage.setItem(tourPendingKey(user.id), "1");
     }
     setPhaseSafe("tour");
-    router.push(user.tenant?.account_type === "personal" ? "/dashboard/finance" : "/dashboard");
+    router.push(getHomeRoute(user.tenant));
   }, [user, router, setPhaseSafe, clearHelpMode]);
 
   const replayWizard = useCallback(() => {

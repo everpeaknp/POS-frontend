@@ -23,7 +23,12 @@ import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
+import { useEnabledModuleLinks } from "@/lib/dashboard/useEnabledModuleLinks";
 import toast from "react-hot-toast";
+
+// Already covered by this page's own quick actions / module links above —
+// left out of the dynamic "Explore Modules" list so they don't duplicate.
+const HARDWARE_COVERED_MODULE_IDS = ["hardware", "inventory", "customers", "accounting", "reports"];
 
 interface DashboardStats {
   totalProducts: number;
@@ -126,6 +131,7 @@ export default function HardwareDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
+  const enabledModuleLinks = useEnabledModuleLinks(HARDWARE_COVERED_MODULE_IDS);
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
@@ -391,7 +397,7 @@ export default function HardwareDashboardPage() {
               Module Navigation
             </h3>
             <div className="space-y-2">
-              {moduleLinks.map((link) => (
+              {[...moduleLinks, ...enabledModuleLinks].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

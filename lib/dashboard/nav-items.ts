@@ -38,6 +38,8 @@ export interface NavItem {
   hideForPersonal?: boolean;
   personalOnly?: boolean;
   hasQuickAction?: boolean;
+  /** Always renders first in the sidebar, immune to the drag-and-drop module order. */
+  pinnedFirst?: boolean;
 }
 
 export function matchesNavChild(pathname: string, child: NavSubItem): boolean {
@@ -63,6 +65,7 @@ const DASHBOARD_NAV: NavItem = {
   icon: LayoutDashboard,
   href: "/dashboard",
   hideForPersonal: true,
+  pinnedFirst: true,
 };
 
 const SALES_NAV: NavItem = {
@@ -217,6 +220,7 @@ const PERSONAL_NAV_ITEMS: NavItem[] = [
     href: "/dashboard/finance",
     requiredModule: "personal_finance",
     personalOnly: true,
+    pinnedFirst: true,
   },
   {
     label: "Transactions",
@@ -308,6 +312,7 @@ const RETAIL_NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
     href: "/dashboard/retail",
     requiredModule: "pos",
+    pinnedFirst: true,
   },
   POS_NAV,
   CUSTOMERS_NAV,
@@ -355,6 +360,7 @@ const CONSTRUCTION_NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
     href: "/dashboard/construction",
     requiredModule: "construction",
+    pinnedFirst: true,
   },
   {
     label: "Sites",
@@ -436,6 +442,7 @@ const HARDWARE_NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
     href: "/dashboard/hardware",
     requiredModule: "hardware",
+    pinnedFirst: true,
   },
   POS_NAV,
   CUSTOMERS_NAV,
@@ -526,7 +533,14 @@ export function filterDashboardNavItems(
   const isPersonal = opts.accountType === "personal";
   const isConstruction = opts.accountType === "construction";
   const isHardware = opts.accountType === "hardware";
-  const isKirana = opts.businessType === "kirana" || opts.businessType === "retail";
+  // account_type is the authoritative field (set for every tenant created
+  // through the workplace wizard); business_type is checked too only for
+  // older tenants predating account_type, whose business_type may already
+  // be "kirana"/"retail" while account_type still defaults to "organization".
+  const isKirana =
+    opts.accountType === "retail" ||
+    opts.businessType === "kirana" ||
+    opts.businessType === "retail";
 
   // Select navigation based on workplace type
   let navItems: NavItem[];
@@ -619,8 +633,12 @@ export function scopedSidebarKey(baseKey: string, tenantSlug: string | null | un
  * order (stable sort) rather than jumping to the front or back.
  */
 export function sortNavItemsByModuleOrder(items: NavItem[], order: string[]): NavItem[] {
-  if (!order.length) return items;
-  return [...items].sort((a, b) => {
+  const pinned = items.filter((item) => item.pinnedFirst);
+  const rest = items.filter((item) => !item.pinnedFirst);
+
+  if (!order.length) return [...pinned, ...rest];
+
+  const sortedRest = [...rest].sort((a, b) => {
     const indexA = a.requiredModule ? order.indexOf(a.requiredModule) : -1;
     const indexB = b.requiredModule ? order.indexOf(b.requiredModule) : -1;
     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -628,6 +646,8 @@ export function sortNavItemsByModuleOrder(items: NavItem[], order: string[]): Na
     if (indexB !== -1) return 1;
     return 0;
   });
+
+  return [...pinned, ...sortedRest];
 }
 
 // =============================================================================
@@ -644,6 +664,18 @@ export function getOrganizationModuleFeatures(moduleId: string): NavSubItem[] {
   return ORGANIZATION_NAV_ITEMS
     .filter((item) => item.requiredModule === moduleId)
     .flatMap((item) => item.children ?? []);
+}
+
+/**
+ * Resolves an ORG_MODULE_CATALOG module id to its dashboard landing route,
+ * sourced from the organization sidebar definition (which covers every
+ * catalog module) so dashboard "explore modules" links stay in sync with
+ * the real sidebar routes without a second hardcoded route table.
+ */
+export function getModulePrimaryHref(moduleId: string): string | undefined {
+  if (moduleId === "dashboard") return "/dashboard";
+  const item = ORGANIZATION_NAV_ITEMS.find((navItem) => navItem.requiredModule === moduleId);
+  return item?.href ?? item?.children?.[0]?.href;
 }
 
 /** Applies a saved per-module feature order (see SIDEBAR_FEATURE_ORDER_KEY) to a features list. */

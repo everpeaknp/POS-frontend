@@ -5,6 +5,9 @@
 
 import type { CameraCapabilities } from "./types";
 
+/** Cap for the CSS-transform digital zoom fallback — purely a visual aid (it doesn't change what the detector reads from the video frame), so there's no accuracy reason to push it further. */
+const DIGITAL_ZOOM_MAX = 2.5;
+
 export class CameraManager {
   private stream: MediaStream | null = null;
   private videoTrack: MediaStreamTrack | null = null;
@@ -12,6 +15,8 @@ export class CameraManager {
   private videoElement: HTMLVideoElement | null = null;
   private currentZoom = 1;
   private isStarting = false; // Prevent concurrent starts
+  /** Focus point (0-1, video-relative) that CSS-based digital zoom scales toward. */
+  private digitalZoomFocus = { x: 0.5, y: 0.5 };
 
   /**
    * Start camera with optimized settings
@@ -109,6 +114,7 @@ export class CameraManager {
     }
 
     if (this.videoElement) {
+      this.videoElement.style.transform = "";
       this.videoElement.srcObject = null;
       this.videoElement = null;
     }
@@ -116,6 +122,7 @@ export class CameraManager {
     this.videoTrack = null;
     this.capabilities = null;
     this.currentZoom = 1;
+    this.digitalZoomFocus = { x: 0.5, y: 0.5 };
     this.isStarting = false; // Reset starting flag
   }
 
@@ -190,15 +197,51 @@ export class CameraManager {
   }
 
   /**
+   * The zoom range to plan against: the camera's real hardware range when
+   * available, otherwise a virtual [1, DIGITAL_ZOOM_MAX] range for the CSS
+   * fallback — so auto-zoom's math works the same either way.
+   */
+  private getZoomRange(): { min: number; max: number } {
+    const hw = this.capabilities?.zoom;
+    if (hw && hw.max > 1) return { min: hw.min, max: hw.max };
+    return { min: 1, max: DIGITAL_ZOOM_MAX };
+  }
+
+  /**
+   * Applies a zoom level via hardware zoom when the camera supports it,
+   * otherwise scales the video element itself with a CSS transform. The
+   * digital path is a visual aid only — it doesn't crop what the detector
+   * reads from the video frame — but it's what makes "auto-zoom" actually do
+   * something on the many devices/browsers that don't expose hardware zoom.
+   */
+  private async applyZoom(zoomLevel: number, focus?: { x: number; y: number }): Promise<boolean> {
+    const { min, max } = this.getZoomRange();
+    const clampedZoom = Math.max(min, Math.min(max, zoomLevel));
+
+    if (this.supportsZoom()) {
+      return this.setZoom(clampedZoom);
+    }
+
+    if (!this.videoElement) return false;
+
+    if (focus) {
+      this.digitalZoomFocus = focus;
+    }
+    const originX = Math.max(0, Math.min(1, this.digitalZoomFocus.x)) * 100;
+    const originY = Math.max(0, Math.min(1, this.digitalZoomFocus.y)) * 100;
+    this.videoElement.style.transformOrigin = `${originX}% ${originY}%`;
+    this.videoElement.style.transform = clampedZoom > 1 ? `scale(${clampedZoom})` : "";
+    this.videoElement.style.transition = "transform 150ms ease-out";
+
+    this.currentZoom = clampedZoom;
+    return true;
+  }
+
+  /**
    * Auto zoom based on barcode size - ENHANCED for faster detection
    */
   async autoZoom(barcodeSize: number, targetSize = 50): Promise<boolean> {
-    if (!this.supportsZoom()) {
-      return false;
-    }
-
-    const zoom = this.capabilities?.zoom;
-    if (!zoom) return false;
+    const zoom = this.getZoomRange();
 
     // Calculate desired zoom
     // If barcode is too small, zoom in MORE AGGRESSIVELY
@@ -224,12 +267,14 @@ export class CameraManager {
     const change = desiredZoom - this.currentZoom;
     const smoothedZoom = this.currentZoom + Math.max(-maxChange, Math.min(maxChange, change));
 
-    return await this.setZoom(smoothedZoom);
+    return await this.applyZoom(smoothedZoom);
   }
 
   /**
    * Smart auto-zoom that considers barcode position AND size
-   * Zooms in automatically when barcode is detected at any position
+   * Zooms in automatically when barcode is detected at any position.
+   * Falls back to a CSS-transform digital zoom, centered on the barcode's
+   * own position, when the camera has no hardware zoom to offer.
    */
   async smartAutoZoom(
     barcode: { boundingBox?: { x: number; y: number; width: number; height: number } },
@@ -237,13 +282,11 @@ export class CameraManager {
     frameHeight: number,
     targetSize = 50
   ): Promise<boolean> {
-    if (!this.supportsZoom() || !barcode.boundingBox) {
+    if (!barcode.boundingBox) {
       return false;
     }
 
-    const zoom = this.capabilities?.zoom;
-    if (!zoom) return false;
-
+    const zoom = this.getZoomRange();
     const box = barcode.boundingBox;
 
     // Calculate barcode size as percentage of frame
@@ -256,6 +299,7 @@ export class CameraManager {
     const centerY = box.y + box.height / 2;
     const normalizedX = centerX / frameWidth;
     const normalizedY = centerY / frameHeight;
+    const focus = { x: normalizedX, y: normalizedY };
 
     // Distance from center of frame (0 = center, 1 = edge)
     const distanceFromCenter = Math.sqrt(
@@ -281,23 +325,29 @@ export class CameraManager {
 
       // Apply zoom with limits
       const desiredZoom = Math.min(zoom.max, this.currentZoom * Math.min(1.6, zoomFactor));
-      
+
       // More aggressive zoom step
       const maxChange = 0.3;
       const change = desiredZoom - this.currentZoom;
       const smoothedZoom = this.currentZoom + Math.max(-maxChange, Math.min(maxChange, change));
 
-      return await this.setZoom(smoothedZoom);
+      return await this.applyZoom(smoothedZoom, focus);
     } else if (barcodeSize > targetSize * 1.5) {
       // Too large - zoom out slightly
       const zoomFactor = Math.max(0.85, Math.sqrt(barcodeSize / targetSize));
       const desiredZoom = Math.max(zoom.min, this.currentZoom / zoomFactor);
-      
+
       const maxChange = 0.2;
       const change = desiredZoom - this.currentZoom;
       const smoothedZoom = this.currentZoom + Math.max(-maxChange, Math.min(maxChange, change));
 
-      return await this.setZoom(smoothedZoom);
+      return await this.applyZoom(smoothedZoom, focus);
+    } else {
+      // Size is good, but keep the digital-zoom focus point tracking the
+      // barcode so the view stays centered on it as it moves.
+      if (!this.supportsZoom() && this.currentZoom > 1) {
+        await this.applyZoom(this.currentZoom, focus);
+      }
     }
 
     // Size and position are good
@@ -308,14 +358,8 @@ export class CameraManager {
    * Reset zoom to default
    */
   async resetZoom(): Promise<boolean> {
-    if (!this.supportsZoom()) {
-      return false;
-    }
-
-    const zoom = this.capabilities?.zoom;
-    if (!zoom) return false;
-
-    return await this.setZoom(zoom.min);
+    const zoom = this.getZoomRange();
+    return await this.applyZoom(zoom.min, { x: 0.5, y: 0.5 });
   }
 
   /**

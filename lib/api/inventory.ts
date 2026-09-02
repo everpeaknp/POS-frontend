@@ -210,10 +210,14 @@ export const inventoryApi = {
       apiClient.get<PaginatedResponse<Product>>('/inventory/products/', { params }),
     get: (id: number) => 
       apiClient.get<Product>(`/inventory/products/${id}/`),
-    create: (data: Partial<Product> | FormData) => 
-      apiClient.post<Product>('/inventory/products/', data),
-    update: (id: number, data: Partial<Product> | FormData) => 
-      apiClient.put<Product>(`/inventory/products/${id}/`, data),
+    create: (data: Partial<Product> | FormData) =>
+      apiClient.post<Product>('/inventory/products/', data, {
+        headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      }),
+    update: (id: number, data: Partial<Product> | FormData) =>
+      apiClient.put<Product>(`/inventory/products/${id}/`, data, {
+        headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      }),
     delete: (id: number) => 
       apiClient.delete(`/inventory/products/${id}/`),
     lowStock: () => 

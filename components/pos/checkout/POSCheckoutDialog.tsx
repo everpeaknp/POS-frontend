@@ -80,42 +80,42 @@ export function POSCheckoutDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900">Complete Sale</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">Complete Sale</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
           {/* Order Summary */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-5 space-y-2.5 border border-green-200">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg p-5 space-y-2.5 border border-green-200 dark:border-green-800">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">Subtotal</span>
-              <span className="font-semibold text-gray-900">Rs. {subtotal.toFixed(2)}</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Subtotal</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {subtotal.toFixed(2)}</span>
             </div>
             {discountValue > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-700 font-medium">
+                <span className="text-gray-700 dark:text-gray-300 font-medium">
                   Discount {appliedCoupon && `(${appliedCoupon.code})`}
                 </span>
-                <span className="font-semibold text-red-600">- Rs. {Number(discountValue).toFixed(2)}</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">- Rs. {Number(discountValue).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">Tax ({(taxRate * 100).toFixed(1)}%)</span>
-              <span className="font-semibold text-gray-900">Rs. {taxAmount.toFixed(2)}</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Tax ({(taxRate * 100).toFixed(1)}%)</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {taxAmount.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-green-300">
-              <span className="text-gray-900">Total</span>
-              <span className="text-green-600">Rs. {total.toFixed(0)}</span>
+            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-green-300 dark:border-green-700">
+              <span className="text-gray-900 dark:text-gray-100">Total</span>
+              <span className="text-green-600 dark:text-green-400">Rs. {total.toFixed(0)}</span>
             </div>
           </div>
 
           {/* Customer Selection */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-900">
+            <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               Customer 
               {paymentMethod === "credit" ? (
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-red-500 dark:text-red-400 ml-1">*</span>
               ) : (
-                <span className="text-gray-400 font-normal ml-1">(Optional)</span>
+                <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">(Optional)</span>
               )}
             </label>
             <div className="flex gap-2">
@@ -153,8 +153,8 @@ export function POSCheckoutDialog({
 
           {/* Payment Method */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-900">
-              Payment Method <span className="text-red-500">*</span>
+            <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Payment Method <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             
             {/* Row 1: Cash, eSewa, FonePay, Khalti */}
@@ -165,8 +165,8 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("cash")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "cash"
-                    ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <Wallet className="h-5 w-5" />
@@ -181,8 +181,8 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("esewa")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "esewa"
-                        ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
                     <Smartphone className="h-5 w-5" />
@@ -190,7 +190,7 @@ export function POSCheckoutDialog({
                   </button>
                   <button
                     type="button"
-                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowQRCode("esewa");
@@ -201,8 +201,8 @@ export function POSCheckoutDialog({
                   </button>
                 </div>
               ) : (
-                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <span className="text-xs text-gray-400">eSewa</span>
+                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-600">eSewa</span>
                 </div>
               )}
 
@@ -214,8 +214,8 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("fonepay")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "fonepay"
-                        ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
                     <CreditCard className="h-5 w-5" />
@@ -223,7 +223,7 @@ export function POSCheckoutDialog({
                   </button>
                   <button
                     type="button"
-                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowQRCode("fonepay");
@@ -234,8 +234,8 @@ export function POSCheckoutDialog({
                   </button>
                 </div>
               ) : (
-                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <span className="text-xs text-gray-400">FonePay</span>
+                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-600">FonePay</span>
                 </div>
               )}
 
@@ -247,8 +247,8 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("khalti")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "khalti"
-                        ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
                     <Wallet className="h-5 w-5" />
@@ -256,7 +256,7 @@ export function POSCheckoutDialog({
                   </button>
                   <button
                     type="button"
-                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowQRCode("khalti");
@@ -267,8 +267,8 @@ export function POSCheckoutDialog({
                   </button>
                 </div>
               ) : (
-                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <span className="text-xs text-gray-400">Khalti</span>
+                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-600">Khalti</span>
                 </div>
               )}
             </div>
@@ -283,8 +283,8 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("bank_transfer")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "bank_transfer"
-                        ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
                     <CreditCard className="h-5 w-5" />
@@ -292,7 +292,7 @@ export function POSCheckoutDialog({
                   </button>
                   <button
                     type="button"
-                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 transition-colors z-10"
+                    className="absolute right-1 top-1 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowQRCode("bank_transfer");
@@ -303,8 +303,8 @@ export function POSCheckoutDialog({
                   </button>
                 </div>
               ) : (
-                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <span className="text-xs text-gray-400">Bank</span>
+                <div className="h-16 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-600">Bank</span>
                 </div>
               )}
 
@@ -314,8 +314,8 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("card")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "card"
-                    ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <CreditCard className="h-5 w-5" />
@@ -328,8 +328,8 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("credit")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "credit"
-                    ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <Wallet className="h-5 w-5" />
@@ -341,9 +341,9 @@ export function POSCheckoutDialog({
           {/* Cash Amount Input */}
           {paymentMethod === "cash" && (
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-900">Cash Received <span className="text-red-500">*</span></label>
+              <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Cash Received <span className="text-red-500 dark:text-red-400">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500 pointer-events-none">
                   Rs.
                 </span>
                 <Input
@@ -358,9 +358,9 @@ export function POSCheckoutDialog({
                 />
               </div>
               {cashGiven >= total && changeAmount > 0 && (
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-300">
-                  <div className="text-sm font-semibold text-gray-700">Change to Return</div>
-                  <div className="text-2xl font-bold text-green-600 mt-1">
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg border border-green-300 dark:border-green-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Change to Return</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                     Rs. {changeAmount.toFixed(2)}
                   </div>
                 </div>

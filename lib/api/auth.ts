@@ -21,7 +21,7 @@ export interface Tenant {
   id: number;
   name: string;
   slug: string;
-  account_type?: "organization" | "personal";
+  account_type?: "organization" | "personal" | "construction" | "hardware" | "retail";
   workspace_name?: string;
   address?: string;
   email?: string;
