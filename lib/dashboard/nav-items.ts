@@ -612,8 +612,16 @@ export function filterDashboardNavItems(
         icon: DollarSign,
         requiredModule: "accounting",
         children: [
-          { label: "Overview", href: "/dashboard/accounting", exact: true },
-          { label: "Journal Entries", href: "/dashboard/accounting/journal-entries", createHref: "/dashboard/accounting/journal-entries/new" },
+          { label: "Overview", href: "/dashboard/expenses", exact: true },
+          { label: "Add Expense", href: "/dashboard/expenses?new=1", createHref: "/dashboard/expenses?new=1" },
+        ],
+      },
+      {
+        label: "Accounting",
+        icon: BookOpen,
+        requiredModule: "accounting",
+        children: [
+          { label: "Bank Accounts", href: "/dashboard/accounting/bank-accounts", createHref: "/dashboard/accounting/bank-accounts/new" },
         ],
       },
       {

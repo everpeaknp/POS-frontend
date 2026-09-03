@@ -78,105 +78,109 @@ export function BarcodeScannerModal({
       console.log("Initializing Quagga2 scanner...");
 
       // Initialize Quagga with optimized settings for product barcodes
-      await Quagga.init(
-        {
-          inputStream: {
-            type: "LiveStream",
-            target: scannerDivRef.current,
-            constraints: {
-              width: { min: 640, ideal: 1280, max: 1920 },
-              height: { min: 480, ideal: 720, max: 1080 },
-              facingMode: "environment", // Use back camera
-              aspectRatio: { min: 1, max: 2 },
+      await new Promise<void>((resolve, reject) => {
+        Quagga.init(
+          {
+            inputStream: {
+              type: "LiveStream",
+              target: scannerDivRef.current!,
+              constraints: {
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 },
+                facingMode: "environment", // Use back camera
+                aspectRatio: { min: 1, max: 2 },
+              },
             },
+            locator: {
+              patchSize: "medium",
+              halfSample: true,
+            },
+            numOfWorkers: navigator.hardwareConcurrency || 4,
+            decoder: {
+              readers: [
+                "ean_reader", // EAN-13, EAN-8
+                "ean_8_reader",
+                "code_128_reader", // Code128
+                "code_39_reader", // Code39
+                "code_39_vin_reader",
+                "codabar_reader", // Codabar
+                "upc_reader", // UPC-A
+                "upc_e_reader", // UPC-E
+                "i2of5_reader", // Interleaved 2 of 5
+                "2of5_reader",
+                "code_93_reader",
+              ],
+              multiple: false,
+            },
+            locate: true,
+            frequency: 10,
           },
-          locator: {
-            patchSize: "medium",
-            halfSample: true,
-          },
-          numOfWorkers: navigator.hardwareConcurrency || 4,
-          decoder: {
-            readers: [
-              "ean_reader", // EAN-13, EAN-8
-              "ean_8_reader",
-              "code_128_reader", // Code128
-              "code_39_reader", // Code39
-              "code_39_vin_reader",
-              "codabar_reader", // Codabar
-              "upc_reader", // UPC-A
-              "upc_e_reader", // UPC-E
-              "i2of5_reader", // Interleaved 2 of 5
-              "2of5_reader",
-              "code_93_reader",
-            ],
-            multiple: false,
-          },
-          locate: true,
-          frequency: 10,
-        },
-        (err) => {
-          if (err) {
-            console.error("Quagga initialization error:", err);
-            isScanningRef.current = false;
-            setScanning(false);
-            setCameraActive(false);
-            
-            if (err.name === "NotAllowedError") {
-              setCameraError("Camera access denied. Please allow camera permissions.");
-            } else if (err.name === "NotFoundError") {
-              setCameraError("No camera found on this device.");
-            } else if (err.name === "NotReadableError") {
-              setCameraError("Camera is already in use by another application.");
-            } else {
-              setCameraError(`Failed to start camera: ${err.message || "Unknown error"}`);
+          (err) => {
+            if (err) {
+              console.error("Quagga initialization error:", err);
+              isScanningRef.current = false;
+              setScanning(false);
+              setCameraActive(false);
+              
+              if (err.name === "NotAllowedError") {
+                setCameraError("Camera access denied. Please allow camera permissions.");
+              } else if (err.name === "NotFoundError") {
+                setCameraError("No camera found on this device.");
+              } else if (err.name === "NotReadableError") {
+                setCameraError("Camera is already in use by another application.");
+              } else {
+                setCameraError(`Failed to start camera: ${err.message || "Unknown error"}`);
+              }
+              reject(err);
+              return;
             }
-            return;
+            resolve();
           }
+        );
+      });
 
-          console.log("Quagga initialized successfully");
-          
-          // DEBUG: Add frame processing callback to see decode attempts
-          let lastLogTime = Date.now();
-          Quagga.onProcessed((result) => {
-            frameCountRef.current++;
-            
-            // Log every 30 frames (about every 3 seconds at 10fps)
-            if (frameCountRef.current % 30 === 0) {
-              const now = Date.now();
-              const fps = 30 / ((now - lastLogTime) / 1000);
-              console.log(`[DEBUG] Processed ${frameCountRef.current} frames (${fps.toFixed(1)} fps)`);
-              lastLogTime = now;
-            }
-            
-            // Log if any boxes/codes were found (even failed attempts)
-            if (result) {
-              if (result.boxes) {
-                console.log(`[DEBUG] Frame ${frameCountRef.current}: Found ${result.boxes.length} potential barcode regions`);
-              }
-              if (result.codeResult) {
-                if (result.codeResult.code) {
-                  console.log(`[DEBUG] Frame ${frameCountRef.current}: Decoded code: "${result.codeResult.code}" (format: ${result.codeResult.format})`);
-                } else {
-                  // Decode attempt but no valid code
-                  console.log(`[DEBUG] Frame ${frameCountRef.current}: Decode attempted but no valid code found`);
-                }
-              }
-            }
-          });
-          
-          // Register barcode detection handler
-          Quagga.onDetected(handleBarcodeDetected);
-          
-          // Start scanning
-          Quagga.start();
-          
-          console.log("Quagga scanner started - processing frames...");
-          console.log("[DEBUG] Watch console for frame processing logs");
-          frameCountRef.current = 0;
-          setCameraActive(true);
-          setScanning(false);
+      console.log("Quagga initialized successfully");
+      
+      // DEBUG: Add frame processing callback to see decode attempts
+      let lastLogTime = Date.now();
+      Quagga.onProcessed((result) => {
+        frameCountRef.current++;
+        
+        // Log every 30 frames (about every 3 seconds at 10fps)
+        if (frameCountRef.current % 30 === 0) {
+          const now = Date.now();
+          const fps = 30 / ((now - lastLogTime) / 1000);
+          console.log(`[DEBUG] Processed ${frameCountRef.current} frames (${fps.toFixed(1)} fps)`);
+          lastLogTime = now;
         }
-      );
+        
+        // Log if any boxes/codes were found (even failed attempts)
+        if (result) {
+          if (result.boxes) {
+            console.log(`[DEBUG] Frame ${frameCountRef.current}: Found ${result.boxes.length} potential barcode regions`);
+          }
+          if (result.codeResult) {
+            if (result.codeResult.code) {
+              console.log(`[DEBUG] Frame ${frameCountRef.current}: Decoded code: "${result.codeResult.code}" (format: ${result.codeResult.format})`);
+            } else {
+              // Decode attempt but no valid code
+              console.log(`[DEBUG] Frame ${frameCountRef.current}: Decode attempted but no valid code found`);
+            }
+          }
+        }
+      });
+      
+      // Register barcode detection handler
+      Quagga.onDetected(handleBarcodeDetected);
+      
+      // Start scanning
+      Quagga.start();
+      
+      console.log("Quagga scanner started - processing frames...");
+      console.log("[DEBUG] Watch console for frame processing logs");
+      frameCountRef.current = 0;
+      setCameraActive(true);
+      setScanning(false);
     } catch (error: any) {
       console.error("Camera start error:", error);
       isScanningRef.current = false;

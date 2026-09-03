@@ -164,6 +164,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
 
+      // FIX: If user already has a tenant selected in their current session,
+      // don't show overlay even if orgCount is 0 (race condition during load).
+      // User is clearly already using an org, so onboarding was already completed.
+      if (user.tenant) {
+        stored = markTourComplete(user.id)!;
+        setState(stored);
+        setPhaseSafe("done");
+        setChecking(false);
+        return;
+      }
+
       if (!stored.completed && count === 0) {
         setPhaseSafe(sessionDismissed ? "idle" : "overlay");
         setChecking(false);

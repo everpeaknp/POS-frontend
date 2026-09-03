@@ -15,8 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { inventoryApi, type Product, type Warehouse } from "@/lib/api/inventory";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import posApi, { type POSSession, type POSTransaction } from "@/lib/api/pos";
+import { paymentMethodsAPI, bankAccountsAPI, type PaymentMethod, type BankAccount } from "@/lib/api/accounting";
 import { downloadReceiptPDF, preparePrint, cleanupPrint } from "@/lib/utils/receipt-generator";
 import { BarcodeScannerModal } from "@/components/pos/BarcodeScannerModal";
+import { ConfirmSaleModal, type SaleConfirmationData } from "@/components/pos/ConfirmSaleModal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +36,8 @@ export default function POSCheckoutPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [openSession, setOpenSession] = useState<POSSession | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [taxRate, setTaxRate] = useState<number>(0.13); // Default 13%, will be overridden
   
   // Cart
@@ -44,6 +48,7 @@ export default function POSCheckoutPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "digital" | "credit">("cash");
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   const [cashAmount, setCashAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
   
@@ -55,6 +60,9 @@ export default function POSCheckoutPage() {
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState("");
   
+  // Confirm Sale Modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  
   // UI State
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -63,20 +71,32 @@ export default function POSCheckoutPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [productsRes, warehousesRes, customersRes, sessionRes, settingsRes] = await Promise.all([
+        const [productsRes, warehousesRes, customersRes, sessionRes, settingsRes, paymentMethodsRes, bankAccountsRes] = await Promise.all([
           inventoryApi.products.list({ limit: 1000, status: "active" }),
           inventoryApi.warehouses.list({ limit: 100 }),
           customerAPI.list({ status: "active", page_size: 500 }),
           posApi.getOpenSession(),
           posApi.getSettings(),
+          paymentMethodsAPI.list({ is_active: true }).catch(() => ({ data: { results: [] } })),
+          bankAccountsAPI.list({ status: "active" }).catch(() => []),
         ]);
-
+        
         const allProducts = productsRes.data?.results || [];
         setProducts(allProducts);
         setFilteredProducts(allProducts);
         setWarehouses(warehousesRes.data?.results || []);
         setCustomers(customersRes.data?.results || []);
         setOpenSession(sessionRes);
+        
+        // Set payment methods (filter active ones)
+        const activeMethods = (paymentMethodsRes.data?.results || []).filter(
+          (pm: PaymentMethod) => pm.is_active
+        );
+        setPaymentMethods(activeMethods);
+        
+        // Set bank accounts
+        const activeAccounts = Array.isArray(bankAccountsRes) ? bankAccountsRes : [];
+        setBankAccounts(activeAccounts);
         
         // Set tax rate from settings (convert from percentage to decimal)
         if (settingsRes && settingsRes.tax_rate !== undefined) {
@@ -90,7 +110,7 @@ export default function POSCheckoutPage() {
           setSelectedWarehouse(String(warehousesRes.data.results[0].id));
         }
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("[Checkout] Failed to load data:", error);
         toast.error("Failed to load data");
       } finally {
         setLoading(false);
@@ -190,6 +210,7 @@ export default function POSCheckoutPage() {
     setCart([]);
     setSelectedCustomer("");
     setPaymentMethod("cash");
+    setSelectedPaymentMethodId(null);
     setCashAmount("");
     setDiscountAmount("");
     setSearchQuery("");
@@ -234,6 +255,40 @@ export default function POSCheckoutPage() {
     }
   };
 
+  // Handle confirm sale modal - Save Only
+  const handleConfirmSave = async (data: SaleConfirmationData) => {
+    console.log("Save with confirmation data:", data);
+    
+    // Update state with confirmation data before completing sale
+    if (data.paymentMethodId) {
+      setSelectedPaymentMethodId(data.paymentMethodId);
+    }
+    if (data.bankAccountId) {
+      // Store bank account ID to pass to transaction
+      (window as any).__selectedBankAccountId = data.bankAccountId;
+    }
+    
+    await completeSale();
+    setShowConfirmModal(false);
+  };
+
+  // Handle confirm sale modal - Save & Print
+  const handleConfirmSaveAndPrint = async (data: SaleConfirmationData) => {
+    console.log("Save and print with confirmation data:", data);
+    
+    // Update state with confirmation data before completing sale
+    if (data.paymentMethodId) {
+      setSelectedPaymentMethodId(data.paymentMethodId);
+    }
+    if (data.bankAccountId) {
+      // Store bank account ID to pass to transaction
+      (window as any).__selectedBankAccountId = data.bankAccountId;
+    }
+    
+    await completeSale();
+    setShowConfirmModal(false);
+  };
+
   // Complete sale
   const completeSale = async () => {
     if (cart.length === 0) {
@@ -268,6 +323,8 @@ export default function POSCheckoutPage() {
         warehouse: selectedWarehouse,
         customer: paymentMethod === "credit" ? selectedCustomer : null,
         payment_method: paymentMethod === "digital" ? "card" : paymentMethod,
+        payment_method_ref: selectedPaymentMethodId,
+        bank_account: (window as any).__selectedBankAccountId || null,
         amount_paid: paymentMethod === "cash" ? cashGiven : total,
         change_given: paymentMethod === "cash" ? changeAmount : 0,
         subtotal: subtotal,
@@ -284,6 +341,9 @@ export default function POSCheckoutPage() {
       };
 
       const response = await posApi.createTransaction(transactionData);
+      
+      // Clear the temporary bank account ID
+      (window as any).__selectedBankAccountId = null;
       
       // Store transaction data for receipt viewing
       setCompletedTransaction(response);
@@ -329,7 +389,11 @@ export default function POSCheckoutPage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-600">Loading...</p>
+          <p className="mt-4 text-sm text-gray-600">Loading products and settings...</p>
+          <p className="mt-2 text-xs text-gray-400">(times out after 5 seconds if API is slow)</p>
+          <div className="mt-6 text-xs text-gray-400 space-y-1">
+            <p>Tip: Check browser console for errors if this persists</p>
+          </div>
         </div>
       </div>
     );
@@ -569,34 +633,65 @@ export default function POSCheckoutPage() {
             {/* Payment Method */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Payment</label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant={paymentMethod === "cash" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("cash")}
-                  className={paymentMethod === "cash" ? "bg-green-600" : ""}
+              
+              {/* Show PaymentMethod options if available, otherwise fallback to simple buttons */}
+              {paymentMethods.length > 0 ? (
+                <Select 
+                  value={selectedPaymentMethodId || ""} 
+                  onValueChange={(value) => {
+                    setSelectedPaymentMethodId(value || null);
+                    
+                    // Map PaymentMethod to legacy payment_method string
+                    const pm = paymentMethods.find(m => m.id === value);
+                    if (pm) {
+                      if (pm.method_type === 'cash') setPaymentMethod('cash');
+                      else if (pm.method_type === 'credit') setPaymentMethod('credit');
+                      else setPaymentMethod('digital'); // card/bank/other
+                    }
+                  }}
                 >
-                  <Wallet className="h-4 w-4 mr-1" />
-                  Cash
-                </Button>
-                <Button
-                  variant={paymentMethod === "digital" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("digital")}
-                  className={paymentMethod === "digital" ? "bg-green-600" : ""}
-                >
-                  <CreditCard className="h-4 w-4 mr-1" />
-                  Card
-                </Button>
-                <Button
-                  variant={paymentMethod === "credit" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPaymentMethod("credit")}
-                  className={paymentMethod === "credit" ? "bg-green-600" : ""}
-                >
-                  Credit
-                </Button>
-              </div>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentMethods.map((pm) => (
+                      <SelectItem key={pm.id} value={pm.id}>
+                        {pm.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                /* Fallback to simple cash/card/credit buttons if no PaymentMethods */
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={paymentMethod === "cash" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => { setPaymentMethod("cash"); setSelectedPaymentMethodId(null); }}
+                    className={paymentMethod === "cash" ? "bg-green-600" : ""}
+                  >
+                    <Wallet className="h-4 w-4 mr-1" />
+                    Cash
+                  </Button>
+                  <Button
+                    variant={paymentMethod === "digital" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => { setPaymentMethod("digital"); setSelectedPaymentMethodId(null); }}
+                    className={paymentMethod === "digital" ? "bg-green-600" : ""}
+                  >
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Card
+                  </Button>
+                  <Button
+                    variant={paymentMethod === "credit" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => { setPaymentMethod("credit"); setSelectedPaymentMethodId(null); }}
+                    className={paymentMethod === "credit" ? "bg-green-600" : ""}
+                  >
+                    Credit
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Credit Customer Selection */}
@@ -641,12 +736,11 @@ export default function POSCheckoutPage() {
 
             {/* Complete Sale Button */}
             <Button
-              onClick={completeSale}
+              onClick={() => setShowConfirmModal(true)}
               disabled={
                 processing ||
                 !openSession ||
-                (paymentMethod === "cash" && cashGiven < total) ||
-                (paymentMethod === "credit" && !selectedCustomer)
+                cart.length === 0
               }
               className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700"
             >
@@ -817,6 +911,18 @@ export default function POSCheckoutPage() {
         onClose={() => setShowBarcodeScanner(false)}
         warehouseId={Number(selectedWarehouse)}
         onProductScanned={handleBarcodeProductScanned}
+      />
+
+      {/* Confirm Sale Modal */}
+      <ConfirmSaleModal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onSave={handleConfirmSave}
+        onSaveAndPrint={handleConfirmSaveAndPrint}
+        totalAmount={total}
+        customers={customers}
+        paymentMethods={paymentMethods}
+        bankAccounts={bankAccounts}
       />
     </div>
   );

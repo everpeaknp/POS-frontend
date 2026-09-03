@@ -50,6 +50,13 @@ export function ProtectedRoute({
       return;
     }
     
+    // CRITICAL FIX: If requiredModule is specified but tenant is not loaded yet,
+    // don't redirect - wait for tenant data to load
+    if (requiredModule && !user.tenant) {
+      console.log('[ProtectedRoute] Waiting for tenant to load before checking module access');
+      return;
+    }
+    
     // Check role requirement
     if (requiredRole && user.role !== requiredRole && user.role !== 'admin') {
       router.push(fallbackPath);
@@ -58,6 +65,7 @@ export function ProtectedRoute({
     
     // Check module access
     if (requiredModule && !permissions.canView(requiredModule)) {
+      console.log(`[ProtectedRoute] Module "${requiredModule}" access denied, redirecting to ${fallbackPath}`);
       router.push(fallbackPath);
       return;
     }
@@ -73,11 +81,16 @@ export function ProtectedRoute({
       router.push(fallbackPath);
       return;
     }
-  }, [user, loading, requiredRole, requiredModule, requireFinancialAccess, requireEditAccess, permissions, router, fallbackPath]);
+  }, [user, user?.tenant, loading, requiredRole, requiredModule, requireFinancialAccess, requireEditAccess, permissions, router, fallbackPath]);
   
   // Show loading state
   if (loading) {
     return <PageLoading fullScreen message="Loading…" />;
+  }
+  
+  // Show loading if tenant hasn't loaded yet but is required for module check
+  if (requiredModule && user && !user.tenant) {
+    return <PageLoading fullScreen message="Loading workspace…" />;
   }
   
   // Show nothing if not authenticated (will redirect)

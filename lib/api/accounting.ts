@@ -72,6 +72,20 @@ export interface JournalEntry {
   updated_at: string;
 }
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  method_type: 'cash' | 'card' | 'digital_wallet' | 'cheque' | 'bank_transfer';
+  method_type_display?: string;
+  linked_account: string;
+  linked_account_name?: string;
+  linked_account_code?: string;
+  is_active: boolean;
+  is_system_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BankAccount {
   id: string;
   bank_name: string;
@@ -720,6 +734,52 @@ export const bankAccountsAPI = {
   statement: async (id: string) => {
     const response = await apiClient.get<BankTransaction[] | Paginated<BankTransaction>>(`/accounting/bank-accounts/${id}/statement/`);
     return unwrapList(response.data);
+  },
+};
+
+// ============================================================================
+// PAYMENT METHODS API
+// ============================================================================
+
+export const paymentMethodsAPI = {
+  // List all payment methods
+  list: async (params?: {
+    method_type?: string;
+    is_active?: boolean;
+    is_system_default?: boolean;
+    search?: string;
+    ordering?: string;
+  }) => {
+    return fetchAllPages<PaymentMethod>('/accounting/payment-methods/', params);
+  },
+
+  // Get payment method by ID
+  get: async (id: string) => {
+    const response = await apiClient.get<PaymentMethod>(`/accounting/payment-methods/${id}/`);
+    return response.data;
+  },
+
+  // Create new payment method
+  create: async (data: Partial<PaymentMethod>) => {
+    const response = await apiClient.post<PaymentMethod>('/accounting/payment-methods/', data);
+    return response.data;
+  },
+
+  // Update payment method
+  update: async (id: string, data: Partial<PaymentMethod>) => {
+    const response = await apiClient.put<PaymentMethod>(`/accounting/payment-methods/${id}/`, data);
+    return response.data;
+  },
+
+  // Partial update
+  patch: async (id: string, data: Partial<PaymentMethod>) => {
+    const response = await apiClient.patch<PaymentMethod>(`/accounting/payment-methods/${id}/`, data);
+    return response.data;
+  },
+
+  // Delete payment method (blocked for system defaults on backend)
+  delete: async (id: string) => {
+    await apiClient.delete(`/accounting/payment-methods/${id}/`);
   },
 };
 

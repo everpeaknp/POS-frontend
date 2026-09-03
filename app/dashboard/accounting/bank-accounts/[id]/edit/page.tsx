@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { BankNameCombobox } from "@/components/accounting/BankNameCombobox";
 import { bankAccountsAPI } from "@/lib/api/accounting";
 import { loadBankGlAccounts } from "@/lib/accounting/bank-gl-accounts";
 
@@ -38,6 +37,7 @@ export default function EditBankAccountPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [glAccounts, setGlAccounts] = useState<Awaited<ReturnType<typeof loadBankGlAccounts>>>([]);
+  const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<{
     bank_name: string;
     account_name: string;
@@ -110,22 +110,21 @@ export default function EditBankAccountPage() {
       toast.error('Account number is required');
       return;
     }
-    if (!formData.gl_account) {
-      toast.error('GL account is required');
-      return;
-    }
 
     try {
       setSaving(true);
-      await bankAccountsAPI.update(id, {
-        bank_name: formData.bank_name.trim(),
-        account_name: formData.account_name.trim(),
-        account_number: formData.account_number.trim(),
-        type: formData.type,
-        branch: formData.branch.trim(),
-        swift_code: formData.swift_code.trim(),
-        gl_account: String(formData.gl_account),
-        status: formData.status });
+      const formDataToSend = new FormData();
+      formDataToSend.append('bank_name', formData.bank_name.trim());
+      formDataToSend.append('account_name', formData.account_name.trim());
+      formDataToSend.append('account_number', formData.account_number.trim());
+      formDataToSend.append('type', formData.type);
+      
+      // Add QR code image if new file selected
+      if (qrCodeFile) {
+        formDataToSend.append('qr_code_image', qrCodeFile);
+      }
+      
+      await bankAccountsAPI.update(id, formDataToSend);
       toast.success('Bank account updated successfully');
       router.push(`/dashboard/accounting/bank-accounts/${id}`);
     } catch (error: any) {
@@ -134,6 +133,13 @@ export default function EditBankAccountPage() {
       toast.error(errorMessage);
     } finally {
       setSaving(false);
+    }
+  };
+  
+  const handleQrCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setQrCodeFile(file);
     }
   };
 
@@ -180,9 +186,11 @@ export default function EditBankAccountPage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5 max-w-2xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Bank Name" required>
-                <BankNameCombobox
+                <Input 
+                  className="h-9 text-sm border-gray-200" 
+                  placeholder="e.g. Nabil Bank Ltd."
                   value={formData.bank_name}
-                  onChange={(bank_name) => setFormData({ ...formData, bank_name })}
+                  onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
                   disabled={saving}
                 />
               </Field>
@@ -206,74 +214,22 @@ export default function EditBankAccountPage() {
                   disabled={saving}
                 />
               </Field>
-              <Field label="Account Type" required>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => setFormData({ ...formData, type: value as AccountType })}
-                  disabled={saving}
-                >
-                  <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(["Current", "Savings", "Overdraft", "Fixed"] as const).map((t) => <SelectItem key={t} value={t}>{t === "Fixed" ? "Fixed Deposit" : t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </Field>
+              <div /> {/* Spacer for grid alignment */}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Branch Name">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  placeholder="e.g. Thamel, Kathmandu"
-                  value={formData.branch}
-                  onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+            
+            <div className="pt-4 border-t border-gray-100">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Payment QR Code (Optional)</h4>
+              <Field label="QR Code Image">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleQrCodeChange}
                   disabled={saving}
-                />
-              </Field>
-              <Field label="SWIFT Code">
-                <Input 
-                  className="h-9 text-sm border-gray-200" 
-                  placeholder="e.g. NEBLNPKA"
-                  value={formData.swift_code}
-                  onChange={(e) => setFormData({ ...formData, swift_code: e.target.value })}
-                  disabled={saving}
+                  className="h-9 text-sm border-gray-200"
                 />
               </Field>
             </div>
-            <Field label="Link to GL Account" required>
-              {glAccounts.length === 0 ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  No GL accounts found.{" "}
-                  <Link href="/dashboard/accounting/chart-of-accounts/new" className="font-medium underline text-[#22C55E]">
-                    Create a Bank account
-                  </Link>{" "}
-                  in Chart of Accounts.
-                </div>
-              ) : (
-                <Combobox
-                  options={glAccountOptions}
-                  value={formData.gl_account || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, gl_account: value })}
-                  placeholder="Search GL account..."
-                  searchPlaceholder="Code or name..."
-                  emptyText="No account found."
-                  disabled={saving}
-                />
-              )}
-            </Field>
-            <Field label="Status" required>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
-                disabled={saving}
-              >
-                <SelectTrigger className="h-9 text-sm border-gray-200 w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
+            
             <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
               <Button 
                 type="button"
@@ -288,7 +244,7 @@ export default function EditBankAccountPage() {
               <Button 
                 type="submit"
                 className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-                disabled={saving || glAccounts.length === 0}
+                disabled={saving}
               >
                 {saving ? 'Saving...' : 'Update Bank Account'}
               </Button>

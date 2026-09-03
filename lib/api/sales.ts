@@ -152,6 +152,9 @@ export const customerAPI = {
   
   delete: (id: string) => 
     apiClient.delete(`/sales/customers/${id}/`),
+  
+  ledger: (id: string) =>
+    apiClient.get<CustomerLedger[]>(`/sales/customers/${id}/ledger/`),
 };
 
 
