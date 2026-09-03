@@ -2,12 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, Package, TrendingUp, TrendingDown, Camera, Plus } from "@/lib/icons/lucide-react-shim";
+import { X, Package, TrendingUp, TrendingDown, Camera, Plus, Zap, Loader2 } from "@/lib/icons/lucide-react-shim";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Quagga from "@ericblade/quagga2";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import { toast } from "sonner";
+import { BarcodeDetectionOverlay } from "@/components/barcode/BarcodeDetectionOverlay";
+import { CameraManager } from "@/lib/barcode/camera";
+import { BarcodeDetector } from "@/lib/barcode/detector";
+import { BarcodeTracker } from "@/lib/barcode/tracker";
+import { ImageProcessor } from "@/lib/barcode/imageProcessor";
+import type { DetectedBarcode, ScannerState } from "@/lib/barcode/types";
 
 interface BarcodeScannerModalProps {
   open: boolean;
@@ -23,216 +28,259 @@ export function BarcodeScannerModal({
   onProductScanned,
 }: BarcodeScannerModalProps) {
   const router = useRouter();
-  const [scanning, setScanning] = useState(false);
-  const [cameraActive, setCameraActive] = useState(false);
+  
+  // State
+  const [scannerState, setScannerState] = useState<ScannerState>("idle");
+  const [detectedBarcode, setDetectedBarcode] = useState<DetectedBarcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
-  const [scannedBarcode, setScannedBarcode] = useState<string>("");
+  const [scannedBarcodeValue, setScannedBarcodeValue] = useState<string>("");
   const [showAddProductDialog, setShowAddProductDialog] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [processing, setProcessing] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const scannerDivRef = useRef<HTMLDivElement | null>(null);
-  const isScanningRef = useRef(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const frameCountRef = useRef(0);
+  const [detectionInfo, setDetectionInfo] = useState<string>("Initializing...");
+  const [currentZoom, setCurrentZoom] = useState(1);
 
-  // Initialize and start camera when modal opens
+  // Refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraManagerRef = useRef<CameraManager | null>(null);
+  const barcodeDetectorRef = useRef<BarcodeDetector | null>(null);
+  const trackerRef = useRef<BarcodeTracker | null>(null);
+  const imageProcessorRef = useRef<ImageProcessor | null>(null);
+  const detectionLoopRef = useRef<number | null>(null);
+  const isProcessingRef = useRef(false);
+
+  // Initialize services
   useEffect(() => {
-    if (open && !cameraActive && !isScanningRef.current) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        if (scannerDivRef.current) {
-          startCamera();
-        }
-      }, 100);
+    if (open) {
+      cameraManagerRef.current = new CameraManager();
+      barcodeDetectorRef.current = new BarcodeDetector("all");
+      trackerRef.current = new BarcodeTracker(5, 2000); // 5 frames, 2s timeout
+      imageProcessorRef.current = new ImageProcessor();
+
+      // Log available detection strategies
+      const strategies = barcodeDetectorRef.current.getAvailableStrategies();
+      console.log("Available detection strategies:", strategies);
       
-      return () => clearTimeout(timer);
+      if (barcodeDetectorRef.current.hasNativeSupport()) {
+        setDetectionInfo("Using native AI detection");
+      } else {
+        setDetectionInfo("Using advanced ML detection");
+      }
     }
 
     return () => {
-      // Cleanup camera when modal closes
-      if (isScanningRef.current) {
-        stopCamera();
-      }
+      cleanup();
     };
   }, [open]);
 
-  const startCamera = async () => {
+  // Start camera when modal opens
+  useEffect(() => {
+    if (open && videoRef.current && scannerState === "idle") {
+      startScanning();
+    }
+  }, [open]);
+
+  /**
+   * Start camera and detection
+   */
+  const startScanning = async () => {
+    if (!videoRef.current || !cameraManagerRef.current) return;
+
+    setScannerState("initializing");
+    setCameraError(null);
+    setDetectionInfo("Starting camera...");
+
     try {
-      // Check if scanner container exists
-      if (!scannerDivRef.current) {
-        console.error("Scanner container not found");
-        setCameraError("Failed to initialize camera view");
-        return;
+      // Ensure video element is ready
+      if (videoRef.current.srcObject) {
+        videoRef.current.srcObject = null;
       }
 
-      if (isScanningRef.current) {
-        console.log("Scanner already running");
-        return;
-      }
-
-      setCameraError(null);
-      setScanning(true);
-      isScanningRef.current = true;
-
-      console.log("Initializing Quagga2 scanner...");
-
-      // Initialize Quagga with optimized settings for product barcodes
-      await new Promise<void>((resolve, reject) => {
-        Quagga.init(
-          {
-            inputStream: {
-              type: "LiveStream",
-              target: scannerDivRef.current!,
-              constraints: {
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 },
-                facingMode: "environment", // Use back camera
-                aspectRatio: { min: 1, max: 2 },
-              },
-            },
-            locator: {
-              patchSize: "medium",
-              halfSample: true,
-            },
-            numOfWorkers: navigator.hardwareConcurrency || 4,
-            decoder: {
-              readers: [
-                "ean_reader", // EAN-13, EAN-8
-                "ean_8_reader",
-                "code_128_reader", // Code128
-                "code_39_reader", // Code39
-                "code_39_vin_reader",
-                "codabar_reader", // Codabar
-                "upc_reader", // UPC-A
-                "upc_e_reader", // UPC-E
-                "i2of5_reader", // Interleaved 2 of 5
-                "2of5_reader",
-                "code_93_reader",
-              ],
-              multiple: false,
-            },
-            locate: true,
-            frequency: 10,
-          },
-          (err) => {
-            if (err) {
-              console.error("Quagga initialization error:", err);
-              isScanningRef.current = false;
-              setScanning(false);
-              setCameraActive(false);
-              
-              if (err.name === "NotAllowedError") {
-                setCameraError("Camera access denied. Please allow camera permissions.");
-              } else if (err.name === "NotFoundError") {
-                setCameraError("No camera found on this device.");
-              } else if (err.name === "NotReadableError") {
-                setCameraError("Camera is already in use by another application.");
-              } else {
-                setCameraError(`Failed to start camera: ${err.message || "Unknown error"}`);
-              }
-              reject(err);
-              return;
-            }
-            resolve();
-          }
-        );
-      });
-
-      console.log("Quagga initialized successfully");
+      // Start camera
+      await cameraManagerRef.current.startCamera(videoRef.current, "environment");
       
-      // DEBUG: Add frame processing callback to see decode attempts
-      let lastLogTime = Date.now();
-      Quagga.onProcessed((result) => {
-        frameCountRef.current++;
-        
-        // Log every 30 frames (about every 3 seconds at 10fps)
-        if (frameCountRef.current % 30 === 0) {
-          const now = Date.now();
-          const fps = 30 / ((now - lastLogTime) / 1000);
-          console.log(`[DEBUG] Processed ${frameCountRef.current} frames (${fps.toFixed(1)} fps)`);
-          lastLogTime = now;
-        }
-        
-        // Log if any boxes/codes were found (even failed attempts)
-        if (result) {
-          if (result.boxes) {
-            console.log(`[DEBUG] Frame ${frameCountRef.current}: Found ${result.boxes.length} potential barcode regions`);
-          }
-          if (result.codeResult) {
-            if (result.codeResult.code) {
-              console.log(`[DEBUG] Frame ${frameCountRef.current}: Decoded code: "${result.codeResult.code}" (format: ${result.codeResult.format})`);
-            } else {
-              // Decode attempt but no valid code
-              console.log(`[DEBUG] Frame ${frameCountRef.current}: Decode attempted but no valid code found`);
-            }
-          }
-        }
-      });
-      
-      // Register barcode detection handler
-      Quagga.onDetected(handleBarcodeDetected);
-      
-      // Start scanning
-      Quagga.start();
-      
-      console.log("Quagga scanner started - processing frames...");
-      console.log("[DEBUG] Watch console for frame processing logs");
-      frameCountRef.current = 0;
-      setCameraActive(true);
-      setScanning(false);
+      setDetectionInfo("Camera ready - searching for barcode...");
+      setScannerState("searching");
+
+      // Start detection loop
+      startDetectionLoop();
     } catch (error: any) {
-      console.error("Camera start error:", error);
-      isScanningRef.current = false;
-      setScanning(false);
-      setCameraActive(false);
-      setCameraError(`Failed to start camera: ${error.message || "Unknown error"}`);
+      console.error("Failed to start camera:", error);
+      setCameraError(error.message);
+      setScannerState("error");
+      setDetectionInfo("Camera failed");
     }
   };
 
-  const stopCamera = () => {
-    if (isScanningRef.current) {
-      try {
-        console.log("Stopping Quagga scanner...");
-        console.log(`[DEBUG] Total frames processed: ${frameCountRef.current}`);
-        Quagga.offProcessed();
-        Quagga.offDetected(handleBarcodeDetected);
-        Quagga.stop();
-        console.log("Quagga scanner stopped");
-      } catch (error) {
-        console.error("Error stopping scanner:", error);
-      } finally {
-        isScanningRef.current = false;
-        setCameraActive(false);
-        frameCountRef.current = 0;
+  /**
+   * Start detection loop with enhanced position detection
+   */
+  const startDetectionLoop = () => {
+    if (!videoRef.current || !barcodeDetectorRef.current || !trackerRef.current) return;
+
+    let frameCount = 0;
+    const targetFPS = 15; // Increased from 10 for faster detection
+    const frameInterval = 1000 / targetFPS;
+    let lastFrameTime = 0;
+
+    const detect = async (timestamp: number) => {
+      if (scannerState === "success" || scannerState === "error" || !videoRef.current) {
+        return;
       }
-    }
+
+      // Throttle detection
+      if (timestamp - lastFrameTime < frameInterval) {
+        detectionLoopRef.current = requestAnimationFrame(detect);
+        return;
+      }
+
+      lastFrameTime = timestamp;
+      frameCount++;
+
+      // Skip if already processing
+      if (isProcessingRef.current) {
+        detectionLoopRef.current = requestAnimationFrame(detect);
+        return;
+      }
+
+      isProcessingRef.current = true;
+
+      try {
+        // Detect barcode
+        const result = await barcodeDetectorRef.current!.detect(videoRef.current);
+
+        if (result.success && result.barcode) {
+          const barcode = result.barcode;
+          
+          // Update detected barcode for overlay
+          setDetectedBarcode(barcode);
+
+          // Immediately start auto-zoom when barcode is detected (even before stable)
+          await handleAutoZoom(barcode);
+
+          // Track detection for stability
+          const isStable = trackerRef.current!.track(barcode);
+
+          if (isStable) {
+            // Stable detection - trigger capture
+            setScannerState("scanning");
+            setDetectionInfo(`✓ Barcode locked: ${barcode.rawValue}`);
+            
+            // Final zoom adjustment for optimal size
+            await handleAutoZoom(barcode);
+
+            // Stop detection loop
+            if (detectionLoopRef.current) {
+              cancelAnimationFrame(detectionLoopRef.current);
+              detectionLoopRef.current = null;
+            }
+
+            // Capture and process
+            await captureBarcode(barcode.rawValue);
+            return;
+          } else {
+            // Still tracking
+            const trackingInfo = trackerRef.current!.getTrackingInfo(barcode.rawValue);
+            if (trackingInfo) {
+              setScannerState("detected");
+              setDetectionInfo(
+                `Barcode detected (${trackingInfo.frameCount}/${5}) - zooming and stabilizing...`
+              );
+            }
+          }
+        } else {
+          // No barcode detected
+          if (frameCount % 45 === 0) {
+            // Log every 3 seconds (45 frames at 15 FPS)
+            setDetectionInfo("Searching for barcode at any position...");
+          }
+          
+          // Clear detection if no barcode for a while
+          if (detectedBarcode) {
+            setDetectedBarcode(null);
+            setScannerState("searching");
+          }
+        }
+      } catch (error) {
+        console.error("Detection error:", error);
+      } finally {
+        isProcessingRef.current = false;
+      }
+
+      // Continue loop
+      detectionLoopRef.current = requestAnimationFrame(detect);
+    };
+
+    // Start loop
+    detectionLoopRef.current = requestAnimationFrame(detect);
   };
 
-  const handleBarcodeDetected = (result: any) => {
-    if (!result || !result.codeResult) {
-      console.log("[DEBUG] Detection callback fired but no valid result");
-      return;
-    }
+  /**
+   * Handle auto zoom based on barcode size AND position
+   */
+  const handleAutoZoom = async (barcode: DetectedBarcode) => {
+    if (!cameraManagerRef.current || !videoRef.current) return;
 
-    const code = result.codeResult.code;
+    const box = barcode.boundingBox;
+    if (!box) return;
+
+    // Use smart auto-zoom that considers both size and position
+    const zoomed = await cameraManagerRef.current.smartAutoZoom(
+      barcode,
+      videoRef.current.videoWidth,
+      videoRef.current.videoHeight,
+      40 // Target 40% of frame for better detection at any position
+    );
     
-    // Only process if we have a valid code
-    if (code && code.length > 0) {
-      console.log("✅ Barcode detected:", code, "Format:", result.codeResult.format);
-      
-      // Stop scanning immediately to prevent multiple detections
-      stopCamera();
-      
-      // Process the barcode
-      onScanSuccess(code);
-    } else {
-      console.log("[DEBUG] Detection fired but code is empty or invalid");
+    if (zoomed) {
+      const newZoom = cameraManagerRef.current.getCurrentZoom();
+      setCurrentZoom(newZoom);
+      console.log(`Auto-zoomed to ${newZoom.toFixed(2)}x for better barcode detection`);
     }
   };
 
+  /**
+   * Capture and process barcode
+   */
+  const captureBarcode = async (barcodeValue: string) => {
+    setScannedBarcodeValue(barcodeValue);
+    setDetectionInfo(`Processing: ${barcodeValue}`);
+
+    try {
+      // Search for product by SKU (barcode)
+      const response = await inventoryApi.products.list({ search: barcodeValue });
+      const products = response.data?.results || [];
+
+      // Find product with exact SKU match
+      const product = products.find(
+        (p: Product) => p.sku.trim().toLowerCase() === barcodeValue.toLowerCase()
+      );
+
+      if (product) {
+        setScannedProduct(product);
+        setScannerState("success");
+        setDetectionInfo(`✓ Product found: ${product.name}`);
+        toast.success(`Product found: ${product.name}`);
+      } else {
+        // Product not found
+        setScannerState("error");
+        setDetectionInfo("Product not found");
+        setShowAddProductDialog(true);
+      }
+    } catch (error) {
+      console.error("Barcode lookup error:", error);
+      setScannerState("error");
+      setDetectionInfo("Error looking up product");
+      toast.error("Error looking up product");
+    }
+  };
+
+  /**
+   * Handle gallery upload
+   */
   const handleGalleryUpload = () => {
-    // Trigger file input click
     fileInputRef.current?.click();
   };
 
@@ -240,125 +288,52 @@ export function BarcodeScannerModal({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    console.log("Processing image from gallery:", file.name);
-    
-    // Check if it's an image
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
-    setScanning(true);
-    
+    setDetectionInfo("Processing image...");
+    stopDetectionLoop();
+
     try {
-      // Create image element
       const img = new Image();
       const imageUrl = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        console.log("Image loaded, decoding barcode...");
-        
-        // Decode using Quagga's decodeSingle
-        Quagga.decodeSingle(
-          {
-            src: imageUrl,
-            numOfWorkers: 0, // Use main thread for single decode
-            locate: true,
-            decoder: {
-              readers: [
-                "ean_reader",
-                "ean_8_reader",
-                "code_128_reader",
-                "code_39_reader",
-                "code_39_vin_reader",
-                "codabar_reader",
-                "upc_reader",
-                "upc_e_reader",
-                "i2of5_reader",
-                "2of5_reader",
-                "code_93_reader",
-              ],
-            },
-          },
-          (result) => {
-            URL.revokeObjectURL(imageUrl);
-            
-            if (result && result.codeResult && result.codeResult.code) {
-              console.log("✅ Barcode decoded from image:", result.codeResult.code);
-              setScanning(false);
-              onScanSuccess(result.codeResult.code);
-            } else {
-              console.log("❌ No barcode found in image");
-              setScanning(false);
-              toast.error("Couldn't read a barcode from this image, please try again");
-            }
-          }
-        );
+
+      img.onload = async () => {
+        URL.revokeObjectURL(imageUrl);
+
+        if (!barcodeDetectorRef.current) return;
+
+        // Try to detect barcode from image
+        const result = await barcodeDetectorRef.current.detect(img);
+
+        if (result.success && result.barcode) {
+          await captureBarcode(result.barcode.rawValue);
+        } else {
+          setDetectionInfo("No barcode found in image");
+          toast.error("Couldn't read a barcode from this image");
+        }
       };
-      
+
       img.onerror = () => {
         URL.revokeObjectURL(imageUrl);
-        setScanning(false);
+        setDetectionInfo("Failed to load image");
         toast.error("Failed to load image");
       };
-      
+
       img.src = imageUrl;
     } catch (error: any) {
       console.error("Gallery upload error:", error);
-      setScanning(false);
       toast.error("Failed to process image");
     }
-    
-    // Reset file input
-    event.target.value = '';
+
+    event.target.value = "";
   };
 
-  const onScanSuccess = async (decodedText: string) => {
-    // Stop scanning while we process
-    stopCamera();
-
-    setScanning(true);
-    // Trim whitespace from barcode
-    const barcode = decodedText.trim();
-    setScannedBarcode(barcode);
-    
-    try {
-      // Search for product by SKU (barcode)
-      console.log("Searching for barcode:", barcode);
-      const response = await inventoryApi.products.list({ search: barcode });
-      console.log("Search response:", response.data);
-      const products = response.data?.results || [];
-      
-      // Find product with case-insensitive SKU match
-      const product = products.find((p: Product) => 
-        p.sku.trim().toLowerCase() === barcode.toLowerCase()
-      );
-
-      if (product) {
-        console.log("Product found:", product);
-        setScannedProduct(product);
-        toast.success(`Product found: ${product.name}`);
-      } else {
-        console.log("Product not found for barcode:", barcode);
-        // Show "Add Product" dialog instead of just error
-        setShowAddProductDialog(true);
-      }
-    } catch (error) {
-      console.error("Barcode scan error:", error);
-      toast.error("Error looking up product");
-      setScannedProduct(null);
-      // Restart camera for next scan
-      setTimeout(() => startCamera(), 1000);
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  const onScanError = (errorMessage: string) => {
-    // This function is no longer needed with ZXing but kept for compatibility
-    console.debug("Scan error:", errorMessage);
-  };
-
+  /**
+   * Handle action (received/sold)
+   */
   const handleAction = async (action: "received" | "sold") => {
     if (!scannedProduct) return;
 
@@ -373,9 +348,7 @@ export function BarcodeScannerModal({
           reason: "Barcode scan - received",
           notes: `Scanned barcode: ${scannedProduct.sku}`,
         });
-        toast.success(
-          `Added ${quantity} unit(s) of ${scannedProduct.name} to inventory`
-        );
+        toast.success(`Added ${quantity} unit(s) of ${scannedProduct.name} to inventory`);
         handleClose();
       } else {
         // Stock OUT (or pass to checkout for sale)
@@ -396,28 +369,78 @@ export function BarcodeScannerModal({
     }
   };
 
-  const handleClose = async () => {
-    stopCamera();
+  /**
+   * Handle close
+   */
+  const handleClose = () => {
+    cleanup();
     setScannedProduct(null);
-    setScannedBarcode("");
+    setScannedBarcodeValue("");
     setShowAddProductDialog(false);
     setQuantity(1);
     setCameraError(null);
+    setDetectionInfo("Initializing...");
+    setScannerState("idle");
+    setDetectedBarcode(null);
+    setCurrentZoom(1);
     onClose();
   };
 
-  const handleRescan = async () => {
+  /**
+   * Handle rescan
+   */
+  const handleRescan = () => {
     setScannedProduct(null);
-    setScannedBarcode("");
+    setScannedBarcodeValue("");
     setShowAddProductDialog(false);
     setQuantity(1);
-    await startCamera();
+    setDetectedBarcode(null);
+    setScannerState("idle");
+    
+    if (trackerRef.current) {
+      trackerRef.current.clear();
+    }
+
+    startScanning();
   };
 
+  /**
+   * Handle add product
+   */
   const handleAddProduct = () => {
-    // Navigate to new product page with barcode pre-filled via query param
-    router.push(`/dashboard/inventory/products/new?sku=${encodeURIComponent(scannedBarcode)}`);
+    router.push(
+      `/dashboard/inventory/products/new?sku=${encodeURIComponent(scannedBarcodeValue)}`
+    );
     handleClose();
+  };
+
+  /**
+   * Stop detection loop
+   */
+  const stopDetectionLoop = () => {
+    if (detectionLoopRef.current) {
+      cancelAnimationFrame(detectionLoopRef.current);
+      detectionLoopRef.current = null;
+    }
+  };
+
+  /**
+   * Cleanup
+   */
+  const cleanup = () => {
+    stopDetectionLoop();
+
+    if (cameraManagerRef.current) {
+      cameraManagerRef.current.stopCamera();
+    }
+
+    if (imageProcessorRef.current) {
+      imageProcessorRef.current.dispose();
+    }
+
+    if (trackerRef.current) {
+      trackerRef.current.clear();
+    }
   };
 
   if (!open) return null;
@@ -425,19 +448,21 @@ export function BarcodeScannerModal({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/70 z-40"
-        onClick={handleClose}
-      />
+      <div className="fixed inset-0 bg-black/70 z-40" onClick={handleClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+          <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
             <div className="flex items-center gap-2">
-              <Camera className="h-5 w-5 text-[#22C55E]" />
-              <h2 className="text-lg font-bold text-gray-900">Scan Barcode</h2>
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Camera className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">AI Barcode Scanner</h2>
+                <p className="text-xs text-gray-600">{detectionInfo}</p>
+              </div>
             </div>
             <button
               onClick={handleClose}
@@ -454,7 +479,7 @@ export function BarcodeScannerModal({
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
                 <p className="text-sm text-red-800">{cameraError}</p>
                 <Button
-                  onClick={startCamera}
+                  onClick={startScanning}
                   size="sm"
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
@@ -466,41 +491,69 @@ export function BarcodeScannerModal({
             {/* Camera View */}
             {!cameraError && !scannedProduct && (
               <div className="space-y-3">
-                <div 
-                  ref={scannerDivRef}
-                  className="rounded-lg overflow-hidden border-2 border-[#22C55E] bg-black relative"
-                  style={{ minHeight: "300px" }}
-                >
-                  {/* Quagga will inject video element here */}
-                  <style jsx>{`
-                    div :global(video), div :global(canvas) {
-                      width: 100% !important;
-                      max-height: 300px !important;
-                      object-fit: cover;
-                    }
-                    div :global(canvas.drawingBuffer) {
-                      position: absolute;
-                      top: 0;
-                      left: 0;
-                    }
-                  `}</style>
-                </div>
-                {scanning && !cameraActive && (
-                  <div className="text-center py-4">
-                    <div className="animate-pulse text-[#22C55E] text-sm">
-                      {scanning && !cameraActive ? "Starting camera..." : "Processing..."}
+                <div className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative" style={{ minHeight: "300px" }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ maxHeight: "400px" }}
+                  />
+                  
+                  {/* Detection Overlay */}
+                  <BarcodeDetectionOverlay
+                    videoElement={videoRef.current}
+                    detectedBarcode={detectedBarcode}
+                    scannerState={scannerState}
+                  />
+
+                  {/* State Indicators */}
+                  <div className="absolute top-2 left-2 right-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+                      {scannerState === "searching" && (
+                        <>
+                          <Loader2 className="h-3 w-3 text-green-400 animate-spin" />
+                          <span className="text-xs text-white font-medium">Searching...</span>
+                        </>
+                      )}
+                      {scannerState === "detected" && (
+                        <>
+                          <Zap className="h-3 w-3 text-blue-400" />
+                          <span className="text-xs text-white font-medium">Detected</span>
+                        </>
+                      )}
+                      {scannerState === "stabilizing" && (
+                        <>
+                          <Loader2 className="h-3 w-3 text-orange-400 animate-spin" />
+                          <span className="text-xs text-white font-medium">Stabilizing...</span>
+                        </>
+                      )}
+                      {scannerState === "scanning" && (
+                        <>
+                          <Zap className="h-3 w-3 text-emerald-400 animate-pulse" />
+                          <span className="text-xs text-white font-medium">Scanning...</span>
+                        </>
+                      )}
                     </div>
+
+                    {/* Zoom indicator */}
+                    {currentZoom > 1 && (
+                      <div className="bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+                        <span className="text-xs text-white font-medium">{currentZoom.toFixed(1)}x</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {cameraActive && (
+                </div>
+
+                {scannerState === "searching" && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-sm text-blue-800">
-                      <strong>Position the barcode</strong> within the camera view. 
-                      The scan will happen automatically when detected.
+                      <strong>Point camera at barcode</strong> - Auto-zoom and detection happen automatically at any position!
                     </p>
                   </div>
                 )}
-                
+
                 {/* Gallery Upload Option */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -510,18 +563,17 @@ export function BarcodeScannerModal({
                     <span className="px-2 bg-white text-gray-500">or</span>
                   </div>
                 </div>
-                
+
                 <Button
                   onClick={handleGalleryUpload}
-                  disabled={scanning}
+                  disabled={scannerState === "scanning"}
                   variant="outline"
                   className="w-full gap-2"
                 >
                   <Package className="h-4 w-4" />
                   Upload from Gallery
                 </Button>
-                
-                {/* Hidden file input */}
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -540,28 +592,22 @@ export function BarcodeScannerModal({
                   <div className="flex-1">
                     <h3 className="font-semibold text-yellow-900">Product doesn't exist</h3>
                     <p className="text-sm text-yellow-800 mt-1">
-                      No product found for barcode: <span className="font-mono font-semibold">{scannedBarcode}</span>
+                      No product found for barcode:{" "}
+                      <span className="font-mono font-semibold">{scannedBarcodeValue}</span>
                     </p>
-                    <p className="text-sm text-yellow-800 mt-2">
-                      Would you like to add it?
-                    </p>
+                    <p className="text-sm text-yellow-800 mt-2">Would you like to add it?</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
                     size="sm"
                   >
                     <Plus className="h-4 w-4" />
                     Add Product
                   </Button>
-                  <Button
-                    onClick={handleRescan}
-                    variant="outline"
-                    className="flex-1"
-                    size="sm"
-                  >
+                  <Button onClick={handleRescan} variant="outline" className="flex-1" size="sm">
                     Scan Again
                   </Button>
                 </div>
@@ -571,13 +617,13 @@ export function BarcodeScannerModal({
             {/* Scanned Product */}
             {scannedProduct && (
               <div className="space-y-4">
-                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="border border-gray-200 rounded-lg p-4 bg-green-50">
                   <div className="flex items-start gap-3">
-                    <Package className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Package className="h-5 w-5 text-green-600" />
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">
-                        {scannedProduct.name}
-                      </h3>
+                      <h3 className="font-semibold text-gray-900">{scannedProduct.name}</h3>
                       <p className="text-sm text-gray-600">SKU: {scannedProduct.sku}</p>
                       <p className="text-sm text-gray-600">
                         Current Stock: {scannedProduct.current_stock || 0}
@@ -588,9 +634,7 @@ export function BarcodeScannerModal({
 
                 {/* Quantity Input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Quantity
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Quantity</label>
                   <Input
                     type="number"
                     min="1"
@@ -613,7 +657,7 @@ export function BarcodeScannerModal({
                   <Button
                     onClick={() => handleAction("sold")}
                     disabled={processing}
-                    className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
                   >
                     <TrendingDown className="h-4 w-4" />
                     Sold

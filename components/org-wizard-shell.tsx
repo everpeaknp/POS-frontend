@@ -98,7 +98,7 @@ export function OrgWizardShell({
     >
       <div
         className={cn(
-          "w-full max-w-[1100px] bg-white dark:bg-card sm:rounded-[28px]",
+          "w-full max-w-[1600px] bg-white dark:bg-card sm:rounded-[28px]",
           "shadow-[0_18px_45px_rgba(22,163,74,0.12)] overflow-hidden",
           "grid grid-cols-1 lg:grid-cols-[300px_1fr] border border-green-100/60 dark:border-border",
           desktop
@@ -265,10 +265,10 @@ export function OrgWizardShell({
             <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#15803d] mb-2">
               {eyebrow ?? meta.eyebrow}
             </p>
-            <h2 className="text-[26px] sm:text-[32px] font-bold text-gray-900 dark:text-foreground tracking-tight m-0 leading-tight">
+            <h2 className="text-[24px] font-bold text-[rgb(52,60,70)] dark:text-foreground tracking-tight m-0 leading-[38px]" style={{ fontWeight: 700 }}>
               {title ?? meta.title}
             </h2>
-            <p className="text-[15px] text-gray-500 dark:text-muted-foreground mt-2.5 mb-7 leading-relaxed max-w-2xl">
+            <p className="text-[12px] font-medium text-[rgb(99,105,114)] dark:text-muted-foreground mt-2.5 mb-7 leading-[19px] max-w-2xl" style={{ fontWeight: 500 }}>
               {description ?? meta.description}
             </p>
 

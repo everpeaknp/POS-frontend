@@ -153,8 +153,10 @@ export const customerAPI = {
   delete: (id: string) => 
     apiClient.delete(`/sales/customers/${id}/`),
   
-  ledger: (id: string) =>
-    apiClient.get<CustomerLedger[]>(`/sales/customers/${id}/ledger/`),
+  generateShareToken: async (id: string): Promise<{ share_token: string }> => {
+    const response = await apiClient.post(`/sales/customers/${id}/generate_share_token/`);
+    return response.data;
+  },
 };
 
 
@@ -404,6 +406,12 @@ export const customerCreditAPI = {
   // Get credit overview for all customers
   getCreditOverview: async () => {
     const response = await apiClient.get('/sales/customers/credit_overview/');
+    return response.data;
+  },
+
+  // Record payment against customer credit
+  recordPayment: async (customerId: string, data: { amount: number; notes?: string }) => {
+    const response = await apiClient.post(`/sales/customers/${customerId}/record_payment/`, data);
     return response.data;
   },
 };

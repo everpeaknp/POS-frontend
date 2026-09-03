@@ -189,6 +189,7 @@ export default function NewOrgPage() {
 
       {(accountType === "organization" || accountType === "retail") && step === 3 && organizationData && (
         <ModuleSelection
+          accountType={accountType ?? "organization"}
           organizationData={organizationData}
           onBack={() => setStep(2)}
           onNext={handleModulesComplete}

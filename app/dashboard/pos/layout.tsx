@@ -3,7 +3,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute requiredModule="pos" fallbackPath="/dashboard">
+    <ProtectedRoute requiredModule="pos" fallbackPath="/dashboard/kirana">
       <Suspense fallback={null}>{children}</Suspense>
     </ProtectedRoute>
   );

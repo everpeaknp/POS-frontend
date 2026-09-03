@@ -21,9 +21,10 @@ interface ComboboxProps {
   emptyText?: string;
   className?: string;
   disabled?: boolean;
+  dropdownWidth?: string | number; // Add custom dropdown width option
 }
 
-function getDropdownStyle(trigger: HTMLDivElement | null): React.CSSProperties {
+function getDropdownStyle(trigger: HTMLDivElement | null, customWidth?: string | number): React.CSSProperties {
   if (!trigger) {
     return {
       position: "fixed",
@@ -40,12 +41,14 @@ function getDropdownStyle(trigger: HTMLDivElement | null): React.CSSProperties {
   const spaceBelow = window.innerHeight - rect.bottom - 8;
   const spaceAbove = rect.top - 8;
   const openUpward = spaceBelow < maxHeight && spaceAbove > spaceBelow;
+  
+  const dropdownWidth = customWidth ? (typeof customWidth === 'number' ? `${customWidth}px` : customWidth) : rect.width;
 
   if (openUpward) {
     return {
       position: "fixed",
       left: rect.left,
-      width: rect.width,
+      width: dropdownWidth,
       bottom: window.innerHeight - rect.top + 4,
       zIndex: 9999,
     };
@@ -55,7 +58,7 @@ function getDropdownStyle(trigger: HTMLDivElement | null): React.CSSProperties {
     position: "fixed",
     top: rect.bottom + 4,
     left: rect.left,
-    width: rect.width,
+    width: dropdownWidth,
     zIndex: 9999,
   };
 }
@@ -69,6 +72,7 @@ export function Combobox({
   emptyText = "No option found.",
   className,
   disabled = false,
+  dropdownWidth,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -91,8 +95,8 @@ export function Combobox({
   const dropdownStyle = React.useMemo(() => {
     if (!open) return null;
     void positionTick;
-    return getDropdownStyle(triggerRef.current);
-  }, [open, positionTick]);
+    return getDropdownStyle(triggerRef.current, dropdownWidth);
+  }, [open, positionTick, dropdownWidth]);
 
   React.useEffect(() => {
     setMounted(true);

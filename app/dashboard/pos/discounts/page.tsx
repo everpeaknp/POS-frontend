@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { EmptyState } from "@/components/shared/EmptyState";
 import posApi, { type POSDiscount } from "@/lib/api/pos";
@@ -28,7 +29,7 @@ export default function POSDiscountsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [showForm, setShowForm] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
@@ -88,7 +89,7 @@ export default function POSDiscountsPage() {
       category: "",
       product: "",
     });
-    setShowForm(true);
+    setShowDialog(true);
     router.replace("/dashboard/pos/discounts", { scroll: false });
   }, [searchParams, router]);
 
@@ -109,7 +110,7 @@ export default function POSDiscountsPage() {
       product: "",
     });
     setEditingId(null);
-    setShowForm(false);
+    setShowDialog(false);
   };
 
   const handleEdit = (discount: POSDiscount) => {
@@ -129,7 +130,7 @@ export default function POSDiscountsPage() {
       product: discount.product || "",
     });
     setEditingId(discount.id);
-    setShowForm(true);
+    setShowDialog(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,7 +263,7 @@ export default function POSDiscountsPage() {
     );
   }
 
-  if (discounts.length === 0 && !showForm) {
+  if (discounts.length === 0 && !showDialog) {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader title="POS Discounts" subtitle="Manage discount configurations" />
@@ -272,7 +273,7 @@ export default function POSDiscountsPage() {
             title="No discounts yet"
             description="Create your first discount to offer promotions at the point of sale"
             actionLabel="Add Discount"
-            onAction={() => setShowForm(true)}
+            onAction={() => setShowDialog(true)}
           />
         </div>
       </div>
@@ -309,10 +310,10 @@ export default function POSDiscountsPage() {
               </SelectContent>
             </Select>
           </div>
-          {!showForm && (
+          {!showDialog && (
             <Button
               size="sm"
-              onClick={() => setShowForm(true)}
+              onClick={() => setShowDialog(true)}
               className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
             >
               <Plus className="h-4 w-4" /> Add Discount
@@ -320,191 +321,7 @@ export default function POSDiscountsPage() {
           )}
         </div>
 
-        {/* Add/Edit Form */}
-        {showForm && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-semibold mb-4">
-              {editingId ? "Edit Discount" : "Create New Discount"}
-            </h3>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm">Name *</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g., Summer Sale"
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm">Code *</Label>
-                  <Input
-                    value={form.code}
-                    onChange={(e) => setForm({ ...form, code: e.target.value })}
-                    placeholder="e.g., SUMMER20"
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm">Discount Type *</Label>
-                  <Select value={form.discount_type} onValueChange={(v: any) => setForm({ ...form, discount_type: v })}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">Percentage</SelectItem>
-                      <SelectItem value="fixed">Fixed Amount</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label className="text-sm">Discount Value *</Label>
-                  <Input
-                    type="number"
-                    value={form.discount_value}
-                    onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
-                    placeholder={form.discount_type === "percentage" ? "e.g., 20" : "e.g., 100"}
-                    className="mt-1"
-                    min={0}
-                    step={0.01}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm">Apply To *</Label>
-                  <Select value={form.apply_to} onValueChange={(v) => v && setForm({ ...form, apply_to: v, category: "", product: "" })}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bill">Bill Level</SelectItem>
-                      <SelectItem value="item">Item Level</SelectItem>
-                      <SelectItem value="category">Category</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {form.apply_to === "item" && (
-                  <div>
-                    <Label className="text-sm">Product *</Label>
-                    <Select value={form.product} onValueChange={(v) => setForm({ ...form, product: v ?? "" })}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} ({p.sku})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {form.apply_to === "category" && (
-                  <div>
-                    <Label className="text-sm">Category *</Label>
-                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v ?? "" })}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                <div>
-                  <Label className="text-sm">Minimum Amount</Label>
-                  <Input
-                    type="number"
-                    value={form.min_amount}
-                    onChange={(e) => setForm({ ...form, min_amount: e.target.value })}
-                    placeholder="0"
-                    className="mt-1"
-                    min={0}
-                    step={0.01}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm">Start Date</Label>
-                  <DateInput
-                    
-                    value={form.start_date}
-                    onChange={(date) => setForm({ ...form, start_date: date})}
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm">End Date</Label>
-                  <DateInput
-                    
-                    value={form.end_date}
-                    onChange={(date) => setForm({ ...form, end_date: date})}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label className="text-sm">Description</Label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={2}
-                  className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[#22C55E]"
-                  placeholder="Optional description..."
-                />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="is_active" className="text-sm cursor-pointer">
-                  Active
-                </Label>
-              </div>
-              
-              <div className="flex gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={resetForm}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-[#22C55E] hover:bg-[#16A34A]"
-                >
-                  {submitting ? "Saving..." : (
-                    editingId ? "Update Discount" : "Create Discount"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
+        {/* List */}
 
         {/* List */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -577,6 +394,190 @@ export default function POSDiscountsPage() {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit Discount" : "Create New Discount"}</DialogTitle>
+          </DialogHeader>
+            
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Name *</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g., Summer Sale"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm">Code *</Label>
+                <Input
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                  placeholder="e.g., SUMMER20"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm">Discount Type *</Label>
+                <Select value={form.discount_type} onValueChange={(v: any) => setForm({ ...form, discount_type: v })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label className="text-sm">Discount Value *</Label>
+                <Input
+                  type="number"
+                  value={form.discount_value}
+                  onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
+                  placeholder={form.discount_type === "percentage" ? "e.g., 20" : "e.g., 100"}
+                  className="mt-1"
+                  min={0}
+                  step={0.01}
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm">Apply To *</Label>
+                <Select value={form.apply_to} onValueChange={(v) => v && setForm({ ...form, apply_to: v, category: "", product: "" })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bill">Bill Level</SelectItem>
+                    <SelectItem value="item">Item Level</SelectItem>
+                    <SelectItem value="category">Category</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {form.apply_to === "item" && (
+                <div>
+                  <Label className="text-sm">Product *</Label>
+                  <Select value={form.product} onValueChange={(v) => setForm({ ...form, product: v ?? "" })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.name} ({p.sku})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {form.apply_to === "category" && (
+                <div>
+                  <Label className="text-sm">Category *</Label>
+                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v ?? "" })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <div>
+                <Label className="text-sm">Minimum Amount</Label>
+                <Input
+                  type="number"
+                  value={form.min_amount}
+                  onChange={(e) => setForm({ ...form, min_amount: e.target.value })}
+                  placeholder="0"
+                  className="mt-1"
+                  min={0}
+                  step={0.01}
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm">Start Date</Label>
+                <DateInput
+                  value={form.start_date}
+                  onChange={(date) => setForm({ ...form, start_date: date})}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm">End Date</Label>
+                <DateInput
+                  value={form.end_date}
+                  onChange={(date) => setForm({ ...form, end_date: date})}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm">Description</Label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={2}
+                className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[#22C55E]"
+                placeholder="Optional description..."
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="is_active_dialog"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="is_active_dialog" className="text-sm cursor-pointer">
+                Active
+              </Label>
+            </div>
+            
+            <div className="flex gap-3 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetForm}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-[#22C55E] hover:bg-[#16A34A]"
+              >
+                {submitting ? "Saving..." : (
+                  editingId ? "Update Discount" : "Create Discount"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
