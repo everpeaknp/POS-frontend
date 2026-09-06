@@ -339,7 +339,7 @@ export default function AccountPage() {
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-gray-500">Balance</span>
             <div className="text-right">
-              <p className={`text-xl font-bold ${isLiability ? "text-red-600" : "text-[#22C55E]"}`}>
+              <p className={`text-xl font-bold ${isLiability ? "text-red-600" : "text-[var(--color-accent-custom,#22C55E)]"}`}>
                 {isLiability && "-"}
                 {formatCurrency(displayBalance)}
               </p>
@@ -371,7 +371,7 @@ export default function AccountPage() {
           ) : (
             <>
               <p className="text-gray-500 mb-4">No accounts yet</p>
-              <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+              <Button onClick={openAddDialog} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Account
               </Button>
@@ -446,7 +446,7 @@ export default function AccountPage() {
                     {last4Digits ? `•••• ${last4Digits}` : "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-medium ${isLiability ? "text-red-600" : "text-[#22C55E]"}`}>
+                    <span className={`text-sm font-medium ${isLiability ? "text-red-600" : "text-[var(--color-accent-custom,#22C55E)]"}`}>
                       {isLiability && "-"}
                       {formatCurrency(displayBalance)}
                     </span>
@@ -498,9 +498,9 @@ export default function AccountPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total Assets</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{formatCurrency(summary.assets)}</p>
+                <p className="text-2xl font-bold text-[var(--color-accent-custom,#22C55E)]">{formatCurrency(summary.assets)}</p>
               </div>
-              <Building2 className="h-8 w-8 text-[#22C55E]" />
+              <Building2 className="h-8 w-8 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -516,7 +516,7 @@ export default function AccountPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Net Worth</p>
-                <p className={`text-2xl font-bold ${summary.netWorth >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                <p className={`text-2xl font-bold ${summary.netWorth >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                   {formatCurrency(summary.netWorth)}
                 </p>
               </div>
@@ -582,7 +582,7 @@ export default function AccountPage() {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("list")}
-                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "list" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
                 title="List view"
               >
                 <List className="h-4 w-4" />
@@ -591,14 +591,14 @@ export default function AccountPage() {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
-                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
                 title="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
 
-            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Account
             </Button>
@@ -623,7 +623,7 @@ export default function AccountPage() {
             ) : (
               <>
                 <p className="text-gray-500 mb-4">No accounts yet</p>
-                <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Button onClick={openAddDialog} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Your First Account
                 </Button>
@@ -733,7 +733,7 @@ export default function AccountPage() {
                       onClick={() => setFormData({ ...formData, type: option.value })}
                       className={`flex flex-col items-center justify-center gap-1.5 h-20 rounded-lg border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         active
-                          ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                          ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 text-[#16A34A]"
                           : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                       }`}
                     >
@@ -837,7 +837,7 @@ export default function AccountPage() {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSave} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               {editingAccount ? "Update" : "Add"} Account
             </Button>
           </div>

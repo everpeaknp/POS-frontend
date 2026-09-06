@@ -304,7 +304,7 @@ export default function CategoriesPage() {
                 <select
                   value={formData.parent}
                   onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">None (Root Category)</option>
                   {categoryList.map((cat: any) => (
@@ -326,7 +326,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
@@ -365,7 +365,7 @@ export default function CategoriesPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedCategories.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> Add Category
             </Button>
           </div>
@@ -462,7 +462,7 @@ export default function CategoriesPage() {
                 <select
                   value={formData.parent}
                   onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">None (Root Category)</option>
                   {categoryList
@@ -495,7 +495,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}

@@ -134,7 +134,7 @@ export default function PurchaseOrdersPage() {
           <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200 gap-1.5" onClick={handleExportCsv}>
             <Download className="h-4 w-4" /> Export CSV
           </Button>
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/orders/new")}>
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/orders/new")}>
             <Plus className="h-4 w-4" /> New Purchase Order
           </Button>
         </div>
@@ -155,7 +155,7 @@ export default function PurchaseOrdersPage() {
               <tbody className="divide-y divide-gray-50">
                 {paginated.map((o) => (
                       <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}>{o.po_number}</td>
+                        <td className="px-4 py-3 font-medium text-[var(--color-accent-custom,#22C55E)] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}>{o.po_number}</td>
                         <td className="px-4 py-3 text-gray-600"><FormattedDate value={o.date} /></td>
                         <td className="px-4 py-3 font-medium text-gray-800">{o.supplier_name || 'N/A'}</td>
                         <td className="px-4 py-3 text-gray-600">{o.expected_delivery_date ? new Date(o.expected_delivery_date).toLocaleDateString() : 'N/A'}</td>

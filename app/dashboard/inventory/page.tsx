@@ -38,7 +38,7 @@ const quickActions = [
     label: "New Product",
     sub: "Add SKU",
     icon: Plus,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)]",
   },
   {
     href: "/dashboard/inventory/stock-in",
@@ -83,7 +83,7 @@ const moduleLinks = [
     label: "Categories",
     sub: "Product groups",
     icon: Tags,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)]",
   },
   {
     href: "/dashboard/inventory/warehouses",
@@ -184,7 +184,7 @@ export default function InventoryDashboardPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-lg hover:bg-[#16A34A]"
             >
               Retry
             </button>
@@ -222,7 +222,7 @@ export default function InventoryDashboardPage() {
       value: formatNPR(valuation.total_cost_value),
       sub: `Retail: ${formatNPR(valuation.total_sale_value)}`,
       icon: DollarSign,
-      color: "bg-green-50 text-[#22C55E]",
+      color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)]",
     },
     {
       label: "Low Stock",
@@ -272,7 +272,7 @@ export default function InventoryDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -321,8 +321,8 @@ export default function InventoryDashboardPage() {
                       <AreaChart data={testData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
                         <defs>
                           <linearGradient id="inventoryStock" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                            <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                            <stop offset="5%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         {/* Vertical gridlines only */}
@@ -358,11 +358,11 @@ export default function InventoryDashboardPage() {
                           type="monotone"
                           dataKey="stock"
                           name="Stock"
-                          stroke="#22C55E"
+                          stroke="var(--color-accent-custom,#22C55E)"
                           strokeWidth={2.5}
                           fill="url(#inventoryStock)"
                           dot={{ 
-                            fill: "#22C55E", 
+                            fill: "var(--color-accent-custom,#22C55E)", 
                             stroke: "#fff", 
                             strokeWidth: 2, 
                             r: 5 
@@ -371,7 +371,7 @@ export default function InventoryDashboardPage() {
                             r: 7, 
                             stroke: "#fff", 
                             strokeWidth: 2, 
-                            fill: "#22C55E" 
+                            fill: "var(--color-accent-custom,#22C55E)" 
                           }}
                           connectNulls={true}
                           isAnimationActive={true}
@@ -387,7 +387,7 @@ export default function InventoryDashboardPage() {
                 No stock data yet
                 <Link
                   href="/dashboard/inventory/products/new"
-                  className="text-[#22C55E] text-xs mt-2 hover:underline"
+                  className="text-[var(--color-accent-custom,#22C55E)] text-xs mt-2 hover:underline"
                 >
                   Add your first product
                 </Link>
@@ -428,7 +428,7 @@ export default function InventoryDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Low Stock Alerts</h3>
               <Link
                 href="/dashboard/inventory/products"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 Manage products
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -458,7 +458,7 @@ export default function InventoryDashboardPage() {
                       <td className="px-4 py-3 font-medium text-gray-900">
                         <Link
                           href={`/dashboard/inventory/products/${item.id}`}
-                          className="hover:text-[#22C55E]"
+                          className="hover:text-[var(--color-accent-custom,#22C55E)]"
                         >
                           {item.name}
                         </Link>
@@ -489,7 +489,7 @@ export default function InventoryDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Top Products by Value</h3>
               <Link
                 href="/dashboard/inventory/reports"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View reports
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -513,7 +513,7 @@ export default function InventoryDashboardPage() {
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#22C55E] transition-all"
+                        className="h-full rounded-full bg-[var(--color-accent-custom,#22C55E)] transition-all"
                         style={{ width: `${(p.total_cost_value / maxValue) * 100}%` }}
                       />
                     </div>
@@ -538,7 +538,7 @@ export default function InventoryDashboardPage() {
                 className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 flex items-center gap-3"
               >
                 <div className="p-2 rounded-lg bg-white border border-gray-100">
-                  <item.icon className="h-4 w-4 text-[#22C55E]" />
+                  <item.icon className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">{item.label}</p>

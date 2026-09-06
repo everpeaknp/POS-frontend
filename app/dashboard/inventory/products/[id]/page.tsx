@@ -160,7 +160,7 @@ export default function EditProductPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
-                <Package className="h-4 w-4 text-[#22C55E]" />
+                <Package className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                 <h3 className="text-sm font-semibold text-gray-900">Purchase orders</h3>
               </div>
               {activityLoading ? (

@@ -470,7 +470,7 @@ export default function LoansPage() {
                   type="number"
                   value={monthlyIncome}
                   onChange={(e) => setMonthlyIncome(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="100000"
                 />
               </div>
@@ -483,7 +483,7 @@ export default function LoansPage() {
                   type="number"
                   value={monthlyExpenses}
                   onChange={(e) => setMonthlyExpenses(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="40000"
                 />
               </div>
@@ -501,7 +501,7 @@ export default function LoansPage() {
                   type="number"
                   value={existingEMIs}
                   onChange={(e) => setExistingEMIs(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="15000"
                 />
               </div>
@@ -514,7 +514,7 @@ export default function LoansPage() {
                   type="number"
                   value={affordabilityRatio}
                   onChange={(e) => setAffordabilityRatio(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="40"
                   min="0"
                   max="100"
@@ -536,7 +536,7 @@ export default function LoansPage() {
                   onChange={(e) =>
                     handleLoanTypeChange(e.target.value as LoanType)
                   }
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                 >
                   <option value="home">Home Loan</option>
                   <option value="car">Car Loan</option>
@@ -553,7 +553,7 @@ export default function LoansPage() {
                   type="number"
                   value={interestRate}
                   onChange={(e) => setInterestRate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="9.5"
                   step="0.1"
                 />
@@ -571,7 +571,7 @@ export default function LoansPage() {
                   type="number"
                   value={tenureYears}
                   onChange={(e) => setTenureYears(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   placeholder="20"
                   min="1"
                   max={LOAN_DEFAULTS[selectedLoanType].maxTenure}
@@ -694,7 +694,7 @@ export default function LoansPage() {
                     />
                     <Bar
                       dataKey="Max Loan"
-                      fill="#22C55E"
+                      fill="var(--color-accent-custom,#22C55E)"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
@@ -806,7 +806,7 @@ export default function LoansPage() {
             </div>
             <button
               onClick={() => setShowAddLoanForm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
             >
               <Plus className="h-4 w-4" />
               Add Loan
@@ -988,7 +988,7 @@ export default function LoansPage() {
             <Button type="button" variant="ghost" onClick={() => setShowAddLoanForm(false)} className="text-gray-500">
               Cancel
             </Button>
-            <Button type="button" onClick={handleAddLoan} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6">
+            <Button type="button" onClick={handleAddLoan} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6">
               Save Loan
             </Button>
           </div>

@@ -212,7 +212,7 @@ export function POSQuickAddProductDialog({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-[#22C55E]" />
+              <Package className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
               Quick Add Product
             </DialogTitle>
           </DialogHeader>
@@ -327,7 +327,7 @@ export function POSQuickAddProductDialog({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:text-[#22C55E]"
+                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]"
                     onClick={() => setShowUnitDialog(true)}
                     title="Add new unit"
                   >
@@ -405,7 +405,7 @@ export function POSQuickAddProductDialog({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:text-[#22C55E]"
+                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]"
                     onClick={() => setShowCategoryDialog(true)}
                     title="Add new category"
                   >
@@ -428,7 +428,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleSave}
               disabled={saving || loadingOptions}
-              className="bg-[#22C55E] hover:bg-[#16A34A] gap-2"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {saving ? "Adding..." : "Add & Add to Cart"}
@@ -488,7 +488,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {creatingUnit ? "Creating..." : "Create Unit"}
             </Button>
@@ -541,7 +541,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {creatingCategory ? "Creating..." : "Create Category"}
             </Button>

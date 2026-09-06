@@ -86,7 +86,7 @@ function StatCard({
     <div className={purchaseStatCardClass}>
       <p className="text-xs text-gray-500 dark:text-muted-foreground">{label}</p>
       <p className="text-xl font-bold text-gray-900 dark:text-foreground mt-1">{value}</p>
-      {hint && <p className="text-xs text-[#22C55E] mt-0.5">{hint}</p>}
+      {hint && <p className="text-xs text-[var(--color-accent-custom,#22C55E)] mt-0.5">{hint}</p>}
     </div>
   );
 }
@@ -296,9 +296,9 @@ export default function PurchaseReportsPage() {
                       <Line
                         type="monotone"
                         dataKey="purchases"
-                        stroke="#22C55E"
+                        stroke="var(--color-accent-custom,#22C55E)"
                         strokeWidth={2.5}
-                        dot={{ fill: "#22C55E", r: 4 }}
+                        dot={{ fill: "var(--color-accent-custom,#22C55E)", r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -329,7 +329,7 @@ export default function PurchaseReportsPage() {
                         <td className="px-4 py-3 font-medium text-gray-800 dark:text-foreground">
                           {fmt(row.purchases)}
                         </td>
-                        <td className="px-4 py-3 text-[#22C55E] font-medium">{fmt(paid)}</td>
+                        <td className="px-4 py-3 text-[var(--color-accent-custom,#22C55E)] font-medium">{fmt(paid)}</td>
                         <td className="px-4 py-3 text-red-500">{fmt(outstanding)}</td>
                       </tr>
                     );
@@ -357,7 +357,7 @@ export default function PurchaseReportsPage() {
                         tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`}
                       />
                       <Tooltip formatter={(v) => [fmt(Number(v)), "Amount"]} />
-                      <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="amount" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -416,7 +416,7 @@ export default function PurchaseReportsPage() {
                       />
                       <Tooltip formatter={(v) => [fmt(Number(v))]} />
                       <Legend />
-                      <Bar dataKey="amount" name="Amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="amount" name="Amount" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="qty" name="Qty" fill="#86EFAC" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -486,7 +486,7 @@ export default function PurchaseReportsPage() {
                       <Bar
                         dataKey="vat"
                         name="Input VAT (13%)"
-                        fill="#22C55E"
+                        fill="var(--color-accent-custom,#22C55E)"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>

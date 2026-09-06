@@ -228,8 +228,8 @@ export default function KiranaOverviewPage() {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -246,7 +246,7 @@ export default function KiranaOverviewPage() {
               <Area
                 type="monotone"
                 dataKey="sales"
-                stroke="#22C55E"
+                stroke="var(--color-accent-custom,#22C55E)"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorSales)"

@@ -290,7 +290,7 @@ export default function EditCustomerPage() {
                 id="same" 
                 checked={sameAsBilling} 
                 onCheckedChange={(v) => setSameAsBilling(v === true)}
-                className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+                className="data-[state=checked]:bg-[var(--color-accent-custom,#22C55E)] data-[state=checked]:border-[var(--color-accent-custom,#22C55E)]"
               />
               <Label htmlFor="same" className="text-sm text-gray-600 cursor-pointer">
                 Shipping address same as billing
@@ -393,7 +393,7 @@ export default function EditCustomerPage() {
             </Button>
             <Button 
               type="submit"
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
               disabled={submitting}
             >
               {submitting ? "Updating..." : (

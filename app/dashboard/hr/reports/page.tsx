@@ -84,7 +84,7 @@ export default function HRReportsPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Bar dataKey="employees" fill="#22C55E" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="employees" fill="var(--color-accent-custom,#22C55E)" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -97,7 +97,7 @@ export default function HRReportsPage() {
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip formatter={(value) => `${value}%`} />
-                  <Line type="monotone" dataKey="rate" stroke="#22C55E" strokeWidth={2} dot={{ fill: "#22C55E" }} />
+                  <Line type="monotone" dataKey="rate" stroke="var(--color-accent-custom,#22C55E)" strokeWidth={2} dot={{ fill: "var(--color-accent-custom,#22C55E)" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

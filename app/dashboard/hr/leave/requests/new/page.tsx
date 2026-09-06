@@ -238,7 +238,7 @@ export default function NewLeaveRequestPage() {
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setFormData({ ...formData, reason: e.target.value })
                   }
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
                   required
                   disabled={submitting}
                 />
@@ -256,7 +256,7 @@ export default function NewLeaveRequestPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting || leaveTypes.length === 0}
               >
                 {submitting ? "Submitting..." : "Submit Request"}

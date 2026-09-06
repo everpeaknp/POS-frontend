@@ -252,7 +252,7 @@ export default function TransactionDetailPage() {
                   </h2>
                 </div>
                 <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10">
-                  <Receipt className="h-5 w-5 text-[#22C55E]" />
+                  <Receipt className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                 </div>
               </div>
               <div className="space-y-3 text-sm">
@@ -320,7 +320,7 @@ export default function TransactionDetailPage() {
               )}
               <div className="border-t border-gray-100 dark:border-border pt-3 flex justify-between items-center">
                 <span className="font-semibold text-gray-900 dark:text-foreground">Total</span>
-                <span className="text-xl font-bold text-[#22C55E]">
+                <span className="text-xl font-bold text-[var(--color-accent-custom,#22C55E)]">
                   {formatNPR(transaction.total)}
                 </span>
               </div>
@@ -372,7 +372,7 @@ export default function TransactionDetailPage() {
           <div className="xl:col-span-8">
             <div className={posTableWrapClass}>
               <div className="px-5 py-4 border-b border-gray-100 dark:border-border flex items-center gap-2">
-                <Package className="h-4 w-4 text-[#22C55E]" />
+                <Package className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground">
                   Items Purchased ({transaction.lines.length})
                 </h3>
@@ -432,7 +432,7 @@ export default function TransactionDetailPage() {
                       >
                         Grand Total
                       </td>
-                      <td className="px-4 py-3 text-right text-base font-bold text-[#22C55E]">
+                      <td className="px-4 py-3 text-right text-base font-bold text-[var(--color-accent-custom,#22C55E)]">
                         {formatNPR(transaction.total)}
                       </td>
                     </tr>

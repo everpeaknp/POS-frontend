@@ -165,7 +165,7 @@ export default function InventoryReportPage() {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey="stock" fill="#22C55E" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="stock" fill="var(--color-accent-custom,#22C55E)" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (

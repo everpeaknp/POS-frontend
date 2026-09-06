@@ -114,7 +114,7 @@ export default function HardwareProductsPage() {
           </Select>
         </div>
         <Link href="/dashboard/hardware/products/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
             <Plus className="h-4 w-4" /> New Product
           </Button>
         </Link>
@@ -178,7 +178,7 @@ export default function HardwareProductsPage() {
                             e.stopPropagation();
                             router.push(`/dashboard/hardware/products/${product.id}`);
                           }}
-                          className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                          className="text-sm text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium"
                         >
                           View
                         </button>

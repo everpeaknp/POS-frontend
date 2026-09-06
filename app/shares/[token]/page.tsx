@@ -64,7 +64,7 @@ export default function PublicSharePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-custom,#22C55E)] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading share...</p>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function PublicSharePage() {
               <p className="text-sm text-gray-600 mb-2">Receipt</p>
               <button
                 onClick={() => window.open(data.receipt_url, "_blank")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#22C55E] hover:bg-[#22C55E]/90 text-white rounded-lg text-sm font-medium transition"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90 text-white rounded-lg text-sm font-medium transition"
               >
                 <Download className="h-4 w-4" />
                 View Receipt

@@ -19,7 +19,7 @@ export function SalesSummaryBox({ subtotal, totalDiscount, totalTax, grandTotal 
         <span>VAT (13%)</span><span>{fmt(totalTax)}</span>
       </div>
       <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-gray-900 text-base">
-        <span>Grand Total</span><span className="text-[#22C55E]">{fmt(grandTotal)}</span>
+        <span>Grand Total</span><span className="text-[var(--color-accent-custom,#22C55E)]">{fmt(grandTotal)}</span>
       </div>
     </div>
   );

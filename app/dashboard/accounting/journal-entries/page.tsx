@@ -120,15 +120,15 @@ export default function JournalEntriesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input placeholder="Search entries..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white" />
             </div>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]">
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]">
               {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]">
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <Link href="/dashboard/accounting/journal-entries/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
               <Plus className="h-4 w-4" /> New Journal Entry
             </Button>
           </Link>
@@ -152,7 +152,7 @@ export default function JournalEntriesPage() {
                 {filtered.map((je) => (
                   <tr key={je.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3">
-                      <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="font-mono text-xs text-[#22C55E] hover:underline font-medium">{je.entry_number}</Link>
+                      <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="font-mono text-xs text-[var(--color-accent-custom,#22C55E)] hover:underline font-medium">{je.entry_number}</Link>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{je.date}</td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">{je.reference ?? "—"}</td>
@@ -163,7 +163,7 @@ export default function JournalEntriesPage() {
                     <td className="px-4 py-3"><JournalStatusBadge status={je.status.charAt(0).toUpperCase() + je.status.slice(1)} /></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 text-xs">
-                        <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[#22C55E] hover:underline">View</Link>
+                        <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[var(--color-accent-custom,#22C55E)] hover:underline">View</Link>
                         {je.status === "draft" && (
                           <>
                             <span className="text-gray-300">|</span>

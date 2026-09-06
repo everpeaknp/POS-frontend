@@ -167,7 +167,7 @@ export default function ProfilePage() {
                         readOnly
                         disabled
                       />
-                      <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#22C55E]" />
+                      <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-accent-custom,#22C55E)]" />
                     </div>
                   </SettingsField>
                 </div>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="bg-[#22C55E] px-6 text-white hover:bg-[#16A34A]"
+                    className="bg-[var(--color-accent-custom,#22C55E)] px-6 text-white hover:bg-[#16A34A]"
                   >
                     {isLoading ? "Saving..." : (
                       "Save changes"

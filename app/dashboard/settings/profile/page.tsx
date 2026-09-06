@@ -21,7 +21,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const inputCls =
-  "h-11 pl-10 pr-3 border-gray-200 focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/15 focus-visible:ring-3";
+  "h-11 pl-10 pr-3 border-gray-200 focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/15 focus-visible:ring-3";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -62,7 +62,7 @@ export default function ProfilePage() {
           {/* Profile Overview Card */}
           <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-start gap-6">
-              <div className="w-20 h-20 rounded-full bg-[#22C55E] text-white text-2xl font-bold flex items-center justify-center shrink-0">
+              <div className="w-20 h-20 rounded-full bg-[var(--color-accent-custom,#22C55E)] text-white text-2xl font-bold flex items-center justify-center shrink-0">
                 {user ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}` : "U"}
               </div>
               <div className="flex-1">
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                  className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 >
                   {isSubmitting ? "Saving..." : "Save Changes"}
                 </Button>

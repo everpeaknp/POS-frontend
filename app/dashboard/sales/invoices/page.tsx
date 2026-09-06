@@ -317,7 +317,7 @@ export default function InvoicesPage() {
           <Link href="/dashboard/sales/invoices/new">
             <Button
               size="sm"
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
             >
               <Plus className="h-4 w-4" /> New Invoice
             </Button>
@@ -372,7 +372,7 @@ export default function InvoicesPage() {
                       {/* Invoice Number */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#22C55E] transition-colors">
+                          <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[var(--color-accent-custom,#22C55E)] transition-colors">
                             {invoice.invoice_number}
                           </span>
                         </div>

@@ -96,7 +96,7 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-[#22C55E]">
+                        <div className="font-bold text-[var(--color-accent-custom,#22C55E)]">
                           Rs. {total.toLocaleString()}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -128,7 +128,7 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                           onResume(order);
                           onOpenChange(false);
                         }}
-                        className="flex-1 bg-[#22C55E] hover:bg-[#16A34A]"
+                        className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
                       >
                         <Play className="h-4 w-4 mr-1" />
                         Resume

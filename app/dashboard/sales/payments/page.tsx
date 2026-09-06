@@ -106,7 +106,7 @@ export default function PaymentsPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/sales/payments/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2 shrink-0"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2 shrink-0"
           >
             <Plus className="h-4 w-4" />
             Record Payment
@@ -132,7 +132,7 @@ export default function PaymentsPage() {
               <tbody className="divide-y divide-gray-50">
                 {filteredPayments.map((payment: any) => (
                   <tr key={payment.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)] font-medium">
                       {payment.payment_number}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
@@ -141,7 +141,7 @@ export default function PaymentsPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/dashboard/sales/customers/${payment.customer}`}
-                        className="text-gray-700 hover:text-[#22C55E] font-medium"
+                        className="text-gray-700 hover:text-[var(--color-accent-custom,#22C55E)] font-medium"
                       >
                         {payment.customer_name}
                       </Link>

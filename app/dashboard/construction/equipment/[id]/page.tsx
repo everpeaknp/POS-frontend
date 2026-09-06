@@ -80,7 +80,7 @@ function SectionCard({
   return (
     <div className={`${constructionCardClass} p-6 ${className}`}>
       <div className="flex items-center gap-2 mb-5">
-        <Icon className="h-5 w-5 text-[#22C55E]" />
+        <Icon className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       </div>
       {children}
@@ -335,7 +335,7 @@ export default function EquipmentDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[var(--color-accent-custom,#22C55E)] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
@@ -364,7 +364,7 @@ export default function EquipmentDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-gray-500">{primaryCost.label}</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{primaryCost.value}</p>
+                <p className="text-2xl font-bold text-[var(--color-accent-custom,#22C55E)]">{primaryCost.value}</p>
                 {equipment.ownership_type === "rented" && (
                   <p className="text-xs text-gray-400 mt-0.5">per day</p>
                 )}
@@ -411,7 +411,7 @@ export default function EquipmentDetailPage() {
               }
               icon={Wallet}
               iconClass="bg-purple-50 text-purple-600"
-              valueClass="text-[#22C55E]"
+              valueClass="text-[var(--color-accent-custom,#22C55E)]"
             />
             <StatCard
               label="Assigned Site"
@@ -492,7 +492,7 @@ export default function EquipmentDetailPage() {
                   {equipment.ownership_type === "owned" ? (
                     <DetailItem label="Purchase Cost">
                       {equipment.purchase_cost ? (
-                        <span className="text-[#22C55E]">{formatNPR(equipment.purchase_cost)}</span>
+                        <span className="text-[var(--color-accent-custom,#22C55E)]">{formatNPR(equipment.purchase_cost)}</span>
                       ) : (
                         "—"
                       )}
@@ -500,7 +500,7 @@ export default function EquipmentDetailPage() {
                   ) : (
                     <DetailItem label="Rental Cost / Day">
                       {equipment.rental_cost_per_day ? (
-                        <span className="text-[#22C55E]">
+                        <span className="text-[var(--color-accent-custom,#22C55E)]">
                           {formatNPR(equipment.rental_cost_per_day)}
                         </span>
                       ) : (
@@ -522,7 +522,7 @@ export default function EquipmentDetailPage() {
                     {equipment.assigned_site && equipment.assigned_site_name ? (
                       <Link
                         href={`/dashboard/construction/sites/${equipment.assigned_site}`}
-                        className="text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
                       >
                         {equipment.assigned_site_name}
                       </Link>

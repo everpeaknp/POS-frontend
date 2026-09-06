@@ -106,7 +106,7 @@ export function OrgWizardShell({
             : "min-h-[100dvh] sm:min-h-[680px] my-0 sm:my-auto"
         )}
       >
-        <aside className="relative hidden lg:flex flex-col bg-gradient-to-b from-[#14532d] via-[#166534] to-[#22C55E] text-white px-8 py-9 overflow-hidden">
+        <aside className="relative hidden lg:flex flex-col bg-gradient-to-b from-[var(--color-accent-custom-darker,#14532d)] via-[var(--color-accent-custom-dark,#166534)] to-[var(--color-accent-custom,#22C55E)] text-white px-8 py-9 overflow-hidden">
           <div
             className="pointer-events-none absolute -right-24 -bottom-16 h-[230px] w-[230px] rounded-full bg-white/10"
             aria-hidden
@@ -128,7 +128,7 @@ export function OrgWizardShell({
                 >
                   <path
                     d="M16 2L28 10V22L16 30L4 22V10L16 2Z"
-                    fill="#22C55E"
+                    fill="var(--color-accent-custom,#22C55E)"
                   />
                   <path
                     d="M16 8L22 12V20L16 24L10 20V12L16 8Z"
@@ -137,7 +137,7 @@ export function OrgWizardShell({
                   />
                   <path
                     d="M16 6L26 12V20L16 26L6 20V12L16 6Z"
-                    fill="#22C55E"
+                    fill="var(--color-accent-custom,#22C55E)"
                   />
                   <path
                     d="M16 10L22 14V18L16 22L10 18V14L16 10Z"
@@ -175,9 +175,9 @@ export function OrgWizardShell({
                   <div
                     className={`h-[34px] w-[34px] rounded-full grid place-items-center text-sm font-bold border transition-colors shrink-0 ${
                       isDone
-                        ? "bg-green-100 text-[#166534] border-transparent"
+                        ? "bg-[var(--color-accent-custom-light,#dcfce7)] text-[var(--color-accent-custom-darker,#166534)] border-transparent"
                         : isActive
-                          ? "bg-white text-[#14532d] border-transparent"
+                          ? "bg-white text-[var(--color-accent-custom-darker,#14532d)] border-transparent"
                           : "bg-white/15 text-white border-white/28"
                     }`}
                   >
@@ -218,16 +218,16 @@ export function OrgWizardShell({
                     key={s.id}
                     className={`flex items-center gap-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-xs font-semibold border transition-colors ${
                       isActive
-                        ? "bg-green-50 text-[#166534] border-green-200"
+                        ? "bg-[var(--color-accent-custom-light,#f0fdf4)] text-[var(--color-accent-custom-darker,#166534)] border-[var(--color-accent-custom-light,#bbf7d0)]"
                         : isDone
-                          ? "bg-green-100/80 text-[#166534] border-transparent"
+                          ? "bg-[var(--color-accent-custom-light,#dcfce7)]/80 text-[var(--color-accent-custom-darker,#166534)] border-transparent"
                           : "bg-gray-50 text-gray-400 border-gray-100 dark:bg-muted dark:border-border"
                     }`}
                   >
                     <span
                       className={`h-5 w-5 rounded-full grid place-items-center text-[10px] ${
                         isDone || isActive
-                          ? "bg-[#22C55E] text-white"
+                          ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                           : "bg-gray-200 text-gray-500"
                       }`}
                     >
@@ -251,7 +251,7 @@ export function OrgWizardShell({
               </p>
               <div className="h-2 rounded-full bg-gray-100 dark:bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#16A34A] to-[#22C55E] transition-all duration-300"
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent-custom-dark,#16A34A)] to-[var(--color-accent-custom,#22C55E)] transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -262,7 +262,7 @@ export function OrgWizardShell({
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin-sidebar px-5 sm:px-8 lg:px-10 pb-6 sm:pb-9 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#15803d] mb-2">
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--color-accent-custom-dark,#15803d)] mb-2">
               {eyebrow ?? meta.eyebrow}
             </p>
             <h2 className="text-[24px] font-bold text-[rgb(52,60,70)] dark:text-foreground tracking-tight m-0 leading-[38px]" style={{ fontWeight: 700 }}>

@@ -130,7 +130,7 @@ export function QuickActionButton({
                     onClick={() => handleAction(action.href)}
                     className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-50 transition whitespace-nowrap"
                   >
-                    <Icon className="h-5 w-5 text-[#22C55E]" />
+                    <Icon className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                     <span className="text-sm font-medium text-gray-900">
                       {language === "en" ? action.label_en : action.label_ne}
                     </span>
@@ -147,7 +147,7 @@ export function QuickActionButton({
             e.stopPropagation();
             setIsOpen(!isOpen);
           }}
-          className="flex items-center justify-center h-14 w-14 rounded-full bg-[#22C55E] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+          className="flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-accent-custom,#22C55E)] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
           aria-label={isOpen ? "Close menu" : "Open quick actions"}
           onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
           title="Quick Actions (drag to move)"

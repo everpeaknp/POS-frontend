@@ -156,18 +156,18 @@ export function AttendanceMonthCalendar({
                     key={day}
                     type="button"
                     onClick={() => onSelectDay(day)}
-                    className={`min-h-[72px] sm:min-h-[88px] rounded-lg border p-2 text-left transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]/40 ${cellTint(
+                    className={`min-h-[72px] sm:min-h-[88px] rounded-lg border p-2 text-left transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]/40 ${cellTint(
                       summary,
                       weekend,
                       isFuture
-                    )} ${isSelected ? "ring-2 ring-[#22C55E] shadow-sm" : ""}`}
+                    )} ${isSelected ? "ring-2 ring-[var(--color-accent-custom,#22C55E)] shadow-sm" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <div className="min-w-0">
                         <span
                           className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
                             isToday
-                              ? "bg-[#22C55E] text-white"
+                              ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                               : "text-gray-900 dark:text-foreground"
                           }`}
                         >

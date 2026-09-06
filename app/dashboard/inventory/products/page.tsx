@@ -356,7 +356,7 @@ export default function ProductsListPage() {
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-[#22C55E] text-white'
+                    ? 'bg-[var(--color-accent-custom,#22C55E)] text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 title="List View"
@@ -367,7 +367,7 @@ export default function ProductsListPage() {
                 onClick={() => setViewMode('grid')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 dark:border-gray-700 ${
                   viewMode === 'grid'
-                    ? 'bg-[#22C55E] text-white'
+                    ? 'bg-[var(--color-accent-custom,#22C55E)] text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 title="Grid View"
@@ -390,7 +390,7 @@ export default function ProductsListPage() {
             <Button
               type="button"
               onClick={() => router.push('/dashboard/inventory/products/new')}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               New Product
@@ -469,7 +469,7 @@ export default function ProductsListPage() {
                                 toast.error('Failed to update status');
                               }
                             }}
-                            className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#22C55E] ${
+                            className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] ${
                               isOutOfStock ? "border-red-200 bg-red-50 text-red-700" :
                               isLowStock ? "border-orange-200 bg-orange-50 text-orange-700" :
                               product.status === "active" ? "border-green-200 bg-green-50 text-green-700" :
@@ -495,7 +495,7 @@ export default function ProductsListPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-gray-500 hover:text-[#22C55E] hover:bg-green-50 dark:hover:bg-green-950"
+                              className="h-8 w-8 text-gray-500 hover:text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 dark:hover:bg-green-950"
                               onClick={() => router.push(`/dashboard/inventory/products/new?edit=${product.id}`)}
                               title="Edit"
                             >
@@ -547,7 +547,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -720,7 +720,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -756,7 +756,7 @@ export default function ProductsListPage() {
                 setCategoryFilter("all");
                 setCurrentPage(1);
               }}
-              className="mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] hover:underline"
+              className="mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] hover:underline"
             >
               Clear filters
             </button>

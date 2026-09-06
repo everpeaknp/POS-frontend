@@ -181,7 +181,7 @@ export default function MaterialConsumptionPage() {
             </Select>
           </div>
           <Link href="/dashboard/construction/consumption/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Log Consumption
             </Button>
           </Link>
@@ -217,7 +217,7 @@ export default function MaterialConsumptionPage() {
                   <tr key={item.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-accent-custom,#22C55E)] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {(item.product_name || "P")
                             .split(" ")
                             .map((n) => n[0])

@@ -48,7 +48,7 @@ export function AuditLogRow({
       <tr className="hover:bg-gray-50/50 border-b border-gray-50">
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E]">
+            <div className="w-6 h-6 rounded-full bg-[var(--color-accent-custom,#22C55E)]/10 flex items-center justify-center text-xs font-bold text-[var(--color-accent-custom,#22C55E)]">
               {user[0]}
             </div>
             <span className="font-medium text-gray-800 text-sm">{user}</span>
@@ -64,7 +64,7 @@ export function AuditLogRow({
           </span>
         </td>
         <td className="px-4 py-3 text-gray-600 text-sm">{module}</td>
-        <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">{record}</td>
+        <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)]">{record}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{ip}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{device}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{timestamp}</td>

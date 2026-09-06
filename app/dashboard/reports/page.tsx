@@ -41,7 +41,7 @@ import { usePermissions } from "@/lib/hooks/usePermissions";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
+const COLORS = ["var(--color-accent-custom,#22C55E)", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
 
 const ALL_REPORT_CARDS = [
   {
@@ -50,7 +50,7 @@ const ALL_REPORT_CARDS = [
     title: "Sales Report",
     desc: "Sales performance and trends",
     href: "/dashboard/reports/sales",
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)]",
   },
   {
     module: "purchase" as const,
@@ -164,7 +164,7 @@ export default function ReportsPage() {
           value: formatNPR(financials.total_revenue),
           sub: "Invoices + unbilled sales",
           icon: TrendingUp,
-          color: "bg-green-50 text-[#22C55E]",
+          color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)]",
         },
         {
           label: "Total Expenses",
@@ -272,7 +272,7 @@ export default function ReportsPage() {
             <Link
               key={card.title}
               href={card.href}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all group"
             >
               <div className="flex items-start gap-4">
                 <div
@@ -283,7 +283,7 @@ export default function ReportsPage() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
                   <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
-                  <span className="inline-flex items-center gap-1 text-xs text-[#22C55E] font-medium mt-2 group-hover:gap-1.5 transition-all">
+                  <span className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-custom,#22C55E)] font-medium mt-2 group-hover:gap-1.5 transition-all">
                     View report
                     <ChevronRight className="h-3.5 w-3.5" />
                   </span>
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -354,7 +354,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/reports/inventory"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -414,7 +414,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/construction/reports"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />

@@ -67,7 +67,7 @@ export function POSCouponDialog({
               />
               <Button
                 onClick={onApplyCouponCode}
-                className="h-12 px-6 bg-green-600 hover:bg-green-700"
+                className="h-12 px-6 bg-[var(--color-accent-custom-600,#16a34a)] hover:bg-[var(--color-accent-custom-700,#15803d)]"
               >
                 Apply
               </Button>
@@ -86,7 +86,7 @@ export function POSCouponDialog({
           <div className="space-y-3">
             {loadingDiscounts ? (
               <div className="text-center py-8 text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent-custom-600,#16a34a)] mx-auto mb-2"></div>
                 Loading coupons...
               </div>
             ) : availableDiscounts.length === 0 ? (
@@ -111,13 +111,13 @@ export function POSCouponDialog({
                       className={`text-left p-4 rounded-lg border-2 transition-all ${
                         isDisabled
                           ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                          : 'border-green-200 bg-green-50 hover:border-green-400 hover:shadow-md cursor-pointer'
+                          : 'border-[var(--color-accent-custom-200,#bbf7d0)] bg-[var(--color-accent-custom-50,#f0fdf4)] hover:border-[var(--color-accent-custom-400,#4ade80)] hover:shadow-md cursor-pointer'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <Tags className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : 'text-green-600'}`} />
+                            <Tags className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : 'text-[var(--color-accent-custom-600,#16a34a)]'}`} />
                             <span className="font-bold text-base text-gray-900">{discount.name}</span>
                           </div>
                           
@@ -153,7 +153,7 @@ export function POSCouponDialog({
                         </div>
 
                         <div className="text-right">
-                          <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-green-600'}`}>
+                          <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-[var(--color-accent-custom-600,#16a34a)]'}`}>
                             {discount.discount_type === 'percentage' 
                               ? `${discount.discount_value}%` 
                               : `Rs. ${discount.discount_value}`}

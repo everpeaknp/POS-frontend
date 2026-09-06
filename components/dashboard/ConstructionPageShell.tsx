@@ -55,7 +55,7 @@ export function ConstructionPageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             {backLabel}
@@ -83,7 +83,7 @@ export function ConstructionPageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               >
                 Try again
               </Button>
@@ -103,13 +103,13 @@ export const constructionCardClass =
 export const constructionTableWrapClass = `${constructionCardClass} overflow-hidden`;
 
 export const constructionInputClass =
-  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
+  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent";
 
 export const constructionStatCardClass = `${constructionCardClass} p-4`;
 
 export const constructionSectionTitleClass =
   "text-sm font-semibold text-gray-700 dark:text-foreground border-b border-gray-100 dark:border-border pb-2";
 
-export const constructionFilterPillActive = "bg-[#22C55E] text-white";
+export const constructionFilterPillActive = "bg-[var(--color-accent-custom,#22C55E)] text-white";
 export const constructionFilterPillInactive =
   "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80";

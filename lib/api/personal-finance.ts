@@ -22,6 +22,7 @@ export interface FinanceCategory {
   type: 'income' | 'expense';
   type_display: string;
   description?: string;
+  is_system: boolean;
   transaction_count: number;
   created_at: string;
   updated_at: string;

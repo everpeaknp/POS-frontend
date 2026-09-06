@@ -297,7 +297,7 @@ export default function SiteDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[var(--color-accent-custom,#22C55E)] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {site.name
                   .split(" ")
                   .map((n) => n[0])
@@ -361,7 +361,7 @@ export default function SiteDetailPage() {
             <div className={`${constructionCardClass} p-6 xl:col-span-2`}>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-[#22C55E]" />
+                  <Wallet className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                   <h3 className="text-base font-semibold text-gray-900">Budget Overview</h3>
                 </div>
                 <span
@@ -423,7 +423,7 @@ export default function SiteDetailPage() {
             <div className="space-y-6">
               <div className={`${constructionCardClass} p-6`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Building2 className="h-5 w-5 text-[#22C55E]" />
+                  <Building2 className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                   <h3 className="text-base font-semibold text-gray-900">Site Details</h3>
                 </div>
                 <div className="space-y-4">
@@ -442,7 +442,7 @@ export default function SiteDetailPage() {
 
               <div className={`${constructionCardClass} p-6`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="h-5 w-5 text-[#22C55E]" />
+                  <Calendar className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                   <h3 className="text-base font-semibold text-gray-900">Timeline</h3>
                 </div>
                 <div className="space-y-4">
@@ -467,7 +467,7 @@ export default function SiteDetailPage() {
           {/* Cost breakdown */}
           <div className={`${constructionCardClass} p-6`}>
             <div className="flex items-center gap-2 mb-5">
-              <BarChart3 className="h-5 w-5 text-[#22C55E]" />
+              <BarChart3 className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
               <h3 className="text-base font-semibold text-gray-900">Cost Breakdown</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -497,7 +497,7 @@ export default function SiteDetailPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[#22C55E]/30 hover:bg-green-50/50 hover:text-[#22C55E] transition-colors"
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:bg-green-50/50 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                   {label}

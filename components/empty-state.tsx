@@ -47,8 +47,8 @@ export function EmptyState({
 
   return (
     <div className="flex flex-col items-center justify-center py-28 gap-5">
-      <div className="w-24 h-24 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center">
-        <Icon className="h-12 w-12 text-[#22C55E]" />
+      <div className="w-24 h-24 rounded-2xl bg-[var(--color-accent-custom,#22C55E)]/10 border border-[var(--color-accent-custom,#22C55E)]/20 flex items-center justify-center">
+        <Icon className="h-12 w-12 text-[var(--color-accent-custom,#22C55E)]" />
       </div>
       <div className="text-center">
         <p className="text-foreground text-base font-semibold">{title}</p>
@@ -57,7 +57,7 @@ export function EmptyState({
       {shouldShowButton && (
         <Button 
           onClick={handleAction}
-          className="bg-[#22C55E] hover:bg-[#22C555] text-white font-semibold mt-1 gap-1.5 h-10 px-5 rounded-lg"
+          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#22C555] text-white font-semibold mt-1 gap-1.5 h-10 px-5 rounded-lg"
         >
           <Plus className="h-4 w-4" /> {buttonText}
         </Button>

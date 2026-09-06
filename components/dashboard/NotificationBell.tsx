@@ -203,7 +203,7 @@ export function NotificationBell({ placement = "bottom-end" }: NotificationBellP
                 <button
                   type="button"
                   onClick={markAllRead}
-                  className="text-xs text-[#22C55E] hover:underline flex items-center gap-1"
+                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:underline flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" /> Mark all read
                 </button>
@@ -245,7 +245,7 @@ export function NotificationBell({ placement = "bottom-end" }: NotificationBellP
             <div className="px-4 py-2 border-t border-border text-center">
               <Link
                 href="/settings/notifications"
-                className="text-xs text-muted-foreground hover:text-[#22C55E]"
+                className="text-xs text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)]"
                 onClick={() => setOpen(false)}
               >
                 Notification settings

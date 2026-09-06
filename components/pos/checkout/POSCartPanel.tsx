@@ -57,18 +57,18 @@ export function POSCartPanel({
     >
       {/* Resize Handle */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-green-500 cursor-col-resize transition-all group z-10"
+        className="absolute left-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-[var(--color-accent-custom-500,#22c55e)] cursor-col-resize transition-all group z-10"
         onMouseDown={onResizeStart}
       >
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <MoreVertical className="h-6 w-6 text-green-600 dark:text-green-400" />
+          <MoreVertical className="h-6 w-6 text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]" />
         </div>
       </div>
       {/* Cart Header */}
-      <div className="p-3 border-b dark:border-gray-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 flex-shrink-0">
+      <div className="p-3 border-b dark:border-gray-800 bg-gradient-to-r from-[var(--color-accent-custom-50,#f0fdf4)] to-emerald-50 dark:from-[var(--color-accent-custom-950,#052e16)] dark:to-emerald-950 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-green-600 dark:bg-green-700 p-1.5 rounded-lg">
+            <div className="bg-[var(--color-accent-custom-600,#16a34a)] dark:bg-[var(--color-accent-custom-700,#15803d)] p-1.5 rounded-lg">
               <Receipt className="h-4 w-4 text-white" />
             </div>
             <div>
@@ -101,7 +101,7 @@ export function POSCartPanel({
           cart.map((item) => (
             <div
               key={item.product.id}
-              className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 transition-colors"
+              className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-300,#86efac)] dark:hover:border-[var(--color-accent-custom-600,#16a34a)] transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-xs text-gray-900 dark:text-gray-100 truncate">
@@ -131,7 +131,7 @@ export function POSCartPanel({
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-7 w-7 rounded-md hover:bg-green-50 dark:hover:bg-green-950 hover:border-green-500 hover:text-green-600 dark:hover:text-green-400"
+                  className="h-7 w-7 rounded-md hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)] hover:border-[var(--color-accent-custom-500,#22c55e)] hover:text-[var(--color-accent-custom-600,#16a34a)] dark:hover:text-[var(--color-accent-custom-400,#4ade80)]"
                   onClick={() => onUpdateQuantity(item.product.id, 1)}
                 >
                   <Plus className="h-3 w-3" />
@@ -169,12 +169,12 @@ export function POSCartPanel({
             <div className="space-y-2">
               {/* Applied Coupon Display */}
               {appliedCoupon && (
-                <div className="flex items-center justify-between bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-2">
+                <div className="flex items-center justify-between bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] border border-[var(--color-accent-custom-200,#bbf7d0)] dark:border-[var(--color-accent-custom-800,#166534)] rounded-lg p-2">
                   <div className="flex items-center gap-2 flex-1">
-                    <Tags className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <Tags className="h-4 w-4 text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]" />
                     <div className="flex-1">
-                      <div className="text-xs font-semibold text-green-900 dark:text-green-100">{appliedCoupon.name}</div>
-                      <div className="text-xs text-green-700 dark:text-green-300">
+                      <div className="text-xs font-semibold text-[var(--color-accent-custom-900,#14532d)] dark:text-[var(--color-accent-custom-100,#dcfce7)]">{appliedCoupon.name}</div>
+                      <div className="text-xs text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-300,#86efac)]">
                         {appliedCoupon.discount_type === 'percentage' 
                           ? `${appliedCoupon.discount_value}% off` 
                           : `Rs. ${appliedCoupon.discount_value} off`}
@@ -183,7 +183,7 @@ export function POSCartPanel({
                   </div>
                   <button
                     onClick={onRemoveCoupon}
-                    className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 p-1"
+                    className="text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)] hover:text-[var(--color-accent-custom-800,#166534)] dark:hover:text-[var(--color-accent-custom-200,#bbf7d0)] p-1"
                     type="button"
                   >
                     <X className="h-4 w-4" />
@@ -199,7 +199,7 @@ export function POSCartPanel({
                     variant="outline"
                     size="sm"
                     onClick={onShowCouponDialog}
-                    className="flex-1 h-8 text-xs border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
+                    className="flex-1 h-8 text-xs border-[var(--color-accent-custom-300,#86efac)] dark:border-[var(--color-accent-custom-700,#15803d)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)]"
                   >
                     <Tags className="h-3 w-3 mr-1" />
                     Apply Coupon
@@ -211,7 +211,7 @@ export function POSCartPanel({
                       value={discountAmount}
                       onChange={(e) => onDiscountAmountChange(e.target.value)}
                       placeholder="0"
-                      className="w-16 h-8 text-right text-xs border-gray-300 dark:border-gray-700 focus:border-green-500 focus:ring-green-500"
+                      className="w-16 h-8 text-right text-xs border-gray-300 dark:border-gray-700 focus:border-[var(--color-accent-custom-500,#22c55e)] focus:ring-[var(--color-accent-custom-500,#22c55e)]"
                       min="0"
                       step="10"
                       disabled={!!appliedCoupon}
@@ -222,7 +222,7 @@ export function POSCartPanel({
 
               {/* Discount Amount */}
               {discountValue > 0 && (
-                <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
+                <div className="flex justify-between text-xs text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]">
                   <span>Discount</span>
                   <span className="font-medium">- Rs. {Number(discountValue).toFixed(2)}</span>
                 </div>
@@ -236,7 +236,7 @@ export function POSCartPanel({
             
             <div className="flex justify-between text-lg font-bold pt-2 border-t-2 border-gray-200 dark:border-gray-700">
               <span className="text-gray-900 dark:text-gray-100">Total</span>
-              <span className="text-green-600 dark:text-green-400">Rs. {total.toFixed(0)}</span>
+              <span className="text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]">Rs. {total.toFixed(0)}</span>
             </div>
           </div>
 
@@ -244,7 +244,7 @@ export function POSCartPanel({
           <Button
             onClick={onShowCheckoutDialog}
             disabled={!openSession}
-            className="w-full h-12 text-base font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all"
+            className="w-full h-12 text-base font-bold bg-gradient-to-r from-[var(--color-accent-custom-600,#16a34a)] to-emerald-600 hover:from-[var(--color-accent-custom-700,#15803d)] hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all"
           >
             <Receipt className="h-5 w-5 mr-2" />
             Complete Sale · Rs. {total.toFixed(0)}

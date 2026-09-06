@@ -22,9 +22,11 @@ interface PartyTransactionForm extends Omit<PartyTransaction, 'id' | 'party_name
 interface Props {
   partyId: number;
   onOpenDialog?: (direction?: 'in' | 'out') => void;
+  initialEditTransactionId?: number | null;
+  onInitialEditConsumed?: () => void;
 }
 
-export function PartyTransactions({ partyId, onOpenDialog }: Props) {
+export function PartyTransactions({ partyId, onOpenDialog, initialEditTransactionId, onInitialEditConsumed }: Props) {
   const router = useRouter();
   const { dateSystem } = useDateSystem();
   const [transactions, setTransactions] = useState<PartyTransaction[]>([]);
@@ -213,6 +215,17 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
     });
     setShowDialog(true);
   };
+
+  // Auto-open edit dialog when navigated here with a specific transaction to edit
+  useEffect(() => {
+    if (!initialEditTransactionId || transactions.length === 0) return;
+    const txn = transactions.find((t) => t.id === initialEditTransactionId);
+    if (txn) {
+      openEditDialog(txn);
+    }
+    onInitialEditConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEditTransactionId, transactions]);
 
   const handleSave = async () => {
     // Validation
@@ -406,7 +419,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
             {transactions.length === 0 ? (
               <>
                 <p className="text-gray-500 mb-4">No transactions yet</p>
-                <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Button onClick={() => openAddDialog()} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
                   <Plus className="h-4 w-4 mr-2" />
                   Add First Transaction
                 </Button>
@@ -649,7 +662,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSave} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               {editingTransaction ? "Update" : "Add"} Transaction
             </Button>
           </div>
@@ -702,7 +715,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
               />
               <Button
                 onClick={handleCopyShareLink}
-                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90'}`}
               >
                 {shareCopied ? (
                   <>
@@ -754,7 +767,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
               onClick={() => setShareModalOpen(false)}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
             >
               Done
             </Button>

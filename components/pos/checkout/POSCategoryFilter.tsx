@@ -50,27 +50,27 @@ export function POSCategoryFilter({
                 setSelectedCategory("all");
                 setSearchQuery("");
               }}
-              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 flex items-center justify-center transition-all"
+              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] flex items-center justify-center transition-all"
               title="Reset filters"
             >
               <RotateCcw className="h-4 w-4 text-gray-600" />
             </button>
             <button
-              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 flex items-center justify-center transition-all"
+              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] flex items-center justify-center transition-all"
               title="Filters"
             >
               <Filter className="h-4 w-4 text-gray-600" />
             </button>
             <button
               onClick={() => scrollCategories('left')}
-              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 flex items-center justify-center transition-all"
+              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] flex items-center justify-center transition-all"
               title="Scroll left"
             >
               <ChevronLeft className="h-4 w-4 text-gray-600" />
             </button>
             <button
               onClick={() => scrollCategories('right')}
-              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 flex items-center justify-center transition-all"
+              className="w-9 h-9 rounded-lg border-2 border-gray-200 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] flex items-center justify-center transition-all"
               title="Scroll right"
             >
               <ChevronRight className="h-4 w-4 text-gray-600" />
@@ -92,11 +92,11 @@ export function POSCategoryFilter({
             onClick={() => setSelectedCategory("all")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all whitespace-nowrap ${
               selectedCategory === "all"
-                ? "bg-green-50 border-green-500 shadow-md"
-                : "bg-white border-gray-200 hover:border-green-300"
+                ? "bg-[var(--color-accent-custom-50,#f0fdf4)] border-[var(--color-accent-custom-500,#22c55e)] shadow-md"
+                : "bg-white border-gray-200 hover:border-[var(--color-accent-custom-300,#86efac)]"
             }`}
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-accent-custom-400,#4ade80)] to-emerald-500 flex items-center justify-center text-white font-bold">
               All
             </div>
             <div className="text-left">
@@ -117,8 +117,8 @@ export function POSCategoryFilter({
                 onClick={() => setSelectedCategory(String(categoryId))}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all whitespace-nowrap ${
                   selectedCategory === String(categoryId)
-                    ? "bg-green-50 border-green-500 shadow-md"
-                    : "bg-white border-gray-200 hover:border-green-300"
+                    ? "bg-[var(--color-accent-custom-50,#f0fdf4)] border-[var(--color-accent-custom-500,#22c55e)] shadow-md"
+                    : "bg-white border-gray-200 hover:border-[var(--color-accent-custom-300,#86efac)]"
                 }`}
               >
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">

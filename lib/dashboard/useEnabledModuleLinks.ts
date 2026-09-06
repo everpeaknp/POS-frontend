@@ -14,7 +14,7 @@ export interface EnabledModuleLink {
 
 const COLOR_PALETTE = [
   "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
-  "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+  "bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400",
   "bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400",
   "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400",
   "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",

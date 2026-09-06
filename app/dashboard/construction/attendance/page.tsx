@@ -78,7 +78,7 @@ function MarkAttendanceFab({ site }: { site: string }) {
   return (
     <Link
       href={href}
-      className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
+      className="fixed bottom-8 right-8 w-14 h-14 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
       aria-label="Mark attendance"
     >
       <Plus className="h-6 w-6" />
@@ -483,7 +483,7 @@ export default function ConstructionAttendancePage() {
               label="Working days"
               value={stats.working_days}
               icon={CalendarDays}
-              iconClass="bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400"
+              iconClass="bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400"
             />
             <StatCard
               label="Avg attendance"
@@ -564,7 +564,7 @@ export default function ConstructionAttendancePage() {
                               <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
                                 <Link
                                   href={`/dashboard/construction/workers/${worker.id}`}
-                                  className="hover:text-[#22C55E] transition-colors"
+                                  className="hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                                 >
                                   {worker.name}
                                 </Link>
@@ -647,7 +647,7 @@ export default function ConstructionAttendancePage() {
                                 weekend
                                   ? "text-gray-400 dark:text-muted-foreground bg-gray-100/70 dark:bg-muted/60"
                                   : "text-gray-400 dark:text-muted-foreground"
-                              } ${selectedDay === day ? "bg-[#22C55E]/10" : ""}`}
+                              } ${selectedDay === day ? "bg-[var(--color-accent-custom,#22C55E)]/10" : ""}`}
                             >
                               {getWeekdayLabelForPeriod(period, day)}
                             </th>
@@ -671,7 +671,7 @@ export default function ConstructionAttendancePage() {
                                 weekend
                                   ? "text-gray-400 dark:text-muted-foreground bg-gray-100/70 dark:bg-muted/60"
                                   : "text-gray-500 dark:text-muted-foreground"
-                              } ${selectedDay === day ? "bg-[#22C55E]/10 ring-1 ring-inset ring-[#22C55E]/30" : ""}`}
+                              } ${selectedDay === day ? "bg-[var(--color-accent-custom,#22C55E)]/10 ring-1 ring-inset ring-[var(--color-accent-custom,#22C55E)]/30" : ""}`}
                             >
                               {day}
                             </th>
@@ -685,7 +685,7 @@ export default function ConstructionAttendancePage() {
                           <td className="sticky left-0 z-10 bg-white dark:bg-card px-4 py-3 border-r border-gray-100 dark:border-border group-hover:bg-gray-50/50 dark:group-hover:bg-muted/20">
                             <Link
                               href={`/dashboard/construction/workers/${worker.id}`}
-                              className="block min-w-0 hover:text-[#22C55E] transition-colors"
+                              className="block min-w-0 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                             >
                               <span className="font-medium text-gray-900 dark:text-foreground truncate block">
                                 {worker.name}
@@ -709,7 +709,7 @@ export default function ConstructionAttendancePage() {
                                 key={day}
                                 className={`text-center px-1.5 py-2 cursor-pointer ${
                                   weekend ? "bg-gray-50/80 dark:bg-muted/30" : ""
-                                } ${isSelected ? "bg-[#22C55E]/5" : ""}`}
+                                } ${isSelected ? "bg-[var(--color-accent-custom,#22C55E)]/5" : ""}`}
                                 onClick={() => setSelectedDay(day)}
                               >
                                 <span

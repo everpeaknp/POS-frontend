@@ -186,7 +186,7 @@ export function NewPosSessionDialog({
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {loading ? "Opening..." : (
                 "Open Session"

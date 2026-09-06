@@ -88,7 +88,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("file")}
-        className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
       >
         File Return
       </Button>
@@ -96,7 +96,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("mark-paid")}
-        className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
       >
         Mark as Paid
       </Button>
@@ -167,7 +167,7 @@ export default function VatReturnDetailPage() {
               {
                 label: "Net Payable to IRD",
                 value: fmt(vatReturn.net_payable),
-                color: vatReturn.net_payable >= 0 ? "text-[#22C55E]" : "text-red-600",
+                color: vatReturn.net_payable >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600",
                 bold: true,
               },
             ].map((s) => (

@@ -305,7 +305,7 @@ export default function UOMPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
@@ -347,7 +347,7 @@ export default function UOMPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedUnits.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> Add Unit
             </Button>
           </div>
@@ -442,7 +442,7 @@ export default function UOMPage() {
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                           currentPage === page
-                            ? "bg-[#22C55E] text-white"
+                            ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                             : "text-gray-600 hover:bg-gray-100"
                         }`}
                       >
@@ -508,7 +508,7 @@ export default function UOMPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}

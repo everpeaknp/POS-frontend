@@ -87,7 +87,7 @@ export function POSProductGrid({
                 placeholder="Search products by name, SKU, or category..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 h-12 text-base border-gray-300 dark:border-gray-700 focus:border-green-500 focus:ring-green-500 shadow-sm dark:bg-gray-800 dark:text-white"
+                className="pl-10 h-12 text-base border-gray-300 dark:border-gray-700 focus:border-[var(--color-accent-custom-500,#22c55e)] focus:ring-[var(--color-accent-custom-500,#22c55e)] shadow-sm dark:bg-gray-800 dark:text-white"
                 autoFocus
               />
             </div>
@@ -95,7 +95,7 @@ export function POSProductGrid({
             {/* Filter Icons */}
             <button
               onClick={handleReset}
-              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 flex items-center justify-center transition-all flex-shrink-0"
+              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)] flex items-center justify-center transition-all flex-shrink-0"
               title="Reset filters"
             >
               <RotateCcw className={`h-4 w-4 text-gray-600 dark:text-gray-400 transition-transform duration-500 ${isRefreshing ? 'rotate-180' : ''}`} />
@@ -104,8 +104,8 @@ export function POSProductGrid({
               onClick={onToggleAvailable}
               className={`w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center flex-shrink-0 ${
                 showOnlyAvailable 
-                  ? 'border-green-500 bg-green-50 dark:bg-green-950 text-green-600' 
-                  : 'border-gray-200 dark:border-gray-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 text-gray-600 dark:text-gray-400'
+                  ? 'border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-600,#16a34a)]' 
+                  : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)] text-gray-600 dark:text-gray-400'
               }`}
               title={showOnlyAvailable ? "Showing available only (click to show all)" : "Showing all products (click to show available only)"}
             >
@@ -113,14 +113,14 @@ export function POSProductGrid({
             </button>
             <button
               onClick={() => scrollCategories('left')}
-              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 flex items-center justify-center transition-all flex-shrink-0"
+              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)] flex items-center justify-center transition-all flex-shrink-0"
               title="Scroll left"
             >
               <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
             <button
               onClick={() => scrollCategories('right')}
-              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 flex items-center justify-center transition-all flex-shrink-0"
+              className="w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)] flex items-center justify-center transition-all flex-shrink-0"
               title="Scroll right"
             >
               <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
@@ -138,7 +138,7 @@ export function POSProductGrid({
             <Button
               onClick={onShowBarcodeScanner}
               disabled={!selectedWarehouse}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all h-12 flex-shrink-0"
+              className="bg-gradient-to-r from-[var(--color-accent-custom-500,#22c55e)] to-emerald-600 hover:from-[var(--color-accent-custom-600,#16a34a)] hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all h-12 flex-shrink-0"
             >
               <Scan className="h-4 w-4" />
               Scan Barcode
@@ -159,8 +159,8 @@ export function POSProductGrid({
               onClick={() => onCategoryChange("all")}
               className={`px-5 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                 selectedCategory === "all"
-                  ? "bg-green-600 text-white shadow-md"
-                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500"
+                  ? "bg-[var(--color-accent-custom-600,#16a34a)] text-white shadow-md"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-400,#4ade80)] dark:hover:border-[var(--color-accent-custom-500,#22c55e)]"
               }`}
             >
               All Products <span className={`font-semibold ${selectedCategory === "all" ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{products.length}</span>
@@ -179,8 +179,8 @@ export function POSProductGrid({
                   onClick={() => onCategoryChange(String(categoryKey))}
                   className={`px-5 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                     selectedCategory === String(categoryKey)
-                      ? "bg-green-600 text-white shadow-md"
-                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500"
+                      ? "bg-[var(--color-accent-custom-600,#16a34a)] text-white shadow-md"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-400,#4ade80)] dark:hover:border-[var(--color-accent-custom-500,#22c55e)]"
                   }`}
                 >
                   {categoryName} <span className={`font-semibold ${selectedCategory === String(categoryKey) ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{count}</span>
@@ -199,7 +199,7 @@ export function POSProductGrid({
               {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} available
             </div>
             {cart.length > 0 && (
-              <div className="text-sm font-medium text-green-600 dark:text-green-400">
+              <div className="text-sm font-medium text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]">
                 {cart.length} item{cart.length !== 1 ? 's' : ''} in cart
               </div>
             )}
@@ -222,13 +222,13 @@ export function POSProductGrid({
                       isOutOfStock
                         ? "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 cursor-not-allowed opacity-50"
                         : inCart
-                          ? "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-500 shadow-lg scale-[1.02] ring-2 ring-green-200 dark:ring-green-800"
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 hover:shadow-lg hover:scale-[1.02] active:scale-95"
+                          ? "bg-gradient-to-br from-[var(--color-accent-custom-50,#f0fdf4)] to-emerald-50 dark:from-[var(--color-accent-custom-950,#052e16)] dark:to-emerald-950 border-[var(--color-accent-custom-500,#22c55e)] shadow-lg scale-[1.02] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-400,#4ade80)] hover:shadow-lg hover:scale-[1.02] active:scale-95"
                     }
                   `}
                 >
                   {inCart && (
-                    <div className="absolute top-2 left-2 z-10 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-800">
+                    <div className="absolute top-2 left-2 z-10 bg-gradient-to-r from-[var(--color-accent-custom-600,#16a34a)] to-emerald-600 text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-800">
                       {inCart.quantity}
                     </div>
                   )}
@@ -264,7 +264,7 @@ export function POSProductGrid({
                         ? 'bg-red-500/90 text-white' 
                         : stock < 10
                           ? 'bg-amber-500/90 text-white'
-                          : 'bg-green-500/90 text-white'
+                          : 'bg-[var(--color-accent-custom-500,#22c55e)]/90 text-white'
                     }`}>
                       {isOutOfStock ? 'Out' : `${stock}`}
                     </div>
@@ -275,7 +275,7 @@ export function POSProductGrid({
                     {/* Price */}
                     <div className="flex items-baseline gap-0.5">
                       <span className="text-xs text-gray-500 dark:text-gray-400">Rs.</span>
-                      <span className="text-base font-bold text-green-600 dark:text-green-400">
+                      <span className="text-base font-bold text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]">
                         {Number(product.selling_price).toFixed(0)}
                       </span>
                     </div>

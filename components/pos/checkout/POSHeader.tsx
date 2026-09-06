@@ -48,7 +48,7 @@ export function POSHeader({
                 <Play className="h-4 w-4" />
                 Held Orders
                 {heldOrdersCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                  <span className="ml-1 px-1.5 py-0.5 bg-[var(--color-accent-custom-100,#dcfce7)] text-[var(--color-accent-custom-700,#15803d)] rounded-full text-xs font-semibold">
                     {heldOrdersCount}
                   </span>
                 )}

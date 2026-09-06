@@ -15,12 +15,15 @@ import {
   Wrench,
   Layers,
   BookOpen,
+  TrendingUp,
+  Truck,
 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
+import { rentalAPI } from "@/lib/api/hardware";
 import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
 import { formatNPR } from "@/lib/utils";
 import { useEnabledModuleLinks } from "@/lib/dashboard/useEnabledModuleLinks";
@@ -38,6 +41,7 @@ interface DashboardStats {
   totalOutstanding: number;
   totalCreditLimit: number;
   bulkPricingRules: number;
+  overdueRentals: number;
 }
 
 const quickActions = [
@@ -53,7 +57,7 @@ const quickActions = [
     label: "Record Payment",
     sub: "Receive from customer",
     icon: DollarSign,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400",
   },
   {
     href: "/dashboard/hardware/products/new",
@@ -80,6 +84,27 @@ const moduleLinks = [
     color: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
   },
   {
+    href: "/dashboard/hardware/rates",
+    label: "Rate Board",
+    sub: "Today's rod, cement & sand prices",
+    icon: TrendingUp,
+    color: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  },
+  {
+    href: "/dashboard/hardware/deliveries",
+    label: "Deliveries",
+    sub: "Vehicles & delivery tracking",
+    icon: Truck,
+    color: "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-400",
+  },
+  {
+    href: "/dashboard/hardware/rentals",
+    label: "Rentals",
+    sub: "Tools & equipment on rent",
+    icon: Wrench,
+    color: "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400",
+  },
+  {
     href: "/dashboard/inventory/products",
     label: "Inventory",
     sub: "Stock management",
@@ -98,7 +123,7 @@ const moduleLinks = [
     label: "Orders",
     sub: "Sales history",
     icon: ShoppingCart,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400",
   },
   {
     href: "/dashboard/hardware/reports",
@@ -127,6 +152,7 @@ export default function HardwareDashboardPage() {
     totalOutstanding: 0,
     totalCreditLimit: 0,
     bulkPricingRules: 0,
+    overdueRentals: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
@@ -169,6 +195,16 @@ export default function HardwareDashboardPage() {
       const bulkPricingResponse = await inventoryApi.bulkPricing.list(HARDWARE_LIST_PARAMS);
       const bulkPricing = unwrapList(bulkPricingResponse.data);
 
+      // Rentals is a newer, optional-for-this-tenant feature — don't let a
+      // failure here (e.g. module not yet active) break the whole dashboard.
+      let overdueRentals = 0;
+      try {
+        const rentalStatsResponse = await rentalAPI.stats();
+        overdueRentals = rentalStatsResponse.data?.overdue || 0;
+      } catch (rentalError) {
+        console.error("Failed to fetch rental stats:", rentalError);
+      }
+
       setStats({
         totalProducts: products.length,
         lowStockCount: lowStock.length,
@@ -177,6 +213,7 @@ export default function HardwareDashboardPage() {
         totalOutstanding,
         totalCreditLimit,
         bulkPricingRules: bulkPricing.length,
+        overdueRentals,
       });
 
       setRecentCustomers(customersWithCredit.slice(0, 5));
@@ -245,12 +282,29 @@ export default function HardwareDashboardPage() {
       <DashHeader title="Hardware" subtitle={subtitle} />
 
       <div className="flex-1 p-6 space-y-6">
+        {stats.overdueRentals > 0 && (
+          <Link
+            href="/dashboard/hardware/rentals"
+            className="flex items-center justify-between gap-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl px-4 py-3 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400">
+                <Wrench className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                {stats.overdueRentals} rented {stats.overdueRentals === 1 ? "item is" : "items are"} overdue for return
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-red-400 shrink-0" />
+          </Link>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card) => (
             <Link
               key={card.label}
               href={card.href}
-              className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all"
+              className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all"
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-gray-500 dark:text-muted-foreground">{card.label}</p>
@@ -275,7 +329,7 @@ export default function HardwareDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-lg ${action.color}`}>
@@ -302,7 +356,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/credit"
-                  className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
                 >
                   View all
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -322,7 +376,7 @@ export default function HardwareDashboardPage() {
                         onClick={() =>
                           router.push(`/dashboard/hardware/customers/${customer.id}`)
                         }
-                        className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-border hover:border-[#22C55E]/30 transition-colors text-left"
+                        className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-border hover:border-[var(--color-accent-custom,#22C55E)]/30 transition-colors text-left"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
@@ -349,7 +403,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/products"
-                  className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
                 >
                   View products
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -428,7 +482,7 @@ export default function HardwareDashboardPage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                 >
                   <item.icon className="h-4 w-4" />
                   {item.label}
@@ -440,7 +494,7 @@ export default function HardwareDashboardPage() {
 
         <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-green-50 text-[#22C55E] dark:bg-green-500/10">
+            <div className="p-2 rounded-lg bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10">
               <Wrench className="h-5 w-5" />
             </div>
             <div>

@@ -110,7 +110,7 @@ export default function AccountDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <p className="text-gray-500">This account could not be found.</p>
             <Link href="/dashboard/accounting/chart-of-accounts">
-              <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white">Back to Chart of Accounts</Button>
+              <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">Back to Chart of Accounts</Button>
             </Link>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function AccountDetailPage() {
             <Button
               onClick={fetchData}
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {loading ? "Loading..." : "Apply Filter"}
             </Button>
@@ -208,7 +208,7 @@ export default function AccountDetailPage() {
                     <td className="px-4 py-3 text-gray-600">
                       <FormattedDate value={entry.date} />
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">{entry.reference}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)]">{entry.reference}</td>
                     <td className="px-4 py-3 text-gray-700">{entry.description}</td>
                     <td className="px-4 py-3 text-gray-800">{entry.debit > 0 ? fmt(entry.debit) : "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{entry.credit > 0 ? fmt(entry.credit) : "—"}</td>

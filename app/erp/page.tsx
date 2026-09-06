@@ -291,7 +291,7 @@ function ErpPageContent() {
                   placeholder="Search workplaces..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/20"
+                  className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/20"
                   disabled={hasNoTenants}
                 />
               </div>
@@ -366,12 +366,12 @@ function ErpPageContent() {
                 {invitations.map((invitation) => (
                   <div
                     key={invitation.id}
-                    className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-5 sm:p-6 hover:border-[#22C55E]/30 hover:shadow-md transition-all"
+                    className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-5 sm:p-6 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-11 h-11 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-[#16A34A] font-bold text-lg shrink-0">
+                          <div className="w-11 h-11 rounded-xl bg-[var(--color-accent-custom,#22C55E)]/10 flex items-center justify-center text-[#16A34A] font-bold text-lg shrink-0">
                             {invitation.tenant_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -386,7 +386,7 @@ function ErpPageContent() {
 
                         <div className="flex flex-wrap items-center gap-2 text-sm">
                           <span className="text-muted-foreground">Role:</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#22C55E]/15 text-[#22C55E] capitalize">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent-custom,#22C55E)]/15 text-[var(--color-accent-custom,#22C55E)] capitalize">
                             {invitation.role}
                           </span>
                           {invitation.is_expired && (
@@ -412,7 +412,7 @@ function ErpPageContent() {
                         <div className="flex gap-2 shrink-0">
                           <Button
                             onClick={() => handleAcceptInvitation(invitation.id)}
-                            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-9"
+                            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 h-9"
                           >
                             <Check className="h-4 w-4" />
                             Accept
@@ -442,7 +442,7 @@ function ErpPageContent() {
         <button
           type="button"
           onClick={handleCreateOrganization}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
+          className="fixed bottom-8 right-8 w-14 h-14 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
           aria-label="Add new workplace"
         >
           <Plus className="h-6 w-6" />

@@ -87,7 +87,7 @@ function SectionCard({
   return (
     <div className={`${constructionCardClass} p-6 ${className}`}>
       <div className="flex items-center gap-2 mb-5">
-        <Icon className="h-5 w-5 text-[#22C55E]" />
+        <Icon className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       </div>
       {children}
@@ -345,7 +345,7 @@ export default function DailyLogDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[var(--color-accent-custom,#22C55E)] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {siteInitials}
               </div>
               <div className="flex-1 min-w-0">
@@ -371,7 +371,7 @@ export default function DailyLogDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-gray-500">Total Spend</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{formatNPR(totalSpend)}</p>
+                <p className="text-2xl font-bold text-[var(--color-accent-custom,#22C55E)]">{formatNPR(totalSpend)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">materials + other</p>
               </div>
             </div>
@@ -424,10 +424,10 @@ export default function DailyLogDetailPage() {
                 <div className={`${constructionCardClass} overflow-hidden`}>
                   <div className="flex flex-wrap items-center justify-between gap-3 p-6 pb-4">
                     <div className="flex items-center gap-2">
-                      <Package className="h-5 w-5 text-[#22C55E]" />
+                      <Package className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
                       <h3 className="text-base font-semibold text-gray-900">Material Consumptions</h3>
                     </div>
-                    <span className="text-sm font-semibold text-[#22C55E]">
+                    <span className="text-sm font-semibold text-[var(--color-accent-custom,#22C55E)]">
                       Total: {formatNPR(materialCost)}
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function DailyLogDetailPage() {
                           <td colSpan={3} className="px-4 py-3 text-sm font-medium text-gray-600 text-right">
                             Material Total
                           </td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#22C55E] text-right">
+                          <td className="px-4 py-3 text-sm font-bold text-[var(--color-accent-custom,#22C55E)] text-right">
                             {formatNPR(materialCost)}
                           </td>
                         </tr>
@@ -516,7 +516,7 @@ export default function DailyLogDetailPage() {
                     {log.site ? (
                       <Link
                         href={`/dashboard/construction/sites/${log.site}`}
-                        className="text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
                       >
                         {log.site_name}
                       </Link>
@@ -530,7 +530,7 @@ export default function DailyLogDetailPage() {
                   <DetailItem label="Weather">{log.weather || "—"}</DetailItem>
                   <DetailItem label="Other Expenses">
                     {otherExpenses > 0 ? (
-                      <span className="text-[#22C55E]">{formatNPR(otherExpenses)}</span>
+                      <span className="text-[var(--color-accent-custom,#22C55E)]">{formatNPR(otherExpenses)}</span>
                     ) : (
                       "—"
                     )}

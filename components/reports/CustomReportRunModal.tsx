@@ -109,7 +109,7 @@ export function CustomReportRunModal({
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                <Bar dataKey="value" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

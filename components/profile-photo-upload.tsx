@@ -97,14 +97,14 @@ export function ProfilePhotoUpload({
         "group relative shrink-0 overflow-hidden rounded-full border-2 border-border bg-muted",
         avatarSize,
         layout === "stacked" && align === "center" && !isCompact && "mx-auto",
-        !disabled && "cursor-pointer transition-colors hover:border-[#22C55E]/50"
+        !disabled && "cursor-pointer transition-colors hover:border-[var(--color-accent-custom,#22C55E)]/50"
       )}
       aria-label={hasPhoto ? "Replace profile photo" : "Upload profile photo"}
     >
       {displayUrl ? (
         <img src={displayUrl} alt="Profile" className="h-full w-full object-cover" />
       ) : (
-        <span className="flex h-full w-full items-center justify-center bg-[#22C55E]/10 text-lg font-semibold text-[#16A34A]">
+        <span className="flex h-full w-full items-center justify-center bg-[var(--color-accent-custom,#22C55E)]/10 text-lg font-semibold text-[#16A34A]">
           {initials.slice(0, 2).toUpperCase()}
         </span>
       )}
@@ -121,7 +121,7 @@ export function ProfilePhotoUpload({
       <button
         type="button"
         onClick={openFilePicker}
-        className="text-xs font-medium text-[#22C55E] hover:underline"
+        className="text-xs font-medium text-[var(--color-accent-custom,#22C55E)] hover:underline"
       >
         {hasPhoto ? "Replace" : "Upload"}
       </button>

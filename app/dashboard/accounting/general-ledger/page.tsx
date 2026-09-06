@@ -266,7 +266,7 @@ export default function GeneralLedgerPage() {
               <Button
                 onClick={handleGenerate}
                 disabled={!accountId || generating || postableAccounts.length === 0}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
               >
                 {generating ? "Generating..." : "Generate"}
               </Button>
@@ -308,7 +308,7 @@ export default function GeneralLedgerPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Closing Balance</p>
-                <p className="font-semibold text-[#22C55E]">{fmt(closing)}</p>
+                <p className="font-semibold text-[var(--color-accent-custom,#22C55E)]">{fmt(closing)}</p>
               </div>
             </div>
 
@@ -332,7 +332,7 @@ export default function GeneralLedgerPage() {
                       <td className="px-4 py-3 text-gray-600">
                         <FormattedDate value={entry.date} />
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">{entry.reference || "—"}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)]">{entry.reference || "—"}</td>
                       <td className="px-4 py-3 text-gray-700">{entry.description}</td>
                       <td className="px-4 py-3 text-gray-800">{entry.debit > 0 ? fmt(entry.debit) : "—"}</td>
                       <td className="px-4 py-3 text-gray-500">{entry.credit > 0 ? fmt(entry.credit) : "—"}</td>
@@ -350,7 +350,7 @@ export default function GeneralLedgerPage() {
                     </td>
                     <td className="px-4 py-3 font-bold text-gray-800">{fmt(totalDebits)}</td>
                     <td className="px-4 py-3 font-bold text-gray-800">{fmt(totalCredits)}</td>
-                    <td className="px-4 py-3 font-bold text-[#22C55E]">{fmt(closing)}</td>
+                    <td className="px-4 py-3 font-bold text-[var(--color-accent-custom,#22C55E)]">{fmt(closing)}</td>
                     <td />
                   </tr>
                 </tfoot>

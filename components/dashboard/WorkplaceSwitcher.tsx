@@ -47,7 +47,7 @@ function TenantMark({
   return (
     <span
       className={cn(
-        "rounded-lg bg-[#22C55E] flex items-center justify-center text-white font-bold shrink-0 overflow-hidden",
+        "rounded-lg bg-[var(--color-accent-custom,#22C55E)] flex items-center justify-center text-white font-bold shrink-0 overflow-hidden",
         dim
       )}
     >
@@ -220,7 +220,7 @@ export function WorkplaceSwitcher({ compact = false }: { compact?: boolean }) {
                 <div className="text-sm truncate">{tenant.name}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{displayType}</div>
               </div>
-              {active && <Check className="h-4 w-4 text-[#22C55E] shrink-0" />}
+              {active && <Check className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)] shrink-0" />}
             </DropdownMenuItem>
           );
         })}

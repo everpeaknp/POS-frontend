@@ -181,21 +181,21 @@ export default function TaxPage() {
             <Button
               variant={selectedPeriod === "ytd" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("ytd")}
-              className={selectedPeriod === "ytd" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
+              className={selectedPeriod === "ytd" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}
             >
               Year to Date ({currentYearLabel})
             </Button>
             <Button
               variant={selectedPeriod === "fy2026" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("fy2026")}
-              className={selectedPeriod === "fy2026" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
+              className={selectedPeriod === "fy2026" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}
             >
               {fy2026Label}
             </Button>
             <Button
               variant={selectedPeriod === "fy2025" ? "default" : "outline"}
               onClick={() => setSelectedPeriod("fy2025")}
-              className={selectedPeriod === "fy2025" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}
+              className={selectedPeriod === "fy2025" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}
             >
               {fy2025Label}
             </Button>
@@ -212,7 +212,7 @@ export default function TaxPage() {
                   Based on {filteredIncome.length} income {filteredIncome.length === 1 ? "entry" : "entries"}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-[#22C55E]" />
+              <TrendingUp className="h-8 w-8 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalIncome)}</p>
           </div>
@@ -248,7 +248,7 @@ export default function TaxPage() {
               variant="ghost"
               size="sm"
               onClick={() => setShowBreakdown(!showBreakdown)}
-              className="text-[#22C55E] hover:text-[#22C55E]/90"
+              className="text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]/90"
             >
               {showBreakdown ? (
                 <>
@@ -340,7 +340,7 @@ export default function TaxPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">{entry.description}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{entry.categoryName}</td>
-                      <td className="px-4 py-3 text-sm text-right font-medium text-[#22C55E]">
+                      <td className="px-4 py-3 text-sm text-right font-medium text-[var(--color-accent-custom,#22C55E)]">
                         +{formatCurrency(entry.amount)}
                       </td>
                     </tr>
@@ -351,7 +351,7 @@ export default function TaxPage() {
                     <td colSpan={3} className="px-4 py-3 text-sm font-semibold text-gray-900">
                       Total Income
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-bold text-[#22C55E]">
+                    <td className="px-4 py-3 text-sm text-right font-bold text-[var(--color-accent-custom,#22C55E)]">
                       {formatCurrency(totalIncome)}
                     </td>
                   </tr>

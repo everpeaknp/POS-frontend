@@ -97,7 +97,7 @@ export function POSQRPaymentDialog({
 
           <Button
             onClick={() => onOpenChange(false)}
-            className="w-full bg-[#22C55E] hover:bg-[#22C55E]/90"
+            className="w-full bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
           >
             Close
           </Button>

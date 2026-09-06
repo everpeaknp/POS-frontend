@@ -187,7 +187,7 @@ export function PartySelector({ value, onChange, label = "Select Party", require
                 setIsOpen(false);
                 setShowNewPartyDialog(true);
               }}
-              className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[#22C55E] hover:bg-emerald-50 flex items-center gap-2"
+              className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[var(--color-accent-custom,#22C55E)] hover:bg-emerald-50 flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               Add New Party
@@ -256,7 +256,7 @@ export function PartySelector({ value, onChange, label = "Select Party", require
             <Button
               onClick={handleCreateParty}
               disabled={creatingParty}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
             >
               {creatingParty ? "Creating..." : "Create Party"}
             </Button>

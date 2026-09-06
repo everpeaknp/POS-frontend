@@ -547,7 +547,7 @@ export default function POSTransactionsPage() {
                       className="group transition-all duration-150 hover:bg-gray-50 active:bg-gray-100"
                     >
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#22C55E] transition-colors">
+                        <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[var(--color-accent-custom,#22C55E)] transition-colors">
                           {transaction.transaction_number}
                         </span>
                       </td>

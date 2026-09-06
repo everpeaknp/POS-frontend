@@ -85,7 +85,7 @@ export function POSCheckoutDialog({
 
         <div className="space-y-5 py-4">
           {/* Order Summary */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg p-5 space-y-2.5 border border-green-200 dark:border-green-800">
+          <div className="bg-gradient-to-br from-[var(--color-accent-custom-50,#f0fdf4)] to-emerald-50 dark:from-[var(--color-accent-custom-950,#052e16)] dark:to-emerald-950 rounded-lg p-5 space-y-2.5 border border-[var(--color-accent-custom-200,#bbf7d0)] dark:border-[var(--color-accent-custom-800,#166534)]">
             <div className="flex justify-between text-sm">
               <span className="text-gray-700 dark:text-gray-300 font-medium">Subtotal</span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {subtotal.toFixed(2)}</span>
@@ -102,9 +102,9 @@ export function POSCheckoutDialog({
               <span className="text-gray-700 dark:text-gray-300 font-medium">Tax ({(taxRate * 100).toFixed(1)}%)</span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {taxAmount.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-green-300 dark:border-green-700">
+            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-[var(--color-accent-custom-300,#86efac)] dark:border-[var(--color-accent-custom-700,#15803d)]">
               <span className="text-gray-900 dark:text-gray-100">Total</span>
-              <span className="text-green-600 dark:text-green-400">Rs. {total.toFixed(0)}</span>
+              <span className="text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)]">Rs. {total.toFixed(0)}</span>
             </div>
           </div>
 
@@ -165,7 +165,7 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("cash")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "cash"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
@@ -181,7 +181,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("esewa")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "esewa"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -214,7 +214,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("fonepay")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "fonepay"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -247,7 +247,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("khalti")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "khalti"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -283,7 +283,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("bank_transfer")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "bank_transfer"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -314,7 +314,7 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("card")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "card"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
@@ -328,7 +328,7 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("credit")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "credit"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)] text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] ring-2 ring-[var(--color-accent-custom-200,#bbf7d0)] dark:ring-[var(--color-accent-custom-800,#166534)]"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
@@ -358,9 +358,9 @@ export function POSCheckoutDialog({
                 />
               </div>
               {cashGiven >= total && changeAmount > 0 && (
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg border border-green-300 dark:border-green-700">
+                <div className="text-center p-4 bg-gradient-to-br from-[var(--color-accent-custom-50,#f0fdf4)] to-emerald-50 dark:from-[var(--color-accent-custom-950,#052e16)] dark:to-emerald-950 rounded-lg border border-[var(--color-accent-custom-300,#86efac)] dark:border-[var(--color-accent-custom-700,#15803d)]">
                   <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Change to Return</div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                  <div className="text-2xl font-bold text-[var(--color-accent-custom-600,#16a34a)] dark:text-[var(--color-accent-custom-400,#4ade80)] mt-1">
                     Rs. {changeAmount.toFixed(2)}
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export function POSCheckoutDialog({
                 (paymentMethod === "cash" && cashGiven < total) ||
                 (paymentMethod === "credit" && !selectedCustomer)
               }
-              className="flex-1 h-11 bg-green-600 hover:bg-green-700"
+              className="flex-1 h-11 bg-[var(--color-accent-custom-600,#16a34a)] hover:bg-[var(--color-accent-custom-700,#15803d)]"
             >
               {processing ? (
                 <>

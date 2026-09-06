@@ -33,7 +33,7 @@ export function POSCheckoutHeader({
           <Button
             onClick={onScanClick}
             disabled={!warehouseSelected}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all"
+            className="bg-gradient-to-r from-[var(--color-accent-custom-500,#22c55e)] to-emerald-600 hover:from-[var(--color-accent-custom-600,#16a34a)] hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all"
           >
             <Scan className="h-4 w-4" />
             Scan Barcode
@@ -48,21 +48,21 @@ export function POSCheckoutHeader({
               placeholder="Search products by name, SKU, or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm"
+              className="pl-10 h-12 text-base border-gray-300 focus:border-[var(--color-accent-custom-500,#22c55e)] focus:ring-[var(--color-accent-custom-500,#22c55e)] shadow-sm"
               autoFocus
             />
           </div>
 
           {/* Barcode Input Field */}
           <div className="relative">
-            <Scan className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-600" />
+            <Scan className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-accent-custom-600,#16a34a)]" />
             <Input
               type="text"
               placeholder="Quick scan: Enter barcode here..."
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
               onKeyDown={onBarcodeSubmit}
-              className="pl-10 h-12 text-base border-green-300 focus:border-green-500 focus:ring-green-500 bg-green-50/50 shadow-sm"
+              className="pl-10 h-12 text-base border-[var(--color-accent-custom-300,#86efac)] focus:border-[var(--color-accent-custom-500,#22c55e)] focus:ring-[var(--color-accent-custom-500,#22c55e)] bg-[var(--color-accent-custom-50,#f0fdf4)]/50 shadow-sm"
             />
           </div>
         </div>

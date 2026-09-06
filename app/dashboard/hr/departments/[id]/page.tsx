@@ -122,7 +122,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             The department you are looking for does not exist.
           </p>
           <Link href="/dashboard/hr/departments">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View all departments</Button>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">View all departments</Button>
           </Link>
         </div>
       </HRPageShell>
@@ -140,7 +140,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[#22C55E] hover:text-white hover:border-[#22C55E]"
+              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[var(--color-accent-custom,#22C55E)] hover:text-white hover:border-[var(--color-accent-custom,#22C55E)]"
               onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
             >
               <Edit className="h-3.5 w-3.5" />

@@ -142,7 +142,7 @@ export function POSCustomerDialog({
             <Button
               onClick={onAddCustomer}
               disabled={!customerName.trim() || !customerPhone.trim()}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-[var(--color-accent-custom-600,#16a34a)] hover:bg-[var(--color-accent-custom-700,#15803d)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Customer

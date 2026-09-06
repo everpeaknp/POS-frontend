@@ -79,7 +79,7 @@ function SidebarItem({
             className={cn(
               "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
               isParentActive
-                ? "bg-[#22C55E] text-white"
+                ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
                 : "!text-gray-400 hover:!text-white hover:bg-white/10"
             )}
           >
@@ -94,7 +94,7 @@ function SidebarItem({
               e.preventDefault();
               setShowQuickMenu(!showQuickMenu);
             }}
-            className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+            className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
             title="Quick actions"
           >
             <Plus size={16} />
@@ -139,7 +139,7 @@ function SidebarItem({
           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
           compact && "justify-center px-2",
           isParentActive
-            ? "bg-[#22C55E] text-white"
+            ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
             : "!text-gray-400 hover:!text-white hover:bg-white/10"
         )}
       >
@@ -162,7 +162,7 @@ function SidebarItem({
           className={cn(
             "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
             isParentActive
-              ? "bg-[#22C55E] text-white"
+              ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
               : "!text-gray-400 hover:!text-white hover:bg-white/10"
           )}
         >
@@ -174,7 +174,7 @@ function SidebarItem({
         </Link>
         <Link
           href={addHref!}
-          className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+          className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
           title={`Add ${item.label}`}
         >
           <Plus size={16} />
@@ -196,7 +196,7 @@ function SidebarItem({
           compact && "justify-center px-2",
           alwaysExpanded && "cursor-default",
           isParentActive && !isOpen
-            ? "bg-[#22C55E] text-white"
+            ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
             : isOpen
               ? "bg-white/10 text-white"
               : "!text-gray-400 hover:!text-white hover:bg-white/10"
@@ -241,7 +241,7 @@ function SidebarItem({
                     className={cn(
                       "flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-all",
                       active
-                        ? "text-[#22C55E] border-l-2 border-[#22C55E] -ml-[1px] pl-[9px] bg-white/5"
+                        ? "text-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] border-l-2 border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] -ml-[1px] pl-[9px] bg-white/5"
                         : "text-gray-500 hover:text-white hover:bg-white/5"
                     )}
                   >
@@ -250,7 +250,7 @@ function SidebarItem({
                   {child.createHref && (
                     <Link
                       href={child.createHref}
-                      className="p-1 rounded hover:bg-[#22C55E] text-white hover:text-white transition-all"
+                      className="p-1 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white hover:text-white transition-all"
                       title={`Create new ${child.label}`}
                     >
                       <Plus size={14} />
@@ -422,7 +422,7 @@ function SidebarContent({
         ) : (
           <div className={cn(compact && "flex-1 flex justify-center")}>
             {!compact ? <KhataLogo size="md" /> : (
-              <div className="w-8 h-8 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] grid place-items-center text-white text-sm font-bold">
                 K
               </div>
             )}
@@ -444,6 +444,18 @@ function SidebarContent({
       {!compact && (
         <div data-tour="sidebar-search" className="px-3 pt-3 pb-1">
           <div className="relative flex items-center">
+            {/* Decoy field: Chrome's address/identity autofill targets the first
+                matching input it finds on the page, ignoring autocomplete="off"
+                on the real one in some versions — this absorbs that instead. */}
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              tabIndex={-1}
+              aria-hidden="true"
+              readOnly
+              style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }}
+            />
             <Search
               size={15}
               strokeWidth={2}
@@ -477,7 +489,7 @@ function SidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (
               <button
@@ -678,7 +690,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={toggleCollapse}
-            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[#22C55E] transition-all duration-200 shadow-lg"
+            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] transition-all duration-200 shadow-lg"
             aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
             title={compact ? "Expand sidebar" : "Collapse sidebar"}
           >

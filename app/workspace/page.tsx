@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { KhataLogo } from "@/components/khata-logo";
 import { setVisitedWorkspace, setSkipWorkspace } from "@/lib/utils/workspace";
 
-const B = "#22C55E";
+const B = "var(--color-accent-custom,#22C55E)";
 const BD = "#16A34A";
 
 // Module icons mapping

@@ -163,7 +163,7 @@ export function JournalLinesTable({ lines, onChange, readOnly, accounts = [] }: 
       </div>
 
       {!readOnly && (
-        <button onClick={addLine} className="flex items-center gap-1.5 text-sm text-[#22C55E] hover:text-[#16A34A] font-medium transition-colors">
+        <button onClick={addLine} className="flex items-center gap-1.5 text-sm text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium transition-colors">
           <Plus className="h-4 w-4" /> Add Line
         </button>
       )}

@@ -667,7 +667,7 @@ export const formatCurrency = (amount: number): string => {
  */
 export const getBudgetHealthColor = (health: 'green' | 'yellow' | 'red'): string => {
   const colors = {
-    green: '#22C55E',
+    green: 'var(--color-accent-custom,#22C55E)',
     yellow: '#F59E0B',
     red: '#EF4444',
   };

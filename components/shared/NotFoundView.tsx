@@ -14,7 +14,7 @@ interface NotFoundViewProps {
 }
 
 const primaryBtn =
-  "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white transition-colors";
+  "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white transition-colors";
 const secondaryBtn =
   "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors";
 
@@ -38,7 +38,7 @@ export function NotFoundView({
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-10">
-        <p className="text-6xl sm:text-7xl font-bold tracking-tight text-[#22C55E] leading-none">
+        <p className="text-6xl sm:text-7xl font-bold tracking-tight text-[var(--color-accent-custom,#22C55E)] leading-none">
           {code}
         </p>
         <h1 className="mt-4 text-xl font-bold text-gray-900">{title}</h1>

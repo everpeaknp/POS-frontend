@@ -69,7 +69,7 @@ export function DesktopTitleBar() {
       <div
         className={`flex items-center gap-2.5 min-w-0 flex-1 h-full ${isMac ? "pl-[78px]" : "pl-3"}`}
       >
-        <div className="h-5 w-5 rounded-[5px] bg-[#22C55E] grid place-items-center text-[10px] font-bold text-white shrink-0 shadow-sm">
+        <div className="h-5 w-5 rounded-[5px] bg-[var(--color-accent-custom,#22C55E)] grid place-items-center text-[10px] font-bold text-white shrink-0 shadow-sm">
           K
         </div>
         <div className="flex items-center gap-1.5 min-w-0">
@@ -110,7 +110,7 @@ export function DesktopTitleBar() {
               className={cn(
                 "h-7 w-7 rounded-md grid place-items-center transition-colors",
                 pageTour?.active
-                  ? "text-[#22C55E] bg-white/10"
+                  ? "text-[var(--color-accent-custom,#22C55E)] bg-white/10"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               )}
               onClick={() => {

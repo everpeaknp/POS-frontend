@@ -13,7 +13,7 @@ import { invitationApi, type InvitationPreview } from "@/lib/api/tenant";
 import { acceptInviteToken, inviteErrorMessage } from "@/lib/invitations/accept";
 import { useAuth } from "@/lib/context/AuthContext";
 
-const B = "#22C55E";
+const B = "var(--color-accent-custom,#22C55E)";
 
 export default function InviteAcceptPage() {
   const params = useParams();
@@ -157,15 +157,15 @@ export default function InviteAcceptPage() {
 
                 <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
                   <div className="flex items-center gap-3 text-sm">
-                    <Building2 className="h-4 w-4 text-[#22C55E]" />
+                    <Building2 className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                     <span>{preview.tenant_name}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <Mail className="h-4 w-4 text-[#22C55E]" />
+                    <Mail className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                     <span>{preview.invited_email}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-[#22C55E]" />
+                    <CheckCircle2 className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                     <span className="capitalize">Role: {preview.role_display || preview.role}</span>
                   </div>
                   {preview.message ? (

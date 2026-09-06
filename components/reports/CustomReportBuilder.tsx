@@ -133,7 +133,7 @@ export function CustomReportBuilder({
         {[1, 2, 3, 4, 5, 6].map((s) => (
           <div
             key={s}
-            className={`flex-1 h-2 rounded-full ${s <= step ? "bg-[#22C55E]" : "bg-gray-200 dark:bg-muted"}`}
+            className={`flex-1 h-2 rounded-full ${s <= step ? "bg-[var(--color-accent-custom,#22C55E)]" : "bg-gray-200 dark:bg-muted"}`}
           />
         ))}
       </div>
@@ -229,7 +229,7 @@ export function CustomReportBuilder({
                 }
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   formData.module === mod.value
-                    ? "border-[#22C55E] bg-green-50 dark:bg-green-500/10"
+                    ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 dark:bg-green-500/10"
                     : "border-gray-200 dark:border-border hover:border-gray-300"
                 }`}
               >
@@ -562,7 +562,7 @@ export function CustomReportBuilder({
             <Button
               type="button"
               onClick={goNext}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               disabled={loading}
             >
               Next
@@ -572,7 +572,7 @@ export function CustomReportBuilder({
               <Button
                 type="button"
                 onClick={onSave}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                 disabled={loading || !formData.name}
               >
                 {loading ? "Saving..." : "Save Report"}

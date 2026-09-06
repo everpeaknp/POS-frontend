@@ -250,7 +250,7 @@ export default function DepartmentsPage() {
           </div>
         </div>
         <Link href="/dashboard/hr/departments/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Department
           </Button>
         </Link>
@@ -341,7 +341,7 @@ export default function DepartmentsPage() {
                     <td className="px-4 py-3 font-medium text-gray-900">
                       <Link
                         href={`/dashboard/hr/departments/${dept.id}`}
-                        className="hover:text-[#22C55E]"
+                        className="hover:text-[var(--color-accent-custom,#22C55E)]"
                       >
                         {dept.name}
                       </Link>

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 
-const B = "#22C55E";
+const B = "var(--color-accent-custom,#22C55E)";
 const BD = "#16A34A";
 
 export default function ForgotPasswordPage() {

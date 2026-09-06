@@ -46,7 +46,7 @@ interface Transaction {
   amount: number;
   category: number;
   account: number | null;
-  description: string;
+  description?: string;
 }
 
 interface Account {
@@ -57,11 +57,11 @@ interface Account {
 }
 
 const CHART_COLORS = {
-  income: "#22C55E",
+  income: "var(--color-accent-custom,#22C55E)",
   expense: "#EF4444",
   primary: "#3B82F6",
   categories: [
-    "#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EC4899",
+    "var(--color-accent-custom,#22C55E)", "#3B82F6", "#F59E0B", "#8B5CF6", "#EC4899",
     "#14B8A6", "#F97316", "#06B6D4", "#84CC16", "#6366F1",
   ],
 };
@@ -212,9 +212,9 @@ export default function ReportsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total Income</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{formatCurrency(summary.totalIncome)}</p>
+                <p className="text-2xl font-bold text-[var(--color-accent-custom,#22C55E)]">{formatCurrency(summary.totalIncome)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-[#22C55E]" />
+              <TrendingUp className="h-8 w-8 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -230,7 +230,7 @@ export default function ReportsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Net Savings</p>
-                <p className={`text-2xl font-bold ${summary.netSavings >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                <p className={`text-2xl font-bold ${summary.netSavings >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                   {formatCurrency(summary.netSavings)}
                 </p>
               </div>

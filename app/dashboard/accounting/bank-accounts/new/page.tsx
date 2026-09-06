@@ -201,7 +201,7 @@ export default function NewBankAccountPage() {
                       No GL accounts found.{" "}
                       <Link
                         href="/dashboard/accounting/chart-of-accounts/new"
-                        className="font-medium underline text-[#22C55E]"
+                        className="font-medium underline text-[var(--color-accent-custom,#22C55E)]"
                       >
                         Create a Bank account
                       </Link>{" "}
@@ -264,7 +264,7 @@ export default function NewBankAccountPage() {
               </Button>
               <Button 
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 disabled={loading || loadingGlAccounts || glAccounts.length === 0}
               >
                 {loading ? "Saving..." : "Save Bank Account"}

@@ -101,7 +101,7 @@ export default function PayrollDetailPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/dashboard/hr/payroll/${encodeURIComponent(monthKey)}/slip/${r.id}`}
-                      className="text-[#22C55E] hover:underline text-xs font-medium"
+                      className="text-[var(--color-accent-custom,#22C55E)] hover:underline text-xs font-medium"
                     >
                       View slip
                     </Link>

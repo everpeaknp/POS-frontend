@@ -141,7 +141,7 @@ export function PosSessionsPageContent({
           </div>
           <Button
             size="sm"
-            className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+            className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
             onClick={() => setNewDialogOpen(true)}
           >
             <Plus className="h-4 w-4" /> New Session
@@ -183,7 +183,7 @@ export function PosSessionsPageContent({
               ) : (
                 filtered.map((session) => (
                 <tr key={session.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)] font-medium">
                     <Link
                       href={`/dashboard/pos/sessions/${session.id}`}
                       className="hover:underline"

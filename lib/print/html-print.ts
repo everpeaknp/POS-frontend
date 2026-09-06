@@ -51,7 +51,7 @@ const PREVIEW_TOOLBAR_STYLES = `
   cursor: pointer;
 }
 #khata-print-toolbar button.primary {
-  background: #22C55E;
+  background: var(--color-accent-custom,#22C55E);
   color: #fff;
 }
 #khata-print-toolbar button.primary:hover { background: #16a34a; }

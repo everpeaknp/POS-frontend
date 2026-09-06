@@ -230,7 +230,7 @@ export default function EditQuotationPage() {
                 rows={3} 
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#22C55E]" 
+                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]" 
               />
             </div>
             <SalesSummaryBox 
@@ -253,7 +253,7 @@ export default function EditQuotationPage() {
             <Button 
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {submitting ? "Updating..." : (
                 'Update Quotation'

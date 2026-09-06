@@ -168,7 +168,7 @@ export default function POSSettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#22C55E] border-t-transparent mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent-custom,#22C55E)] border-t-transparent mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading settings...</p>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function POSSettingsPage() {
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            className="border border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
+            className="border border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom,#22C55E)] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
             onClick={() => setSelectedMethod(method.id)}
           >
             <CardContent className="p-4">
@@ -225,7 +225,7 @@ export default function POSSettingsPage() {
               <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-3">{method.description}</p>
 
               {/* Configure Button */}
-              <div className="flex items-center justify-center text-[#22C55E] dark:text-green-400 text-xs font-medium group-hover:gap-0.5 transition-all">
+              <div className="flex items-center justify-center text-[var(--color-accent-custom,#22C55E)] dark:text-green-400 text-xs font-medium group-hover:gap-0.5 transition-all">
                 Configure
                 <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -638,7 +638,7 @@ export default function POSSettingsPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
             >
               {saving ? "Saving..." : "Save Changes"}
             </Button>

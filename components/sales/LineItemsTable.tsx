@@ -213,7 +213,7 @@ export function LineItemsTable({ items, onChange, products = [], readOnly = fals
       
       {!readOnly && isExpanded && (
         <Button type="button" variant="outline" size="sm" onClick={addRow}
-          className="border-dashed border-[#22C55E] text-[#22C55E] hover:bg-green-50 gap-1.5">
+          className="border-dashed border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 gap-1.5">
           <Plus className="h-3.5 w-3.5" /> Add Item
         </Button>
       )}

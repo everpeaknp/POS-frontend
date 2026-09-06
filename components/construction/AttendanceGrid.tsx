@@ -265,7 +265,7 @@ export default function AttendanceGrid() {
         </label>
         <select
           {...register('site')}
-          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
         >
           <option value="">Select site</option>
           {sites.map((site) => (
@@ -390,7 +390,7 @@ export default function AttendanceGrid() {
         <div className="flex gap-3 pt-4 border-t border-gray-100">
           <Button
             type="submit"
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             disabled={submitting || workers.length === 0}
           >
             {submitting ? 'Saving...' : 'Save Attendance'}

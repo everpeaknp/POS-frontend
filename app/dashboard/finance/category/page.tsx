@@ -200,7 +200,7 @@ export default function CategoryPage() {
         <div className="text-center py-12">
           <Tags className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">No categories yet</p>
-          <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+          <Button onClick={openAddDialog} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
             <Plus className="h-4 w-4 mr-2" />
             Add Your First Category
           </Button>
@@ -248,7 +248,7 @@ export default function CategoryPage() {
                       variant={category.type === "income" ? "default" : "secondary"}
                       className={
                         category.type === "income"
-                          ? "bg-green-100 text-[#22C55E] hover:bg-green-100"
+                          ? "bg-green-100 text-[var(--color-accent-custom,#22C55E)] hover:bg-green-100"
                           : "bg-red-100 text-red-600 hover:bg-red-100"
                       }
                     >
@@ -264,7 +264,7 @@ export default function CategoryPage() {
                     {category.description || "-"}
                   </td>
                   <td className="px-4 py-3">
-                    {category.isSystem && (
+                    {category.is_system && (
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
                         System
                       </Badge>
@@ -276,9 +276,9 @@ export default function CategoryPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openEditDialog(category)}
-                        disabled={category.isSystem}
+                        disabled={category.is_system}
                         className="h-8 w-8 p-0"
-                        title={category.isSystem ? "System categories cannot be edited" : "Edit category"}
+                        title={category.is_system ? "System categories cannot be edited" : "Edit category"}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -286,9 +286,9 @@ export default function CategoryPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteConfirmId(category.id)}
-                        disabled={category.isSystem}
+                        disabled={category.is_system}
                         className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title={category.isSystem ? "System categories cannot be deleted" : "Delete category"}
+                        title={category.is_system ? "System categories cannot be deleted" : "Delete category"}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -314,9 +314,9 @@ export default function CategoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Income Categories</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{incomeCategories.length}</p>
+                <p className="text-2xl font-bold text-[var(--color-accent-custom,#22C55E)]">{incomeCategories.length}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-[#22C55E]" />
+              <TrendingUp className="h-8 w-8 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -370,7 +370,7 @@ export default function CategoryPage() {
                   </SelectItem>
                   <SelectItem value="income">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-3.5 w-3.5 text-[#22C55E]" />
+                      <TrendingUp className="h-3.5 w-3.5 text-[var(--color-accent-custom,#22C55E)]" />
                       <span>Income ({incomeCategories.length})</span>
                     </div>
                   </SelectItem>
@@ -391,7 +391,7 @@ export default function CategoryPage() {
               )}
             </div>
 
-            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={openAddDialog} className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Category
             </Button>
@@ -447,7 +447,7 @@ export default function CategoryPage() {
                   onClick={() => setFormData({ ...formData, type: "income" })}
                   className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     formData.type === "income"
-                      ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                      ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 text-[#16A34A]"
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
@@ -487,7 +487,7 @@ export default function CategoryPage() {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSave} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               {editingCategory ? "Update" : "Add"} Category
             </Button>
           </div>

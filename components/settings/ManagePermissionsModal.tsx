@@ -90,11 +90,11 @@ function ModulePermissionCard({
         onClick={onToggleExpanded}
         className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50/80 dark:hover:bg-muted/40 transition-colors"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#22C55E]/10 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-custom,#22C55E)]/10 flex items-center justify-center shrink-0">
           {Icon ? (
-            <Icon className="h-5 w-5 text-[#22C55E]" />
+            <Icon className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
           ) : (
-            <Shield className="h-5 w-5 text-[#22C55E]" />
+            <Shield className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -106,7 +106,7 @@ function ModulePermissionCard({
               className={cn(
                 "text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full",
                 allEnabled
-                  ? "bg-[#22C55E]/10 text-[#16A34A]"
+                  ? "bg-[var(--color-accent-custom,#22C55E)]/10 text-[#16A34A]"
                   : noneEnabled
                     ? "bg-gray-100 text-gray-500 dark:bg-muted dark:text-muted-foreground"
                     : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
@@ -118,7 +118,7 @@ function ModulePermissionCard({
           <div className="mt-1.5 flex items-center gap-2">
             <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-gray-100 dark:bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#22C55E] transition-all"
+                className="h-full rounded-full bg-[var(--color-accent-custom,#22C55E)] transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -169,14 +169,14 @@ function ModulePermissionCard({
                   className={cn(
                     "flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors",
                     checked
-                      ? "bg-[#22C55E]/8"
+                      ? "bg-[var(--color-accent-custom,#22C55E)]/8"
                       : "hover:bg-white/80 dark:hover:bg-muted/30"
                   )}
                 >
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(value) => onPermissionChange(key, value === true)}
-                    className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+                    className="data-[state=checked]:bg-[var(--color-accent-custom,#22C55E)] data-[state=checked]:border-[var(--color-accent-custom,#22C55E)]"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-foreground">
@@ -290,8 +290,8 @@ export function ManagePermissionsModal({
         <div className="flex h-full min-h-0 flex-col">
           <DialogHeader className="shrink-0 space-y-0 border-b border-gray-100 px-5 pb-4 pt-5 text-left dark:border-border sm:px-6">
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#22C55E]/10">
-                <Shield className="h-5 w-5 text-[#22C55E]" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent-custom,#22C55E)]/10">
+                <Shield className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
@@ -347,7 +347,7 @@ export function ManagePermissionsModal({
 
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-muted">
                   <div
-                    className="h-full rounded-full bg-[#22C55E] transition-all"
+                    className="h-full rounded-full bg-[var(--color-accent-custom,#22C55E)] transition-all"
                     style={{ width: `${overallProgress}%` }}
                   />
                 </div>
@@ -371,7 +371,7 @@ export function ManagePermissionsModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search modules or actions..."
-                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-sm focus:border-[#22C55E] focus:outline-none focus:ring-2 focus:ring-[#22C55E]/20 dark:border-border dark:bg-card"
+                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-sm focus:border-[var(--color-accent-custom,#22C55E)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]/20 dark:border-border dark:bg-card"
                 />
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -443,7 +443,7 @@ export function ManagePermissionsModal({
                 type="button"
                 onClick={onSave}
                 disabled={saving}
-                className="flex-1 bg-[#22C55E] text-white hover:bg-[#16A34A] sm:flex-none"
+                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] text-white hover:bg-[#16A34A] sm:flex-none"
               >
                 {saving ? "Saving..." : "Save Permissions"}
               </Button>

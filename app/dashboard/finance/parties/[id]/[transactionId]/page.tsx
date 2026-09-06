@@ -10,21 +10,9 @@ import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
 import { useAuth } from "@/lib/context/AuthContext";
 import toast from "react-hot-toast";
-import { partyTransactionAPI } from "@/lib/api/personal-finance";
+import { partyTransactionAPI, type PartyTransaction } from "@/lib/api/personal-finance";
 
-interface Transaction {
-  id: number;
-  party: number;
-  party_name: string;
-  direction: 'in' | 'out';
-  amount: number;
-  payment_method: string | null;
-  receipt: string | null;
-  receipt_url?: string;
-  note: string;
-  date: string;
-  created_at: string;
-}
+type Transaction = PartyTransaction;
 
 export default function TransactionDetailPage() {
   const { user } = useAuth();
@@ -175,7 +163,7 @@ export default function TransactionDetailPage() {
         <DashHeader title="Transaction Receipt" subtitle={`${workspaceName} · Loading...`} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-custom,#22C55E)] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading receipt...</p>
           </div>
         </div>
@@ -221,9 +209,9 @@ export default function TransactionDetailPage() {
                 Print
               </Button>
               <Button
-                onClick={() => router.push(`/dashboard/finance/parties/${partyId}?edit-transaction=${transactionId}`)}
+                onClick={() => router.push(`/dashboard/finance/parties/${partyId}?edit-transaction=${transaction.id}`)}
                 size="sm"
-                className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
               >
                 Edit
               </Button>
@@ -283,7 +271,7 @@ export default function TransactionDetailPage() {
                   <p className={`text-3xl font-bold ${
                     transaction.direction === 'in' ? 'text-emerald-600' : 'text-red-600'
                   }`}>
-                    Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Rs. {Number(transaction.amount).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -355,7 +343,7 @@ export default function TransactionDetailPage() {
               <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium text-gray-900">Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-gray-900">Rs. {Number(transaction.amount).toLocaleString('en-NP', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm mb-3">
                   <span className="text-gray-600">Tax</span>
@@ -366,7 +354,7 @@ export default function TransactionDetailPage() {
                   <span className={`text-2xl font-bold ${
                     transaction.direction === 'in' ? 'text-emerald-600' : 'text-red-600'
                   }`}>
-                    Rs. {transaction.amount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}
+                    Rs. {Number(transaction.amount).toLocaleString('en-NP', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

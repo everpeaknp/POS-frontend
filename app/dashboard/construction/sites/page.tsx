@@ -252,7 +252,7 @@ export default function SitesPage() {
             </div>
           </div>
           <Link href="/dashboard/construction/sites/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Site
             </Button>
           </Link>
@@ -301,7 +301,7 @@ export default function SitesPage() {
                   <tr key={site.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-accent-custom,#22C55E)] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {site.name
                             .split(" ")
                             .map((n) => n[0])
@@ -312,7 +312,7 @@ export default function SitesPage() {
                         <div>
                           <Link
                             href={`/dashboard/construction/sites/${site.id}`}
-                            className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                            className="font-medium text-gray-800 hover:text-[var(--color-accent-custom,#22C55E)] hover:underline"
                           >
                             {site.name}
                           </Link>
@@ -404,7 +404,7 @@ function SiteGridCard({
 
   return (
     <div
-      className={`${constructionCardClass} hover:shadow-md hover:border-[#22C55E]/20 transition-all cursor-pointer w-full overflow-hidden`}
+      className={`${constructionCardClass} hover:shadow-md hover:border-[var(--color-accent-custom,#22C55E)]/20 transition-all cursor-pointer w-full overflow-hidden`}
       onClick={onView}
     >
       <div className="p-5 border-b border-gray-100">
@@ -422,7 +422,7 @@ function SiteGridCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-2 text-[#22C55E] hover:bg-green-50 rounded-md transition-colors"
+              className="p-2 text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 rounded-md transition-colors"
               title="Edit site"
             >
               <Pencil className="w-4 h-4" />

@@ -365,7 +365,7 @@ export default function WarehousesPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -407,7 +407,7 @@ export default function WarehousesPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedWarehouses.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={handleOpenCreate}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={handleOpenCreate}>
               <Plus className="h-4 w-4" /> Add Warehouse
             </Button>
           </div>
@@ -530,7 +530,7 @@ export default function WarehousesPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

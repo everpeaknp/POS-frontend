@@ -13,7 +13,7 @@ export function SummaryBox({ subtotal, totalDiscount, totalTax, grandTotal }: Su
       <div className="flex justify-between text-sm text-gray-600"><span>Total Discount</span><span className="text-red-500">- {fmt(totalDiscount)}</span></div>
       <div className="flex justify-between text-sm text-gray-600"><span>VAT (13%)</span><span>{fmt(totalTax)}</span></div>
       <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-gray-900 text-base">
-        <span>Grand Total</span><span className="text-[#22C55E]">{fmt(grandTotal)}</span>
+        <span>Grand Total</span><span className="text-[var(--color-accent-custom,#22C55E)]">{fmt(grandTotal)}</span>
       </div>
     </div>
   );

@@ -60,9 +60,9 @@ export function DesktopQuickActions() {
                 a.run();
                 setOpen(false);
               }}
-              className="flex items-center gap-2 rounded-full bg-[#0f172a] text-white text-xs font-medium pl-3 pr-3.5 py-2 shadow-lg border border-white/10 hover:border-[#22C55E]/40"
+              className="flex items-center gap-2 rounded-full bg-[#0f172a] text-white text-xs font-medium pl-3 pr-3.5 py-2 shadow-lg border border-white/10 hover:border-[var(--color-accent-custom,#22C55E)]/40"
             >
-              <a.icon className="h-3.5 w-3.5 text-[#22C55E]" />
+              <a.icon className="h-3.5 w-3.5 text-[var(--color-accent-custom,#22C55E)]" />
               {a.label}
             </button>
           ))}
@@ -73,7 +73,7 @@ export function DesktopQuickActions() {
         aria-label="Quick actions"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="h-12 w-12 rounded-full bg-gradient-to-br from-[#16A34A] to-[#22C55E] text-white shadow-xl shadow-green-900/30 grid place-items-center hover:scale-105 transition-transform"
+        className="h-12 w-12 rounded-full bg-gradient-to-br from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] text-white shadow-xl shadow-green-900/30 grid place-items-center hover:scale-105 transition-transform"
       >
         {open ? <Zap className="h-5 w-5" /> : <Plus className="h-6 w-6" />}
       </button>

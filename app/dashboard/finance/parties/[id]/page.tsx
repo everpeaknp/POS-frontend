@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ChevronLeft, Edit2, Mail, Phone, ExternalLink, Copy, Check, User, Calendar, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownLeft, Plus, Printer } from "@/lib/icons/lucide-react-shim";
 import { WhatsAppIcon, FacebookMessengerIcon, TelegramIcon, EnvelopeIcon } from "@/lib/icons/lucide-react-shim";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -37,7 +37,10 @@ export default function PartyDetailPage() {
   const dateSystem = useDateSystemStore((state) => state.dateSystem);
   const router = useRouter();
   const params = useParams();
-  
+  const searchParams = useSearchParams();
+  const editTransactionParam = searchParams.get('edit-transaction');
+  const initialEditTransactionId = editTransactionParam ? parseInt(editTransactionParam, 10) : null;
+
   // Extract party ID from slug (slug format: "party-name-123")
   const extractIdFromSlug = (slug: string): number => {
     const parts = slug.split('-');
@@ -290,7 +293,7 @@ export default function PartyDetailPage() {
         <DashHeader title="Party Details" subtitle={`${workspaceName} · Loading...`} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-custom,#22C55E)] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading party details...</p>
           </div>
         </div>
@@ -323,7 +326,7 @@ export default function PartyDetailPage() {
           </div>
         </div>
         {/* Hero Section - Party Profile */}
-        <div className="bg-gradient-to-br from-[#22C55E] to-emerald-600 rounded-lg shadow-md overflow-hidden print:bg-white print:border print:border-gray-800 print:rounded-none print:shadow-none">
+        <div className="bg-gradient-to-br from-[var(--color-accent-custom,#22C55E)] to-emerald-600 rounded-lg shadow-md overflow-hidden print:bg-white print:border print:border-gray-800 print:rounded-none print:shadow-none">
           <div className="p-6 print:p-4">
             {/* Edit Profile Button - Top Right */}
             <div className="flex justify-end mb-4 print:hidden">
@@ -339,7 +342,7 @@ export default function PartyDetailPage() {
                   setEditDialogOpen(true);
                 }}
                 size="sm"
-                className="bg-white text-[#22C55E] hover:bg-white/90 gap-1.5 h-8 text-xs"
+                className="bg-white text-[var(--color-accent-custom,#22C55E)] hover:bg-white/90 gap-1.5 h-8 text-xs"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 Edit Profile
@@ -511,7 +514,12 @@ export default function PartyDetailPage() {
           </div>
           
           <div className="p-5 print:p-3">
-            <PartyTransactions partyId={party.id} onOpenDialog={() => {}} />
+            <PartyTransactions
+              partyId={party.id}
+              onOpenDialog={() => {}}
+              initialEditTransactionId={initialEditTransactionId}
+              onInitialEditConsumed={() => router.replace(`/dashboard/finance/parties/${params.id}`, { scroll: false })}
+            />
           </div>
         </div>
 
@@ -531,7 +539,7 @@ export default function PartyDetailPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5 text-[#22C55E]" />
+              <ExternalLink className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
               Share Party Ledger
             </DialogTitle>
           </DialogHeader>
@@ -550,7 +558,7 @@ export default function PartyDetailPage() {
               />
               <Button
                 onClick={handleCopyShareLink}
-                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90'}`}
               >
                 {shareCopied ? (
                   <>
@@ -600,7 +608,7 @@ export default function PartyDetailPage() {
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
               onClick={() => setShareModalOpen(false)}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
             >
               Done
             </Button>
@@ -613,7 +621,7 @@ export default function PartyDetailPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-[#22C55E]" />
+              <Edit2 className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
               Edit Party Profile
             </DialogTitle>
           </DialogHeader>
@@ -688,7 +696,7 @@ export default function PartyDetailPage() {
             </Button>
             <Button
               onClick={handleEditSave}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90"
             >
               Save Changes
             </Button>

@@ -115,7 +115,7 @@ function Row({
     >
       <span className={`text-sm ${bold ? "font-bold text-gray-900" : italic ? "italic text-gray-600" : "text-gray-700"}`}>
         {accountId ? (
-          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[#22C55E] hover:underline">
+          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[var(--color-accent-custom,#22C55E)] hover:underline">
             {label}
           </Link>
         ) : (
@@ -420,7 +420,7 @@ export default function BalanceSheetPage() {
               <Button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
               >
                 {loading ? "Generating..." : "Generate"}
               </Button>
@@ -506,7 +506,7 @@ export default function BalanceSheetPage() {
                     </span>
                   </div>
                   <div className="sm:text-right">
-                    <span className={`font-bold text-2xl ${balanced ? "text-[#22C55E]" : "text-red-600"}`}>
+                    <span className={`font-bold text-2xl ${balanced ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                       {fmt(totalLiabEquity)}
                     </span>
                     <p className="text-sm text-gray-500 mt-1">Total Assets: {fmt(totalAssets)}</p>

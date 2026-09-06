@@ -393,7 +393,7 @@ export default function AttendancePage() {
           <DateSystemToggle />
         </div>
         <Link href="/dashboard/hr/attendance/mark" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
             <ClipboardCheck className="h-4 w-4" />
             Mark today
           </Button>
@@ -406,7 +406,7 @@ export default function AttendancePage() {
               label="Working days"
               value={stats?.working_days || 0}
               icon={CalendarDays}
-              iconClass="bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400"
+              iconClass="bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400"
             />
             <StatCard
               label="Avg attendance"
@@ -487,7 +487,7 @@ export default function AttendancePage() {
                               <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
                                 <Link
                                   href={`/dashboard/hr/employees/${emp.id}`}
-                                  className="hover:text-[#22C55E] transition-colors"
+                                  className="hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                                 >
                                   {emp.name}
                                 </Link>
@@ -567,7 +567,7 @@ export default function AttendancePage() {
                               weekend
                                 ? "text-gray-400 dark:text-muted-foreground bg-gray-100/70 dark:bg-muted/60"
                                 : "text-gray-400 dark:text-muted-foreground"
-                            } ${selectedDay === day ? "bg-[#22C55E]/10" : ""}`}
+                            } ${selectedDay === day ? "bg-[var(--color-accent-custom,#22C55E)]/10" : ""}`}
                           >
                             {getWeekdayLabelForPeriod(period, day)}
                           </th>
@@ -591,7 +591,7 @@ export default function AttendancePage() {
                               weekend
                                 ? "text-gray-400 dark:text-muted-foreground bg-gray-100/70 dark:bg-muted/60"
                                 : "text-gray-500 dark:text-muted-foreground"
-                            } ${selectedDay === day ? "bg-[#22C55E]/10 ring-1 ring-inset ring-[#22C55E]/30" : ""}`}
+                            } ${selectedDay === day ? "bg-[var(--color-accent-custom,#22C55E)]/10 ring-1 ring-inset ring-[var(--color-accent-custom,#22C55E)]/30" : ""}`}
                           >
                             {day}
                           </th>
@@ -605,7 +605,7 @@ export default function AttendancePage() {
                           <td className="sticky left-0 z-10 bg-white dark:bg-card px-4 py-3 border-r border-gray-100 dark:border-border group-hover:bg-gray-50/50 dark:group-hover:bg-muted/20">
                             <Link
                               href={`/dashboard/hr/employees/${emp.id}`}
-                              className="block min-w-0 hover:text-[#22C55E] transition-colors"
+                              className="block min-w-0 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                             >
                               <span className="font-medium text-gray-900 dark:text-foreground truncate block">
                                 {emp.name}
@@ -629,7 +629,7 @@ export default function AttendancePage() {
                                 key={day}
                                 className={`text-center px-1.5 py-2 cursor-pointer ${
                                   weekend ? "bg-gray-50/80 dark:bg-muted/30" : ""
-                                } ${isSelected ? "bg-[#22C55E]/5" : ""}`}
+                                } ${isSelected ? "bg-[var(--color-accent-custom,#22C55E)]/5" : ""}`}
                                 onClick={() => setSelectedDay(day)}
                               >
                                 <span

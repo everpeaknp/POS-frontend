@@ -125,7 +125,7 @@ export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMoveme
           <Button 
             onClick={handleSubmit} 
             disabled={loading}
-            className="bg-[#22C55E] hover:bg-[#16A34A]"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
           >
             {loading ? "Recording..." : "Record Movement"}
           </Button>

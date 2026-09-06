@@ -128,7 +128,7 @@ function ReportRow({
     >
       <span className={`text-sm ${bold ? "font-bold text-gray-900" : "text-gray-700"}`}>
         {accountId ? (
-          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[#22C55E] hover:underline">
+          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[var(--color-accent-custom,#22C55E)] hover:underline">
             {label}
           </Link>
         ) : (
@@ -337,7 +337,7 @@ export default function ProfitLossPage() {
                   <Button
                     onClick={fetchProfitLoss}
                     disabled={loading}
-                    className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                    className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                   >
                     {loading ? "Generating..." : "Generate"}
                   </Button>
@@ -382,7 +382,7 @@ export default function ProfitLossPage() {
               </div>
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Gross Profit</p>
-                <p className="text-xl font-bold text-[#22C55E] mt-1">{fmt(grossProfit)}</p>
+                <p className="text-xl font-bold text-[var(--color-accent-custom,#22C55E)] mt-1">{fmt(grossProfit)}</p>
               </div>
               <div
                 className={`rounded-xl border shadow-sm p-4 ${netProfit >= 0 ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}`}
@@ -461,7 +461,7 @@ export default function ProfitLossPage() {
                 >
                   <span className="font-bold text-gray-900 text-lg">Net Profit</span>
                   <div className="sm:text-right">
-                    <span className={`font-bold text-2xl ${netProfit >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                    <span className={`font-bold text-2xl ${netProfit >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                       {fmt(netProfit)}
                     </span>
                     <p className="text-sm text-gray-500 mt-1">Margin: {netMargin.toFixed(1)}%</p>

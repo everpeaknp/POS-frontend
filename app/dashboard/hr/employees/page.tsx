@@ -169,7 +169,7 @@ export default function EmployeesPage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/employees/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Employee
           </Button>
         </Link>
@@ -195,9 +195,9 @@ export default function EmployeesPage() {
               filtered.map((emp) => (
                 <tr key={emp.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    <Link href={`/dashboard/hr/employees/${emp.id}`} className="hover:text-[#22C55E]">{emp.name}</Link>
+                    <Link href={`/dashboard/hr/employees/${emp.id}`} className="hover:text-[var(--color-accent-custom,#22C55E)]">{emp.name}</Link>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">{String(emp.id).substring(0, 8)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)] font-medium">{String(emp.id).substring(0, 8)}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.designation}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.department_name || 'N/A'}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.phone}</td>

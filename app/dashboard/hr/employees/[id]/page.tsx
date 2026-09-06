@@ -88,7 +88,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             The employee you are looking for does not exist.
           </p>
           <Link href="/dashboard/hr/employees">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View all employees</Button>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">View all employees</Button>
           </Link>
         </div>
       </HRPageShell>
@@ -123,7 +123,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[#22C55E] hover:text-white hover:border-[#22C55E]"
+              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[var(--color-accent-custom,#22C55E)] hover:text-white hover:border-[var(--color-accent-custom,#22C55E)]"
             >
               <Edit className="h-3.5 w-3.5" />
               Edit
@@ -131,7 +131,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           </Link>
 
           <div className="flex items-start gap-4 min-w-0 pr-20">
-            <div className="w-16 h-16 rounded-full bg-[#22C55E] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[#22C55E]/10">
+            <div className="w-16 h-16 rounded-full bg-[var(--color-accent-custom,#22C55E)] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[var(--color-accent-custom,#22C55E)]/10">
               {initials}
             </div>
             <div className="min-w-0">
@@ -254,7 +254,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             <TabsContent value="attendance" className="mt-6">
               <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Attendance history for this employee.{" "}
-                <Link href="/dashboard/hr/attendance/mark" className="text-[#22C55E] hover:underline">
+                <Link href="/dashboard/hr/attendance/mark" className="text-[var(--color-accent-custom,#22C55E)] hover:underline">
                   Mark attendance
                 </Link>
               </p>
@@ -265,7 +265,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 Leave requests for this employee.{" "}
                 <Link
                   href={`/dashboard/hr/leave/requests/new?employee=${id}`}
-                  className="text-[#22C55E] hover:underline"
+                  className="text-[var(--color-accent-custom,#22C55E)] hover:underline"
                 >
                   Apply leave
                 </Link>
@@ -275,7 +275,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             <TabsContent value="payroll" className="mt-6">
               <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Payslip history for this employee.{" "}
-                <Link href="/dashboard/hr/payroll" className="text-[#22C55E] hover:underline">
+                <Link href="/dashboard/hr/payroll" className="text-[var(--color-accent-custom,#22C55E)] hover:underline">
                   View payroll
                 </Link>
               </p>

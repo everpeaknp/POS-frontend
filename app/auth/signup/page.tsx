@@ -18,7 +18,7 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { buildInviteRedirect } from "@/lib/invitations/accept";
 
-const B = "#22C55E";
+const B = "var(--color-accent-custom,#22C55E)";
 const BD = "#16A34A";
 
 // Zod validation schema - simplified without organization and username

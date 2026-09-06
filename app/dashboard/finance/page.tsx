@@ -139,7 +139,7 @@ export default function PersonalFinanceDashboardPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-lg hover:bg-[#16A34A]"
             >
               Retry
             </button>
@@ -258,7 +258,7 @@ export default function PersonalFinanceDashboardPage() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -285,8 +285,8 @@ export default function PersonalFinanceDashboardPage() {
                 <AreaChart data={netWorthTrend} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid 
@@ -318,11 +318,11 @@ export default function PersonalFinanceDashboardPage() {
                     type="monotone"
                     dataKey="value"
                     name="Net Worth"
-                    stroke="#22C55E"
+                    stroke="var(--color-accent-custom,#22C55E)"
                     strokeWidth={2.5}
                     fill="url(#netWorthGradient)"
                     dot={{ 
-                      fill: "#22C55E", 
+                      fill: "var(--color-accent-custom,#22C55E)", 
                       stroke: "#fff", 
                       strokeWidth: 2, 
                       r: 5 
@@ -331,7 +331,7 @@ export default function PersonalFinanceDashboardPage() {
                       r: 7, 
                       stroke: "#fff", 
                       strokeWidth: 2, 
-                      fill: "#22C55E" 
+                      fill: "var(--color-accent-custom,#22C55E)" 
                     }}
                     connectNulls={true}
                     isAnimationActive={true}
@@ -379,7 +379,7 @@ export default function PersonalFinanceDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Recent Activities</h3>
               <Link
                 href="/dashboard/finance/activities"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -412,7 +412,7 @@ export default function PersonalFinanceDashboardPage() {
                               <span className={`text-xs font-medium ${
                                 activity.type === 'transaction' && activity.description.toLowerCase().includes('expense')
                                   ? 'text-red-600'
-                                  : 'text-[#22C55E]'
+                                  : 'text-[var(--color-accent-custom,#22C55E)]'
                               }`}>
                                 {formatNPR(activity.amount)}
                               </span>
@@ -479,7 +479,7 @@ export default function PersonalFinanceDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Top Accounts by Balance</h3>
               <Link
                 href="/dashboard/finance/account"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -503,7 +503,7 @@ export default function PersonalFinanceDashboardPage() {
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#22C55E] transition-all"
+                        className="h-full rounded-full bg-[var(--color-accent-custom,#22C55E)] transition-all"
                         style={{ 
                           width: `${(account.balance / topAccounts[0].balance) * 100}%` 
                         }}

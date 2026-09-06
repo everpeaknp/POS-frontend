@@ -554,7 +554,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]"
                 onClick={() => setShowCategoryDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -631,7 +631,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]"
                 onClick={() => setShowUnitDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -675,7 +675,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom,#22C55E)]"
                 onClick={() => setShowBarcodeScanner(true)}
                 title="Scan Barcode"
               >
@@ -793,7 +793,7 @@ export default function ProductForm({
               ) : (
                 <label
                   htmlFor="image"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[var(--color-accent-custom,#22C55E)] hover:bg-gray-50 transition-colors"
                 >
                   <Upload className="h-10 w-10 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600 font-medium">Click to upload image</span>
@@ -837,7 +837,7 @@ export default function ProductForm({
         <Button
           type="submit"
           disabled={isSubmitting || hasMissingData}
-          className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
         >
           {isSubmitting ? "Saving..." : isEdit ? (
             'Update Product'
@@ -897,7 +897,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {creatingCategory ? "Creating..." : (
                 'Create Category'
@@ -959,7 +959,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
             >
               {creatingUnit ? "Creating..." : (
                 'Create Unit'

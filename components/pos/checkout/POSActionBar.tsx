@@ -54,7 +54,7 @@ export function POSActionBar({
           <Play className="h-4 w-4" />
           Held Orders
           {heldOrdersCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+            <span className="ml-1 px-1.5 py-0.5 bg-[var(--color-accent-custom-100,#dcfce7)] text-[var(--color-accent-custom-700,#15803d)] rounded-full text-xs font-semibold">
               {heldOrdersCount}
             </span>
           )}
@@ -74,7 +74,7 @@ export function POSActionBar({
           size="sm"
           variant={splitPaymentMode ? "default" : "outline"}
           onClick={onToggleSplitPayment}
-          className={`gap-1 ${splitPaymentMode ? 'bg-[#22C55E] hover:bg-[#16A34A]' : ''}`}
+          className={`gap-1 ${splitPaymentMode ? 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]' : ''}`}
         >
           Split Payment
           {splitPaymentMode && payments.length > 0 && (

@@ -47,7 +47,7 @@ export function ReportsPageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Reports
@@ -73,7 +73,7 @@ export function ReportsPageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               >
                 Try again
               </Button>

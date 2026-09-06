@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { DeliveryFormDialog } from "@/components/hardware/DeliveryFormDialog";
 import { deliveryAPI, type Delivery, type DeliveryStats } from "@/lib/api/hardware";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -36,15 +37,23 @@ const statusLabels = {
 
 export default function DeliveriesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [stats, setStats] = useState<DeliveryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     loadData();
   }, [statusFilter]);
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setShowForm(true);
+    router.replace("/dashboard/hardware/deliveries", { scroll: false });
+  }, [searchParams, router]);
 
   const loadData = async () => {
     try {
@@ -160,8 +169,8 @@ export default function DeliveriesPage() {
             </Select>
           </div>
           <Button
-            onClick={() => router.push("/dashboard/hardware/deliveries/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            onClick={() => setShowForm(true)}
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             New Delivery
@@ -177,8 +186,8 @@ export default function DeliveriesPage() {
             </p>
             {!searchTerm && !statusFilter && (
               <Button
-                onClick={() => router.push("/dashboard/hardware/deliveries/new")}
-                className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                onClick={() => setShowForm(true)}
+                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               >
                 Create First Delivery
               </Button>
@@ -206,7 +215,7 @@ export default function DeliveriesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium text-[#22C55E]">{delivery.delivery_number}</span>
+                        <span className="font-medium text-[var(--color-accent-custom,#22C55E)]">{delivery.delivery_number}</span>
                       </div>
                       {delivery.challan_number && (
                         <div className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
@@ -254,6 +263,12 @@ export default function DeliveriesPage() {
           </div>
         )}
       </div>
+
+      <DeliveryFormDialog
+        open={showForm}
+        onOpenChange={setShowForm}
+        onSuccess={() => loadData()}
+      />
     </div>
   );
 }

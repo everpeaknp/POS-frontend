@@ -342,7 +342,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("ledger")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "ledger"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -353,7 +353,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("aging")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "aging"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -364,7 +364,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("credit-notes")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "credit-notes"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -582,7 +582,7 @@ export default function UdaroPage() {
                         </p>
                         <Button
                           onClick={() => router.push("/dashboard/sales/credit-notes/new")}
-                          className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                         >
                           Create Credit Note
                         </Button>
@@ -609,7 +609,7 @@ export default function UdaroPage() {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-gray-400" />
-                                    <span className="font-mono text-xs text-[#22C55E]">
+                                    <span className="font-mono text-xs text-[var(--color-accent-custom,#22C55E)]">
                                       {cn.credit_note_number}
                                     </span>
                                   </div>

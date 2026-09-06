@@ -120,7 +120,7 @@ function AccountSidebarContent({
               compact && "justify-center flex-1"
             )}
           >
-            <div className="w-9 h-9 rounded-lg bg-[#22C55E] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-accent-custom,#22C55E)] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -143,7 +143,7 @@ function AccountSidebarContent({
             {!compact ? (
               <KhataLogo size="md" />
             ) : (
-              <div className="w-9 h-9 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+              <div className="w-9 h-9 rounded-lg bg-[var(--color-accent-custom,#22C55E)] grid place-items-center text-white text-sm font-bold">
                 K
               </div>
             )}
@@ -165,6 +165,18 @@ function AccountSidebarContent({
       {!compact && (
         <div data-tour="sidebar-search" className="px-3 pt-3 pb-1">
           <div className="relative flex items-center">
+            {/* Decoy field: Chrome's address/identity autofill targets the first
+                matching input it finds on the page, ignoring autocomplete="off"
+                on the real one in some versions — this absorbs that instead. */}
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              tabIndex={-1}
+              aria-hidden="true"
+              readOnly
+              style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }}
+            />
             <Search
               size={15}
               strokeWidth={2}
@@ -198,7 +210,7 @@ function AccountSidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[var(--color-accent-custom,#22C55E)]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (
               <button
@@ -250,7 +262,7 @@ function AccountSidebarContent({
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                     compact && "justify-center px-2",
                     active
-                      ? "bg-[#22C55E] text-white"
+                      ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
                       : "text-gray-400 hover:text-white hover:bg-white/10"
                   )}
                 >

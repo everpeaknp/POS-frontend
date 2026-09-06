@@ -232,7 +232,7 @@ export default function SalesOrdersPage() {
               <Download className="h-4 w-4" /> Export
             </Button>
             <Link href="/dashboard/sales/orders/new">
-              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> New Order
               </Button>
             </Link>
@@ -257,7 +257,7 @@ export default function SalesOrdersPage() {
               <tbody className="divide-y divide-gray-50">
                 {orders.map((o: any) => (
                   <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent-custom,#22C55E)] font-medium">
                       <Link href={`/dashboard/sales/orders/${o.id}`} className="hover:underline">
                         {o.order_number}
                       </Link>

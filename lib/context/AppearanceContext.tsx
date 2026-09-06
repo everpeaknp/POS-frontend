@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { userApi } from "@/lib/api/user";
 import type { AppearancePreferences } from "@/lib/types/user";
 import {
+  APPEARANCE_STORAGE_KEY,
   AUTH_LOGIN_EVENT,
   applyAppearancePreferences,
   applyCachedAppearancePreferences,
@@ -69,6 +70,21 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     window.addEventListener(AUTH_LOGIN_EVENT, onAuthLogin);
     return () => window.removeEventListener(AUTH_LOGIN_EVENT, onAuthLogin);
   }, [refresh]);
+
+  // The `storage` event fires in *other* same-origin browsing contexts
+  // (other tabs, or an <iframe> like the appearance settings' live preview)
+  // when localStorage changes here — lets those windows pick up a new
+  // theme/accent pick instantly without needing their own save round-trip.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== APPEARANCE_STORAGE_KEY) return;
+      const next = readCachedOrDefault();
+      setPreferences(next);
+      syncResolvedTheme(next);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [syncResolvedTheme]);
 
   useEffect(() => {
     if (preferences.theme !== "system") return;

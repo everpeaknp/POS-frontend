@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   HardwarePageShell,
   hardwareCardClass,
   hardwareTableWrapClass,
@@ -28,6 +36,15 @@ export default function HardwareBulkPricingPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showModal, setShowModal] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    productName: string | null;
+  }>({
+    isOpen: false,
+    id: null,
+    productName: null,
+  });
 
   const openModal = useCallback(() => {
     setShowModal(true);
@@ -65,14 +82,25 @@ export default function HardwareBulkPricingPage() {
   };
 
   const handleDelete = async (id: string, productName?: string) => {
-    if (!confirm(`Delete pricing rule${productName ? ` for ${productName}` : ""}?`)) return;
+    setDeleteDialog({
+      isOpen: true,
+      id,
+      productName: productName || null,
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.id) return;
+
     try {
-      await inventoryApi.bulkPricing.delete(Number(id));
+      await inventoryApi.bulkPricing.delete(Number(deleteDialog.id));
       toast.success("Pricing rule deleted");
-      setPricingRules(pricingRules.filter((p) => String(p.id) !== id));
+      setPricingRules(pricingRules.filter((p) => String(p.id) !== deleteDialog.id));
     } catch (error) {
       console.error("Failed to delete pricing rule:", error);
       toast.error("Failed to delete pricing rule");
+    } finally {
+      setDeleteDialog({ isOpen: false, id: null, productName: null });
     }
   };
 
@@ -144,7 +172,7 @@ export default function HardwareBulkPricingPage() {
           type="button"
           size="sm"
           onClick={openModal}
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+          className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" /> New Rule
         </Button>
@@ -215,6 +243,34 @@ export default function HardwareBulkPricingPage() {
         onClose={closeModal}
         onSuccess={fetchPricingRules}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.isOpen} onOpenChange={(open) => !open && setDeleteDialog({ isOpen: false, id: null, productName: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Pricing Rule</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this pricing rule
+              {deleteDialog.productName ? ` for ${deleteDialog.productName}` : ""}?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialog({ isOpen: false, id: null, productName: null })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </HardwarePageShell>
   );
 }

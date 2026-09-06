@@ -28,7 +28,7 @@ import { usePermissions } from "@/lib/hooks/usePermissions";
 import { tenantApi } from "@/lib/api/tenant";
 
 const fmt = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
-const COLORS = ["#22C55E", "#86EFAC", "#FCA5A5", "#60A5FA", "#F59E0B", "#A78BFA"];
+const COLORS = ["var(--color-accent-custom,#22C55E)", "#86EFAC", "#FCA5A5", "#60A5FA", "#F59E0B", "#A78BFA"];
 
 export default function AccountingDashboard() {
   const { user, refreshUser } = useAuth();
@@ -92,7 +92,7 @@ export default function AccountingDashboard() {
           </p>
           {canEnableAccounting ? (
             <Button
-              className="mt-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="mt-6 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               onClick={handleEnableAccountingModule}
               disabled={enablingModule}
             >
@@ -161,7 +161,7 @@ export default function AccountingDashboard() {
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
               <p className="text-xs text-gray-500">{s.label}</p>
-              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[var(--color-accent-custom,#22C55E)]" : "text-gray-900"}`}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function AccountingDashboard() {
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
               <p className="text-xs text-gray-500">{s.label}</p>
-              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[var(--color-accent-custom,#22C55E)]" : "text-gray-900"}`}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -189,7 +189,7 @@ export default function AccountingDashboard() {
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
               <p className="text-xs text-gray-500">{s.label}</p>
-              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[#22C55E]" : "text-gray-900"}`}>{s.value}</p>
+              <p className={`text-xl font-bold mt-1 ${s.green ? "text-[var(--color-accent-custom,#22C55E)]" : "text-gray-900"}`}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -201,7 +201,7 @@ export default function AccountingDashboard() {
             { label: "VAT Collected", value: fmt(data.vat_collected), href: "/dashboard/accounting/tax-management" },
             { label: "Outstanding Taxes", value: fmt(data.outstanding_taxes ?? data.vat_payable), href: "/dashboard/accounting/tax-management" },
           ].map((s) => (
-            <Link key={s.label} href={s.href} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30">
+            <Link key={s.label} href={s.href} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[var(--color-accent-custom,#22C55E)]/30">
               <p className="text-xs text-gray-500">{s.label}</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{s.value}</p>
             </Link>
@@ -218,7 +218,7 @@ export default function AccountingDashboard() {
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v) => fmt(Number(v))} />
                 <Legend />
-                <Bar dataKey="income" name="Income" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" name="Income" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expenses" name="Expenses" fill="#FCA5A5" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -251,7 +251,7 @@ export default function AccountingDashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Net cash flow</span>
-                    <span className={`font-medium ${data.cash_flow_summary.net_cash_flow >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                    <span className={`font-medium ${data.cash_flow_summary.net_cash_flow >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                       {fmt(data.cash_flow_summary.net_cash_flow)}
                     </span>
                   </div>
@@ -324,7 +324,7 @@ export default function AccountingDashboard() {
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v) => fmt(Number(v))} />
-                <Line type="monotone" dataKey="net_profit" name="Net profit" stroke="#22C55E" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="net_profit" name="Net profit" stroke="var(--color-accent-custom,#22C55E)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -350,7 +350,7 @@ export default function AccountingDashboard() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700">Recent Journal Entries</h3>
-              <Link href="/dashboard/accounting/journal-entries" className="text-xs text-[#22C55E] hover:underline">View all</Link>
+              <Link href="/dashboard/accounting/journal-entries" className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:underline">View all</Link>
             </div>
             <div className="overflow-x-auto max-h-64">
               <table className="w-full text-sm">
@@ -365,7 +365,7 @@ export default function AccountingDashboard() {
                   {data.recent_journal_entries.map((je) => (
                     <tr key={je.id} className="hover:bg-gray-50/50">
                       <td className="px-4 py-2">
-                        <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[#22C55E] font-mono text-xs">
+                        <Link href={`/dashboard/accounting/journal-entries/${je.id}`} className="text-[var(--color-accent-custom,#22C55E)] font-mono text-xs">
                           {je.entry_number}
                         </Link>
                       </td>
@@ -408,7 +408,7 @@ export default function AccountingDashboard() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700">Recent Bank Transactions</h3>
-              <Link href="/dashboard/accounting/bank-accounts" className="text-xs text-[#22C55E] hover:underline">View banks</Link>
+              <Link href="/dashboard/accounting/bank-accounts" className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:underline">View banks</Link>
             </div>
             <div className="overflow-x-auto max-h-48">
               <table className="w-full text-sm">

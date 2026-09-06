@@ -30,7 +30,7 @@ export default function HelpDeskPage() {
           </p>
           <Button
             type="button"
-            className="mt-5 bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent rounded-xl"
+            className="mt-5 bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent rounded-xl"
             onClick={replayWizard}
           >
             <RefreshCw className="h-4 w-4 mr-1.5" />

@@ -33,8 +33,8 @@ export function POSThankYouDialog({
       <DialogContent className="sm:max-w-md">
         <div className="text-center space-y-6 py-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-12 h-12 text-green-600" />
+            <div className="w-20 h-20 bg-[var(--color-accent-custom-100,#dcfce7)] rounded-full flex items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-[var(--color-accent-custom-600,#16a34a)]" />
             </div>
           </div>
 
@@ -45,13 +45,13 @@ export function POSThankYouDialog({
               <div className="bg-gray-50 rounded-lg p-3 mt-3">
                 <p className="text-sm text-gray-600">Receipt Number</p>
                 <p className="text-lg font-bold text-gray-900">#{transaction.transaction_number}</p>
-                <p className="text-2xl font-bold text-green-600 mt-2">
+                <p className="text-2xl font-bold text-[var(--color-accent-custom-600,#16a34a)] mt-2">
                   Rs. {Number(transaction.total).toFixed(2)}
                 </p>
                 {transaction.change_given && transaction.change_given > 0 && (
                   <div className="mt-2 pt-2 border-t">
                     <p className="text-sm text-gray-600">Change Given</p>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="text-lg font-bold text-[var(--color-accent-custom-600,#16a34a)]">
                       Rs. {Number(transaction.change_given).toFixed(2)}
                     </p>
                   </div>
@@ -72,7 +72,7 @@ export function POSThankYouDialog({
             <Button
               onClick={onViewTransaction}
               variant="outline"
-              className="w-full h-12 border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 font-semibold"
+              className="w-full h-12 border-2 border-gray-300 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] font-semibold"
             >
               <Eye className="h-5 w-5 mr-2" />
               View Transaction
@@ -81,7 +81,7 @@ export function POSThankYouDialog({
             <Button
               onClick={onViewInvoice}
               variant="outline"
-              className="w-full h-12 border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 font-semibold"
+              className="w-full h-12 border-2 border-gray-300 hover:border-[var(--color-accent-custom-500,#22c55e)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] font-semibold"
             >
               <FileText className="h-5 w-5 mr-2" />
               View Invoice

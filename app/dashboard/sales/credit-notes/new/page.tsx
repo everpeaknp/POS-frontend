@@ -322,7 +322,7 @@ export default function NewCreditNotePage() {
             <Section title="Reason">
               <Field label="Reason for Credit Note" required>
                 <textarea
-                  className="w-full text-sm border border-gray-200 dark:border-border rounded-lg p-3 resize-none bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full text-sm border border-gray-200 dark:border-border rounded-lg p-3 resize-none bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent"
                   rows={4}
                   placeholder="Describe the reason for issuing this credit note (e.g., damaged goods, pricing error, return, etc.)"
                   value={form.reason}
@@ -343,7 +343,7 @@ export default function NewCreditNotePage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting}
               >
                 {submitting ? "Creating..." : (

@@ -80,7 +80,7 @@ export function QuickAddAccountDialog({
                     onClick={() => onFormDataChange({ type: option.value })}
                     className={`flex flex-col items-center justify-center gap-1.5 h-20 rounded-lg border text-xs font-medium transition-all ${
                       active
-                        ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                        ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 text-[#16A34A]"
                         : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                     }`}
                   >
@@ -185,7 +185,7 @@ export function QuickAddAccountDialog({
           >
             Cancel
           </Button>
-          <Button onClick={onAdd} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+          <Button onClick={onAdd} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
             Add Account
           </Button>
         </div>

@@ -62,8 +62,8 @@ export function ModuleOverviewSection({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-border">
         <div className="flex items-center gap-3 min-w-0">
           {Icon ? (
-            <div className="w-10 h-10 rounded-lg bg-[#22C55E]/15 flex items-center justify-center shrink-0">
-              <Icon className="h-5 w-5 text-[#22C55E]" />
+            <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-custom,#22C55E)]/15 flex items-center justify-center shrink-0">
+              <Icon className="h-5 w-5 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
           ) : null}
           <div className="min-w-0">
@@ -77,7 +77,7 @@ export function ModuleOverviewSection({
           {headerExtra}
           <Link
             href={module.href}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
           >
             Open module
             <ArrowRight className="h-4 w-4" />
@@ -125,8 +125,8 @@ export function ModuleOverviewSection({
               <AreaChart data={module.chart.data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id={`chart-${module.id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="var(--color-accent-custom,#22C55E)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "oklch(1 0 0 / 8%)" : "#F3F4F6"} />
@@ -150,7 +150,7 @@ export function ModuleOverviewSection({
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#22C55E"
+                  stroke="var(--color-accent-custom,#22C55E)"
                   strokeWidth={2}
                   fill={`url(#chart-${module.id})`}
                   dot={false}

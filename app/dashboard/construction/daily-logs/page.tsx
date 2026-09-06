@@ -217,7 +217,7 @@ export default function DailyLogsPage() {
             </Select>
           </div>
           <Link href="/dashboard/construction/daily-logs/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Daily Log
             </Button>
           </Link>
@@ -252,7 +252,7 @@ export default function DailyLogsPage() {
                   <tr key={log.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-accent-custom,#22C55E)] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {(log.site_name || "S")
                             .split(" ")
                             .map((n) => n[0])
@@ -262,7 +262,7 @@ export default function DailyLogsPage() {
                         </div>
                         <Link
                           href={`/dashboard/construction/daily-logs/${log.id}`}
-                          className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                          className="font-medium text-gray-800 hover:text-[var(--color-accent-custom,#22C55E)] hover:underline"
                         >
                           {log.site_name || "—"}
                         </Link>

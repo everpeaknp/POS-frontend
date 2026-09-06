@@ -98,7 +98,7 @@ export default function PosSessionDetailPage() {
           <div className="flex-1" />
           {session.status === "open" && (
             <Link href={closeHref}>
-              <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white h-8">
+              <Button size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white h-8">
                 Close Session
               </Button>
             </Link>
@@ -107,7 +107,7 @@ export default function PosSessionDetailPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Sales", value: formatNPR(session.total_sales), accent: "text-[#22C55E]" },
+            { label: "Total Sales", value: formatNPR(session.total_sales), accent: "text-[var(--color-accent-custom,#22C55E)]" },
             { label: "Transactions", value: String(session.total_transactions), accent: "text-gray-900 dark:text-foreground" },
             { label: "Cash Sales", value: formatNPR(session.cash_sales), accent: "text-gray-900 dark:text-foreground" },
             { label: "Digital Sales", value: formatNPR(digitalSales), accent: "text-gray-900 dark:text-foreground" },
@@ -177,7 +177,7 @@ export default function PosSessionDetailPage() {
 
           <div className={`${posCardClass} p-6`}>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground mb-4 flex items-center gap-2">
-              <Banknote className="h-4 w-4 text-[#22C55E]" />
+              <Banknote className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
               Cash Reconciliation
             </h3>
             <div className="space-y-3 text-sm">
@@ -241,7 +241,7 @@ export default function PosSessionDetailPage() {
             </h3>
             <Link
               href="/dashboard/pos/transactions"
-              className="text-xs text-[#22C55E] hover:underline"
+              className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:underline"
             >
               View all transactions
             </Link>

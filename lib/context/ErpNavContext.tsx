@@ -97,7 +97,7 @@ export function ErpTabsNav({
             onClick={() => onTabChange(tab.id)}
             className={`shrink-0 h-9 px-3.5 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2 ${
               active
-                ? "bg-[#22C55E]/12 text-[#22C55E]"
+                ? "bg-[var(--color-accent-custom,#22C55E)]/12 text-[var(--color-accent-custom,#22C55E)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10"
             }`}
           >

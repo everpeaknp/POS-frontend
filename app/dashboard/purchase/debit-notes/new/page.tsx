@@ -153,7 +153,7 @@ export default function NewDebitNotePage() {
                   setSelectedSupplier(e.target.value);
                   setForm({ ...form, invoice: "" });
                 }}
-                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
               >
                 <option value="">Select supplier</option>
                 {suppliers.map((s) => (
@@ -167,7 +167,7 @@ export default function NewDebitNotePage() {
               <select
                 value={form.invoice}
                 onChange={(e) => setForm({ ...form, invoice: e.target.value })}
-                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 disabled={!selectedSupplier}
               >
                 <option value="">— Select invoice —</option>
@@ -189,7 +189,7 @@ export default function NewDebitNotePage() {
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
+                className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 placeholder="Reason for debit note, return details..."
               />
             </div>
@@ -200,10 +200,10 @@ export default function NewDebitNotePage() {
               <ArrowLeft className="h-4 w-4" /> Cancel
             </Button>
             <div className="flex-1" />
-            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit()} disabled={submitting}>
+            <Button variant="outline" className="border-gray-200 text-gray-700" onClick={() => handleSubmit()} disabled={submitting}>
               Save Draft
             </Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit()} disabled={submitting}>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit()} disabled={submitting}>
               Issue Debit Note
             </Button>
           </div>

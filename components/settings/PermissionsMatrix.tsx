@@ -71,7 +71,7 @@ export function PermissionsMatrix({
                             onCheckedChange={(checked) =>
                               handleChange(role, key, checked as boolean)
                             }
-                            className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+                            className="data-[state=checked]:bg-[var(--color-accent-custom,#22C55E)] data-[state=checked]:border-[var(--color-accent-custom,#22C55E)]"
                           />
                         </td>
                       );

@@ -315,7 +315,7 @@ export default function LeavePage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/leave/requests/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Apply Leave
           </Button>
         </Link>
@@ -344,7 +344,7 @@ export default function LeavePage() {
           <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.rejected}</p>
         </div>
         <div className={hrStatCardClass}>
-          <div className="flex items-center gap-2 text-[#22C55E] mb-1">
+          <div className="flex items-center gap-2 text-[var(--color-accent-custom,#22C55E)] mb-1">
             <CalendarDays className="h-4 w-4" />
             <p className="text-xs font-medium">Leave Types</p>
           </div>
@@ -383,7 +383,7 @@ export default function LeavePage() {
                     {filtered.map((leave) => (
                       <tr key={leave.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground whitespace-nowrap">
-                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[#22C55E]">
+                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[var(--color-accent-custom,#22C55E)]">
                             {leave.employee_name}
                           </Link>
                         </td>

@@ -66,7 +66,7 @@ const quickActions = [
     label: 'New Worker',
     sub: 'Add workforce',
     icon: Users,
-    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+    color: 'bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400',
   },
   {
     href: '/dashboard/construction/attendance',
@@ -97,7 +97,7 @@ const moduleLinks = [
     label: 'Manage Workers',
     sub: 'View workforce',
     icon: HardHat,
-    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+    color: 'bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400',
   },
   {
     href: '/dashboard/accounting/journal-entries',
@@ -128,7 +128,7 @@ function getBudgetHealthLabel(percentage: number) {
 }
 
 function getProgressBarColor(percentage: number) {
-  if (percentage < 80) return 'bg-[#22C55E]';
+  if (percentage < 80) return 'bg-[var(--color-accent-custom,#22C55E)]';
   if (percentage < 100) return 'bg-yellow-500';
   return 'bg-red-500';
 }
@@ -214,7 +214,7 @@ export default function ConstructionDashboardPage() {
           value: stats.total_workers.toString(),
           sub: `${stats.active_workers} active`,
           icon: Users,
-          color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+          color: 'bg-green-50 text-[var(--color-accent-custom,#22C55E)] dark:bg-green-500/10 dark:text-green-400',
         },
         {
           label: 'Budget Health',
@@ -279,7 +279,7 @@ export default function ConstructionDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className={`${constructionCardClass} p-4 hover:border-[#22C55E]/30 hover:shadow-md transition-all group`}
+                className={`${constructionCardClass} p-4 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:shadow-md transition-all group`}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -312,7 +312,7 @@ export default function ConstructionDashboardPage() {
                   <Tooltip formatter={(value) => formatNPR(Number(value ?? 0))} />
                   <Legend />
                   <Bar dataKey="allocated" name="Allocated" fill="#93C5FD" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="spent" name="Spent" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="spent" name="Spent" fill="var(--color-accent-custom,#22C55E)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -354,7 +354,7 @@ export default function ConstructionDashboardPage() {
             <h2 className="text-sm font-semibold text-gray-700 dark:text-foreground">Active Construction Sites</h2>
             <Link
               href="/dashboard/construction/sites"
-              className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
             >
               View all
               <ChevronRight className="h-3.5 w-3.5" />
@@ -428,7 +428,7 @@ export default function ConstructionDashboardPage() {
                         <p
                           className={`font-semibold ${
                             (site.remaining_budget ?? 0) >= 0
-                              ? 'text-[#22C55E]'
+                              ? 'text-[var(--color-accent-custom,#22C55E)]'
                               : 'text-red-600'
                           }`}
                         >

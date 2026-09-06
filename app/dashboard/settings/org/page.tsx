@@ -321,7 +321,7 @@ function OrgSettingsContent() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent-custom,#22C55E)]"></div>
           <p className="mt-4 text-gray-600">Redirecting to Personal Finance Settings...</p>
         </div>
       </div>
@@ -684,7 +684,7 @@ function OrgSettingsContent() {
             <div className="pt-2 border-t border-gray-100">
               <Button
                 onClick={handleSubmit}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 disabled={submitting}
               >
                 {submitting ? "Saving..." : (

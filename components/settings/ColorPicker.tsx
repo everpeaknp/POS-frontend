@@ -10,7 +10,7 @@ interface ColorPickerProps {
 }
 
 const presetColors = [
-  "#22C55E", // Green (brand)
+  "var(--color-accent-custom,#22C55E)", // Green (brand)
   "#3B82F6", // Blue
   "#8B5CF6", // Purple
   "#EC4899", // Pink

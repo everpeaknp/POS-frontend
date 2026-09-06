@@ -143,7 +143,7 @@ function OnboardingSuccess({
           </p>
           <Button
             type="button"
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold border-transparent shadow-md shadow-green-500/20"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold border-transparent shadow-md shadow-green-500/20"
             onClick={onContinue}
           >
             Go to dashboard & start tour
@@ -267,7 +267,7 @@ export function OnboardingOverlay() {
             </p>
             <Button
               type="button"
-              className="mt-6 h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent font-extrabold shadow-md shadow-green-500/20"
+              className="mt-6 h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent font-extrabold shadow-md shadow-green-500/20"
               onClick={skipOverlay}
             >
               Go to organizations

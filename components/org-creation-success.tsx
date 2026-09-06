@@ -81,7 +81,7 @@ export function OrgCreationSuccess({ organizationName, accountType }: OrgCreatio
         <div className="space-y-3 mt-8">
           <Button
             onClick={handleGoToDashboard}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold text-base gap-2 border-transparent shadow-md shadow-green-500/20"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold text-base gap-2 border-transparent shadow-md shadow-green-500/20"
           >
             Go to dashboard
             <ArrowRight className="h-5 w-5" />

@@ -62,7 +62,7 @@ export function ReportFilter({
       <Button
         onClick={onGenerate}
         disabled={loading}
-        className="bg-[#22C55E] hover:bg-[#16A34A] text-white h-9"
+        className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white h-9"
       >
         {loading ? "Generating..." : "Generate Report"}
       </Button>

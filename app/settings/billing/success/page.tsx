@@ -58,12 +58,12 @@ function BillingSuccessContent() {
         <SettingsCardBody className="text-center py-10">
           {status === "success" && (
             <>
-              <CheckCircle className="h-10 w-10 text-[#22C55E] mx-auto mb-4" />
+              <CheckCircle className="h-10 w-10 text-[var(--color-accent-custom,#22C55E)] mx-auto mb-4" />
               <h2 className="text-base font-semibold text-gray-900">Payment successful</h2>
               <p className="text-sm text-gray-500 mt-1">{message}</p>
               <Link
                 href="/settings/billing"
-                className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-[#22C55E] px-4 text-sm font-medium text-white hover:bg-[#16A34A]"
+                className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-accent-custom,#22C55E)] px-4 text-sm font-medium text-white hover:bg-[#16A34A]"
               >
                 Back to billing
               </Link>

@@ -106,7 +106,7 @@ export default function JournalEntryDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
             <p className="text-gray-600">Journal entry not found</p>
             <Link href="/dashboard/accounting/journal-entries">
-              <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white">Back to List</Button>
+              <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">Back to List</Button>
             </Link>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function JournalEntryDetailPage() {
               <Link href={`/dashboard/accounting/journal-entries/${entry.id}/edit`}>
                 <Button variant="outline" size="sm" className="h-8 border-gray-200 text-gray-600">Edit</Button>
               </Link>
-              <Button size="sm" className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white" onClick={handlePost}>Post Entry</Button>
+              <Button size="sm" className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" onClick={handlePost}>Post Entry</Button>
             </>
           )}
           {entry.status === "posted" && (

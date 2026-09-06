@@ -30,7 +30,7 @@ export function TransactionTable({
             {hasActiveFilters ? "No transactions match your filters" : "No transactions yet"}
           </p>
           {!hasActiveFilters && (
-            <Button onClick={onAddTransaction} className="mt-4 bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={onAddTransaction} className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Transaction
             </Button>
@@ -96,7 +96,7 @@ export function TransactionTable({
                       variant={transaction.type === "income" ? "default" : "secondary"}
                       className={
                         transaction.type === "income"
-                          ? "bg-green-100 text-[#22C55E] hover:bg-green-100"
+                          ? "bg-green-100 text-[var(--color-accent-custom,#22C55E)] hover:bg-green-100"
                           : "bg-red-100 text-red-600 hover:bg-red-100"
                       }
                     >
@@ -110,7 +110,7 @@ export function TransactionTable({
                   </td>
                   <td
                     className={`px-4 py-3 text-sm text-right font-medium ${
-                      transaction.type === "income" ? "text-[#22C55E]" : "text-red-600"
+                      transaction.type === "income" ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"
                     }`}
                   >
                     {transaction.type === "income" ? "+" : "-"}

@@ -98,4 +98,6 @@ export interface AppearancePreferences {
   smooth_animations: boolean;
   /** Main dashboard navigation: left sidebar or top bar */
   navbar_position: 'left' | 'top';
+  /** Dynamic accent color (optional, for future premium feature) */
+  accent_color?: string;
 }

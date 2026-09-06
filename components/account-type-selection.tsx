@@ -105,10 +105,10 @@ export function AccountTypeSelection({
               disabled={option.disabled}
               className={cn(
                 "relative group text-left p-6 rounded-2xl border-2 transition-all duration-200",
-                "hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-green-500/20",
+                "hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-[var(--color-accent-custom,#22C55E)]/20",
                 option.disabled
                   ? "border-gray-200 bg-gray-50/50 cursor-not-allowed opacity-60"
-                  : "border-gray-200 bg-white hover:border-green-400 hover:bg-green-50/30 cursor-pointer"
+                  : "border-gray-200 bg-white hover:border-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-light,#f0fdf4)]/30 cursor-pointer"
               )}
             >
               {option.disabled && (
@@ -125,13 +125,13 @@ export function AccountTypeSelection({
                   "h-12 w-12 rounded-xl grid place-items-center mb-4 transition-colors",
                   option.disabled
                     ? "bg-gray-100"
-                    : "bg-green-50 group-hover:bg-green-100"
+                    : "bg-[var(--color-accent-custom-light,#f0fdf4)] group-hover:bg-[var(--color-accent-custom-light,#dcfce7)]"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-6 w-6 transition-colors",
-                    option.disabled ? "text-gray-400" : "text-green-600"
+                    option.disabled ? "text-gray-400" : "text-[var(--color-accent-custom,#22C55E)]"
                   )}
                 />
               </div>
@@ -141,7 +141,7 @@ export function AccountTypeSelection({
                   "text-xl font-bold mb-2 transition-colors",
                   option.disabled
                     ? "text-gray-500"
-                    : "text-gray-900 group-hover:text-green-700"
+                    : "text-gray-900 group-hover:text-[var(--color-accent-custom-dark,#15803d)]"
                 )}
               >
                 {option.title}
@@ -168,7 +168,7 @@ export function AccountTypeSelection({
                     <svg
                       className={cn(
                         "h-5 w-5 shrink-0 mt-0.5",
-                        option.disabled ? "text-gray-300" : "text-green-500"
+                        option.disabled ? "text-gray-300" : "text-[var(--color-accent-custom,#22C55E)]"
                       )}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -194,7 +194,7 @@ export function AccountTypeSelection({
 
               {!option.disabled && (
                 <div className="mt-5 pt-4 border-t border-gray-100">
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-green-600 group-hover:text-green-700">
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-custom,#22C55E)] group-hover:text-[var(--color-accent-custom-dark,#15803d)]">
                     Choose {option.title}
                     <svg
                       className="h-4 w-4 transition-transform group-hover:translate-x-1"

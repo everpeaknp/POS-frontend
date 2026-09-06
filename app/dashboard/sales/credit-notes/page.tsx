@@ -91,7 +91,7 @@ export default function CreditNotesPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/sales/credit-notes/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             New Credit Note

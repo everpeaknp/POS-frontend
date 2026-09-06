@@ -60,7 +60,7 @@ export default function BudgetPage() {
   }, []);
   const [showDialog, setShowDialog] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<string>("2026-08");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const [filterType, setFilterType] = useState<string>("all"); // "all" | "expense" | "income"
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -255,7 +255,7 @@ export default function BudgetPage() {
     if (isOverBudget) return "bg-red-500";
     if (percentUsed >= 90) return "bg-amber-500";
     if (percentUsed >= 75) return "bg-yellow-500";
-    return "bg-[#22C55E]";
+    return "bg-[var(--color-accent-custom,#22C55E)]";
   };
 
   const renderBudgetCard = (data: typeof budgetData[0]) => {
@@ -357,7 +357,7 @@ export default function BudgetPage() {
           ) : (
             <>
               <p className="text-gray-500 mb-4">No budgets set for {selectedMonth}</p>
-              <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+              <Button onClick={() => openAddDialog()} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Budget
               </Button>
@@ -406,7 +406,7 @@ export default function BudgetPage() {
                   </td>
                   <td className="px-4 py-3">
                     {category.type === "income" ? (
-                      <div className="inline-flex items-center gap-1 text-xs text-[#22C55E]">
+                      <div className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-custom,#22C55E)]">
                         <TrendingUp className="h-3 w-3" />
                         Income
                       </div>
@@ -425,7 +425,7 @@ export default function BudgetPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-right">
                     {budget ? (
-                      <span className={isOverBudget ? "text-red-600 font-medium" : "text-[#22C55E]"}>
+                      <span className={isOverBudget ? "text-red-600 font-medium" : "text-[var(--color-accent-custom,#22C55E)]"}>
                         {formatCurrency(remaining)}
                       </span>
                     ) : (
@@ -548,11 +548,11 @@ export default function BudgetPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Remaining</p>
-                <p className={`text-2xl font-bold ${summary.remaining >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+                <p className={`text-2xl font-bold ${summary.remaining >= 0 ? "text-[var(--color-accent-custom,#22C55E)]" : "text-red-600"}`}>
                   {formatCurrency(summary.remaining)}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-[#22C55E]" />
+              <TrendingUp className="h-8 w-8 text-[var(--color-accent-custom,#22C55E)]" />
             </div>
           </div>
         </div>
@@ -629,7 +629,7 @@ export default function BudgetPage() {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("list")}
-                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "list" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
                 title="List view"
               >
                 <List className="h-4 w-4" />
@@ -638,14 +638,14 @@ export default function BudgetPage() {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
-                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
                 title="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
 
-            <Button onClick={() => openAddDialog()} className="h-9 shrink-0 bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={() => openAddDialog()} className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Budget
             </Button>
@@ -669,7 +669,7 @@ export default function BudgetPage() {
               ) : (
                 <>
                   <p className="text-gray-500 mb-4">No budgets set for {selectedMonth}</p>
-                  <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                  <Button onClick={() => openAddDialog()} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Budget
                   </Button>
@@ -709,7 +709,7 @@ export default function BudgetPage() {
                 value={formData.category?.toString() || ""}
                 onChange={(e) => setFormData({ ...formData, category: parseInt(e.target.value) })}
                 disabled={!!editingBudget}
-                className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
               >
                 <option value="">Select category</option>
                 <optgroup label="Expense Categories">
@@ -769,7 +769,7 @@ export default function BudgetPage() {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSave} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               {editingBudget ? "Update" : "Add"} Budget
             </Button>
           </div>
@@ -787,7 +787,7 @@ export default function BudgetPage() {
             <p className="text-sm text-gray-600">
               Are you sure you want to delete the budget for{" "}
               <span className="font-semibold text-gray-900">
-                {budgetToDelete && categories.find((c) => c.id === budgetToDelete.categoryId)?.name}
+                {budgetToDelete && categories.find((c) => c.id === budgetToDelete.category)?.name}
               </span>
               ? This action cannot be undone.
             </p>

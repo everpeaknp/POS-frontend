@@ -33,7 +33,7 @@ export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all ${
                     isComplete || isCurrent
-                      ? "bg-[#22C55E] text-white shadow-sm shadow-green-200/80"
+                      ? "bg-[var(--color-accent-custom,#22C55E)] text-white shadow-sm shadow-green-200/80"
                       : "bg-white border-2 border-gray-200 text-gray-400"
                   }`}
                 >
@@ -62,7 +62,7 @@ export function OrgWizardStepper({ currentStep }: OrgWizardStepperProps) {
                   aria-hidden
                 >
                   <div
-                    className={`h-full bg-[#22C55E] transition-all duration-500 ${
+                    className={`h-full bg-[var(--color-accent-custom,#22C55E)] transition-all duration-500 ${
                       isComplete ? "w-full" : isCurrent ? "w-1/2" : "w-0"
                     }`}
                   />

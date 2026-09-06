@@ -136,9 +136,9 @@ export default function PurchaseReportPage() {
                   <Line
                     type="monotone"
                     dataKey="purchases"
-                    stroke="#22C55E"
+                    stroke="var(--color-accent-custom,#22C55E)"
                     strokeWidth={2}
-                    dot={{ fill: "#22C55E" }}
+                    dot={{ fill: "var(--color-accent-custom,#22C55E)" }}
                   />
                 </LineChart>
               </ResponsiveContainer>

@@ -207,7 +207,7 @@ export default function NewPurchaseInvoicePage() {
           <div className="flex flex-col lg:flex-row gap-6 justify-between">
             <div className="flex-1 min-w-0">
               <Label className="text-sm mb-1.5 block">Notes</Label>
-              <textarea className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]" placeholder="Additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <textarea className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]" placeholder="Additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <SummaryBox subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} />
           </div>
@@ -220,7 +220,7 @@ export default function NewPurchaseInvoicePage() {
 
               Save as Received
             </Button>
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
 
               Save & Mark Paid
             </Button>

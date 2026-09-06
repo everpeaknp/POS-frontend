@@ -53,7 +53,7 @@ export function PurchasePageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Purchase
@@ -81,7 +81,7 @@ export function PurchasePageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               >
                 Try again
               </Button>
@@ -105,6 +105,6 @@ export const purchaseSectionTitleClass =
 
 export const purchaseStatCardClass = `${purchaseCardClass} p-4`;
 
-export const purchaseFilterPillActive = "bg-[#22C55E] text-white";
+export const purchaseFilterPillActive = "bg-[var(--color-accent-custom,#22C55E)] text-white";
 export const purchaseFilterPillInactive =
   "bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80";

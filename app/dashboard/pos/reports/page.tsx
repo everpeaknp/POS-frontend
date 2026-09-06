@@ -145,7 +145,7 @@ export default function POSReportsPage() {
               <Button
                 onClick={handleGenerateReport}
                 disabled={generating}
-                className="w-full bg-[#22C55E] hover:bg-[#16A34A]"
+                className="w-full bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
               >
                 {generating ? "Generating..." : (
                   <>

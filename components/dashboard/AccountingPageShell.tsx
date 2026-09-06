@@ -55,7 +55,7 @@ export function AccountingPageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             {backLabel}
@@ -81,7 +81,7 @@ export function AccountingPageShell({
           <div className={`${accountingCardClass} p-12 text-center`}>
             <p className="text-gray-600 dark:text-muted-foreground mb-4">{error}</p>
             {onRetry && (
-              <Button onClick={onRetry} size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+              <Button onClick={onRetry} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">
                 Try again
               </Button>
             )}
@@ -100,10 +100,10 @@ export const accountingCardClass =
 export const accountingTableWrapClass = `${accountingCardClass} overflow-hidden`;
 
 export const accountingInputClass =
-  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
+  "w-full h-9 pl-10 pr-4 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] focus:border-transparent";
 
 export const accountingStatCardClass = `${accountingCardClass} p-4`;
 
-export const accountingFilterPillActive = "bg-[#22C55E] text-white";
+export const accountingFilterPillActive = "bg-[var(--color-accent-custom,#22C55E)] text-white";
 export const accountingFilterPillInactive =
   "bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80";

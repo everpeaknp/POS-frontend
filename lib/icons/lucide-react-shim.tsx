@@ -211,6 +211,7 @@ export const Tags: IconType = Hi.HiOutlineTag;
 export const Trash2: IconType = Hi.HiOutlineTrash;
 export const TrendingDown: IconType = Hi.HiOutlineArrowTrendingDown;
 export const TrendingUp: IconType = Hi.HiOutlineArrowTrendingUp;
+export const Truck: IconType = Fa.FaTruck;
 export const Upload: IconType = Hi.HiOutlineArrowUpTray;
 export const User: IconType = Hi.HiOutlineUser;
 export const UserPlus: IconType = Hi.HiOutlineUserPlus;

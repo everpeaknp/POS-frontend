@@ -224,7 +224,7 @@ export default function StockAdjustmentPage() {
                 <select
                   value={formData.product}
                   onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">Select a product</option>
                   {products.map((p: any) => (
@@ -239,7 +239,7 @@ export default function StockAdjustmentPage() {
                 <select
                   value={formData.warehouse}
                   onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">Select a warehouse</option>
                   {warehouses.map((w: any) => (
@@ -299,7 +299,7 @@ export default function StockAdjustmentPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -358,7 +358,7 @@ export default function StockAdjustmentPage() {
             />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> New Adjustment
             </Button>
           </div>
@@ -391,7 +391,7 @@ export default function StockAdjustmentPage() {
 
                   return (
                   <tr key={a.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-medium text-[#22C55E]">ADJ{a.id}</td>
+                    <td className="px-4 py-3 font-medium text-[var(--color-accent-custom,#22C55E)]">ADJ{a.id}</td>
                     <td className="px-4 py-3 text-gray-600">{formatDate(a.created_at)}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">{a.product_name}</td>
                     <td className="px-4 py-3">
@@ -428,7 +428,7 @@ export default function StockAdjustmentPage() {
                 <select
                   value={formData.product}
                   onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">Select a product</option>
                   {products.map((p: any) => (
@@ -443,7 +443,7 @@ export default function StockAdjustmentPage() {
                 <select
                   value={formData.warehouse}
                   onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 >
                   <option value="">Select a warehouse</option>
                   {warehouses.map((w: any) => (
@@ -503,7 +503,7 @@ export default function StockAdjustmentPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

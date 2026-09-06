@@ -163,7 +163,7 @@ export default function EditBankAccountPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">
               Back to Bank Accounts
             </Button>
           </div>
@@ -243,7 +243,7 @@ export default function EditBankAccountPage() {
               {glAccounts.length === 0 ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   No GL accounts found.{" "}
-                  <Link href="/dashboard/accounting/chart-of-accounts/new" className="font-medium underline text-[#22C55E]">
+                  <Link href="/dashboard/accounting/chart-of-accounts/new" className="font-medium underline text-[var(--color-accent-custom,#22C55E)]">
                     Create a Bank account
                   </Link>{" "}
                   in Chart of Accounts.
@@ -287,7 +287,7 @@ export default function EditBankAccountPage() {
               <div className="flex-1" />
               <Button 
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
                 disabled={saving || glAccounts.length === 0}
               >
                 {saving ? 'Saving...' : 'Update Bank Account'}

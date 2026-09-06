@@ -299,7 +299,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
         <div className={`${hrCardClass} p-8 text-center w-full`}>
           <p className="text-gray-600 dark:text-muted-foreground mb-4">Leave request not found</p>
           <Link href="/dashboard/hr/leave">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View leave management</Button>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">View leave management</Button>
           </Link>
         </div>
       </HRPageShell>
@@ -372,7 +372,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
           </div>
 
           <div className="flex items-start gap-4 min-w-0 pr-4 sm:pr-72">
-            <div className="w-16 h-16 rounded-full bg-[#22C55E] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[#22C55E]/10">
+            <div className="w-16 h-16 rounded-full bg-[var(--color-accent-custom,#22C55E)] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[var(--color-accent-custom,#22C55E)]/10">
               {initials}
             </div>
             <div className="min-w-0">
@@ -427,7 +427,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 value={
                   <Link
                     href={`/dashboard/hr/employees/${leaveRequest.employee}`}
-                    className="hover:text-[#22C55E] transition-colors"
+                    className="hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                   >
                     {leaveRequest.employee_name}
                   </Link>

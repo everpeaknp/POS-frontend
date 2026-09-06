@@ -189,9 +189,9 @@ export default function NewEmployeePage() {
                   <div className="flex flex-col items-center flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
                       currentStep > step.id 
-                        ? 'bg-[#22C55E] border-[#22C55E] text-white' 
+                        ? 'bg-[var(--color-accent-custom,#22C55E)] border-[var(--color-accent-custom,#22C55E)] text-white' 
                         : currentStep === step.id 
-                        ? 'bg-[#22C55E] border-[#22C55E] text-white' 
+                        ? 'bg-[var(--color-accent-custom,#22C55E)] border-[var(--color-accent-custom,#22C55E)] text-white' 
                         : 'bg-white border-gray-300 text-gray-400'
                     }`}>
                       {currentStep > step.id ? <Check className="h-5 w-5" /> : step.id}
@@ -204,7 +204,7 @@ export default function NewEmployeePage() {
                   </div>
                   {index < STEPS.length - 1 && (
                     <div className={`h-0.5 flex-1 mx-2 transition-colors ${
-                      currentStep > step.id ? 'bg-[#22C55E]' : 'bg-gray-200'
+                      currentStep > step.id ? 'bg-[var(--color-accent-custom,#22C55E)]' : 'bg-gray-200'
                     }`} />
                   )}
                 </div>
@@ -403,7 +403,7 @@ export default function NewEmployeePage() {
                   <Button 
                     type="button" 
                     onClick={handleNext}
-                    className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
                     disabled={loading}
                   >
                     Next
@@ -411,7 +411,7 @@ export default function NewEmployeePage() {
                 ) : (
                   <Button 
                     type="submit" 
-                    className="bg-[#22C55E] hover:bg-[#16A34A] text-white" 
+                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" 
                     disabled={loading}
                   >
                     {loading ? 'Saving...' : 'Save Employee'}

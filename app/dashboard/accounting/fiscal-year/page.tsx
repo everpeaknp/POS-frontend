@@ -110,7 +110,7 @@ export default function FiscalYearPage() {
         </div>
         <Button
           size="sm"
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+          className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
           onClick={handleEnsureCurrent}
         >
           <Plus className="h-4 w-4" /> Ensure current FY

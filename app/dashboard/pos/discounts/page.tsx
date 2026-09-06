@@ -314,7 +314,7 @@ export default function POSDiscountsPage() {
             <Button
               size="sm"
               onClick={() => setShowDialog(true)}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
             >
               <Plus className="h-4 w-4" /> Add Discount
             </Button>
@@ -351,7 +351,7 @@ export default function POSDiscountsPage() {
                       <td className="px-4 py-3 font-medium text-sm">{discount.name}</td>
                       <td className="px-4 py-3 text-sm font-mono">{discount.code}</td>
                       <td className="px-4 py-3 text-sm capitalize">{discount.discount_type}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-[#22C55E]">
+                      <td className="px-4 py-3 text-sm font-semibold text-[var(--color-accent-custom,#22C55E)]">
                         {discount.discount_type === "percentage"
                           ? `${discount.discount_value}%`
                           : `Rs. ${discount.discount_value}`}
@@ -538,7 +538,7 @@ export default function POSDiscountsPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={2}
-                className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[#22C55E]"
+                className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[var(--color-accent-custom,#22C55E)]"
                 placeholder="Optional description..."
               />
             </div>
@@ -568,7 +568,7 @@ export default function POSDiscountsPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="bg-[#22C55E] hover:bg-[#16A34A]"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
               >
                 {submitting ? "Saving..." : (
                   editingId ? "Update Discount" : "Create Discount"

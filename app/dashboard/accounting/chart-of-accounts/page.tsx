@@ -140,7 +140,7 @@ export default function ChartOfAccountsPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button onClick={fetchAccounts} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+            <Button onClick={fetchAccounts} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">
               Retry
             </Button>
           </div>
@@ -171,8 +171,8 @@ export default function ChartOfAccountsPage() {
               key={type}
               type="button"
               onClick={() => setTypeFilter(type as (typeof TYPES)[number])}
-              className={`text-left bg-card rounded-xl border border-border shadow-sm p-4 hover:border-[#22C55E]/40 transition-colors ${
-                typeFilter === type ? "ring-2 ring-[#22C55E]/30 border-[#22C55E]/40" : ""
+              className={`text-left bg-card rounded-xl border border-border shadow-sm p-4 hover:border-[var(--color-accent-custom,#22C55E)]/40 transition-colors ${
+                typeFilter === type ? "ring-2 ring-[var(--color-accent-custom,#22C55E)]/30 border-[var(--color-accent-custom,#22C55E)]/40" : ""
               }`}
             >
               <p className="text-xs text-muted-foreground mb-1">{type}</p>
@@ -211,7 +211,7 @@ export default function ChartOfAccountsPage() {
             </Select>
           </div>
           <Link href="/dashboard/accounting/chart-of-accounts/new" className="shrink-0">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Account
             </Button>
           </Link>
@@ -226,7 +226,7 @@ export default function ChartOfAccountsPage() {
               Build your chart of accounts to track assets, liabilities, income, and expenses.
             </p>
             <Link href="/dashboard/accounting/chart-of-accounts/new">
-              <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> Add Account
               </Button>
             </Link>
@@ -306,7 +306,7 @@ export default function ChartOfAccountsPage() {
                                 className={`truncate hover:underline ${
                                   acc.level === 0
                                     ? "font-semibold text-foreground"
-                                    : "font-medium text-[#22C55E]"
+                                    : "font-medium text-[var(--color-accent-custom,#22C55E)]"
                                 }`}
                               >
                                 {acc.name}
@@ -336,7 +336,7 @@ export default function ChartOfAccountsPage() {
                                 href={`/dashboard/accounting/chart-of-accounts/${acc.id}`}
                                 title="View ledger"
                               >
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-[#22C55E]">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-[var(--color-accent-custom,#22C55E)]">
                                   <BookOpen className="h-4 w-4" />
                                 </Button>
                               </Link>

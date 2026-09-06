@@ -113,7 +113,7 @@ export default function OrganizationModulesPage() {
             </p>
             <Link
               href="/erp"
-              className="inline-flex mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A]"
+              className="inline-flex mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
             >
               Go to ERP
             </Link>
@@ -144,7 +144,7 @@ export default function OrganizationModulesPage() {
             </div>
             <Link
               href="/dashboard/settings/org"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#22C55E] hover:text-[#16A34A]"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
             >
               Organization settings
               <ChevronRight className="h-3.5 w-3.5" />

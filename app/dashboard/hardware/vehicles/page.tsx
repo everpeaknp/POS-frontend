@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ const vehicleTypeLabels = {
 import { VehicleForm } from "@/components/hardware/VehicleForm";
 
 export default function VehiclesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,11 +48,18 @@ export default function VehiclesPage() {
     loadVehicles();
   }, [statusFilter]);
 
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditingVehicle(null);
+    setShowForm(true);
+    router.replace("/dashboard/hardware/vehicles", { scroll: false });
+  }, [searchParams, router]);
+
   const loadVehicles = async () => {
     try {
       setLoading(true);
       const response = await vehicleAPI.list({ status: statusFilter || undefined });
-      setVehicles(Array.isArray(response.data) ? response.data : []);
+      setVehicles(response.data?.results || []);
     } catch (error) {
       console.error("Failed to load vehicles:", error);
       toast.error("Failed to load vehicles");
@@ -145,7 +155,7 @@ export default function VehiclesPage() {
           </div>
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             Add Vehicle
@@ -162,7 +172,7 @@ export default function VehiclesPage() {
             {!searchTerm && !statusFilter && (
               <Button
                 onClick={() => setShowForm(true)}
-                className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
               >
                 Add First Vehicle
               </Button>
@@ -185,7 +195,10 @@ export default function VehiclesPage() {
                   <tr
                     key={vehicle.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-muted/30 cursor-pointer transition-colors"
-                    onClick={() => setEditingVehicle(vehicle)}
+                    onClick={() => {
+                      setEditingVehicle(vehicle);
+                      setShowForm(true);
+                    }}
                   >
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
                       {vehicle.vehicle_number}

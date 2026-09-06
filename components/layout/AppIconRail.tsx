@@ -34,9 +34,9 @@ function KhataMark({ size = 22 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <path d="M16 2L28 10V22L16 30L4 22V10L16 2Z" fill="#22C55E" />
+      <path d="M16 2L28 10V22L16 30L4 22V10L16 2Z" fill="var(--color-accent-custom,#22C55E)" />
       <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="white" opacity="0.2" />
-      <path d="M16 6L26 12V20L16 26L6 20V12L16 6Z" fill="#22C55E" />
+      <path d="M16 6L26 12V20L16 26L6 20V12L16 6Z" fill="var(--color-accent-custom,#22C55E)" />
       <path d="M16 10L22 14V18L16 22L10 18V14L16 10Z" fill="white" opacity="0.45" />
     </svg>
   );
@@ -67,7 +67,7 @@ function RailButton({
     danger
       ? "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300"
       : active
-        ? "bg-[#22C55E]/20 ring-1 ring-[#22C55E]/50"
+        ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/20 ring-1 ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/50"
         : "hover:bg-black/5 dark:hover:bg-white/10",
     disabled && "opacity-50 pointer-events-none"
   );
@@ -104,8 +104,8 @@ function OrgAvatar({ tenant, active }: { tenant: Tenant; active?: boolean }) {
   return (
     <span
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-lg bg-[#22C55E] text-white text-xs font-bold overflow-hidden",
-        active && "ring-2 ring-[#22C55E]/50 dark:ring-white/50"
+        "flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white text-xs font-bold overflow-hidden",
+        active && "ring-2 ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/50 dark:ring-white/50"
       )}
     >
       {logo ? (
@@ -268,7 +268,7 @@ export function AppIconRail({
           className={cn(
             "h-[18px] w-[18px]",
             pageTour?.active
-              ? "text-[#22C55E]"
+              ? "text-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]"
               : "text-gray-500 dark:text-gray-400"
           )}
           strokeWidth={2}
@@ -300,13 +300,13 @@ export function AppIconRail({
               "rounded-lg grid place-items-center transition-colors shrink-0 outline-none",
               horizontal ? "h-9 w-9" : "h-10 w-10",
               onSettings
-                ? "bg-[#22C55E]/15 ring-1 ring-[#22C55E]/40 dark:bg-[#22C55E]/20 dark:ring-[#22C55E]/50"
+                ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/15 ring-1 ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/40 dark:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/20 dark:ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/50"
                 : "hover:bg-black/5 dark:hover:bg-white/10"
             )}
             aria-label="Account menu"
             title="Account"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#22C55E] text-white text-xs font-semibold overflow-hidden">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white text-xs font-semibold overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
