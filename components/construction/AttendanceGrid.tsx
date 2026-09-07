@@ -390,7 +390,7 @@ export default function AttendanceGrid() {
         <div className="flex gap-3 pt-4 border-t border-gray-100">
           <Button
             type="submit"
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             disabled={submitting || workers.length === 0}
           >
             {submitting ? 'Saving...' : 'Save Attendance'}

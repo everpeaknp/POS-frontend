@@ -164,7 +164,7 @@ export default function DebugPOSPage() {
               onClick={() => {
                 window.location.href = '/dashboard';
               }}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded hover:bg-[var(--color-accent-custom-700,#15803d)]"
             >
               Go to Dashboard
             </button>

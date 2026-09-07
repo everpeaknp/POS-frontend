@@ -420,7 +420,7 @@ export default function BalanceSheetPage() {
               <Button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6 h-9 shrink-0"
               >
                 {loading ? "Generating..." : "Generate"}
               </Button>

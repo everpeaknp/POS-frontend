@@ -755,7 +755,7 @@ export default function UsersPage() {
             <Button
               size="sm"
               onClick={handleInvite}
-              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
             >
               <Mail className="h-4 w-4" /> Invite User
             </Button>
@@ -1087,7 +1087,7 @@ export default function UsersPage() {
                   className={`flex-1 text-white ${
                     userToToggleActive.is_active
                       ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
+                      : "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]"
                   }`}
                 >
                   {userToToggleActive.is_active ? "Disable Access" : "Enable Access"}
@@ -1162,7 +1162,7 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={() => void handleRoleChangeConfirm()}
-                  className="flex-1 h-10 rounded-lg bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white text-sm font-medium"
+                  className="flex-1 h-10 rounded-lg bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white text-sm font-medium"
                 >
                   Update Role
                 </button>
@@ -1288,7 +1288,7 @@ export default function UsersPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Sending..." : "Send Invitation"}

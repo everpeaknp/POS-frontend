@@ -141,7 +141,7 @@ export function RecordPaymentModal({ open, onClose, invoiceId, invoiceNumber, ba
           <div className="flex gap-2 pt-1">
             <Button 
               onClick={handleSave} 
-              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               disabled={submitting}
             >
               {submitting ? "Recording..." : (

@@ -223,7 +223,7 @@ export default function PurchaseRequestDetailPage() {
           {req.status === "Draft" && (
             <Button
               size="sm"
-              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
               onClick={handleSubmitForApproval}
               disabled={updating}
             >
@@ -234,7 +234,7 @@ export default function PurchaseRequestDetailPage() {
             <>
               <Button
                 size="sm"
-                className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+                className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
                 onClick={handleApprove}
                 disabled={updating}
               >
@@ -255,7 +255,7 @@ export default function PurchaseRequestDetailPage() {
           {req.status === "Approved" && (
             <Button
               size="sm"
-              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
               onClick={openConvertModal}
               disabled={updating}
             >
@@ -399,7 +399,7 @@ export default function PurchaseRequestDetailPage() {
               <Button
                 onClick={handleConvertToPO}
                 disabled={updating}
-                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Create PO
               </Button>

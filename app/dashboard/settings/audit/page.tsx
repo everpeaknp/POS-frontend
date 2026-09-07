@@ -159,7 +159,7 @@ export default function AuditPage() {
           <Button
             size="sm"
             onClick={handleExport}
-            className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+            className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
           >
             <Download className="h-4 w-4" /> Export
           </Button>

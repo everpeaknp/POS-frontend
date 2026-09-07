@@ -110,7 +110,7 @@ export default function AccountDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <p className="text-gray-500">This account could not be found.</p>
             <Link href="/dashboard/accounting/chart-of-accounts">
-              <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">Back to Chart of Accounts</Button>
+              <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white">Back to Chart of Accounts</Button>
             </Link>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function AccountDetailPage() {
             <Button
               onClick={fetchData}
               disabled={loading}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {loading ? "Loading..." : "Apply Filter"}
             </Button>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Loader2, ChevronDownIcon, Plus } from "@/lib/icons/lucide-react-shim";
+import { Package, ChevronDownIcon, Plus } from "@/lib/icons/lucide-react-shim";
 import { inventoryApi, type Category, type UnitOfMeasure, type Product } from "@/lib/api/inventory";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -427,11 +427,12 @@ export function POSQuickAddProductDialog({
             <Button
               type="button"
               onClick={handleSave}
-              disabled={saving || loadingOptions}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
+              disabled={loadingOptions}
+              loading={saving}
+              loadingText="Adding..."
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2"
             >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              {saving ? "Adding..." : "Add & Add to Cart"}
+              Add & Add to Cart
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -488,7 +489,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingUnit ? "Creating..." : "Create Unit"}
             </Button>
@@ -541,7 +542,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingCategory ? "Creating..." : "Create Category"}
             </Button>

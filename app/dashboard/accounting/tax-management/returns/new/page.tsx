@@ -261,7 +261,7 @@ export default function NewVatReturnPage() {
             <Button variant="outline" className="border-gray-200 text-gray-700" onClick={handleSaveDraft} disabled={loading}>
               {loading ? "Saving..." : "Save Draft"}
             </Button>
-            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6" onClick={handleSubmit} disabled={loading}>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6" onClick={handleSubmit} disabled={loading}>
               {loading ? "Filing..." : "File Return"}
             </Button>
           </div>

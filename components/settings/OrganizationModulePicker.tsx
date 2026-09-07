@@ -138,8 +138,8 @@ export function OrganizationModulePicker({
   }, [user?.tenant?.disabled_features]);
 
   const selectedCount = useMemo(
-    () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id)).length,
-    [activeModules]
+    () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id, accountType)).length,
+    [activeModules, accountType]
   );
 
   const orderedModules = useMemo(() => {
@@ -176,7 +176,7 @@ export function OrganizationModulePicker({
     }
 
     const enabled = isModuleInActiveList(activeModules, moduleId);
-    const isRequired = isRequiredModule(moduleId);
+    const isRequired = isRequiredModule(moduleId, accountType);
 
     if (isRequired) {
       toast.error("Core modules are always included");
@@ -255,7 +255,7 @@ export function OrganizationModulePicker({
               <SortableModuleCard
                 key={module.id}
                 module={module}
-                isSelected={isModuleActive(activeModules, module.id)}
+                isSelected={isModuleActive(activeModules, module.id, accountType)}
                 isLoading={togglingId === module.id}
                 canEdit={canEdit}
                 onToggle={() => toggleModule(module.id)}

@@ -1,5 +1,8 @@
+"use client";
+
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { DashboardShellLoading } from "@/components/dashboard/DashboardShellLoading";
+import { SkeletonDashboard } from "@/components/shared/Skeleton";
+import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
 
 interface DashboardPageShellProps {
   title: string;
@@ -19,13 +22,26 @@ export function DashboardPageShell({
   headerActions,
   children,
   loading,
-  loadingMessage,
 }: DashboardPageShellProps) {
-  if (loading) {
+  const showLoading = useDelayedLoading(!!loading);
+
+  if (showLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0">
+      <div className="flex flex-col h-full min-h-0" aria-busy="true" aria-live="polite">
         <DashHeader title={title} subtitle={subtitle} actions={headerActions} />
-        <DashboardShellLoading message={loadingMessage} />
+        <div className="flex-1 overflow-auto">
+          <SkeletonDashboard />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    // Still loading, but within the flicker-guard window — keep the header
+    // usable and render nothing below rather than a stale/empty body.
+    return (
+      <div className="flex flex-col h-full min-h-0" aria-busy="true">
+        <DashHeader title={title} subtitle={subtitle} actions={headerActions} />
       </div>
     );
   }

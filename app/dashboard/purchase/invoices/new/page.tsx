@@ -220,7 +220,7 @@ export default function NewPurchaseInvoicePage() {
 
               Save as Received
             </Button>
-            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6" onClick={() => handleSubmit("paid")} disabled={submitting}>
 
               Save & Mark Paid
             </Button>

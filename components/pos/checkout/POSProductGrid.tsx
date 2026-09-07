@@ -138,7 +138,7 @@ export function POSProductGrid({
             <Button
               onClick={onShowBarcodeScanner}
               disabled={!selectedWarehouse}
-              className="bg-gradient-to-r from-[var(--color-accent-custom-500,#22c55e)] to-emerald-600 hover:from-[var(--color-accent-custom-600,#16a34a)] hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all h-12 flex-shrink-0"
+              className="bg-[var(--color-accent-custom,#22c55e)] hover:bg-[var(--color-accent-custom-600,#16a34a)] text-white gap-2 shadow-md hover:shadow-lg transition-all h-12 flex-shrink-0"
             >
               <Scan className="h-4 w-4" />
               Scan Barcode
@@ -228,7 +228,7 @@ export function POSProductGrid({
                   `}
                 >
                   {inCart && (
-                    <div className="absolute top-2 left-2 z-10 bg-gradient-to-r from-[var(--color-accent-custom-600,#16a34a)] to-emerald-600 text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-800">
+                    <div className="absolute top-2 left-2 z-10 bg-[var(--color-accent-custom-600,#16a34a)] text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-800">
                       {inCart.quantity}
                     </div>
                   )}

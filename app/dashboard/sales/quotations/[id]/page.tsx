@@ -157,7 +157,7 @@ export default function QuotationDetailPage() {
               toast.dismiss(t.id);
               confirmConvert();
             }}
-            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-custom,#22C55E)] rounded-lg hover:bg-[#16A34A] transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-custom,#22C55E)] rounded-lg hover:bg-[var(--color-accent-custom-600,#16A34A)] transition-colors"
           >
             Convert
           </button>
@@ -269,7 +269,7 @@ export default function QuotationDetailPage() {
                 size="sm" 
                 onClick={handleConvertToOrder}
                 disabled={updating}
-                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 h-8"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5 h-8"
               >
                   <ShoppingCart className="h-3.5 w-3.5" />
                 Convert to Order

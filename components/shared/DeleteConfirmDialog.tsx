@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 
 interface DeleteConfirmDialogProps {
@@ -21,8 +22,9 @@ export function DeleteConfirmDialog({
   onConfirm,
 }: DeleteConfirmDialogProps) {
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 bg-black/20 z-40"
@@ -66,6 +68,7 @@ export function DeleteConfirmDialog({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

@@ -251,7 +251,7 @@ export default function PersonalFinanceSettingsPage() {
                 <Button
                   onClick={handleSaveProfile}
                   disabled={savingProfile}
-                  className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {savingProfile ? "Saving..." : "Save Changes"}
@@ -308,7 +308,7 @@ export default function PersonalFinanceSettingsPage() {
                 <Button
                   onClick={handleSavePrefs}
                   disabled={savingPrefs}
-                  className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {savingPrefs ? "Saving..." : "Save Preferences"}

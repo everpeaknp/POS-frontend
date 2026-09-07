@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 
 interface ConfirmDialogProps {
@@ -26,13 +27,14 @@ export function ConfirmDialog({
   confirming = false,
   icon,
   iconWrapperClassName = "bg-[var(--color-accent-custom,#22C55E)]/15 text-[var(--color-accent-custom,#22C55E)]",
-  confirmClassName = "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white",
+  confirmClassName = "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white",
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={confirming ? undefined : onCancel}
@@ -79,6 +81,7 @@ export function ConfirmDialog({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

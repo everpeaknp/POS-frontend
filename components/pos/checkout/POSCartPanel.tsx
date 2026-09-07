@@ -244,7 +244,7 @@ export function POSCartPanel({
           <Button
             onClick={onShowCheckoutDialog}
             disabled={!openSession}
-            className="w-full h-12 text-base font-bold bg-gradient-to-r from-[var(--color-accent-custom-600,#16a34a)] to-emerald-600 hover:from-[var(--color-accent-custom-700,#15803d)] hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all"
+            className="w-full h-12 text-base font-bold bg-[var(--color-accent-custom-600,#16a34a)] hover:bg-[var(--color-accent-custom-700,#15803d)] text-white shadow-lg hover:shadow-xl transition-all"
           >
             <Receipt className="h-5 w-5 mr-2" />
             Complete Sale · Rs. {total.toFixed(0)}

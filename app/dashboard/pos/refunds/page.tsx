@@ -166,7 +166,7 @@ export default function POSRefundsPage() {
         subtitle="View and manage product returns"
         actions={
           <Link href="/dashboard/pos/refunds/new">
-            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2">
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2">
               <Plus className="h-4 w-4" />
               New Refund
             </Button>

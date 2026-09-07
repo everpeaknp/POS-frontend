@@ -10,7 +10,6 @@ import {
   Copy,
   Trash2,
   ChevronDownIcon,
-  Loader2,
 } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
@@ -158,7 +157,7 @@ export default function HardwareRateBoardPage() {
                 setPrefillProduct(null);
                 setShowDialog(true);
               }}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2"
             >
               <Plus className="h-4 w-4" />
               Update Rate
@@ -494,11 +493,11 @@ function UpdateRateDialog({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving}
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
+            loading={saving}
+            loadingText="Saving..."
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2"
           >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {saving ? "Saving..." : "Save Rate"}
+            Save Rate
           </Button>
         </DialogFooter>
       </DialogContent>

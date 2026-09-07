@@ -337,7 +337,7 @@ export default function ProfitLossPage() {
                   <Button
                     onClick={fetchProfitLoss}
                     disabled={loading}
-                    className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
+                    className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6"
                   >
                     {loading ? "Generating..." : "Generate"}
                   </Button>

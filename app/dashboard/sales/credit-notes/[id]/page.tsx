@@ -162,7 +162,7 @@ export default function CreditNoteDetailPage() {
                 <Button
                   variant="link"
                   onClick={() => router.push(`/dashboard/sales/invoices/${creditNote.invoice}`)}
-                  className="p-0 h-auto text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium"
+                  className="p-0 h-auto text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium"
                 >
                   {creditNote.invoice_number}
                 </Button>

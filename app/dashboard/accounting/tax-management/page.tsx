@@ -186,7 +186,7 @@ function TaxManagementContent() {
             confirmLabel: "File Return",
             icon: <FileText className="h-5 w-5" />,
             iconWrapperClassName: "bg-[var(--color-accent-custom,#22C55E)]/15 text-[var(--color-accent-custom,#22C55E)]",
-            confirmClassName: "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white",
+            confirmClassName: "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white",
           }
         : confirmAction?.kind === "mark-paid"
           ? {
@@ -195,7 +195,7 @@ function TaxManagementContent() {
               confirmLabel: "Mark as Paid",
               icon: <CheckCircle2 className="h-5 w-5" />,
               iconWrapperClassName: "bg-[var(--color-accent-custom,#22C55E)]/15 text-[var(--color-accent-custom,#22C55E)]",
-              confirmClassName: "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white",
+              confirmClassName: "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white",
             }
           : null;
 
@@ -298,13 +298,13 @@ function TaxManagementContent() {
           </div>
           {tab === "Tax Rules" ? (
             <Link href="/dashboard/accounting/tax-management/new" className="shrink-0">
-              <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> Add Tax Rule
               </Button>
             </Link>
           ) : (
             <Link href="/dashboard/accounting/tax-management/returns/new" className="shrink-0">
-              <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> New VAT Return
               </Button>
             </Link>
@@ -472,7 +472,7 @@ function TaxManagementContent() {
                                     <span className="text-gray-300">|</span>
                                     <button
                                       onClick={() => handleMarkPaid(vat.id)}
-                                      className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
+                                      className="text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)]"
                                     >
                                       Mark Paid
                                     </button>

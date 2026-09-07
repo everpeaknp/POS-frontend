@@ -155,7 +155,7 @@ export default function VehiclesPage() {
           </div>
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             Add Vehicle
@@ -172,7 +172,7 @@ export default function VehiclesPage() {
             {!searchTerm && !statusFilter && (
               <Button
                 onClick={() => setShowForm(true)}
-                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Add First Vehicle
               </Button>

@@ -299,7 +299,7 @@ export default function StockAdjustmentPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -358,7 +358,7 @@ export default function StockAdjustmentPage() {
             />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> New Adjustment
             </Button>
           </div>
@@ -503,7 +503,7 @@ export default function StockAdjustmentPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

@@ -190,7 +190,7 @@ export default function ConstructionReportsPage() {
             <button
               onClick={generateReport}
               disabled={!selectedSite || loading}
-              className="w-full px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {loading ? 'Generating...' : 'Generate Report'}
             </button>
@@ -283,7 +283,7 @@ export default function ConstructionReportsPage() {
             <button
               onClick={loadPayrollSummary}
               disabled={!payrollSite || loadingPayroll}
-              className="w-full px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {loadingPayroll ? 'Loading...' : 'Load Payroll'}
             </button>

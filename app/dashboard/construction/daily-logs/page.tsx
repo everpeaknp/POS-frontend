@@ -217,7 +217,7 @@ export default function DailyLogsPage() {
             </Select>
           </div>
           <Link href="/dashboard/construction/daily-logs/new">
-            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Daily Log
             </Button>
           </Link>

@@ -32,7 +32,7 @@ interface PersonalFormProps {
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground border-b border-gray-100 dark:border-border pb-2">{title}</h3>
       <div className="space-y-4">{children}</div>
     </section>
   );
@@ -43,11 +43,11 @@ function FieldGroup({ label, required, children, hint }: {
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-gray-700">
+      <Label className="text-sm font-medium text-gray-700 dark:text-foreground">
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
       {children}
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-gray-400 dark:text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -111,7 +111,7 @@ export function PersonalForm({
     }
   };
 
-  const inputCls = "h-11 w-full rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/15 focus-visible:ring-3 text-sm";
+  const inputCls = "h-11 w-full rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/15 focus-visible:ring-3 text-sm";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
@@ -139,37 +139,37 @@ export function PersonalForm({
               />
             </FieldGroup>
 
-            <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-              <p className="text-xs font-medium text-green-800 mb-1">Your workspace URL</p>
-              <p className="text-sm font-mono text-[#16A34A] break-all">{workspaceUrl}</p>
+            <div className="rounded-lg border border-[var(--color-accent-custom-100,#dcfce7)] dark:border-[var(--color-accent-custom-900,#14532d)] bg-[var(--color-accent-custom-50,#f0fdf4)]/80 dark:bg-[var(--color-accent-custom-950,#052e16)]/30 px-4 py-3">
+              <p className="text-xs font-medium text-[var(--color-accent-custom-800,#166534)] dark:text-[var(--color-accent-custom-300,#86efac)] mb-1">Your workspace URL</p>
+              <p className="text-sm font-mono text-[var(--color-accent-custom-600,#16A34A)] dark:text-[var(--color-accent-custom-400,#4ade80)] break-all">{workspaceUrl}</p>
             </div>
           </FormSection>
         </div>
       </div>
 
       {/* Agreement */}
-      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-green-100 bg-green-50/50">
+      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-[var(--color-accent-custom-100,#dcfce7)] dark:border-[var(--color-accent-custom-900,#14532d)] bg-[var(--color-accent-custom-50,#f0fdf4)]/50 dark:bg-[var(--color-accent-custom-950,#052e16)]/20">
         <Checkbox
           id="terms"
           checked={form.agreeToTerms}
           onCheckedChange={(checked) => setForm({ ...form, agreeToTerms: checked === true })}
           className="mt-0.5 data-[state=checked]:bg-[var(--color-accent-custom,#22C55E)] data-[state=checked]:border-[var(--color-accent-custom,#22C55E)]"
         />
-        <Label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+        <Label htmlFor="terms" className="text-sm text-gray-700 dark:text-muted-foreground leading-relaxed cursor-pointer">
           I agree to Khata.app&apos;s{" "}
-          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[#16A34A]">Terms of Service</a> and{" "}
-          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[#16A34A]">Privacy Policy</a>
+          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[var(--color-accent-custom-600,#16A34A)]">Terms of Service</a> and{" "}
+          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[var(--color-accent-custom-600,#16A34A)]">Privacy Policy</a>
         </Label>
       </div>
 
       {/* Submit Button */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-gray-100">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-gray-100 dark:border-border">
         {showBackButton && (
           <Button
             type="button"
             variant="secondary"
             onClick={() => (onBack ? onBack() : router.back())}
-            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
+            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-muted dark:hover:bg-muted/80 text-gray-900 dark:text-foreground border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
@@ -178,7 +178,7 @@ export function PersonalForm({
         <Button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-green-500/20"
+          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md"
         >
           {submitLabel || "Continue"} <ArrowRight className="h-4 w-4" />
         </Button>

@@ -32,17 +32,19 @@ export default function OrganizationModulesPage() {
   const canEdit = isTenantOrgAdmin(tenantMeta?.user_role);
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
 
+  const accountType = user?.tenant?.account_type;
+
   const enabledCount = useMemo(
-    () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id)).length,
-    [activeModules]
+    () => ORG_MODULE_CATALOG.filter((m) => isModuleActive(activeModules, m.id, accountType)).length,
+    [activeModules, accountType]
   );
 
   const optionalEnabled = useMemo(
     () =>
       ORG_MODULE_CATALOG.filter(
-        (m) => !isRequiredModule(m.id) && isModuleInActiveList(activeModules, m.id)
+        (m) => !isRequiredModule(m.id, accountType) && isModuleInActiveList(activeModules, m.id)
       ).length,
-    [activeModules]
+    [activeModules, accountType]
   );
 
   const loadTenantData = useCallback(async () => {
@@ -113,7 +115,7 @@ export default function OrganizationModulesPage() {
             </p>
             <Link
               href="/erp"
-              className="inline-flex mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
+              className="inline-flex mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)]"
             >
               Go to ERP
             </Link>
@@ -144,7 +146,7 @@ export default function OrganizationModulesPage() {
             </div>
             <Link
               href="/dashboard/settings/org"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)]"
             >
               Organization settings
               <ChevronRight className="h-3.5 w-3.5" />

@@ -140,7 +140,7 @@ export default function QuotationsPage() {
               toast.dismiss(t.id);
               confirmConvert();
             }}
-            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-custom,#22C55E)] rounded-lg hover:bg-[#16A34A] transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-custom,#22C55E)] rounded-lg hover:bg-[var(--color-accent-custom-600,#16A34A)] transition-colors"
           >
             Convert
           </button>
@@ -231,7 +231,7 @@ export default function QuotationsPage() {
             </Select>
           </div>
           <Link href="/dashboard/sales/quotations/new">
-            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
               <Plus className="h-4 w-4" /> New Quotation
             </Button>
           </Link>

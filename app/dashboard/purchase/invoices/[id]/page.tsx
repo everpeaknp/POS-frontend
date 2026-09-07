@@ -162,7 +162,7 @@ export default function PurchaseInvoiceDetailPage() {
           {canRecordPayment && (
             <Button
               size="sm"
-              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-8 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
               onClick={() => {
                 setPaymentForm((prev) => ({ ...prev, amount: invoice.balance }));
                 setPayModal(true);
@@ -317,7 +317,7 @@ export default function PurchaseInvoiceDetailPage() {
               <Button
                 onClick={handleRecordPayment}
                 disabled={submitting}
-                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Save Payment
               </Button>

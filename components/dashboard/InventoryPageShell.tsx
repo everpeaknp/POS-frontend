@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { DashboardShellLoading } from "@/components/dashboard/DashboardShellLoading";
+import { SkeletonListPage } from "@/components/shared/Skeleton";
+import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
 import { Button } from "@/components/ui/button";
 
 interface InventoryPageShellProps {
@@ -30,16 +33,16 @@ export function InventoryPageShell({
   action,
   children,
   loading,
-  loadingMessage = "Loading…",
   error,
   onRetry,
   variant = "default",
 }: InventoryPageShellProps) {
+  const showSkeleton = useDelayedLoading(!!loading);
   if (loading) {
     return (
-      <div className="flex flex-col h-full min-h-0 w-full">
+      <div className="flex flex-col h-full min-h-0 w-full" aria-busy="true">
         <DashHeader title={title} subtitle={subtitle} />
-        <DashboardShellLoading message={loadingMessage} />
+        {showSkeleton && <SkeletonListPage />}
       </div>
     );
   }
@@ -93,7 +96,7 @@ export function InventoryPageShell({
           <div className={`${inventoryCardClass} p-12 text-center`}>
             <p className="text-gray-600 dark:text-muted-foreground mb-4">{error}</p>
             {onRetry && (
-              <Button onClick={onRetry} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">
+              <Button onClick={onRetry} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white">
                 Try again
               </Button>
             )}

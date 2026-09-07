@@ -80,7 +80,7 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                 const itemCount = order.items.length;
                 
                 return (
-                  <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-colors">
+                  <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-[var(--color-accent-custom-300,#86efac)] transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="font-semibold text-sm">
@@ -128,7 +128,7 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                           onResume(order);
                           onOpenChange(false);
                         }}
-                        className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
+                        className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]"
                       >
                         <Play className="h-4 w-4 mr-1" />
                         Resume

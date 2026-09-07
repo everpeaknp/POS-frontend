@@ -140,7 +140,7 @@ export default function BankAccountDetailPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-4">{error || 'Account not found'}</p>
-            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">
+            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white">
               Back to Bank Accounts
             </Button>
           </div>
@@ -232,7 +232,7 @@ export default function BankAccountDetailPage() {
                 >
                   <CheckCircle className="h-3.5 w-3.5" /> Reconcile
                 </Button>
-                <Button size="sm" className="gap-1.5 h-8 text-xs bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" onClick={() => setShowAddTx((v) => !v)}>
+                <Button size="sm" className="gap-1.5 h-8 text-xs bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white" onClick={() => setShowAddTx((v) => !v)}>
                   <Plus className="h-3.5 w-3.5" /> Add Transaction
                 </Button>
               </div>
@@ -266,7 +266,7 @@ export default function BankAccountDetailPage() {
                   <Input type="number" step="0.01" min="0" className="h-9 text-sm mt-1" value={txForm.amount} onChange={(e) => setTxForm((f) => ({ ...f, amount: e.target.value }))} />
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button type="submit" size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" disabled={savingTx}>
+                  <Button type="submit" size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white" disabled={savingTx}>
                     {savingTx ? "Saving..." : "Save"}
                   </Button>
                   <Button type="button" size="sm" variant="ghost" onClick={() => setShowAddTx(false)}>Cancel</Button>

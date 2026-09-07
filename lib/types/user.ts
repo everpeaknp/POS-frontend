@@ -100,4 +100,12 @@ export interface AppearancePreferences {
   navbar_position: 'left' | 'top';
   /** Dynamic accent color (optional, for future premium feature) */
   accent_color?: string;
+  /** Custom sidebar background color (optional; defaults to the built-in navy) */
+  sidebar_color?: string;
+  /** Custom navbar/icon-rail background color (optional; defaults to the theme-neutral card color) */
+  navbar_color?: string;
+  /** Custom global corner radius (optional CSS length, e.g. "0.625rem" or "9999px") */
+  border_radius?: string;
+  /** Boost border/text contrast for low-vision accessibility */
+  high_contrast?: boolean;
 }

@@ -210,7 +210,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
           <>
             <Button 
               size="sm" 
-              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white text-xs font-semibold h-9 gap-1.5"
+              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenKhata}
             >
               <ExternalLink className="h-3 w-3" /> Open Khata

@@ -47,7 +47,7 @@ export default function EditWorkerPage() {
         <div className={`${constructionCardClass} p-8 text-center w-full`}>
           <Link
             href="/dashboard/construction/workers"
-            className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium"
+            className="text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium"
           >
             Back to Workers
           </Link>

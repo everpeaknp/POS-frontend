@@ -137,7 +137,7 @@ export default function PurchaseInvoicesPage() {
           <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200 gap-1.5" onClick={handleExportCsv}>
             <Download className="h-4 w-4" /> Export CSV
           </Button>
-          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/invoices/new")}>
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/invoices/new")}>
             <Plus className="h-4 w-4" /> New Invoice
           </Button>
         </div>

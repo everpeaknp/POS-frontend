@@ -115,7 +115,7 @@ export default function HardwareCustomersPage() {
           </Select>
         </div>
         <Link href="/dashboard/hardware/customers/new">
-          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5 shrink-0">
             <Plus className="h-4 w-4" /> New Customer
           </Button>
         </Link>
@@ -177,7 +177,7 @@ export default function HardwareCustomersPage() {
                           e.stopPropagation();
                           router.push(`/dashboard/hardware/customers/${customer.id}`);
                         }}
-                        className="text-sm text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium"
+                        className="text-sm text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium"
                       >
                         View
                       </button>

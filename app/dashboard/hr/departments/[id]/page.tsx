@@ -122,7 +122,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             The department you are looking for does not exist.
           </p>
           <Link href="/dashboard/hr/departments">
-            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">View all departments</Button>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white">View all departments</Button>
           </Link>
         </div>
       </HRPageShell>

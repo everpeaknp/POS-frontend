@@ -88,7 +88,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             The employee you are looking for does not exist.
           </p>
           <Link href="/dashboard/hr/employees">
-            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white">View all employees</Button>
+            <Button className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white">View all employees</Button>
           </Link>
         </div>
       </HRPageShell>

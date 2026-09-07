@@ -6,6 +6,7 @@ import { Building2, ChevronDown, LogOut, User } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getMediaUrl } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 interface UserMenuDropdownProps {
   showUserDetails?: boolean;
@@ -31,6 +32,7 @@ export function UserMenuDropdown({
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -134,7 +136,10 @@ export function UserMenuDropdown({
             </button>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => {
+                setOpen(false);
+                setShowLogoutConfirm(true);
+              }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
             >
               <LogOut className="h-4 w-4 shrink-0" />
@@ -143,6 +148,21 @@ export function UserMenuDropdown({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Log out?"
+        description="You'll need to sign in again to access your account."
+        confirmLabel="Log out"
+        icon={<LogOut className="h-5 w-5" />}
+        iconWrapperClassName="bg-red-500/15 text-red-500"
+        confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          handleLogout();
+        }}
+      />
     </div>
   );
 }

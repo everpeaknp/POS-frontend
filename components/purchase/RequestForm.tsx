@@ -372,7 +372,7 @@ export default function RequestForm({
           <button
             type="button"
             onClick={() => append({ product: '', description: '', quantity: '', estimated_unit_price: '' })}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-700,#15803d)] transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Item
@@ -499,7 +499,7 @@ export default function RequestForm({
           type="submit"
           disabled={isSubmitting}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
+        >
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Request' : 'Create Request'}
         </button>
         

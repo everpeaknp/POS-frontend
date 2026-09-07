@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Send, Loader2, X, Copy, Check } from "lucide-react";
+import { Sparkles, Send, X, Copy, Check } from "lucide-react";
+import { KhataSpinner } from "@/components/shared/KhataSpinner";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useDesktopWorkspace } from "@/lib/context/DesktopWorkspaceContext";
 import { parseAiIntent, AI_QUICK_PROMPTS, type AiAction } from "@/lib/desktop/ai/intent-router";
@@ -159,8 +160,8 @@ export function AICommandCenter() {
             </div>
           ))}
           {busy && (
-            <div className="flex items-center gap-2 text-white/50 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
+            <div className="flex items-center gap-2 text-white/50 text-sm" role="status" aria-live="polite">
+              <KhataSpinner size="xs" variant="muted" /> Thinking…
             </div>
           )}
           <div ref={bottomRef} />

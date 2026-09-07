@@ -88,7 +88,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("file")}
-        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
       >
         File Return
       </Button>
@@ -96,7 +96,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("mark-paid")}
-        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
       >
         Mark as Paid
       </Button>

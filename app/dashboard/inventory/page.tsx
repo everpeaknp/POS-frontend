@@ -184,7 +184,7 @@ export default function InventoryDashboardPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-lg hover:bg-[var(--color-accent-custom-600,#16A34A)]"
             >
               Retry
             </button>
@@ -428,7 +428,7 @@ export default function InventoryDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Low Stock Alerts</h3>
               <Link
                 href="/dashboard/inventory/products"
-                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
               >
                 Manage products
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -489,7 +489,7 @@ export default function InventoryDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Top Products by Value</h3>
               <Link
                 href="/dashboard/inventory/reports"
-                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
               >
                 View reports
                 <ChevronRight className="h-3.5 w-3.5" />

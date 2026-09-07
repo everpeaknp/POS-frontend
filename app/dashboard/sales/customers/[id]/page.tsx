@@ -81,7 +81,7 @@ export default function CustomerProfilePage() {
                 </div>
               </div>
               <Link href={`/dashboard/sales/customers/${customer.id}/edit`}>
-                <Button size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2">
+                <Button size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-2">
                   <Edit className="h-4 w-4" />
                   Edit
                 </Button>

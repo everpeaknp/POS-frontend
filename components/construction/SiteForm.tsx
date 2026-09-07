@@ -393,7 +393,7 @@ export default function SiteForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
 
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Site' : 'Create Site'}

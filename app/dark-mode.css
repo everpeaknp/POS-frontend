@@ -248,7 +248,7 @@ html.dark .hover\:bg-gray-50\/50:hover {
 
 /* Scrollbars */
 html.dark .scrollbar-green {
-  scrollbar-color: #15803d rgba(255, 255, 255, 0.08);
+  scrollbar-color: var(--color-accent-custom-700,#15803d) rgba(255, 255, 255, 0.08);
 }
 
 html.dark .scrollbar-green::-webkit-scrollbar-track {
@@ -259,7 +259,7 @@ html.dark .overflow-y-auto,
 html.dark .overflow-x-auto,
 html.dark .overflow-auto,
 html.dark .overflow-scroll {
-  scrollbar-color: #15803d rgba(255, 255, 255, 0.08);
+  scrollbar-color: var(--color-accent-custom-700,#15803d) rgba(255, 255, 255, 0.08);
 }
 
 html.dark .overflow-y-auto::-webkit-scrollbar-track,

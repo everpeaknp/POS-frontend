@@ -160,18 +160,21 @@ export default function NotificationsPage() {
       description: "Show browser alerts while Khata is open",
       icon: Bell,
       key: "push_desktop" as const,
+      comingSoon: false,
     },
     {
       title: "Mobile notifications",
-      description: "Push alerts on mobile devices when available",
+      description: "Coming soon — no mobile app is available yet",
       icon: Smartphone,
       key: "push_mobile" as const,
+      comingSoon: true,
     },
     {
       title: "Sound alerts",
       description: "Play a sound for important desktop alerts",
       icon: Volume2,
       key: "push_sound" as const,
+      comingSoon: false,
     },
   ];
 
@@ -226,7 +229,7 @@ export default function NotificationsPage() {
             <SettingsCardHeader
               icon={Mail}
               title="Email notifications"
-              description="Saved for email delivery when outbound mail is configured"
+              description="Delivered to your inbox by email"
               action={
                 <div className="flex gap-2">
                   <Button type="button" size="sm" variant="outline" onClick={() => setAllEmail(true)}>
@@ -273,6 +276,7 @@ export default function NotificationsPage() {
                     checked={preferences[item.key]}
                     disabled={
                       savingKey === item.key ||
+                      item.comingSoon ||
                       (item.key === "push_desktop" && !getBrowserNotificationSupport())
                     }
                     onChange={() => handleToggle(item.key)}

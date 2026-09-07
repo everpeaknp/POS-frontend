@@ -165,7 +165,7 @@ export function SplitPaymentDialog({ open, onOpenChange, totalAmount, onConfirm 
           <Button 
             onClick={handleConfirm}
             disabled={paidTotal < totalAmount}
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]"
           >
             Confirm Split Payment
           </Button>

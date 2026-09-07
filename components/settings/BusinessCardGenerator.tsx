@@ -1710,7 +1710,7 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
             {/* Actions */}
             <div className="flex gap-2 pt-2">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex-1 h-10 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white rounded-lg inline-flex items-center justify-center font-medium disabled:opacity-50" disabled={downloading}>
+                <DropdownMenuTrigger className="flex-1 h-10 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white rounded-lg inline-flex items-center justify-center font-medium disabled:opacity-50" disabled={downloading}>
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </DropdownMenuTrigger>

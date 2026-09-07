@@ -248,7 +248,7 @@ export default function CategoryPage() {
                       variant={category.type === "income" ? "default" : "secondary"}
                       className={
                         category.type === "income"
-                          ? "bg-green-100 text-[var(--color-accent-custom,#22C55E)] hover:bg-green-100"
+                          ? "bg-green-100 text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-100,#dcfce7)]"
                           : "bg-red-100 text-red-600 hover:bg-red-100"
                       }
                     >

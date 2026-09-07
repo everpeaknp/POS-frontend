@@ -326,7 +326,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
@@ -365,7 +365,7 @@ export default function CategoriesPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedCategories.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> Add Category
             </Button>
           </div>
@@ -495,7 +495,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}

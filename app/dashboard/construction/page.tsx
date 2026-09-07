@@ -354,7 +354,7 @@ export default function ConstructionDashboardPage() {
             <h2 className="text-sm font-semibold text-gray-700 dark:text-foreground">Active Construction Sites</h2>
             <Link
               href="/dashboard/construction/sites"
-              className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
             >
               View all
               <ChevronRight className="h-3.5 w-3.5" />

@@ -684,7 +684,7 @@ export function BarcodeScannerModal({
                 <div className="flex gap-2">
                   <Button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+                    className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-700,#15803d)] text-white gap-2"
                     size="sm"
                   >
                     <Plus className="h-4 w-4" />
@@ -746,7 +746,7 @@ export function BarcodeScannerModal({
                       <Button
                         onClick={() => handleAction("sold")}
                         disabled={processing}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+                        className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-700,#15803d)] text-white gap-2"
                       >
                         <TrendingDown className="h-4 w-4" />
                         Sold

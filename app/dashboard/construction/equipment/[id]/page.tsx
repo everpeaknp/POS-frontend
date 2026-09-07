@@ -522,7 +522,7 @@ export default function EquipmentDetailPage() {
                     {equipment.assigned_site && equipment.assigned_site_name ? (
                       <Link
                         href={`/dashboard/construction/sites/${equipment.assigned_site}`}
-                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
+                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] transition-colors"
                       >
                         {equipment.assigned_site_name}
                       </Link>

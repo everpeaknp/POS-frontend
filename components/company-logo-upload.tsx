@@ -124,7 +124,7 @@ export function CompanyLogoUpload({
             {!disabled && (
               <div>
                 <label htmlFor="company-logo-upload" className="cursor-pointer">
-                  <span className="text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]">
+                  <span className="text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)]">
                     Upload a logo
                   </span>
                   <input

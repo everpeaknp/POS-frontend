@@ -285,14 +285,14 @@ export default function NewPurchaseRequestPage() {
             <Button 
               variant="outline" 
               onClick={() => handleSubmit('Draft')}
-              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50"
+              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
               disabled={submitting}
             >
               Save Draft
             </Button>
             <Button 
               onClick={() => handleSubmit('Pending Approval')}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               disabled={submitting}
             >
               Submit for Approval

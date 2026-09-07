@@ -64,7 +64,7 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
   }, [accountType]);
 
   const toggleModule = (moduleId: string) => {
-    if (isRequiredModule(moduleId)) {
+    if (isRequiredModule(moduleId, accountType)) {
       toast.error("Core modules are always included");
       return;
     }
@@ -96,13 +96,13 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
         }}
         className={`group flex items-start gap-3 rounded-2xl border px-4 py-4 transition-all ${
           isSelected
-            ? "border-2 border-[var(--color-accent-custom,#22C55E)] bg-green-50/80 cursor-pointer shadow-sm shadow-green-500/10"
-            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+            ? "border-2 border-[var(--color-accent-custom,#22C55E)] bg-[var(--color-accent-custom-50,#f0fdf4)]/80 dark:bg-[var(--color-accent-custom-950,#052e16)]/30 cursor-pointer shadow-sm shadow-green-500/10"
+            : "border-gray-200 dark:border-border bg-white dark:bg-card hover:border-gray-300 dark:hover:border-muted-foreground/40 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
         }`}
       >
         <div
           className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            isSelected ? "bg-[var(--color-accent-custom,#22C55E)]/15 text-[#16A34A]" : "bg-gray-100 text-gray-500"
+            isSelected ? "bg-[var(--color-accent-custom,#22C55E)]/15 text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)]" : "bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground"
           }`}
         >
           <IconComponent className="h-[18px] w-[18px]" />
@@ -110,19 +110,19 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-gray-900">{module.name}</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground">{module.name}</h3>
             {isRequired && (
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+              <span className="rounded-full bg-gray-100 dark:bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
                 Always on
               </span>
             )}
             {!isRequired && module.recommended && (
-              <span className="rounded-full bg-[var(--color-accent-custom,#22C55E)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
+              <span className="rounded-full bg-[var(--color-accent-custom,#22C55E)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)]">
                 Recommended
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-gray-500 leading-relaxed line-clamp-2">
+          <p className="mt-1 text-xs text-gray-500 dark:text-muted-foreground leading-relaxed line-clamp-2">
             {module.description}
           </p>
         </div>
@@ -146,7 +146,7 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
 
   if (allowedModules === null) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500 dark:text-muted-foreground">
         <p className="text-sm">Loading available modules…</p>
       </div>
     );
@@ -154,12 +154,12 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-5 border-b border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-5 border-b border-gray-100 dark:border-border">
         <div>
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-gray-900 dark:text-foreground">
             {selectedModules.length} modules selected
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
             All modules available - no restrictions
           </p>
         </div>
@@ -169,10 +169,10 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
         {getModuleCatalogSections(accountType).map((section) => (
           <section key={section.key} className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
                 {section.label}
               </h3>
-              <span className="text-xs text-gray-400 tabular-nums">
+              <span className="text-xs text-gray-400 dark:text-muted-foreground tabular-nums">
                 {section.modules.filter((m) => selectedModules.includes(m.id)).length}/
                 {section.modules.length}
               </span>

@@ -74,7 +74,7 @@ export function POSActionBar({
           size="sm"
           variant={splitPaymentMode ? "default" : "outline"}
           onClick={onToggleSplitPayment}
-          className={`gap-1 ${splitPaymentMode ? 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]' : ''}`}
+          className={`gap-1 ${splitPaymentMode ? 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]' : ''}`}
         >
           Split Payment
           {splitPaymentMode && payments.length > 0 && (

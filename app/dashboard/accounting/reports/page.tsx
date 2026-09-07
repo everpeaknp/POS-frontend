@@ -258,7 +258,7 @@ export default function AccountingReportsPage() {
             key={t.id}
             variant={tab === t.id ? "default" : "outline"}
             size="sm"
-            className={tab === t.id ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]" : ""}
+            className={tab === t.id ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]" : ""}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -284,7 +284,7 @@ export default function AccountingReportsPage() {
             <Button
               onClick={runReport}
               disabled={loading}
-              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white shrink-0"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white shrink-0"
             >
               <FileText className="h-4 w-4 mr-1" />
               {loading ? "Generating…" : "Generate"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDownIcon, Loader2, Package } from "lucide-react";
+import { ChevronDownIcon, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,11 +315,13 @@ export function DeliveryFormDialog({ open, onOpenChange, onSuccess }: DeliveryFo
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving || loadingOptions}
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
+            disabled={loadingOptions}
+            loading={saving}
+            loadingText="Creating..."
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
-            {saving ? "Creating..." : "Create Delivery"}
+            <Package className="h-4 w-4" />
+            Create Delivery
           </Button>
         </DialogFooter>
       </DialogContent>

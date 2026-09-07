@@ -184,7 +184,7 @@ export default function RentalsPage() {
                 setEditingRental(null);
                 setShowForm(true);
               }}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-2"
             >
               <Plus className="h-4 w-4" />
               Rent Out Equipment
@@ -205,7 +205,7 @@ export default function RentalsPage() {
                   setEditingRental(null);
                   setShowForm(true);
                 }}
-                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Rent Out Your First Item
               </Button>
@@ -321,7 +321,7 @@ export default function RentalsPage() {
             <Button
               onClick={confirmMarkReturned}
               disabled={returningId !== null}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {returningId !== null ? "Saving..." : "Mark Returned"}
             </Button>

@@ -497,7 +497,7 @@ export default function SiteDetailPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:bg-green-50/50 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[var(--color-accent-custom,#22C55E)]/30 hover:bg-[var(--color-accent-custom-50,#f0fdf4)]/50 hover:text-[var(--color-accent-custom,#22C55E)] transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                   {label}

@@ -79,7 +79,7 @@ export default function DebitNotesPage() {
             <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm border-gray-200" placeholder="Search debit notes..." />
           </div>
           <div className="flex-1" />
-          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/debit-notes/new")}>
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/debit-notes/new")}>
             <Plus className="h-4 w-4" /> New Debit Note
           </Button>
         </div>

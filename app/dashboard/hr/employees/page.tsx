@@ -169,7 +169,7 @@ export default function EmployeesPage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/employees/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Employee
           </Button>
         </Link>

@@ -516,7 +516,7 @@ export default function DailyLogDetailPage() {
                     {log.site ? (
                       <Link
                         href={`/dashboard/construction/sites/${log.site}`}
-                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
+                        className="text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] transition-colors"
                       >
                         {log.site_name}
                       </Link>

@@ -176,7 +176,7 @@ export default function ProfilePage() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="bg-[var(--color-accent-custom,#22C55E)] px-6 text-white hover:bg-[#16A34A]"
+                    className="bg-[var(--color-accent-custom,#22C55E)] px-6 text-white hover:bg-[var(--color-accent-custom-600,#16A34A)]"
                   >
                     {isLoading ? "Saving..." : (
                       "Save changes"

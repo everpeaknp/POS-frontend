@@ -332,7 +332,7 @@ export function RentalForm({ open, onClose, rental, onSuccess }: RentalFormProps
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 {loading ? "Saving..." : rental ? "Update Rental" : "Check Out"}
               </Button>

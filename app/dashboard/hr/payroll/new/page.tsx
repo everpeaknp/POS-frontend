@@ -101,7 +101,7 @@ export default function RunPayrollPage() {
                 <Button
                   onClick={handleCalculate}
                   disabled={!month || loading}
-                  className="w-full h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                  className="w-full h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                 >
                   {loading ? "Calculating..." : "Calculate Payroll"}
                 </Button>
@@ -176,7 +176,7 @@ export default function RunPayrollPage() {
               >
                 Back
               </Button>
-              <Button onClick={handleProcess} disabled={loading} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6">
+              <Button onClick={handleProcess} disabled={loading} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6">
                 {loading ? "Processing..." : "Process Payroll"}
               </Button>
             </div>

@@ -304,7 +304,7 @@ export default function NewQuotationPage() {
                       <Button 
                         type="button"
                         onClick={handleCreateCustomer}
-                        className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                        className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                         disabled={creatingCustomer}
                       >
                         {creatingCustomer ? "Creating..." : (
@@ -372,7 +372,7 @@ export default function NewQuotationPage() {
             <Button 
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {submitting ? "Creating..." : (
                 'Create Quotation'

@@ -412,7 +412,7 @@ function ErpPageContent() {
                         <div className="flex gap-2 shrink-0">
                           <Button
                             onClick={() => handleAcceptInvitation(invitation.id)}
-                            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 h-9"
+                            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5 h-9"
                           >
                             <Check className="h-4 w-4" />
                             Accept
@@ -442,7 +442,7 @@ function ErpPageContent() {
         <button
           type="button"
           onClick={handleCreateOrganization}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
+          className="fixed bottom-8 right-8 w-14 h-14 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
           aria-label="Add new workplace"
         >
           <Plus className="h-6 w-6" />

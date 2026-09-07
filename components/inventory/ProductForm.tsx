@@ -837,7 +837,7 @@ export default function ProductForm({
         <Button
           type="submit"
           disabled={isSubmitting || hasMissingData}
-          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
+          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6"
         >
           {isSubmitting ? "Saving..." : isEdit ? (
             'Update Product'
@@ -897,7 +897,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingCategory ? "Creating..." : (
                 'Create Category'
@@ -959,7 +959,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingUnit ? "Creating..." : (
                 'Create Unit'

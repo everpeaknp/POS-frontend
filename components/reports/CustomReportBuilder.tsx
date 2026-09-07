@@ -229,7 +229,7 @@ export function CustomReportBuilder({
                 }
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   formData.module === mod.value
-                    ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 dark:bg-green-500/10"
+                    ? "border-[var(--color-accent-custom,#22C55E)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom,#22c55e)]/10"
                     : "border-gray-200 dark:border-border hover:border-gray-300"
                 }`}
               >
@@ -259,7 +259,7 @@ export function CustomReportBuilder({
                       key={field.key}
                       type="button"
                       onClick={() => addField(field.key)}
-                      className="w-full text-left p-2 bg-gray-50 dark:bg-muted rounded text-sm hover:bg-green-50 dark:hover:bg-green-500/10"
+                      className="w-full text-left p-2 bg-gray-50 dark:bg-muted rounded text-sm hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-500,#22c55e)]/10"
                     >
                       {field.label}
                       <span className="text-xs text-gray-400 ml-2">({field.type})</span>
@@ -562,7 +562,7 @@ export function CustomReportBuilder({
             <Button
               type="button"
               onClick={goNext}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               disabled={loading}
             >
               Next
@@ -572,7 +572,7 @@ export function CustomReportBuilder({
               <Button
                 type="button"
                 onClick={onSave}
-                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                 disabled={loading || !formData.name}
               >
                 {loading ? "Saving..." : "Save Report"}

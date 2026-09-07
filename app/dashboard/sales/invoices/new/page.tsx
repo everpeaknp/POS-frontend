@@ -291,7 +291,7 @@ export default function NewInvoicePage() {
             </p>
             <Button 
               onClick={() => router.push("/dashboard/sales/customers/new")}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               Create Your First Customer
             </Button>
@@ -344,7 +344,7 @@ export default function NewInvoicePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 px-3 border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 shrink-0"
+                  className="h-9 px-3 border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] shrink-0"
                   onClick={() => setCustomerDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4" />
@@ -459,14 +459,14 @@ export default function NewInvoicePage() {
             </Button>
             <Button 
               variant="outline" 
-              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50"
+              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
               onClick={() => handleSubmit("Sent")}
               disabled={submitting}
             >
               {submitting ? "Sending..." : "Send Invoice"}
             </Button>
             <Button 
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6"
               onClick={() => handleSubmit("Sent", true)}
               disabled={submitting}
             >
@@ -557,7 +557,7 @@ export default function NewInvoicePage() {
               type="button"
               onClick={handleCreateCustomer}
               disabled={creatingCustomer}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingCustomer ? "Creating..." : "Create Customer"}
             </Button>

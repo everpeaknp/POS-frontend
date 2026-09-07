@@ -1,5 +1,8 @@
+"use client";
+
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { DashboardShellLoading } from "@/components/dashboard/DashboardShellLoading";
+import { SkeletonListPage } from "@/components/shared/Skeleton";
+import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
 
 interface PosPageShellProps {
   title: string;
@@ -17,11 +20,16 @@ export function PosPageShell({
   action,
   children,
   loading,
-  loadingMessage,
   variant = "default",
 }: PosPageShellProps) {
+  const showSkeleton = useDelayedLoading(!!loading);
   if (loading) {
-    return <DashboardShellLoading message={loadingMessage} />;
+    return (
+      <div className="flex flex-col h-full min-h-0" aria-busy="true">
+        <DashHeader title={title} subtitle={subtitle} />
+        {showSkeleton && <SkeletonListPage />}
+      </div>
+    );
   }
 
   const contentClass =

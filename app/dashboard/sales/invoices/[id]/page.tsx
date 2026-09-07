@@ -149,7 +149,7 @@ export default function InvoiceDetailPage() {
           {invoice.balance > 0 && invoice.status !== "Paid" && (
             <Button
               onClick={() => setPaymentOpen(true)}
-              className="gap-2 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="gap-2 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               <DollarSign className="h-4 w-4" />
               Record Payment
@@ -232,7 +232,7 @@ export default function InvoiceDetailPage() {
                 <Button
                   variant="link"
                   onClick={() => router.push(`/dashboard/sales/orders/${invoice.sales_order}`)}
-                  className="p-0 h-auto text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A]"
+                  className="p-0 h-auto text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)]"
                 >
                   View Sales Order
                 </Button>

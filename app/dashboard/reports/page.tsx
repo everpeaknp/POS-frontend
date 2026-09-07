@@ -354,7 +354,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/reports/inventory"
-                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -414,7 +414,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/construction/reports"
-                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />

@@ -63,13 +63,13 @@ function DetailRow({
   valueClassName?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-        <Icon className="h-4 w-4 text-gray-500" />
+    <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-border last:border-0">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-muted">
+        <Icon className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className={`text-sm font-medium text-gray-900 mt-0.5 break-words ${valueClassName ?? ""}`}>
+        <p className="text-xs text-gray-500 dark:text-muted-foreground">{label}</p>
+        <p className={`text-sm font-medium text-gray-900 dark:text-foreground mt-0.5 break-words ${valueClassName ?? ""}`}>
           {value}
         </p>
       </div>
@@ -154,7 +154,7 @@ export function OrgReview({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground">
               {isPersonal ? "Your details" : "Organization"}
             </h3>
             <Button
@@ -162,18 +162,18 @@ export function OrgReview({
               variant="ghost"
               size="sm"
               onClick={onEdit}
-              className="h-8 text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] hover:bg-green-50"
+              className="h-8 text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
             >
               Edit
             </Button>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-[#fffdfa] dark:bg-card px-4 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 dark:border-border bg-[#fffdfa] dark:bg-card px-4 shadow-sm">
             <DetailRow icon={Building2} label="Name" value={organizationData.name} />
             <DetailRow
               icon={Globe}
               label="Workspace URL"
               value={workspaceUrl}
-              valueClassName="font-mono text-[#16A34A] text-xs sm:text-sm"
+              valueClassName="font-mono text-[var(--color-accent-custom-600,#16A34A)] dark:text-[var(--color-accent-custom-400,#4ade80)] text-xs sm:text-sm"
             />
             {!isPersonal && (
               <DetailRow
@@ -212,7 +212,7 @@ export function OrgReview({
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground">
               {isPersonal ? "Included" : `Modules (${selectedModules.length})`}
             </h3>
             {!isPersonal && (
@@ -221,7 +221,7 @@ export function OrgReview({
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="h-8 text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] hover:bg-green-50"
+                className="h-8 text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
               >
                 Edit
               </Button>
@@ -236,23 +236,23 @@ export function OrgReview({
               return (
                 <div
                   key={moduleId}
-                  className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-green-50/60 px-3 py-2.5"
+                  className="flex items-center gap-2.5 rounded-lg border border-[var(--color-accent-custom-100,#dcfce7)] dark:border-[var(--color-accent-custom-900,#14532d)] bg-[var(--color-accent-custom-50,#f0fdf4)]/60 dark:bg-[var(--color-accent-custom-950,#052e16)]/30 px-3 py-2.5"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-100">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent-custom-100,#dcfce7)] dark:bg-[var(--color-accent-custom-900,#14532d)]">
                     <IconComponent className="h-4 w-4 text-[var(--color-accent-custom,#22C55E)]" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900 truncate">{moduleName}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-foreground truncate">{moduleName}</span>
                 </div>
               );
             })}
           </div>
           {selectedModules.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-8">No modules selected</p>
+            <p className="text-sm text-gray-500 dark:text-muted-foreground text-center py-8">No modules selected</p>
           )}
         </div>
       </div>
 
-      <p className="text-xs text-gray-500 mt-6 leading-relaxed">
+      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-6 leading-relaxed">
         By creating your organization, you agree to Khata&apos;s Terms of Service and Privacy Policy.
         You can update these settings anytime after setup.
       </p>

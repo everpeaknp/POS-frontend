@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { DashboardShellLoading } from "@/components/dashboard/DashboardShellLoading";
+import { SkeletonListPage } from "@/components/shared/Skeleton";
+import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
 import { Button } from "@/components/ui/button";
 
 interface PurchasePageShellProps {
@@ -28,13 +31,18 @@ export function PurchasePageShell({
   action,
   children,
   loading,
-  loadingMessage,
   error,
   onRetry,
   variant = "default",
 }: PurchasePageShellProps) {
+  const showSkeleton = useDelayedLoading(!!loading);
   if (loading) {
-    return <DashboardShellLoading message={loadingMessage} />;
+    return (
+      <div className="flex flex-col h-full min-h-0" aria-busy="true">
+        <DashHeader title={title} subtitle={subtitle} />
+        {showSkeleton && <SkeletonListPage />}
+      </div>
+    );
   }
 
   const contentClass =
@@ -81,7 +89,7 @@ export function PurchasePageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Try again
               </Button>

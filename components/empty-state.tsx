@@ -57,7 +57,7 @@ export function EmptyState({
       {shouldShowButton && (
         <Button 
           onClick={handleAction}
-          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#22C555] text-white font-semibold mt-1 gap-1.5 h-10 px-5 rounded-lg"
+          className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white font-semibold mt-1 gap-1.5 h-10 px-5 rounded-lg"
         >
           <Plus className="h-4 w-4" /> {buttonText}
         </Button>

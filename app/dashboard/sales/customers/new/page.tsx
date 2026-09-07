@@ -345,7 +345,7 @@ export default function NewCustomerPage() {
             </Button>
             <Button 
               type="submit"
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6"
               disabled={submitting}
             >
               {submitting ? "Creating..." : (

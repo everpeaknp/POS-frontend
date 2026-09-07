@@ -135,7 +135,7 @@ export function ReceiveItemsModal({ open, onClose, order, warehouses = [], onSuc
             <Button
               onClick={handleSave}
               disabled={submitting}
-              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               Confirm Receipt
             </Button>

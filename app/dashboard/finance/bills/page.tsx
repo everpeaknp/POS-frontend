@@ -806,7 +806,7 @@ export default function LoansPage() {
             </div>
             <button
               onClick={() => setShowAddLoanForm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white text-sm font-medium rounded-lg hover:bg-[#16A34A] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-accent-custom-600,#16A34A)] transition-colors"
             >
               <Plus className="h-4 w-4" />
               Add Loan
@@ -988,7 +988,7 @@ export default function LoansPage() {
             <Button type="button" variant="ghost" onClick={() => setShowAddLoanForm(false)} className="text-gray-500">
               Cancel
             </Button>
-            <Button type="button" onClick={handleAddLoan} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white px-6">
+            <Button type="button" onClick={handleAddLoan} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white px-6">
               Save Loan
             </Button>
           </div>

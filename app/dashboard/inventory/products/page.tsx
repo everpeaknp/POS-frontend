@@ -390,7 +390,7 @@ export default function ProductsListPage() {
             <Button
               type="button"
               onClick={() => router.push('/dashboard/inventory/products/new')}
-              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               New Product
@@ -495,7 +495,7 @@ export default function ProductsListPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-gray-500 hover:text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 dark:hover:bg-green-950"
+                              className="h-8 w-8 text-gray-500 hover:text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] dark:hover:bg-[var(--color-accent-custom-950,#052e16)]"
                               onClick={() => router.push(`/dashboard/inventory/products/new?edit=${product.id}`)}
                               title="Edit"
                             >
@@ -547,7 +547,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -589,7 +589,7 @@ export default function ProductsListPage() {
                           ? "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50"
                           : isSelected
                             ? "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-500 shadow-lg ring-2 ring-green-200 dark:ring-green-800"
-                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 hover:shadow-lg hover:scale-[1.02] active:scale-95"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-[var(--color-accent-custom-400,#4ade80)] hover:shadow-lg hover:scale-[1.02] active:scale-95"
                       }
                     `}
                     onClick={() => handleSelectProduct(product.id, !isSelected)}
@@ -665,7 +665,7 @@ export default function ProductsListPage() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-green-400 hover:bg-white/10"
+                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-[var(--color-accent-custom-400,#4ade80)] hover:bg-white/10"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/dashboard/inventory/products/new?edit=${product.id}`);
@@ -720,7 +720,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -756,7 +756,7 @@ export default function ProductsListPage() {
                 setCategoryFilter("all");
                 setCurrentPage(1);
               }}
-              className="mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] hover:underline"
+              className="mt-4 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] hover:underline"
             >
               Clear filters
             </button>

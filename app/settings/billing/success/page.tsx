@@ -63,7 +63,7 @@ function BillingSuccessContent() {
               <p className="text-sm text-gray-500 mt-1">{message}</p>
               <Link
                 href="/settings/billing"
-                className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-accent-custom,#22C55E)] px-4 text-sm font-medium text-white hover:bg-[#16A34A]"
+                className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-accent-custom,#22C55E)] px-4 text-sm font-medium text-white hover:bg-[var(--color-accent-custom-600,#16A34A)]"
               >
                 Back to billing
               </Link>

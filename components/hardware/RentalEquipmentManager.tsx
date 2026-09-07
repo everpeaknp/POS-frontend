@@ -301,7 +301,7 @@ export function RentalEquipmentManager({ open, onClose, onChanged }: Props) {
                 type="button"
                 onClick={handleAdd}
                 disabled={saving}
-                className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 {saving ? "Adding..." : "Add Equipment"}
               </Button>

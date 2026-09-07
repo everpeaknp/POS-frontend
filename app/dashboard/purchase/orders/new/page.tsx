@@ -376,7 +376,7 @@ export default function NewPurchaseOrderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleSubmit('Draft')}
-              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50"
+              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
               disabled={submitting}
             >
 
@@ -384,7 +384,7 @@ export default function NewPurchaseOrderPage() {
             </Button>
             <Button 
               onClick={() => handleSubmit('Sent')}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               disabled={submitting}
             >
 
@@ -470,7 +470,7 @@ export default function NewPurchaseOrderPage() {
               type="button"
               onClick={handleCreateSupplier}
               disabled={creatingSupplier}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             >
               {creatingSupplier ? "Creating..." : (
                 "Create Supplier"

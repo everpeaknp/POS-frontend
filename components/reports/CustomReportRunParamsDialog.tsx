@@ -63,7 +63,7 @@ export function CustomReportRunParamsDialog({
             Cancel
           </Button>
           <Button
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
             onClick={handleConfirm}
             disabled={loading}
           >

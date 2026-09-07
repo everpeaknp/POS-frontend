@@ -18,6 +18,7 @@ import { useAppearance } from "@/lib/context/AppearanceContext";
 import { billingApi } from "@/lib/api/billing";
 import { cn, getMediaUrl } from "@/lib/utils";
 import { SETTINGS_NAV_ITEMS, isSettingsNavActive } from "@/lib/settings/nav-items";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const SETTINGS_SIDEBAR_COLLAPSED_KEY = "khata-settings-sidebar-collapsed";
 
@@ -35,6 +36,7 @@ function AccountSidebarContent({
   const [planName, setPlanName] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
   const [modKey, setModKey] = useState("Ctrl");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogout = async () => {
@@ -106,10 +108,11 @@ function AccountSidebarContent({
   const showBack = !q || "back".includes(q);
 
   return (
+    <>
     <div className="flex flex-col h-full" data-tour="settings-sidebar">
       <div
         className={cn(
-          "border-b border-white/10 flex items-center justify-between gap-2",
+          "border-b border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] flex items-center justify-between gap-2",
           compact ? "px-2 py-4" : "px-4 py-4"
         )}
       >
@@ -129,10 +132,10 @@ function AccountSidebarContent({
             </div>
             {!compact && (
               <div className="flex flex-col min-w-0">
-                <span className="text-white font-semibold text-sm leading-tight truncate">
+                <span className="text-[var(--sidebar-fg,#ffffff)] font-semibold text-sm leading-tight truncate">
                   {displayName}
                 </span>
-                <span className="text-gray-400 text-xs leading-tight truncate">
+                <span className="text-[var(--sidebar-fg-muted,#9ca3af)] text-xs leading-tight truncate">
                   {planName ? `${planName} plan` : "…"}
                 </span>
               </div>
@@ -154,7 +157,7 @@ function AccountSidebarContent({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5 shrink-0"
+            className="text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] transition-colors lg:hidden p-1.5 shrink-0"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -180,7 +183,7 @@ function AccountSidebarContent({
             <Search
               size={15}
               strokeWidth={2}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sidebar-fg-subtle,#6b7280)] pointer-events-none"
             />
             <input
               ref={searchInputRef}
@@ -210,7 +213,7 @@ function AccountSidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[var(--color-accent-custom,#22C55E)]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] pl-9 pr-[4.25rem] text-sm text-[var(--sidebar-input-text,#e5e7eb)] outline-none placeholder:text-[var(--sidebar-fg-subtle,#6b7280)] transition-colors focus:border-[var(--color-accent-custom,#22C55E)]/40 focus:bg-[var(--sidebar-surface-strong,rgba(255,255,255,0.07))]"
             />
             {navQuery ? (
               <button
@@ -219,17 +222,17 @@ function AccountSidebarContent({
                   setNavQuery("");
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-gray-500 hover:text-white transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--sidebar-fg-subtle,#6b7280)] hover:text-[var(--sidebar-fg,#ffffff)] transition-colors"
                 aria-label="Clear search"
               >
                 <X size={13} />
               </button>
             ) : (
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] px-1.5 font-sans text-[10px] font-medium leading-none text-[var(--sidebar-fg-subtle,#6b7280)]">
                   {modKey}
                 </kbd>
-                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] px-1.5 font-sans text-[10px] font-medium leading-none text-[var(--sidebar-fg-subtle,#6b7280)]">
                   K
                 </kbd>
               </span>
@@ -245,7 +248,7 @@ function AccountSidebarContent({
         )}
       >
         {filteredNavItems.length === 0 && !showBack ? (
-          <p className="px-3 py-4 text-xs text-gray-500 text-center">
+          <p className="px-3 py-4 text-xs text-[var(--sidebar-fg-subtle,#6b7280)] text-center">
             No menu items found
           </p>
         ) : (
@@ -263,7 +266,7 @@ function AccountSidebarContent({
                     compact && "justify-center px-2",
                     active
                       ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                      : "text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
                   )}
                 >
                   <item.icon size={17} className="shrink-0" />
@@ -279,7 +282,7 @@ function AccountSidebarContent({
                   title="Back"
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))] transition-all mt-1",
                     compact && "justify-center px-2"
                   )}
                 >
@@ -290,13 +293,10 @@ function AccountSidebarContent({
                 {/* Logout Button */}
                 <button
                   type="button"
-                  onClick={() => {
-                    handleLogout();
-                    onClose?.();
-                  }}
+                  onClick={() => setShowLogoutConfirm(true)}
                   title="Logout"
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-red-400 hover:bg-red-500/10 transition-all",
                     compact && "justify-center px-2"
                   )}
                 >
@@ -310,13 +310,29 @@ function AccountSidebarContent({
       </nav>
 
       {!compact && (
-        <div className="px-5 py-4 border-t border-white/10">
-          <p className="text-xs text-gray-600">
+        <div className="px-5 py-4 border-t border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))]">
+          <p className="text-xs text-[var(--sidebar-fg-subtlest,#4b5563)]">
             © {new Date().getFullYear()} Khata Business OS
           </p>
         </div>
       )}
     </div>
+    <ConfirmDialog
+      open={showLogoutConfirm}
+      title="Log out?"
+      description="You'll need to sign in again to access your account."
+      confirmLabel="Log out"
+      icon={<LogOut className="h-5 w-5" />}
+      iconWrapperClassName="bg-red-500/15 text-red-500"
+      confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+      onCancel={() => setShowLogoutConfirm(false)}
+      onConfirm={() => {
+        setShowLogoutConfirm(false);
+        handleLogout();
+        onClose?.();
+      }}
+    />
+    </>
   );
 }
 
@@ -380,7 +396,7 @@ export function AccountSettingsSidebar() {
         type="button"
         onClick={() => setMobileOpen(true)}
         className={cn(
-          "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[#1E2A3B] text-white shadow-lg",
+          "lg:hidden fixed top-4 z-50 p-2 rounded-lg bg-[var(--sidebar-bg,#1E2A3B)] text-[var(--sidebar-fg,#ffffff)] shadow-lg",
           railOnTop ? "left-4" : "left-16"
         )}
         aria-label="Open menu"
@@ -394,7 +410,7 @@ export function AccountSettingsSidebar() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-64 h-full bg-[#1E2A3B] z-50 overflow-hidden">
+          <div className="relative w-64 h-full bg-[var(--sidebar-bg,#1E2A3B)] z-50 overflow-hidden">
             <AccountSidebarContent
               onClose={() => setMobileOpen(false)}
               searchFocusNonce={mobileFocusNonce}
@@ -406,7 +422,7 @@ export function AccountSettingsSidebar() {
       <aside
         data-compact={collapsed ? "true" : "false"}
         className={cn(
-          "relative hidden lg:flex flex-col shrink-0 bg-[#1E2A3B] h-full sticky top-0 overflow-hidden transition-[width] duration-200",
+          "relative hidden lg:flex flex-col shrink-0 bg-[var(--sidebar-bg,#1E2A3B)] h-full sticky top-0 overflow-hidden transition-[width] duration-200",
           collapsed ? "w-[72px]" : "w-60"
         )}
       >
@@ -417,7 +433,7 @@ export function AccountSettingsSidebar() {
         <button
           type="button"
           onClick={toggleCollapse}
-          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-white/15 bg-[#243447] text-gray-300 hover:bg-[#2d4058] hover:text-white grid place-items-center transition-colors"
+          className="absolute top-1/2 right-0 z-20 -translate-y-1/2 h-10 w-5 rounded-l-md border border-r-0 border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-bg,#1E2A3B)] text-[var(--sidebar-fg-muted,#9ca3af)] hover:bg-[var(--color-accent-custom,#22C55E)] hover:text-[var(--sidebar-fg,#ffffff)] grid place-items-center transition-colors"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

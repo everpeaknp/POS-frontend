@@ -80,12 +80,12 @@ function SidebarItem({
               "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
               isParentActive
                 ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
-                : "!text-gray-400 hover:!text-white hover:bg-white/10"
+                : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
             )}
           >
             <item.icon size={17} className={cn(
               "shrink-0",
-              isParentActive ? "!text-white" : "!text-gray-400"
+              isParentActive ? "!text-[var(--sidebar-fg,#ffffff)]" : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
             )} />
             {item.label}
           </Link>
@@ -94,7 +94,7 @@ function SidebarItem({
               e.preventDefault();
               setShowQuickMenu(!showQuickMenu);
             }}
-            className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+            className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] transition-all shrink-0 mr-2"
             title="Quick actions"
           >
             <Plus size={16} />
@@ -140,12 +140,12 @@ function SidebarItem({
           compact && "justify-center px-2",
           isParentActive
             ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
-            : "!text-gray-400 hover:!text-white hover:bg-white/10"
+            : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
         )}
       >
         <item.icon size={17} className={cn(
           "shrink-0",
-          isParentActive ? "!text-white" : "!text-gray-400"
+          isParentActive ? "!text-[var(--sidebar-fg,#ffffff)]" : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
         )} />
         {!compact && item.label}
       </Link>
@@ -163,18 +163,18 @@ function SidebarItem({
             "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
             isParentActive
               ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
-              : "!text-gray-400 hover:!text-white hover:bg-white/10"
+              : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
           )}
         >
           <item.icon size={17} className={cn(
             "shrink-0",
-            isParentActive ? "!text-white" : "!text-gray-400"
+            isParentActive ? "!text-[var(--sidebar-fg,#ffffff)]" : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
           )} />
           {item.label}
         </Link>
         <Link
           href={addHref!}
-          className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+          className="p-1.5 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] !text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] transition-all shrink-0 mr-2"
           title={`Add ${item.label}`}
         >
           <Plus size={16} />
@@ -198,17 +198,17 @@ function SidebarItem({
           isParentActive && !isOpen
             ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
             : isOpen
-              ? "bg-white/10 text-white"
-              : "!text-gray-400 hover:!text-white hover:bg-white/10"
+              ? "bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))] text-[var(--sidebar-fg,#ffffff)]"
+              : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
         )}
       >
         <item.icon size={17} className={cn(
           "shrink-0",
           isParentActive && !isOpen
-            ? "!text-white"
+            ? "!text-[var(--sidebar-fg,#ffffff)]"
             : isOpen
-              ? "!text-white"
-              : "!text-gray-400"
+              ? "!text-[var(--sidebar-fg,#ffffff)]"
+              : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
         )} />
         {!compact && (
           <>
@@ -231,7 +231,7 @@ function SidebarItem({
           className="overflow-hidden transition-all duration-200 ease-in-out"
           style={{ maxHeight: isOpen ? "500px" : "0px" }}
         >
-          <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-white/10 space-y-0.5">
+          <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] space-y-0.5">
             {item.children?.map((child) => {
               const active = matchesNavChild(pathname, child);
               return (
@@ -241,8 +241,8 @@ function SidebarItem({
                     className={cn(
                       "flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-all",
                       active
-                        ? "text-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] border-l-2 border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] -ml-[1px] pl-[9px] bg-white/5"
-                        : "text-gray-500 hover:text-white hover:bg-white/5"
+                        ? "text-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] border-l-2 border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] -ml-[1px] pl-[9px] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))]"
+                        : "text-[var(--sidebar-fg-subtle,#6b7280)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-surface,rgba(255,255,255,0.05))]"
                     )}
                   >
                     {child.label}
@@ -413,7 +413,7 @@ function SidebarContent({
       <div
         data-tour="sidebar-org"
         className={cn(
-          "border-b border-white/10 flex items-center justify-between gap-2",
+          "border-b border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] flex items-center justify-between gap-2",
           compact ? "px-2 py-4" : "px-4 py-4"
         )}
       >
@@ -433,7 +433,7 @@ function SidebarContent({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors lg:hidden p-1.5 shrink-0"
+            className="text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] transition-colors lg:hidden p-1.5 shrink-0"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -459,7 +459,7 @@ function SidebarContent({
             <Search
               size={15}
               strokeWidth={2}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sidebar-fg-subtle,#6b7280)] pointer-events-none"
             />
             <input
               ref={searchInputRef}
@@ -489,7 +489,7 @@ function SidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] pl-9 pr-[4.25rem] text-sm text-[var(--sidebar-input-text,#e5e7eb)] outline-none placeholder:text-[var(--sidebar-fg-subtle,#6b7280)] transition-colors focus:border-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/40 focus:bg-[var(--sidebar-surface-strong,rgba(255,255,255,0.07))]"
             />
             {navQuery ? (
               <button
@@ -498,17 +498,17 @@ function SidebarContent({
                   setNavQuery("");
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-gray-500 hover:text-white transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--sidebar-fg-subtle,#6b7280)] hover:text-[var(--sidebar-fg,#ffffff)] transition-colors"
                 aria-label="Clear search"
               >
                 <X size={13} />
               </button>
             ) : (
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] px-1.5 font-sans text-[10px] font-medium leading-none text-[var(--sidebar-fg-subtle,#6b7280)]">
                   {modKey}
                 </kbd>
-                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-sans text-[10px] font-medium leading-none text-gray-500">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] bg-[var(--sidebar-surface,rgba(255,255,255,0.05))] px-1.5 font-sans text-[10px] font-medium leading-none text-[var(--sidebar-fg-subtle,#6b7280)]">
                   K
                 </kbd>
               </span>
@@ -525,7 +525,7 @@ function SidebarContent({
         )}
       >
         {searchedNavItems.length === 0 ? (
-          <p className="px-3 py-4 text-xs text-gray-500 text-center">
+          <p className="px-3 py-4 text-xs text-[var(--sidebar-fg-subtle,#6b7280)] text-center">
             No menu items found
           </p>
         ) : (
@@ -552,13 +552,13 @@ function SidebarContent({
       </nav>
 
       {!compact && (
-        <div className="px-5 py-4 border-t border-white/10 space-y-1.5">
+        <div className="px-5 py-4 border-t border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] space-y-1.5">
           {user?.tenant && (
-            <p className="text-[11px] font-mono break-all text-gray-500 leading-relaxed">
+            <p className="text-[11px] font-mono break-all text-[var(--sidebar-fg-subtle,#6b7280)] leading-relaxed">
               https://{user.tenant.slug}.khata.app
             </p>
           )}
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-[var(--sidebar-fg-subtlest,#4b5563)]">
             © {new Date().getFullYear()} Khata Business OS
           </p>
         </div>
@@ -646,7 +646,7 @@ export function Sidebar({
           type="button"
           onClick={() => setMobileOpen(true)}
           className={cn(
-            "lg:hidden fixed top-4 z-50 p-2 rounded-lg !bg-[#1E2A3B] !text-white shadow-lg",
+            "lg:hidden fixed top-4 z-50 p-2 rounded-lg !bg-[var(--sidebar-bg,#1E2A3B)] !text-[var(--sidebar-fg,#ffffff)] shadow-lg",
             railOnTop ? "left-4" : "left-16"
           )}
           aria-label="Open menu"
@@ -661,7 +661,7 @@ export function Sidebar({
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-64 h-full !bg-[#1E2A3B] z-50 overflow-hidden">
+          <div className="relative w-64 h-full !bg-[var(--sidebar-bg,#1E2A3B)] z-50 overflow-hidden">
             <SidebarContent
               onClose={() => setMobileOpen(false)}
               searchFocusNonce={mobileFocusNonce}
@@ -674,7 +674,7 @@ export function Sidebar({
         data-tour="sidebar"
         data-compact={compact ? "true" : "false"}
         className={cn(
-          "relative flex-col h-full shrink-0 !bg-[#1E2A3B] overflow-hidden transition-[width] duration-200",
+          "relative flex-col h-full shrink-0 !bg-[var(--sidebar-bg,#1E2A3B)] overflow-hidden transition-[width] duration-200",
           forceDesktop
             ? "flex w-full"
             : cn("hidden lg:flex", compact ? "w-[72px]" : "w-64")
@@ -690,7 +690,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={toggleCollapse}
-            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] transition-all duration-200 shadow-lg"
+            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[var(--sidebar-bg,#1E2A3B)] border border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))] !text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] transition-all duration-200 shadow-lg"
             aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
             title={compact ? "Expand sidebar" : "Collapse sidebar"}
           >

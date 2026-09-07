@@ -7,7 +7,7 @@
 }
 
 .khata-loader {
-  --color-1: #22c55e;
+  --color-1: var(--color-accent-custom, #22c55e);
   --color-2: #1e2a3b;
   --color-3: #ffffff;
   --size: 1px;
@@ -34,7 +34,7 @@
 
 .khata-loader--on-primary {
   --color-1: #ffffff;
-  --color-2: #14532d;
+  --color-2: var(--color-accent-custom-900, #14532d);
   --color-3: rgba(255, 255, 255, 0.72);
 }
 
@@ -63,5 +63,12 @@
 
   100% {
     transform: translate(calc(-25 * var(--size)), calc(-25 * var(--size))) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .khata-loader,
+  .khata-loader__top {
+    animation-duration: 2.4s;
   }
 }

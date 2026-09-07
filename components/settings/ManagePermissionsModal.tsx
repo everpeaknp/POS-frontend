@@ -443,7 +443,7 @@ export function ManagePermissionsModal({
                 type="button"
                 onClick={onSave}
                 disabled={saving}
-                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] text-white hover:bg-[#16A34A] sm:flex-none"
+                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] text-white hover:bg-[var(--color-accent-custom-600,#16A34A)] sm:flex-none"
               >
                 {saving ? "Saving..." : "Save Permissions"}
               </Button>

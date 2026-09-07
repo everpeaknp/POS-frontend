@@ -48,7 +48,7 @@ export function PlanCard({
         className={`w-full mt-5 ${
           isCurrent
             ? "bg-gray-100 text-gray-500 cursor-default"
-            : "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+            : "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
         }`}
         disabled={isCurrent}
         onClick={onSelect}

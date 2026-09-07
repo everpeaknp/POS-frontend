@@ -252,7 +252,7 @@ export default function SitesPage() {
             </div>
           </div>
           <Link href="/dashboard/construction/sites/new">
-            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Site
             </Button>
           </Link>
@@ -422,7 +422,7 @@ function SiteGridCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-2 text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50 rounded-md transition-colors"
+              className="p-2 text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)] rounded-md transition-colors"
               title="Edit site"
             >
               <Pencil className="w-4 h-4" />

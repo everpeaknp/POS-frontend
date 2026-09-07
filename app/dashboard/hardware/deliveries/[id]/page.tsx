@@ -11,7 +11,6 @@ import {
   User,
   CheckCircle,
   XCircle,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -131,10 +130,11 @@ export default function DeliveryDetailPage() {
               <Button
                 size="sm"
                 onClick={handleMarkDelivered}
-                disabled={updating}
-                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] gap-2"
+                loading={updating}
+                loadingText="Marking…"
+                className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] gap-2"
               >
-                {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                <CheckCircle className="h-4 w-4" />
                 Mark Delivered
               </Button>
             )}

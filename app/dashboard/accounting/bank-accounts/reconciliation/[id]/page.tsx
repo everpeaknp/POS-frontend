@@ -239,7 +239,7 @@ export default function BankReconciliationPage() {
             onClick={handleComplete}
             className={`mt-4 w-full text-white ${
               pendingReconcile.length > 0
-                ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]"
+                ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]"
                 : "bg-gray-300 cursor-not-allowed"
             }`}
           >

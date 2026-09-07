@@ -473,7 +473,7 @@ export function ProductTour() {
             <Button
               type="button"
               size="sm"
-              className="rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent px-4 shadow-md shadow-green-500/20"
+              className="rounded-xl bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white border-transparent px-4 shadow-md"
               onClick={() => {
                 if (isLast) completeTour();
                 else setIndex((i) => i + 1);

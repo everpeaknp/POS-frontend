@@ -130,7 +130,7 @@ export default function PurchaseOrderDetailPage() {
             className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
               isDestructive 
                 ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]'
+                : 'bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]'
             }`}
           >
             Confirm
@@ -230,7 +230,7 @@ export default function PurchaseOrderDetailPage() {
             <Button 
               size="sm" 
               onClick={() => setShowReceiveModal(true)}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5 h-8"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5 h-8"
             >
               <Package className="h-3.5 w-3.5" />
               Receive Items

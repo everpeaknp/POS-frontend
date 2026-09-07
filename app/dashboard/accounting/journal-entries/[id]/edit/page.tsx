@@ -222,7 +222,7 @@ export default function EditJournalEntryPage() {
         <div className="flex-1 p-6">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center max-w-5xl">
             <p className="text-gray-600">Only draft entries can be edited</p>
-            <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" onClick={() => router.push(`/dashboard/accounting/journal-entries/${entry.id}`)}>
+            <Button className="mt-4 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white" onClick={() => router.push(`/dashboard/accounting/journal-entries/${entry.id}`)}>
               View Entry
             </Button>
           </div>
@@ -297,7 +297,7 @@ export default function EditJournalEntryPage() {
             </Button>
             <Button 
               disabled={!balanced || submitting} 
-              className={`px-6 text-white ${balanced && !submitting ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A]" : "bg-gray-300 cursor-not-allowed"}`}
+              className={`px-6 text-white ${balanced && !submitting ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)]" : "bg-gray-300 cursor-not-allowed"}`}
               onClick={handlePostEntry}
             >
               {submitting ? "Posting..." : "Post Entry"}

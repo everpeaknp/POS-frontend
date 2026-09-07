@@ -507,7 +507,7 @@ export default function POSTransactionsPage() {
                         toast.error("Please select both start and end dates");
                       }
                     }}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-700,#15803d)]"
                     disabled={!customStartDate || !customEndDate}
                   >
                     Apply

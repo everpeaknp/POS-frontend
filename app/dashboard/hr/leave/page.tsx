@@ -85,7 +85,7 @@ export default function LeavePage() {
             </button>
             <button
               onClick={() => { toast.dismiss(t.id); resolve(true); }}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-custom,#22C55E)] rounded-lg hover:bg-[var(--color-accent-custom-700,#15803d)] transition-colors"
             >
               Approve
             </button>
@@ -315,7 +315,7 @@ export default function LeavePage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/leave/requests/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Apply Leave
           </Button>
         </Link>

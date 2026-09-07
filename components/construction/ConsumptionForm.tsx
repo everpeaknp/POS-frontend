@@ -321,7 +321,7 @@ export default function ConsumptionForm({
                 <button
                   type="button"
                   onClick={addItem}
-                  className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] transition-colors inline-flex items-center gap-2"
+                  className="px-4 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] transition-colors inline-flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Product
@@ -480,7 +480,7 @@ export default function ConsumptionForm({
         <button
           type="submit"
           disabled={isSubmitting || items.length === 0}
-          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {isSubmitting ? "Logging..." : `Log ${items.length || ""} Consumption${items.length !== 1 ? "s" : ""}`}
         </button>

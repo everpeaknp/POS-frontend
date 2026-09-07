@@ -1,6 +1,7 @@
 "use client";
 
 import { PageLoading } from "@/components/shared/PageLoading";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -48,6 +49,7 @@ export default function WorkspacePage() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     console.log('[Workspace] useEffect - user:', user ? 'exists' : 'null');
@@ -95,6 +97,7 @@ export default function WorkspacePage() {
   const activeModules = tenant?.active_modules || [];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
@@ -110,7 +113,7 @@ export default function WorkspacePage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               className="flex items-center gap-2"
             >
               <LogOut className="h-4 w-4" />
@@ -213,7 +216,7 @@ export default function WorkspacePage() {
                     return (
                       <div
                         key={module}
-                        className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-sm transition-all"
+                        className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-[var(--color-accent-custom-300,#86efac)] hover:shadow-sm transition-all"
                       >
                         <div className="p-2 bg-green-50 rounded-lg">
                           <Icon className="h-4 w-4 text-green-600" />
@@ -273,5 +276,18 @@ export default function WorkspacePage() {
         </div>
       </div>
     </div>
+    <ConfirmDialog
+      open={showLogoutConfirm}
+      title="Log out?"
+      description="You'll need to sign in again to access your account."
+      confirmLabel="Log out"
+      icon={<LogOut className="h-5 w-5" />}
+      onCancel={() => setShowLogoutConfirm(false)}
+      onConfirm={() => {
+        setShowLogoutConfirm(false);
+        handleLogout();
+      }}
+    />
+    </>
   );
 }

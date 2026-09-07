@@ -108,9 +108,9 @@ function SearchableDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex w-full items-center justify-between h-11 px-3 text-sm border rounded-lg bg-white",
+          "flex w-full items-center justify-between h-11 px-3 text-sm border rounded-lg bg-white dark:bg-card dark:border-border",
           className,
-          !value && "text-gray-400"
+          !value && "text-gray-400 dark:text-muted-foreground"
         )}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
@@ -118,8 +118,8 @@ function SearchableDropdown({
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-80 rounded-lg bg-white shadow-lg border border-gray-200 overflow-hidden">
-          <div className="px-2 py-1.5 border-b bg-white sticky top-0">
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-80 rounded-lg bg-white dark:bg-card shadow-lg border border-gray-200 dark:border-border overflow-hidden">
+          <div className="px-2 py-1.5 border-b dark:border-border bg-white dark:bg-card sticky top-0">
             <Input
               placeholder="Search..."
               value={search}
@@ -131,7 +131,7 @@ function SearchableDropdown({
           </div>
           <div className="overflow-y-auto max-h-64 p-1">
             {filteredOptions.length === 0 ? (
-              <div className="py-6 text-center text-sm text-gray-500">No results found</div>
+              <div className="py-6 text-center text-sm text-gray-500 dark:text-muted-foreground">No results found</div>
             ) : (
               filteredOptions.map((option) => (
                 <div
@@ -142,8 +142,8 @@ function SearchableDropdown({
                     setSearch("");
                   }}
                   className={cn(
-                    "px-3 py-2 text-sm rounded cursor-pointer hover:bg-gray-100",
-                    value === option.value && "bg-green-50 font-medium text-green-700"
+                    "px-3 py-2 text-sm rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-muted",
+                    value === option.value && "bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)]/40 font-medium text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)]"
                   )}
                 >
                   {option.label}
@@ -160,7 +160,7 @@ function SearchableDropdown({
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-foreground border-b border-gray-100 dark:border-border pb-2">{title}</h3>
       <div className="space-y-4">{children}</div>
     </section>
   );
@@ -171,11 +171,11 @@ function FieldGroup({ label, required, children, hint }: {
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-gray-700">
+      <Label className="text-sm font-medium text-gray-700 dark:text-foreground">
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
       {children}
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-gray-400 dark:text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -252,7 +252,7 @@ export function ConstructionForm({
     }
   };
 
-  const inputCls = "h-11 w-full rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/15 focus-visible:ring-3 text-sm";
+  const inputCls = "h-11 w-full rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-sm placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus-visible:border-[var(--color-accent-custom,#22C55E)] focus-visible:ring-[var(--color-accent-custom,#22C55E)]/15 focus-visible:ring-3 text-sm";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
@@ -321,8 +321,8 @@ export function ConstructionForm({
                   onClick={() => setForm({ ...form, vatRegistered: true })}
                   className={`h-11 rounded-lg border font-medium text-sm transition-all ${
                     form.vatRegistered
-                      ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 text-[#16A34A] shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      ? "border-[var(--color-accent-custom,#22C55E)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)]/40 text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] shadow-sm"
+                      : "border-gray-200 dark:border-border bg-white dark:bg-card text-gray-600 dark:text-muted-foreground hover:border-gray-300 dark:hover:border-muted-foreground/40"
                   }`}
                 >
                   Yes
@@ -332,8 +332,8 @@ export function ConstructionForm({
                   onClick={() => setForm({ ...form, vatRegistered: false, panVatNumber: "" })}
                   className={`h-11 rounded-lg border font-medium text-sm transition-all ${
                     !form.vatRegistered
-                      ? "border-[var(--color-accent-custom,#22C55E)] bg-green-50 text-[#16A34A] shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      ? "border-[var(--color-accent-custom,#22C55E)] bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)]/40 text-[var(--color-accent-custom-700,#15803d)] dark:text-[var(--color-accent-custom-400,#4ade80)] shadow-sm"
+                      : "border-gray-200 dark:border-border bg-white dark:bg-card text-gray-600 dark:text-muted-foreground hover:border-gray-300 dark:hover:border-muted-foreground/40"
                   }`}
                 >
                   No
@@ -367,28 +367,28 @@ export function ConstructionForm({
       </div>
 
       {/* Agreement */}
-      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-green-100 bg-green-50/50">
+      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-[var(--color-accent-custom-100,#dcfce7)] dark:border-[var(--color-accent-custom-900,#14532d)] bg-[var(--color-accent-custom-50,#f0fdf4)]/50 dark:bg-[var(--color-accent-custom-950,#052e16)]/20">
         <Checkbox
           id="terms"
           checked={form.agreeToTerms}
           onCheckedChange={(checked) => setForm({ ...form, agreeToTerms: checked === true })}
           className="mt-0.5 data-[state=checked]:bg-[var(--color-accent-custom,#22C55E)] data-[state=checked]:border-[var(--color-accent-custom,#22C55E)]"
         />
-        <Label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+        <Label htmlFor="terms" className="text-sm text-gray-700 dark:text-muted-foreground leading-relaxed cursor-pointer">
           I agree to Khata.app&apos;s{" "}
-          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[#16A34A]">Terms of Service</a> and{" "}
-          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[#16A34A]">Privacy Policy</a>
+          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[var(--color-accent-custom-600,#16A34A)]">Terms of Service</a> and{" "}
+          <a href="#" className="text-[var(--color-accent-custom,#22C55E)] underline font-medium hover:text-[var(--color-accent-custom-600,#16A34A)]">Privacy Policy</a>
         </Label>
       </div>
 
       {/* Submit Button */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-gray-100">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-gray-100 dark:border-border">
         {showBackButton && (
           <Button
             type="button"
             variant="secondary"
             onClick={() => (onBack ? onBack() : router.back())}
-            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
+            className="h-12 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-muted dark:hover:bg-muted/80 text-gray-900 dark:text-foreground border-transparent font-bold gap-1.5 sm:min-w-[120px] shadow-none"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
@@ -397,7 +397,7 @@ export function ConstructionForm({
         <Button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#16A34A] to-[var(--color-accent-custom,#22C55E)] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-green-500/20"
+          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md"
         >
           {submitLabel || "Continue"} <ArrowRight className="h-4 w-4" />
         </Button>

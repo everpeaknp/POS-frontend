@@ -13,6 +13,7 @@ import { getDesktopApi } from "@/lib/desktop";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
 import { cn, getMediaUrl } from "@/lib/utils";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTopbarContentOptional } from "@/lib/context/TopbarContentContext";
 import { ErpTabsNav, useErpNavOptional } from "@/lib/context/ErpNavContext";
 import { KhataLogo } from "@/components/khata-logo";
@@ -68,7 +69,7 @@ function RailButton({
       ? "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300"
       : active
         ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/20 ring-1 ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/50"
-        : "hover:bg-black/5 dark:hover:bg-white/10",
+        : "hover:bg-[var(--navbar-hover-bg,rgba(0,0,0,0.05))]",
     disabled && "opacity-50 pointer-events-none"
   );
 
@@ -89,7 +90,7 @@ function RailButton({
       disabled={disabled}
       className={cn(
         className,
-        !danger && !active && "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+        !danger && !active && "text-[var(--navbar-fg-muted,#6b7280)] hover:text-[var(--navbar-fg,#111827)]"
       )}
     >
       {children}
@@ -138,6 +139,7 @@ export function AppIconRail({
   const erpNav = useErpNavOptional();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [switchingSlug, setSwitchingSlug] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const onDashboard = pathname.startsWith("/dashboard");
   const onSettings = pathname.startsWith("/settings");
@@ -216,10 +218,10 @@ export function AppIconRail({
   };
 
   const shellClass = cn(
-    "bg-card border-border"
+    "bg-[var(--navbar-bg,var(--card))] border-[var(--navbar-border,var(--border))]"
   );
 
-  const dividerClass = "bg-border";
+  const dividerClass = "bg-[var(--navbar-border,var(--border))]";
 
   const erpBtn = (
     <RailButton label="ERP" href="/erp" active={onErp} horizontal={horizontal}>
@@ -269,7 +271,7 @@ export function AppIconRail({
             "h-[18px] w-[18px]",
             pageTour?.active
               ? "text-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]"
-              : "text-gray-500 dark:text-gray-400"
+              : "text-[var(--navbar-fg-muted,#6b7280)]"
           )}
           strokeWidth={2}
         />
@@ -301,7 +303,7 @@ export function AppIconRail({
               horizontal ? "h-9 w-9" : "h-10 w-10",
               onSettings
                 ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/15 ring-1 ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/40 dark:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/20 dark:ring-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))]/50"
-                : "hover:bg-black/5 dark:hover:bg-white/10"
+                : "hover:bg-[var(--navbar-hover-bg,rgba(0,0,0,0.05))]"
             )}
             aria-label="Account menu"
             title="Account"
@@ -331,7 +333,7 @@ export function AppIconRail({
             <DropdownMenuItem
               variant="destructive"
               className="cursor-pointer gap-2"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -339,6 +341,20 @@ export function AppIconRail({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Log out?"
+        description="You'll need to sign in again to access your account."
+        confirmLabel="Log out"
+        icon={<LogOut className="h-5 w-5" />}
+        iconWrapperClassName="bg-red-500/15 text-red-500"
+        confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          handleLogout();
+        }}
+      />
     </>
   );
 

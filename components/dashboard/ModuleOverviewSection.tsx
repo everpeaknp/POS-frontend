@@ -77,7 +77,7 @@ export function ModuleOverviewSection({
           {headerExtra}
           <Link
             href={module.href}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] transition-colors"
           >
             Open module
             <ArrowRight className="h-4 w-4" />

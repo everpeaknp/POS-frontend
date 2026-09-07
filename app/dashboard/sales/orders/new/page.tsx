@@ -323,7 +323,7 @@ export default function NewSalesOrderPage() {
                       <Button 
                         type="button"
                         onClick={handleCreateCustomer}
-                        className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                        className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                         disabled={creatingCustomer}
                       >
                         {creatingCustomer ? "Creating..." : (
@@ -463,7 +463,7 @@ export default function NewSalesOrderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleSubmit('Draft')}
-              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-green-50"
+              className="border-[var(--color-accent-custom,#22C55E)] text-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-50,#f0fdf4)]"
               disabled={submitting}
             >
 
@@ -471,7 +471,7 @@ export default function NewSalesOrderPage() {
             </Button>
             <Button 
               onClick={() => handleSubmit('Confirmed')}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               disabled={submitting}
             >
 

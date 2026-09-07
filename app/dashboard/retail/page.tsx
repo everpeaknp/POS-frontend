@@ -12,7 +12,6 @@ import {
   DollarSign,
   Banknote,
   ChevronRight,
-  Loader2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -24,7 +23,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { SkeletonCard } from "@/components/shared/Skeleton";
+import { Skeleton, SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { kiranaDashboardAPI } from "@/lib/api/kirana";
@@ -181,9 +180,7 @@ export default function KiranaOverviewPage() {
                 <div>
                   <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
                   {loading ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                    </div>
+                    <Skeleton className="h-6 w-16 mt-1.5" />
                   ) : (
                     <p className="text-lg font-semibold text-gray-900 mt-1">
                       {stat.value}
@@ -354,15 +351,15 @@ export default function KiranaOverviewPage() {
             const Icon = module.icon;
             return (
               <Link key={idx} href={module.href}>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-[var(--color-accent-custom-300,#86efac)] transition-all cursor-pointer group">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                      <p className="text-sm font-semibold text-gray-900 group-hover:text-[var(--color-accent-custom-600,#16a34a)] transition-colors">
                         {module.label}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">{module.sub}</p>
                     </div>
-                    <ChevronRight size={16} className="text-gray-400 group-hover:text-green-600 transition-colors" />
+                    <ChevronRight size={16} className="text-gray-400 group-hover:text-[var(--color-accent-custom-600,#16a34a)] transition-colors" />
                   </div>
                 </div>
               </Link>

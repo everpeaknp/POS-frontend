@@ -98,7 +98,7 @@ export default function PosSessionDetailPage() {
           <div className="flex-1" />
           {session.status === "open" && (
             <Link href={closeHref}>
-              <Button size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white h-8">
+              <Button size="sm" className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white h-8">
                 Close Session
               </Button>
             </Link>

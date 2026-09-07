@@ -403,7 +403,7 @@ export default function NewEmployeePage() {
                   <Button 
                     type="button" 
                     onClick={handleNext}
-                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
                     disabled={loading}
                   >
                     Next
@@ -411,7 +411,7 @@ export default function NewEmployeePage() {
                 ) : (
                   <Button 
                     type="submit" 
-                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" 
+                    className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white" 
                     disabled={loading}
                   >
                     {loading ? 'Saving...' : 'Save Employee'}

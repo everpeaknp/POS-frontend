@@ -111,7 +111,7 @@ export function CustomerPricingPanel({ customerId }: CustomerPricingPanelProps) 
         <p className="text-sm text-gray-500">
           Negotiated rates for this customer override standard and bulk pricing.
         </p>
-        <Button size="sm" className="h-8 gap-1.5 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" className="h-8 gap-1.5 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white" onClick={() => setDialogOpen(true)}>
           <Plus className="h-3.5 w-3.5" /> Add Price
         </Button>
       </div>
@@ -231,7 +231,7 @@ export function CustomerPricingPanel({ customerId }: CustomerPricingPanelProps) 
               <Button
                 onClick={handleCreate}
                 disabled={submitting}
-                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white"
+                className="flex-1 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white"
               >
                 Save
               </Button>

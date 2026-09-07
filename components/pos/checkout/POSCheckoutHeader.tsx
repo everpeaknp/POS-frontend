@@ -33,7 +33,7 @@ export function POSCheckoutHeader({
           <Button
             onClick={onScanClick}
             disabled={!warehouseSelected}
-            className="bg-gradient-to-r from-[var(--color-accent-custom-500,#22c55e)] to-emerald-600 hover:from-[var(--color-accent-custom-600,#16a34a)] hover:to-emerald-700 text-white gap-2 shadow-md hover:shadow-lg transition-all"
+            className="bg-[var(--color-accent-custom,#22c55e)] hover:bg-[var(--color-accent-custom-600,#16a34a)] text-white gap-2 shadow-md hover:shadow-lg transition-all"
           >
             <Scan className="h-4 w-4" />
             Scan Barcode

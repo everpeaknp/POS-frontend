@@ -29,6 +29,16 @@ export interface OrgModuleDefinition {
 // required everywhere too, instead of silently omitting them from pickers.
 export const REQUIRED_MODULE_IDS = ["dashboard", "settings", "accounting"] as const;
 
+// Mirrors backend's `TenantViewSet.ACCOUNT_TYPE_REQUIRED_MODULES` — extra
+// modules that are always on (cannot be disabled) for a given account type,
+// since that workplace's dedicated dashboard is built assuming they're on.
+export const ACCOUNT_TYPE_REQUIRED_MODULE_IDS: Record<string, readonly string[]> = {
+  construction: ["construction"],
+  hardware: ["hardware", "customers"],
+  retail: ["customers", "pos"],
+  kirana: ["customers", "pos"],
+};
+
 /** Modules a Personal account gets — no business/org modules, ever. */
 export const PERSONAL_ACCOUNT_MODULE_IDS = [
   "settings",
@@ -251,8 +261,13 @@ export function normalizeModuleList(modules: string[]): string[] {
   return Array.from(withRequired);
 }
 
-export function isRequiredModule(moduleId: string): boolean {
-  return (REQUIRED_MODULE_IDS as readonly string[]).includes(moduleId);
+export function isRequiredModule(moduleId: string, accountType?: string): boolean {
+  if ((REQUIRED_MODULE_IDS as readonly string[]).includes(moduleId)) {
+    return true;
+  }
+  const type = accountType?.toLowerCase();
+  if (!type) return false;
+  return (ACCOUNT_TYPE_REQUIRED_MODULE_IDS[type] || []).includes(moduleId);
 }
 
 export function isModuleInActiveList(
@@ -264,8 +279,12 @@ export function isModuleInActiveList(
 }
 
 /** Whether a module is effectively enabled (core modules are always on). */
-export function isModuleActive(activeModules: string[] | undefined, moduleId: string): boolean {
-  if (isRequiredModule(moduleId)) {
+export function isModuleActive(
+  activeModules: string[] | undefined,
+  moduleId: string,
+  accountType?: string
+): boolean {
+  if (isRequiredModule(moduleId, accountType)) {
     return true;
   }
   return isModuleInActiveList(activeModules, moduleId);
@@ -295,12 +314,17 @@ export function isRecommendedModule(module: OrgModuleDefinition): boolean {
  */
 export function getModuleCatalogSections(accountType?: string): ModuleCatalogSection[] {
   const type = (accountType || 'organization').toLowerCase();
-  
-  // Core modules (always required, always on)
+
+  // Core modules (always required, always on). Modules locked on for this
+  // account type (e.g. construction/hardware/customers/pos) are promoted
+  // into Core with `required: true` here too.
+  const accountRequiredIds = new Set(ACCOUNT_TYPE_REQUIRED_MODULE_IDS[type] || []);
   const coreModules = ORG_MODULE_CATALOG.filter(
-    (module) => module.required || isRequiredModule(module.id)
+    (module) => module.required || isRequiredModule(module.id, type)
+  ).map((module) =>
+    accountRequiredIds.has(module.id) && !module.required ? { ...module, required: true } : module
   );
-  
+
   // Define primary and optional modules based on workspace type. Each type
   // lists only the modules relevant to it (a dedicated, curated set) rather
   // than every catalog module with irrelevant ones marked "optional" —
@@ -333,19 +357,23 @@ export function getModuleCatalogSections(accountType?: string): ModuleCatalogSec
       break;
   }
 
+  const coreModuleIds = new Set(coreModules.map((module) => module.id));
+
   const primaryModules = sortByIdOrder(
     ORG_MODULE_CATALOG.filter(
-      (module) => primaryModuleIds.includes(module.id) && !coreModules.includes(module)
+      (module) => primaryModuleIds.includes(module.id) && !coreModuleIds.has(module.id)
     ),
     primaryModuleIds
   );
+
+  const primaryModuleIdSet = new Set(primaryModules.map((module) => module.id));
 
   const optionalModules = sortByIdOrder(
     ORG_MODULE_CATALOG.filter(
       (module) =>
         optionalModuleIds.includes(module.id) &&
-        !coreModules.includes(module) &&
-        !primaryModules.includes(module)
+        !coreModuleIds.has(module.id) &&
+        !primaryModuleIdSet.has(module.id)
     ),
     optionalModuleIds
   );

@@ -222,7 +222,7 @@ export function RecordPaymentModal({ open, onClose, onSuccess }: RecordPaymentMo
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-1.5"
+              className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
             >
               {!loading && <Save className="h-4 w-4" />}
               {loading ? "Recording..." : "Record Payment"}

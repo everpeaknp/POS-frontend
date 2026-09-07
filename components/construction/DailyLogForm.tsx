@@ -290,7 +290,7 @@ export default function DailyLogForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[var(--color-accent-custom,#22C55E)] text-white rounded-md hover:bg-[var(--color-accent-custom-600,#16A34A)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {loading ? (isEdit ? "Updating..." : "Creating...") : isEdit ? "Update Daily Log" : "Create Daily Log"}
         </button>

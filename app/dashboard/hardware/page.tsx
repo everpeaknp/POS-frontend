@@ -356,7 +356,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/credit"
-                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
                 >
                   View all
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -403,7 +403,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/products"
-                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[var(--color-accent-custom,#22C55E)] hover:text-[var(--color-accent-custom-600,#16A34A)] font-medium inline-flex items-center gap-1"
                 >
                   View products
                   <ChevronRight className="h-3.5 w-3.5" />

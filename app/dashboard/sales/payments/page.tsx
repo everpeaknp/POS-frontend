@@ -106,7 +106,7 @@ export default function PaymentsPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/sales/payments/new")}
-            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[#16A34A] text-white gap-2 shrink-0"
+            className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-2 shrink-0"
           >
             <Plus className="h-4 w-4" />
             Record Payment
