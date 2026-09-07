@@ -100,10 +100,10 @@ function drawScanningGuide(
   const cornerLength = 30;
   const cornerWidth = 4;
 
-  let color = "var(--color-accent-custom,#22C55E)"; // Green
+  let color = "var(--color-accent-custom,#22C55E)"; // Accent
   if (state === "detected") color = "#3B82F6"; // Blue
   else if (state === "stabilizing") color = "#F59E0B"; // Orange
-  else if (state === "scanning" || state === "success") color = "#10B981"; // Emerald
+  else if (state === "scanning" || state === "success") color = "var(--color-accent-custom,#22C55E)"; // Accent
 
   ctx.strokeStyle = color;
   ctx.lineWidth = cornerWidth;
@@ -142,12 +142,14 @@ function drawScanningGuide(
     const time = Date.now() / 1000;
     const scanLineY = guideY + ((time % 2) / 2) * guideHeight;
 
-    ctx.strokeStyle = "rgba(34, 197, 94, 0.5)";
+    ctx.strokeStyle = "var(--color-accent-custom,#22C55E)";
+    ctx.globalAlpha = 0.5;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(guideX, scanLineY);
     ctx.lineTo(guideX + guideWidth, scanLineY);
     ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -165,18 +167,22 @@ function drawBarcodeBox(
   // Box color based on state
   let strokeColor = "#3B82F6"; // Blue for detected
   let fillColor = "rgba(59, 130, 246, 0.1)";
+  let fillIsAccent = false;
 
   if (state === "stabilizing") {
     strokeColor = "#F59E0B"; // Orange
     fillColor = "rgba(245, 158, 11, 0.1)";
   } else if (state === "scanning" || state === "success") {
-    strokeColor = "#10B981"; // Emerald
-    fillColor = "rgba(16, 185, 129, 0.1)";
+    strokeColor = "var(--color-accent-custom,#22C55E)"; // Accent
+    fillColor = strokeColor;
+    fillIsAccent = true;
   }
 
   // Draw filled box
   ctx.fillStyle = fillColor;
+  if (fillIsAccent) ctx.globalAlpha = 0.1;
   ctx.fillRect(box.x, box.y, box.width, box.height);
+  if (fillIsAccent) ctx.globalAlpha = 1;
 
   // Draw box outline
   ctx.strokeStyle = strokeColor;

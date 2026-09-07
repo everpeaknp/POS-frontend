@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { OrgWizardShell, type WizardStepMeta } from "@/components/org-wizard-shell";
@@ -19,6 +19,7 @@ import {
   User,
 } from "lucide-react";
 import { billingApi } from "@/lib/api/billing";
+import { tenantApi } from "@/lib/api/tenant";
 import toast from "react-hot-toast";
 import { PageLoading } from "@/components/shared/PageLoading";
 import confetti from "canvas-confetti";
@@ -154,10 +155,12 @@ function OnboardingSuccess({
   );
 }
 
+const VALID_ACCOUNT_TYPES: AccountType[] = ["personal", "retail", "construction", "hardware", "organization"];
+
 export function OnboardingOverlay() {
   const { user, refreshUser } = useAuth();
-  const { completeOverlay, skipOverlay, refreshOrgCount } = useOnboarding();
-  
+  const { completeOverlay, skipOverlay, refreshOrgCount, helpMode } = useOnboarding();
+
   const [accountType, setAccountType] = useState<AccountType | null>(null);
   const [step, setStep] = useState(1);
   const [organizationData, setOrganizationData] = useState<OrganizationFormData | null>(null);
@@ -178,6 +181,44 @@ export function OnboardingOverlay() {
     }
     return [ACCOUNT_TYPE_STEP];
   }, [accountType]);
+
+  // Replaying from Help Desk reviews the SAME workplace, not a new one — skip
+  // the "how will you use Khata" picker, jump straight into the details step,
+  // and pre-fill it with the tenant's actual current data (fetched fresh
+  // since `user.tenant` from the login payload lacks accounting_start_date,
+  // vat_registered, pan_vat_number). Guarded by a ref (not the `accountType`
+  // state it sets) so setting that state doesn't re-trigger — and cancel —
+  // this same effect's in-flight fetch.
+  const helpModeAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!helpMode || helpModeAppliedRef.current) return;
+    const tenantType = user?.tenant?.account_type;
+    if (!tenantType || !(VALID_ACCOUNT_TYPES as string[]).includes(tenantType)) return;
+    helpModeAppliedRef.current = true;
+
+    setAccountType(tenantType as AccountType);
+    setStep(2);
+
+    tenantApi
+      .getCurrent()
+      .then((tenant) => {
+        setOrganizationData({
+          name: tenant.name,
+          business_type: tenant.business_type,
+          address: tenant.address,
+          accounting_start_date: tenant.accounting_start_date ?? "",
+          vat_registered: tenant.vat_registered,
+          pan_vat_number: tenant.pan_vat_number,
+          workspace_name: tenant.workspace_name,
+          owner_name: tenant.owner_name,
+          email: tenant.email,
+          phone: tenant.phone,
+        });
+      })
+      .catch(() => {
+        // Non-critical — form just falls back to blank fields
+      });
+  }, [helpMode, user?.tenant?.account_type]);
 
   useEffect(() => {
     const prevHtml = document.documentElement.style.overflow;
@@ -227,7 +268,17 @@ export function OnboardingOverlay() {
   };
 
   const handleAccountTypeSelected = (type: AccountType) => {
-    setAccountType(type);
+    // Each account type has its own business_type namespace (e.g. retail's
+    // "kirana" vs construction's "general_construction") — carrying details
+    // over from a previously-picked type would show a value that doesn't
+    // match any option in the new type's dropdown, and could get submitted
+    // as-is if the user doesn't reselect it.
+    setAccountType((prev) => {
+      if (prev && prev !== type) {
+        setOrganizationData(null);
+      }
+      return type;
+    });
     setStep(2);
   };
 

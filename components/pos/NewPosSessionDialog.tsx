@@ -33,13 +33,21 @@ const emptyForm = {
 interface NewPosSessionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: () => void;
+  onCreated?: (session: { id: string }) => void;
+  /**
+   * Navigate to the new session's detail page after creation (the sessions
+   * list page's behavior). Callers that want to stay put — e.g. checkout,
+   * which just needs its own session state refreshed — pass `false` and
+   * handle the result via `onCreated` instead.
+   */
+  redirectAfterCreate?: boolean;
 }
 
 export function NewPosSessionDialog({
   open,
   onOpenChange,
   onCreated,
+  redirectAfterCreate = true,
 }: NewPosSessionDialogProps) {
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -87,8 +95,10 @@ export function NewPosSessionDialog({
       const session = await posApi.createSession(data);
       toast.success("Session opened successfully");
       onOpenChange(false);
-      onCreated?.();
-      router.push(`/dashboard/pos/sessions/${session.id}`);
+      onCreated?.(session);
+      if (redirectAfterCreate) {
+        router.push(`/dashboard/pos/sessions/${session.id}`);
+      }
     } catch (error: unknown) {
       console.error("Error creating session:", error);
       const err = error as { response?: { data?: Record<string, unknown> } };

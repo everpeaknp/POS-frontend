@@ -97,7 +97,17 @@ export default function NewOrgPage() {
   }, [authLoading, user, router, isSuccess, isLoading]);
 
   const handleAccountTypeSelected = (type: AccountType) => {
-    setAccountType(type);
+    // Each account type has its own business_type namespace (e.g. retail's
+    // "kirana" vs construction's "general_construction") — carrying details
+    // over from a previously-picked type would show a value that doesn't
+    // match any option in the new type's dropdown, and could get submitted
+    // as-is if the user doesn't reselect it.
+    setAccountType((prev) => {
+      if (prev && prev !== type) {
+        setOrganizationData(null);
+      }
+      return type;
+    });
     setStep(2);
   };
 

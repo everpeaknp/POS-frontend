@@ -117,20 +117,18 @@ export function OrganizationModulePicker({
   };
 
   const toggleAlwaysExpanded = (moduleId: string) => {
-    setAlwaysExpandedModules((prev) => {
-      const next = prev.includes(moduleId)
-        ? prev.filter((id) => id !== moduleId)
-        : [...prev, moduleId];
-      localStorage.setItem(
-        scopedSidebarKey(SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY, tenantSlug),
-        JSON.stringify(next)
-      );
-      window.dispatchEvent(new Event(SIDEBAR_ORDER_CHANGED_EVENT));
-      toast.success(
-        prev.includes(moduleId) ? "Menu will collapse like the others" : "Menu will always stay expanded"
-      );
-      return next;
-    });
+    const wasExpanded = alwaysExpandedModules.includes(moduleId);
+    const next = wasExpanded
+      ? alwaysExpandedModules.filter((id) => id !== moduleId)
+      : [...alwaysExpandedModules, moduleId];
+
+    setAlwaysExpandedModules(next);
+    localStorage.setItem(
+      scopedSidebarKey(SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY, tenantSlug),
+      JSON.stringify(next)
+    );
+    window.dispatchEvent(new Event(SIDEBAR_ORDER_CHANGED_EVENT));
+    toast.success(wasExpanded ? "Menu will collapse like the others" : "Menu will always stay expanded");
   };
 
   useEffect(() => {

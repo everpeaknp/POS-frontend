@@ -175,6 +175,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // Fire-and-forget: revoke the session + record a logout audit entry
+    // server-side. Must happen before the tokens below are cleared, and
+    // must not block the redirect (e.g. if the network is unavailable).
+    authApi.logout().catch(() => {});
+
     // Clear localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

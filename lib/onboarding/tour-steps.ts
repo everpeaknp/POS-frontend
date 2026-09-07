@@ -1,3 +1,11 @@
+import { getHomeRoute } from "@/lib/onboarding/home-route";
+import {
+  dashboardNavItems,
+  filterDashboardNavItems,
+  sortNavItemsByModuleOrder,
+  type NavItem,
+} from "@/lib/dashboard/nav-items";
+
 export type TourStep = {
   id: string;
   route: string;
@@ -14,100 +22,137 @@ export type TourStep = {
 
 export type NavbarPosition = "left" | "top";
 
-type ModuleTourDef = {
-  /** Tenant module id; null = always shown (Dashboard) */
-  moduleId: string | null;
-  /** Must match sidebar `label` (drives data-tour + expandNav) */
-  label: string;
-  title: string;
-  body: string;
-  requiredRoles?: string[];
-  /** Skip this step for Personal accounts (e.g. the org Dashboard, hidden from their sidebar) */
-  hideForPersonal?: boolean;
-};
-
 /**
- * One tour beat per sidebar module — filtered at runtime by active modules + role
- * (same rules as `sidebar.tsx`).
+ * Friendly title/body copy for each sidebar item, keyed by lowercased label.
+ * Deliberately separate from the sidebar's own nav definitions (`nav-items.ts`)
+ * so the ORDER and SET of tour steps always comes straight from whatever the
+ * sidebar actually renders (per account type, role, and the user's own
+ * drag-and-drop order) — this table only supplies the copy, never gates
+ * which steps exist. Any real sidebar label missing here still gets a
+ * step, just with a generic body (see `navItemToStep`).
  */
-const MODULE_TOUR_DEFS: ModuleTourDef[] = [
-  {
-    moduleId: null,
-    label: "Dashboard",
+const NAV_STEP_COPY: Record<string, { title: string; body: string }> = {
+  dashboard: {
     title: "Dashboard",
     body: "Open the home overview anytime — KPIs and module snapshots for your business.",
-    hideForPersonal: true,
   },
-  {
-    moduleId: "personal_finance",
-    label: "Personal Finance",
-    title: "Personal Finance",
-    body: "Track your income, expenses, budgets, and bills here — this is your home for Khata.",
+  overview: {
+    title: "Overview",
+    body: "Your workspace's home screen — key numbers and quick actions at a glance.",
   },
-  {
-    moduleId: "sales",
-    label: "Sales",
+  sales: {
     title: "Sales",
     body: "Customers, quotations, orders, invoices, and payments live under Sales. Click to expand the submenu.",
   },
-  {
-    moduleId: "purchase",
-    label: "Purchase",
+  customers: {
+    title: "Customers",
+    body: "Manage customer contacts, credit, and purchase history.",
+  },
+  purchase: {
     title: "Purchase",
     body: "Suppliers, purchase requests, orders, invoices, and debit notes are under Purchase.",
   },
-  {
-    moduleId: "inventory",
-    label: "Inventory",
+  purchases: {
+    title: "Purchases",
+    body: "Suppliers, purchase invoices, and procurement live here.",
+  },
+  inventory: {
     title: "Inventory",
     body: "Products, warehouses, stock in/out, transfers, and inventory reports are here.",
   },
-  {
-    moduleId: "hardware",
-    label: "Hardware",
+  hardware: {
     title: "Hardware",
     body: "Hardware-specific products, customers, orders, credit, and aging reports.",
   },
-  {
-    moduleId: "construction",
-    label: "Construction",
+  construction: {
     title: "Construction",
     body: "Sites, workers, attendance, daily logs, materials, and equipment for construction jobs.",
   },
-  {
-    moduleId: "accounting",
-    label: "Accounting",
+  accounting: {
     title: "Accounting",
     body: "Chart of accounts, journals, P&L, balance sheet, tax, and bank tools are under Accounting.",
-    requiredRoles: ["admin", "accountant", "manager"],
   },
-  {
-    moduleId: "pos",
-    label: "POS",
+  pos: {
     title: "Point of Sale",
     body: "Billing, sessions, transactions, discounts, and daily POS reports.",
   },
-  {
-    moduleId: "hr",
-    label: "HR",
+  hr: {
     title: "HR & Payroll",
     body: "Employees, departments, attendance, leave, and payroll live under HR.",
-    requiredRoles: ["admin", "manager"],
   },
-  {
-    moduleId: "reports",
-    label: "Reports",
+  reports: {
     title: "Reports",
     body: "Cross-module analytics — sales, purchase, inventory, financial, tax, and custom reports.",
   },
-  {
-    moduleId: "settings",
-    label: "Settings",
+  "reports & analytics": {
+    title: "Reports & Analytics",
+    body: "Spending trends, budgets vs actuals, and category breakdowns for your personal finances.",
+  },
+  settings: {
     title: "Settings",
     body: "Organization profile, modules, users, Help Desk, and audit logs are under Settings.",
-    requiredRoles: ["admin", "manager"],
   },
-];
+  "personal finance": {
+    title: "Personal Finance",
+    body: "Track your income, expenses, budgets, and bills here — this is your home for Khata.",
+  },
+  transactions: {
+    title: "Transactions",
+    body: "Record and review your income and expense transactions.",
+  },
+  "parties / lenders": {
+    title: "Parties & Lenders",
+    body: "Track money you owe or are owed, and log transactions against each party.",
+  },
+  budget: {
+    title: "Budget",
+    body: "Set spending limits per category and track progress against them.",
+  },
+  category: {
+    title: "Category",
+    body: "Organize transactions into custom categories.",
+  },
+  account: {
+    title: "Account",
+    body: "Manage your bank, cash, and wallet accounts.",
+  },
+  bills: {
+    title: "Bills",
+    body: "Track upcoming and recurring bills so nothing slips through.",
+  },
+  tax: {
+    title: "Tax",
+    body: "Estimate and track tax obligations.",
+  },
+  sites: {
+    title: "Sites",
+    body: "Manage construction sites and track their progress.",
+  },
+  "material consumption": {
+    title: "Material Consumption",
+    body: "Log materials used on each site.",
+  },
+  "daily logs": {
+    title: "Daily Logs",
+    body: "Record daily site activity and progress notes.",
+  },
+  equipment: {
+    title: "Equipment",
+    body: "Track equipment assigned to your sites.",
+  },
+  "equipment usage": {
+    title: "Equipment Usage",
+    body: "Log equipment usage hours per site.",
+  },
+  workers: {
+    title: "Workers",
+    body: "Manage your construction workforce.",
+  },
+  attendance: {
+    title: "Attendance",
+    body: "Mark and review worker attendance.",
+  },
+};
 
 /** App bar (vertical left rail) — before module sidebar */
 function introForLeftNavbar(homeRoute: string): TourStep[] {
@@ -191,7 +236,11 @@ function introForTopNavbar(homeRoute: string): TourStep[] {
   ];
 }
 
-/** Notifications / theme / account — placement depends on left vs top app bar */
+/**
+ * Notifications / theme / account — order mirrors AppIconRail's actual
+ * left-to-right (horizontal) / top-to-bottom (vertical) render order:
+ * notifications, then theme, then account.
+ */
 function outroForNavbar(position: NavbarPosition, homeRoute: string): TourStep[] {
   const railPlacement = position === "top" ? "bottom" : "right";
 
@@ -236,57 +285,64 @@ function navKey(label: string): string {
   return label.toLowerCase();
 }
 
-function moduleToStep(def: ModuleTourDef, homeRoute: string): TourStep {
-  const key = navKey(def.label);
-  const isLeaf = def.moduleId === null; // Dashboard is a direct link
+/** Builds one tour step per real, currently-visible top-level sidebar item. */
+function navItemToStep(item: NavItem, homeRoute: string): TourStep {
+  const key = navKey(item.label);
+  const isLeaf = !item.children || item.children.length === 0;
+  const copy = NAV_STEP_COPY[key] ?? {
+    title: item.label,
+    body: `Open ${item.label} from the sidebar.`,
+  };
+
   return {
     id: `nav_${key}`,
     route: homeRoute,
     selectors: isLeaf
       ? [`[data-tour="nav-${key}"]`]
       : [`[data-tour="nav-${key}-toggle"]`, `[data-tour="nav-${key}"]`],
-    title: def.title,
-    body: def.body,
-    expandNav: isLeaf ? undefined : def.label,
+    title: copy.title,
+    body: copy.body,
+    expandNav: isLeaf ? undefined : item.label,
     placement: "right",
   };
 }
 
-function isModuleNavVisible(
-  def: ModuleTourDef,
-  canView: (moduleId: string) => boolean,
-  role?: string | null,
-  accountType?: string | null
-): boolean {
-  if (def.hideForPersonal && accountType === "personal") return false;
-  if (!def.moduleId) return true;
-  if (!canView(def.moduleId)) return false;
-
-  if (def.requiredRoles) {
-    if (role === "admin" || role === "super_admin") return true;
-    if (!role || !def.requiredRoles.includes(role)) return false;
-  }
-  return true;
-}
-
 /**
- * Build tour steps for the modules this user can see, adapted to left or top app bar.
+ * Build tour steps for the modules this user can see, adapted to left or top
+ * app bar. The sidebar section always mirrors the ACTUAL sidebar: same
+ * account-type nav list, same role/module filtering, and the same
+ * drag-and-drop `moduleOrder` the sidebar itself applies — so the tour walks
+ * top-to-bottom in whatever order the sidebar is really rendered in, never a
+ * separately hand-maintained order that can drift from it.
  */
 export function buildProductTourSteps(opts: {
   canView: (moduleId: string) => boolean;
   role?: string | null;
   navbarPosition?: NavbarPosition;
   accountType?: string | null;
+  businessType?: string | null;
+  disabledFeatures?: string[] | null;
+  /** Same as the sidebar's saved drag-and-drop module order (SIDEBAR_MODULE_ORDER_KEY). */
+  moduleOrder?: string[] | null;
 }): TourStep[] {
   const position: NavbarPosition = opts.navbarPosition === "top" ? "top" : "left";
-  const homeRoute = opts.accountType === "personal" ? "/dashboard/finance" : "/dashboard";
+  const homeRoute = getHomeRoute({
+    account_type: opts.accountType ?? null,
+    business_type: opts.businessType ?? null,
+  });
 
   const intro =
     position === "top" ? introForTopNavbar(homeRoute) : introForLeftNavbar(homeRoute);
 
-  const moduleSteps = MODULE_TOUR_DEFS.filter((def) =>
-    isModuleNavVisible(def, opts.canView, opts.role, opts.accountType)
-  ).map((def) => moduleToStep(def, homeRoute));
+  const visibleNavItems = filterDashboardNavItems(dashboardNavItems, {
+    canView: opts.canView,
+    role: opts.role,
+    accountType: opts.accountType,
+    businessType: opts.businessType,
+    disabledFeatures: opts.disabledFeatures,
+  });
+  const orderedNavItems = sortNavItemsByModuleOrder(visibleNavItems, opts.moduleOrder ?? []);
+  const moduleSteps = orderedNavItems.map((item) => navItemToStep(item, homeRoute));
 
   return [...intro, ...moduleSteps, ...outroForNavbar(position, homeRoute)];
 }

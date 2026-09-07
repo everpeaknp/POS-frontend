@@ -195,9 +195,16 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
         </DropdownMenu>
         )}
       </div>
-      <div>
-        <h3 className="font-semibold text-foreground text-base">{org.workspace_name || org.name}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5 font-mono">{org.subdomain}</p>
+      <div className="min-w-0">
+        <h3
+          className="font-semibold text-foreground text-base truncate"
+          title={org.workspace_name || org.name}
+        >
+          {org.workspace_name || org.name}
+        </h3>
+        <p className="text-xs text-muted-foreground mt-0.5 font-mono truncate" title={org.subdomain}>
+          {org.subdomain}
+        </p>
       </div>
       {org.status === "expired" && (
         <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">

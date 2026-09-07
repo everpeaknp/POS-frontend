@@ -538,10 +538,10 @@ export function BarcodeScannerModal({
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
+          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-[var(--color-accent-custom-50,#f0fdf4)] to-[var(--color-accent-custom-100,#dcfce7)] dark:from-[var(--color-accent-custom-950,#052e16)] dark:to-[var(--color-accent-custom-900,#14532d)]">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="p-2 bg-[var(--color-accent-custom-100,#dcfce7)] dark:bg-[var(--color-accent-custom-900,#14532d)] rounded-lg">
+                <Camera className="h-5 w-5 text-[var(--color-accent-custom-600,#16A34A)] dark:text-[var(--color-accent-custom-400,#4ade80)]" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Barcode Scanner</h2>
@@ -575,7 +575,7 @@ export function BarcodeScannerModal({
             {/* Camera View */}
             {!cameraError && !scannedProduct && (
               <div className="space-y-3">
-                <div className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative" style={{ height: "400px" }}>
+                <div className="rounded-lg overflow-hidden border-2 border-[var(--color-accent-custom,#22C55E)] bg-black relative" style={{ height: "400px" }}>
                   <video
                     ref={videoRef}
                     autoPlay
@@ -596,7 +596,7 @@ export function BarcodeScannerModal({
                     <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5">
                       {scannerState === "searching" && (
                         <>
-                          <Loader2 className="h-3 w-3 text-green-400 animate-spin" />
+                          <Loader2 className="h-3 w-3 text-[var(--color-accent-custom-400,#4ade80)] animate-spin" />
                           <span className="text-xs text-white font-medium">Searching...</span>
                         </>
                       )}
@@ -614,7 +614,7 @@ export function BarcodeScannerModal({
                       )}
                       {scannerState === "scanning" && (
                         <>
-                          <Zap className="h-3 w-3 text-emerald-400 animate-pulse" />
+                          <Zap className="h-3 w-3 text-[var(--color-accent-custom-400,#4ade80)] animate-pulse" />
                           <span className="text-xs text-white font-medium">Scanning...</span>
                         </>
                       )}
@@ -700,10 +700,10 @@ export function BarcodeScannerModal({
             {/* Scanned Product */}
             {scannedProduct && (
               <div className="space-y-4">
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-green-50 dark:bg-green-950">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-[var(--color-accent-custom-50,#f0fdf4)] dark:bg-[var(--color-accent-custom-950,#052e16)]">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                      <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <div className="p-2 bg-[var(--color-accent-custom-100,#dcfce7)] dark:bg-[var(--color-accent-custom-900,#14532d)] rounded-lg">
+                      <Package className="h-5 w-5 text-[var(--color-accent-custom-600,#16A34A)] dark:text-[var(--color-accent-custom-400,#4ade80)]" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{scannedProduct.name}</h3>

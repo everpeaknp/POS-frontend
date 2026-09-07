@@ -12,6 +12,7 @@ import { POSInvoiceDialog } from "@/components/pos/checkout/POSInvoiceDialog";
 import { POSHeader } from "@/components/pos/checkout/POSHeader";
 import { POSSessionBanner } from "@/components/pos/checkout/POSSessionBanner";
 import { POSQuickAddProductDialog } from "@/components/pos/checkout/POSQuickAddProductDialog";
+import { NewPosSessionDialog } from "@/components/pos/NewPosSessionDialog";
 import { usePOSCheckout } from "@/hooks/usePOSCheckout";
 import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
@@ -24,6 +25,7 @@ export default function POSCheckoutPage() {
   const [sidebarWidth, setSidebarWidth] = useState(340);
   const [isResizing, setIsResizing] = useState(false);
   const [showQuickAddProduct, setShowQuickAddProduct] = useState(false);
+  const [showNewSession, setShowNewSession] = useState(false);
 
   // Handle resize
   useEffect(() => {
@@ -199,9 +201,7 @@ export default function POSCheckoutPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* No Session Warning Banner */}
           {!checkout.openSession && (
-            <POSSessionBanner
-              onStartSession={() => checkout.router.push("/dashboard/pos/sessions/new")}
-            />
+            <POSSessionBanner onStartSession={() => setShowNewSession(true)} />
           )}
 
           {/* Product Grid with Search and Categories */}
@@ -386,6 +386,16 @@ export default function POSCheckoutPage() {
         onCloseAndNewSale={() => {
           handleDialogChange('receipt', false);
           checkout.resetForm();
+        }}
+      />
+
+      {/* Open New POS Session Dialog */}
+      <NewPosSessionDialog
+        open={showNewSession}
+        onOpenChange={setShowNewSession}
+        redirectAfterCreate={false}
+        onCreated={() => {
+          checkout.refreshSession();
         }}
       />
     </div>

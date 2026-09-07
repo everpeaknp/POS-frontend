@@ -295,6 +295,21 @@ export function usePOSCheckout() {
     loadData();
   }, []);
 
+  // Re-fetch just the open session — used after opening a session from the
+  // in-page dialog so the checkout banner/product grid unlock without a
+  // full page reload.
+  const refreshSession = useCallback(async () => {
+    try {
+      const sessionRes = await posApi.getOpenSession();
+      setOpenSession(sessionRes);
+      if (sessionRes?.warehouse) {
+        setSelectedWarehouse(String(sessionRes.warehouse));
+      }
+    } catch (error) {
+      console.error("Failed to refresh session:", error);
+    }
+  }, []);
+
   // Filter products by search and availability
   useEffect(() => {
     let filtered = products;
@@ -634,6 +649,7 @@ export function usePOSCheckout() {
     customers,
     warehouses,
     openSession,
+    refreshSession,
     taxRate,
     paymentSettings,
     

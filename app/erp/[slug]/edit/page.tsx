@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 export default function EditOrganizationPage() {
   const router = useRouter();
   const params = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -21,6 +21,13 @@ export default function EditOrganizationPage() {
   const slug = params.slug as string;
 
   useEffect(() => {
+    // AuthContext hydrates `user` from localStorage asynchronously — `user`
+    // is briefly null on first mount even for a logged-in visitor. Redirecting
+    // to login on that transient null (instead of waiting for `authLoading`
+    // to resolve) sent every visit here through /auth/login, which the
+    // middleware then immediately bounces back to /erp since a valid session
+    // cookie is already present — the page never actually loaded.
+    if (authLoading) return;
     if (!user) {
       router.push("/auth/login");
       return;
@@ -28,7 +35,7 @@ export default function EditOrganizationPage() {
 
     fetchTenant();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, slug]);
+  }, [user, authLoading, slug]);
 
   const fetchTenant = async () => {
     try {
@@ -77,7 +84,7 @@ export default function EditOrganizationPage() {
     }
   };
 
-  if (!user || loading) {
+  if (authLoading || !user || loading) {
     return (
       <PageLoading fullScreen message="Loading workspace…" />
     );
@@ -100,13 +107,18 @@ export default function EditOrganizationPage() {
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <OrgForm
+            accountType={tenant.account_type}
             initialData={{
               name: tenant.name,
               business_type: tenant.business_type,
               owner_name: tenant.owner_name,
               email: tenant.email,
               phone: tenant.phone,
-              address: tenant.address }}
+              address: tenant.address,
+              workspace_name: tenant.workspace_name,
+              accounting_start_date: tenant.accounting_start_date,
+              vat_registered: tenant.vat_registered,
+              pan_vat_number: tenant.pan_vat_number }}
             onSubmit={handleSubmit}
             submitLabel={submitting ? "Updating..." : "Update Organization"}
             isSubmitting={submitting}

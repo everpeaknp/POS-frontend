@@ -142,6 +142,11 @@ export const authApi = {
     const response = await apiClient.get('/auth/users/', { params });
     return response.data.results || response.data;
   },
+
+  // Revoke the current session and record a logout audit entry
+  logout: async (): Promise<void> => {
+    await apiClient.post('/auth/logout/');
+  },
 };
 
 

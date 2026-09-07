@@ -8,41 +8,61 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAllPages } from "@/lib/api/settings-helpers";
 import { downloadCsv } from "@/lib/utils/csv";
+import { authApi, type User } from "@/lib/api/auth";
 import toast from "react-hot-toast";
 
 interface AuditLog {
   id: number;
+  user: number | null;
   user_name: string;
   action: string;
   action_display: string;
   module: string;
   description: string;
   ip_address: string | null;
+  user_agent: string;
   metadata: any;
   created_at: string;
 }
 
 const actionColors: Record<string, string> = {
-  create: "bg-green-100 text-green-700",
-  update: "bg-blue-100 text-blue-700",
-  delete: "bg-red-100 text-red-700",
-  view: "bg-gray-100 text-gray-600",
-  login: "bg-purple-100 text-purple-700",
-  logout: "bg-orange-100 text-orange-700",
-  export: "bg-yellow-100 text-yellow-700",
-  import: "bg-indigo-100 text-indigo-700",
+  create: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400",
+  update: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
+  delete: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
+  view: "bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground",
+  login: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400",
+  logout: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400",
+  export: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400",
+  import: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400",
+  post: "bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-400",
+  reverse: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400",
+  copy: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400",
+  close: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-400",
+  approve: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  reject: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
+  refund: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+  adjust: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-400",
 };
 
 export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("All");
   const [moduleFilter, setModuleFilter] = useState("All");
+  const [userFilter, setUserFilter] = useState("All");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  useEffect(() => {
+    authApi.getUsers().then(setUsers).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchLogs();
-  }, [actionFilter, moduleFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actionFilter, moduleFilter, userFilter, dateFrom, dateTo]);
 
   const fetchLogs = async () => {
     try {
@@ -50,6 +70,9 @@ export default function AuditPage() {
       const data = await fetchAllPages<AuditLog>("/auth/audit-logs/", {
         ...(actionFilter !== "All" ? { action: actionFilter } : {}),
         ...(moduleFilter !== "All" ? { module: moduleFilter } : {}),
+        ...(userFilter !== "All" ? { user: userFilter } : {}),
+        ...(dateFrom ? { date_from: `${dateFrom}T00:00:00` } : {}),
+        ...(dateTo ? { date_to: `${dateTo}T23:59:59` } : {}),
       });
       setLogs(data);
     } catch (error: any) {
@@ -70,6 +93,14 @@ export default function AuditPage() {
       log.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.module.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const hasActiveFilters =
+    searchTerm ||
+    actionFilter !== "All" ||
+    moduleFilter !== "All" ||
+    userFilter !== "All" ||
+    dateFrom ||
+    dateTo;
 
   const handleExport = () => {
     if (filteredLogs.length === 0) {
@@ -123,7 +154,7 @@ export default function AuditPage() {
               onValueChange={(v) => setActionFilter(v ?? "All")}
             >
               <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                <SelectValue />
+                <SelectValue placeholder="All Actions" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Actions</SelectItem>
@@ -135,6 +166,14 @@ export default function AuditPage() {
                 <SelectItem value="logout">Logout</SelectItem>
                 <SelectItem value="export">Export</SelectItem>
                 <SelectItem value="import">Import</SelectItem>
+                <SelectItem value="post">Post</SelectItem>
+                <SelectItem value="reverse">Reverse</SelectItem>
+                <SelectItem value="copy">Copy</SelectItem>
+                <SelectItem value="close">Close</SelectItem>
+                <SelectItem value="approve">Approve</SelectItem>
+                <SelectItem value="reject">Reject</SelectItem>
+                <SelectItem value="refund">Refund</SelectItem>
+                <SelectItem value="adjust">Adjust</SelectItem>
               </SelectContent>
             </Select>
             <Select
@@ -142,19 +181,55 @@ export default function AuditPage() {
               onValueChange={(v) => setModuleFilter(v ?? "All")}
             >
               <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                <SelectValue />
+                <SelectValue placeholder="All Modules" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Modules</SelectItem>
                 <SelectItem value="sales">Sales</SelectItem>
                 <SelectItem value="purchase">Purchase</SelectItem>
                 <SelectItem value="inventory">Inventory</SelectItem>
+                <SelectItem value="pos">POS</SelectItem>
                 <SelectItem value="accounting">Accounting</SelectItem>
                 <SelectItem value="construction">Construction</SelectItem>
+                <SelectItem value="hardware">Hardware</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="customers">Customers</SelectItem>
                 <SelectItem value="users">Users</SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={userFilter}
+              onValueChange={(v) => setUserFilter(v ?? "All")}
+            >
+              <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
+                <SelectValue placeholder="All Users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Users</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={String(u.id)}>
+                    {`${u.first_name} ${u.last_name}`.trim() || u.username}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={dateTo || undefined}
+              className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
+              aria-label="From date"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              min={dateFrom || undefined}
+              className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border"
+              aria-label="To date"
+            />
           </div>
           <Button
             size="sm"
@@ -178,7 +253,7 @@ export default function AuditPage() {
               No audit logs found
             </h3>
             <p className="text-gray-500 dark:text-muted-foreground">
-              {searchTerm || actionFilter !== "All" || moduleFilter !== "All"
+              {hasActiveFilters
                 ? "Try a different search or filter"
                 : "System activities will appear here"}
             </p>

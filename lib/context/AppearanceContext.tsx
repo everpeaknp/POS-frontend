@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { userApi } from "@/lib/api/user";
 import type { AppearancePreferences } from "@/lib/types/user";
 import {
@@ -57,9 +57,20 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     }
   }, [syncResolvedTheme]);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the cached preferences replace the
+  // hardcoded default BEFORE the browser paints — otherwise layout that
+  // depends on this state (e.g. ErpShell's horizontal/vertical nav, which
+  // differs per user) always paints the default position first and visibly
+  // flips once this ran, even though the cached value was available
+  // synchronously. Safe for SSR/hydration: this never runs on the server, so
+  // the server-rendered HTML and the client's first hydration pass both still
+  // use the same default — this only moves the *correction* earlier within
+  // the client-only timeline, before paint instead of after it.
+  useLayoutEffect(() => {
+    const cached = readCachedOrDefault();
+    setPreferences(cached);
     applyCachedAppearancePreferences();
-    setIsDark(resolveIsDark(readCachedOrDefault().theme));
+    setIsDark(resolveIsDark(cached.theme));
     refresh();
   }, [refresh]);
 

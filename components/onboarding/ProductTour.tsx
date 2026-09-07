@@ -8,6 +8,7 @@ import { useAppearance } from "@/lib/context/AppearanceContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { buildProductTourSteps, type TourStep } from "@/lib/onboarding/tour-steps";
+import { SIDEBAR_MODULE_ORDER_KEY, scopedSidebarKey } from "@/lib/dashboard/nav-items";
 
 type Rect = { top: number; left: number; width: number; height: number };
 type Placement = "top" | "bottom" | "left" | "right";
@@ -270,6 +271,23 @@ export function ProductTour() {
 
   const activeModulesKey = user?.tenant?.active_modules?.join(",") ?? "";
   const accountType = user?.tenant?.account_type ?? null;
+  const businessType = user?.tenant?.business_type ?? null;
+  const disabledFeatures = user?.tenant?.disabled_features ?? null;
+  const tenantSlug = user?.tenant?.slug;
+
+  // Same drag-and-drop sidebar order the sidebar itself reads, so the tour
+  // always walks the sidebar in the order it's actually rendered — including
+  // any custom reordering the user saved from Settings → Modules.
+  const [moduleOrder, setModuleOrder] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(scopedSidebarKey(SIDEBAR_MODULE_ORDER_KEY, tenantSlug));
+      setModuleOrder(raw ? JSON.parse(raw) : []);
+    } catch {
+      setModuleOrder([]);
+    }
+  }, [tenantSlug]);
+
   const steps = useMemo(
     () =>
       buildProductTourSteps({
@@ -277,10 +295,23 @@ export function ProductTour() {
         role: user?.role ?? null,
         navbarPosition,
         accountType,
+        businessType,
+        disabledFeatures,
+        moduleOrder,
       }),
-    // Rebuild when org modules, role, navbar, or permission load state change
+    // Rebuild when org modules, role, navbar, permission load state, or the
+    // saved sidebar order change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeModulesKey, user?.role, permissionsLoading, navbarPosition, accountType]
+    [
+      activeModulesKey,
+      user?.role,
+      permissionsLoading,
+      navbarPosition,
+      accountType,
+      businessType,
+      disabledFeatures,
+      moduleOrder,
+    ]
   );
 
   const [index, setIndex] = useState(0);
