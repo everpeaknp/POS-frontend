@@ -10,7 +10,7 @@ export const defaultAppearancePreferences: AppearancePreferences = {
   date_calendar_system: "AD",
   compact_mode: true,
   smooth_animations: true,
-  navbar_position: "left",
+  navbar_position: "top",
   accent_color: undefined, // Default: use CSS variable (green)
   sidebar_color: undefined, // Default: built-in navy
   navbar_color: undefined, // Default: theme-neutral card color

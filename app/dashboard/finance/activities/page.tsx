@@ -151,20 +151,6 @@ export default function ActivitiesPage() {
     setDateTo('');
   };
 
-  // Group activities by date
-  const groupedActivities = filteredActivities.reduce((groups: any, activity: any) => {
-    const date = new Date(activity.timestamp).toLocaleDateString('en-NP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(activity);
-    return groups;
-  }, {});
-
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
@@ -315,7 +301,7 @@ export default function ActivitiesPage() {
           </div>
         </div>
 
-        {/* Activities Timeline */}
+        {/* Activities Table */}
         {filteredActivities.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -329,71 +315,79 @@ export default function ActivitiesPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedActivities).map(([date, dateActivities]: [string, any]) => (
-              <div key={date} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-700">{date}</h3>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {dateActivities.map((activity: any, idx: number) => {
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    {["Date & Time", "Type", "Action", "Description", "Amount"].map((h) => (
+                      <th
+                        key={h}
+                        className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap ${
+                          h === "Amount" ? "text-right" : "text-left"
+                        }`}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredActivities.map((activity: any, idx: number) => {
                     const IconComponent = getActivityIcon(activity.type);
                     const colorClasses = getActivityColor(activity.type, activity.action);
-                    
+
                     return (
-                      <div key={idx} className="px-4 py-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start gap-4">
-                          <div className={`p-2.5 rounded-lg ${colorClasses} shrink-0`}>
-                            <IconComponent className="h-5 w-5" />
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="text-gray-900 font-medium text-xs">
+                              <FormattedDate value={activity.timestamp} />
+                            </span>
+                            <span className="text-gray-400 text-xs inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {getRelativeTime(activity.timestamp)}
+                            </span>
                           </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-3 mb-1">
-                              <p className="text-sm font-medium text-gray-900">
-                                {activity.description}
-                              </p>
-                              <Badge 
-                                variant="outline" 
-                                className={`shrink-0 ${getActionBadgeColor(activity.action)}`}
-                              >
-                                {activity.action}
-                              </Badge>
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                              <span className="inline-flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {getRelativeTime(activity.timestamp)}
-                              </span>
-                              
-                              <Badge variant="outline" className="text-xs">
-                                {activity.type}
-                              </Badge>
-                              
-                              {activity.amount && (
-                                <span className={`font-semibold ${
-                                  activity.description.toLowerCase().includes('expense')
-                                    ? 'text-red-600'
-                                    : activity.description.toLowerCase().includes('income')
-                                    ? 'text-green-600'
-                                    : 'text-gray-900'
-                                }`}>
-                                  {formatNPR(activity.amount)}
-                                </span>
-                              )}
-                              
-                              <span className="text-gray-400">
-                                <FormattedDate value={activity.timestamp} />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium capitalize ${colorClasses}`}>
+                            <IconComponent className="h-3.5 w-3.5" />
+                            {activity.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant="outline"
+                            className={`capitalize ${getActionBadgeColor(activity.action)}`}
+                          >
+                            {activity.action}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 max-w-md">
+                          {activity.description}
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {activity.amount ? (
+                            <span className={`font-semibold ${
+                              activity.description.toLowerCase().includes('expense')
+                                ? 'text-red-600'
+                                : activity.description.toLowerCase().includes('income')
+                                ? 'text-green-600'
+                                : 'text-gray-900'
+                            }`}>
+                              {formatNPR(activity.amount)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
-                </div>
-              </div>
-            ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

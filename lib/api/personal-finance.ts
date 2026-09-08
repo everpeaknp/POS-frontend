@@ -166,6 +166,11 @@ export const partyLenderAPI = {
   delete: async (id: number) => {
     await apiClient.delete(`/finance/parties/${id}/`);
   },
+  /** Issues a fresh share_token, invalidating any previously shared link for this party. */
+  regenerateShareLink: async (id: number) => {
+    const response = await apiClient.post<PartyLender>(`/finance/parties/${id}/regenerate-share-link/`);
+    return response.data;
+  },
 };
 
 // Party Transactions API (In/Out)

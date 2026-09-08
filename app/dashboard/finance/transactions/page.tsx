@@ -210,6 +210,22 @@ export default function TransactionsPage() {
     setShowDialog(true);
   };
 
+  // Transaction detail page's "Edit" button deep-links back here with
+  // ?edit=<transaction_number> since editing happens through this page's
+  // own dialog, not a separate route.
+  useEffect(() => {
+    const editNumber = searchParams.get("edit");
+    if (!editNumber || transactions.length === 0) return;
+    const txn = transactions.find((t) => t.transaction_number === editNumber);
+    if (txn) {
+      openEditDialog(txn);
+    } else {
+      toast.error("Transaction not found");
+    }
+    router.replace("/dashboard/finance/transactions", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, transactions, router]);
+
   const handleSave = async () => {
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error("Amount must be greater than 0");
@@ -410,30 +426,7 @@ export default function TransactionsPage() {
           onClearFilters={clearFilters}
           categories={categories}
           accounts={accounts}
-          onAddIncome={() => {
-            setEditingTransaction(null);
-            setFormData({
-              date: todayIsoDate(),
-              type: "income",
-              amount: "0",
-              category: undefined,
-              account: undefined,
-              description: "",
-            });
-            setShowDialog(true);
-          }}
-          onAddExpense={() => {
-            setEditingTransaction(null);
-            setFormData({
-              date: todayIsoDate(),
-              type: "expense",
-              amount: "0",
-              category: undefined,
-              account: undefined,
-              description: "",
-            });
-            setShowDialog(true);
-          }}
+          onAddTransaction={openAddDialog}
         />
 
         {/* Transactions Table */}

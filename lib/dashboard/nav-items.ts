@@ -13,9 +13,7 @@ import {
   Wallet,
   CreditCard,
   DollarSign,
-  Building2,
-  ClipboardCheck,
-  FileText,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 
@@ -177,6 +175,38 @@ const HR_NAV: NavItem = {
   ],
 };
 
+/** Every construction-specific page, collapsed under one sidebar dropdown. */
+const CONSTRUCTION_SUBMENU_NAV: NavItem = {
+  label: "Construction",
+  icon: HardHat,
+  href: "/dashboard/construction",
+  requiredModule: "construction",
+  children: [
+    { label: "Overview", href: "/dashboard/construction", exact: true },
+    { label: "Sites", href: "/dashboard/construction/sites", createHref: "/dashboard/construction/sites/new" },
+    { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
+    { label: "Attendance", href: "/dashboard/construction/attendance", createHref: "/dashboard/construction/attendance/mark" },
+    { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
+    { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
+    { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
+    { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage", createHref: "/dashboard/construction/equipment-usage?new=1" },
+    { label: "Construction Reports", href: "/dashboard/construction/reports" },
+  ],
+};
+
+/** Hardware-specific extras not already covered by Sales/Customers/Purchase/Inventory. */
+const HARDWARE_EXTRAS_NAV: NavItem = {
+  label: "Hardware",
+  icon: Wrench,
+  requiredModule: "hardware",
+  children: [
+    { label: "Rate Board", href: "/dashboard/hardware/rates", createHref: "/dashboard/hardware/rates?new=1" },
+    { label: "Rentals", href: "/dashboard/hardware/rentals", createHref: "/dashboard/hardware/rentals?new=1" },
+    { label: "Deliveries", href: "/dashboard/hardware/deliveries", createHref: "/dashboard/hardware/deliveries?new=1" },
+    { label: "Vehicles", href: "/dashboard/hardware/vehicles", createHref: "/dashboard/hardware/vehicles?new=1" },
+  ],
+};
+
 const REPORTS_NAV: NavItem = {
   label: "Reports",
   icon: BarChart2,
@@ -215,7 +245,7 @@ const SETTINGS_NAV: NavItem = {
 // Personal Finance
 const PERSONAL_NAV_ITEMS: NavItem[] = [
   {
-    label: "Overview",
+    label: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard/finance",
     requiredModule: "personal_finance",
@@ -297,6 +327,13 @@ const PERSONAL_NAV_ITEMS: NavItem[] = [
     personalOnly: true,
   },
   {
+    label: "Activities",
+    icon: Activity,
+    href: "/dashboard/finance/activities",
+    requiredModule: "personal_finance",
+    personalOnly: true,
+  },
+  {
     label: "Settings",
     icon: Settings,
     href: "/dashboard/finance/settings",
@@ -316,6 +353,7 @@ const RETAIL_NAV_ITEMS: NavItem[] = [
   },
   POS_NAV,
   CUSTOMERS_NAV,
+  SALES_NAV,
   {
     label: "Inventory",
     icon: Package,
@@ -353,92 +391,49 @@ const RETAIL_NAV_ITEMS: NavItem[] = [
   SETTINGS_NAV,
 ];
 
-// Construction
+// Construction — every construction-specific page lives under the single
+// "Construction" dropdown (CONSTRUCTION_SUBMENU_NAV) instead of each getting
+// its own top-level sidebar row, matching how every other module (Sales,
+// Purchase, Inventory, ...) already collapses under one entry. A standalone
+// "Dashboard" row still leads, matching the pinned Dashboard/Overview link
+// every other account type has — the Construction dropdown label doubling
+// as a link isn't visually distinct enough on its own to be discoverable.
 const CONSTRUCTION_NAV_ITEMS: NavItem[] = [
   {
-    label: "Overview",
+    label: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard/construction",
-    requiredModule: "construction",
     pinnedFirst: true,
   },
   {
-    label: "Sites",
-    icon: Building2,
-    href: "/dashboard/construction/sites",
-    requiredModule: "construction",
-    children: [
-      { label: "Sites", href: "/dashboard/construction/sites", createHref: "/dashboard/construction/sites/new" },
-    ],
+    ...CONSTRUCTION_SUBMENU_NAV,
+    pinnedFirst: true,
+    // Overview is redundant here — the standalone "Dashboard" row above
+    // already covers it; still present in the shared submenu for
+    // organization-type tenants, which have no separate Dashboard link.
+    children: CONSTRUCTION_SUBMENU_NAV.children?.filter((c) => c.label !== "Overview"),
   },
   INVENTORY_NAV,
-  {
-    label: "Material Consumption",
-    icon: Package,
-    href: "/dashboard/construction/material-consumption",
-    requiredModule: "construction",
-    children: [
-      { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
-    ],
-  },
-  {
-    label: "Daily Logs",
-    icon: FileText,
-    href: "/dashboard/construction/daily-logs",
-    requiredModule: "construction",
-    children: [
-      { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
-    ],
-  },
-  {
-    label: "Equipment",
-    icon: Wrench,
-    href: "/dashboard/construction/equipment",
-    requiredModule: "construction",
-    children: [
-      { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
-    ],
-  },
-  {
-    label: "Equipment Usage",
-    icon: BarChart2,
-    href: "/dashboard/construction/equipment-usage",
-    requiredModule: "construction",
-    children: [
-      { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage", createHref: "/dashboard/construction/equipment-usage?new=1" },
-    ],
-  },
-  {
-    label: "Workers",
-    icon: HardHat,
-    href: "/dashboard/construction/workers",
-    requiredModule: "construction",
-    children: [
-      { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
-    ],
-  },
-  {
-    label: "Attendance",
-    icon: ClipboardCheck,
-    href: "/dashboard/construction/attendance",
-    requiredModule: "construction",
-    children: [
-      { label: "Attendance", href: "/dashboard/construction/attendance", createHref: "/dashboard/construction/attendance/mark" },
-    ],
-  },
-  {
-    label: "Reports",
-    icon: BarChart2,
-    href: "/dashboard/construction/reports",
-    requiredModule: "construction",
-  },
+  ACCOUNTING_NAV,
+  // Optional business-ops modules — off by default for a construction
+  // workplace, but a construction company that also sells materials directly,
+  // runs its own hardware line, or wants HR/payroll can enable them from
+  // Settings → Modules; each needs its own sidebar entry here to actually
+  // show up once enabled (see getModuleCatalogSections's construction case).
+  SALES_NAV,
+  PURCHASE_NAV,
+  CUSTOMERS_NAV,
+  POS_NAV,
+  HR_NAV,
+  HARDWARE_EXTRAS_NAV,
+  REPORTS_NAV,
   SETTINGS_NAV,
 ];
 
 // Hardware
 const HARDWARE_NAV_ITEMS: NavItem[] = [
   {
-    label: "Overview",
+    label: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard/hardware",
     requiredModule: "hardware",
@@ -449,17 +444,9 @@ const HARDWARE_NAV_ITEMS: NavItem[] = [
   SALES_NAV,
   PURCHASE_NAV,
   INVENTORY_NAV,
-  {
-    label: "Hardware",
-    icon: Wrench,
-    requiredModule: "hardware",
-    children: [
-      { label: "Rate Board", href: "/dashboard/hardware/rates", createHref: "/dashboard/hardware/rates?new=1" },
-      { label: "Rentals", href: "/dashboard/hardware/rentals", createHref: "/dashboard/hardware/rentals?new=1" },
-      { label: "Deliveries", href: "/dashboard/hardware/deliveries", createHref: "/dashboard/hardware/deliveries?new=1" },
-      { label: "Vehicles", href: "/dashboard/hardware/vehicles", createHref: "/dashboard/hardware/vehicles?new=1" },
-    ],
-  },
+  ACCOUNTING_NAV,
+  HR_NAV,
+  HARDWARE_EXTRAS_NAV,
   REPORTS_NAV,
   SETTINGS_NAV,
 ];
@@ -490,22 +477,7 @@ const ORGANIZATION_NAV_ITEMS: NavItem[] = [
       { label: "Reports", href: "/dashboard/hardware/reports" },
     ],
   },
-  {
-    label: "Construction",
-    icon: HardHat,
-    requiredModule: "construction",
-    children: [
-      { label: "Overview", href: "/dashboard/construction", exact: true },
-      { label: "Sites", href: "/dashboard/construction/sites", createHref: "/dashboard/construction/sites/new" },
-      { label: "Workers", href: "/dashboard/construction/workers", createHref: "/dashboard/construction/workers/new" },
-      { label: "Attendance", href: "/dashboard/construction/attendance", createHref: "/dashboard/construction/attendance/mark" },
-      { label: "Daily Logs", href: "/dashboard/construction/daily-logs", createHref: "/dashboard/construction/daily-logs/new" },
-      { label: "Material Consumption", href: "/dashboard/construction/material-consumption", createHref: "/dashboard/construction/consumption/new" },
-      { label: "Equipment", href: "/dashboard/construction/equipment", createHref: "/dashboard/construction/equipment/new" },
-      { label: "Equipment Usage", href: "/dashboard/construction/equipment-usage", createHref: "/dashboard/construction/equipment-usage?new=1" },
-      { label: "Construction Reports", href: "/dashboard/construction/reports" },
-    ],
-  },
+  CONSTRUCTION_SUBMENU_NAV,
   ACCOUNTING_NAV,
   POS_NAV,
   HR_NAV,

@@ -129,130 +129,44 @@ export default function PartyDetailPage() {
     }
   }, [partyId]);
 
-  // Add print styles
+  // Page size for the printed ledger. Hiding the dashboard chrome (sidebar,
+  // icon rail, widgets) and letting #printable-ledger flow across pages is
+  // handled by the shared print stylesheet in app/dashboard/layout.tsx —
+  // this only needs to set the paper size/margins, so it's pure CSS with no
+  // DOM manipulation (moving React-managed nodes around the DOM directly, as
+  // this used to do, fights React's own reconciliation of that subtree).
   useEffect(() => {
     const style = document.createElement('style');
+    style.id = 'party-ledger-print-page-style';
     style.textContent = `
       @media print {
         @page {
           size: A4;
           margin: 15mm;
         }
-        
-        /* Force hide everything except printable content */
-        html, body {
-          height: auto !important;
-          overflow: visible !important;
-        }
-        
-        body > div:first-child {
-          display: none !important;
-        }
-        
-        body > #__next {
-          display: none !important;
-        }
-        
-        /* Show only printable ledger */
-        #printable-ledger {
-          display: block !important;
-          position: absolute !important;
-          left: 0 !important;
-          top: 0 !important;
-          width: 100% !important;
-          background: white !important;
-          padding: 20px !important;
-        }
       }
     `;
     document.head.appendChild(style);
-    
-    // Better approach: Listen for beforeprint event
-    const handleBeforePrint = () => {
-      // Hide everything except printable ledger
-      const body = document.body;
-      const printable = document.getElementById('printable-ledger');
-      
-      if (printable) {
-        // Save original parent
-        const originalParent = printable.parentElement;
-        const originalNextSibling = printable.nextSibling;
-        
-        // Move printable ledger to body root
-        document.body.appendChild(printable);
-        
-        // Hide all other children of body
-        Array.from(body.children).forEach((child) => {
-          if (child !== printable && child.id !== 'printable-ledger') {
-            (child as HTMLElement).style.display = 'none';
-          }
-        });
-        
-        // Store cleanup function
-        (window as any).__printCleanup = () => {
-          // Restore printable ledger to original position
-          if (originalNextSibling && originalParent) {
-            originalParent.insertBefore(printable, originalNextSibling);
-          } else if (originalParent) {
-            originalParent.appendChild(printable);
-          }
-          
-          // Show all children again
-          Array.from(body.children).forEach((child) => {
-            (child as HTMLElement).style.display = '';
-          });
-        };
-      }
-    };
-    
-    const handleAfterPrint = () => {
-      if ((window as any).__printCleanup) {
-        (window as any).__printCleanup();
-        delete (window as any).__printCleanup;
-      }
-    };
-    
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
-    
     return () => {
       document.head.removeChild(style);
-      window.removeEventListener('beforeprint', handleBeforePrint);
-      window.removeEventListener('afterprint', handleAfterPrint);
     };
   }, []);
 
 
   const handleShare = async () => {
     if (!party) return;
-    
+
     try {
-      let tokenToUse = party.share_token;
-      
-      // Check if party already has a share token
-      if (!tokenToUse) {
-        console.log("Party doesn't have share_token, generating one...");
-        // Otherwise, generate a share token for the party
-        // We need to update the party to generate a share_token
-        // The backend should auto-generate it on save if it doesn't exist
-        await partyLenderAPI.update(party.id, { name: party.name }); // Trigger a save to generate token
-        
-        // Reload party to get the newly generated token
-        const updatedParty = await partyLenderAPI.get(party.id);
-        console.log("Updated party:", updatedParty);
-        
-        if (updatedParty.share_token) {
-          tokenToUse = updatedParty.share_token;
-          setParty(prev => prev ? { ...prev, share_token: tokenToUse } : null);
-        } else {
-          toast.error("Failed to generate share link");
-          return;
-        }
+      // Always issue a fresh token — each "Share Ledger" click should hand
+      // out a brand-new link and invalidate any link shared previously.
+      const updatedParty = await partyLenderAPI.regenerateShareLink(party.id);
+      if (!updatedParty.share_token) {
+        toast.error("Failed to generate share link");
+        return;
       }
-      
-      console.log("Using share token:", tokenToUse);
-      const shareUrl = `${window.location.origin}/shares/party/${tokenToUse}`;
-      console.log("Share URL:", shareUrl);
+      setParty((prev) => (prev ? { ...prev, share_token: updatedParty.share_token } : null));
+
+      const shareUrl = `${window.location.origin}/shares/party/${updatedParty.share_token}`;
       setShareLink(shareUrl);
       setShareModalOpen(true);
     } catch (error: any) {
@@ -306,12 +220,12 @@ export default function PartyDetailPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full bg-gray-50">
+    <div className="flex flex-col min-h-full bg-gray-50 print:bg-white">
       <div className="print:hidden">
         <DashHeader title={party.name} subtitle={`${workspaceName} · Party Details & Ledger`} />
       </div>
 
-      <div id="printable-ledger" className="flex-1 p-6 space-y-4 print:p-0 print:space-y-3">
+      <div id="printable-ledger" className="flex-1 p-6 space-y-4 print:p-0 print:space-y-3 print:bg-white">
         {/* Print-only Header */}
         <div className="hidden print:block bg-white border-b-2 border-gray-800 pb-4 mb-4">
           <div className="flex items-center justify-between mb-3">
@@ -325,8 +239,39 @@ export default function PartyDetailPage() {
             </div>
           </div>
         </div>
-        {/* Hero Section - Party Profile */}
-        <div className="bg-gradient-to-br from-[var(--color-accent-custom,#22C55E)] to-emerald-600 rounded-lg shadow-md overflow-hidden print:bg-white print:border print:border-gray-800 print:rounded-none print:shadow-none">
+        {/* Print-only Party Info — plain key/value block, no card chrome */}
+        <div className="hidden print:block mb-4 pb-4 border-b border-gray-300">
+          <h2 className="text-lg font-bold text-gray-900 mb-3">{party.name}</h2>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+            {party.mobile && (
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-20 shrink-0">Mobile</span>
+                <span className="text-gray-900 font-medium">{party.mobile}</span>
+              </div>
+            )}
+            {party.email && (
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-20 shrink-0">Email</span>
+                <span className="text-gray-900 font-medium">{party.email}</span>
+              </div>
+            )}
+            {party.pan && (
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-20 shrink-0">PAN</span>
+                <span className="text-gray-900 font-medium">{party.pan}</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <span className="text-gray-500 w-20 shrink-0">Since</span>
+              <span className="text-gray-900 font-medium">
+                <FormattedDate value={party.createdAt} /> ({dateSystem})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero Section - Party Profile (screen only) */}
+        <div className="bg-gradient-to-br from-[var(--color-accent-custom,#22C55E)] to-emerald-600 rounded-lg shadow-md overflow-hidden print:hidden">
           <div className="p-6 print:p-4">
             {/* Edit Profile Button - Top Right */}
             <div className="flex justify-end mb-4 print:hidden">
@@ -397,10 +342,28 @@ export default function PartyDetailPage() {
           </div>
         </div>
 
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:gap-3 print:grid-cols-3">
+        {/* Print-only Summary — plain 3-column row, no card chrome */}
+        <div className="hidden print:grid grid-cols-3 gap-6 mb-4 pb-4 border-b border-gray-300">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Money Given</p>
+            <p className="text-xl font-bold text-gray-900">Rs. {party.total_given.toLocaleString('en-NP')}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Money Received</p>
+            <p className="text-xl font-bold text-gray-900">Rs. {party.total_received.toLocaleString('en-NP')}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              {party.net_balance >= 0 ? 'Net Balance (Receivable)' : 'Net Balance (Payable)'}
+            </p>
+            <p className="text-xl font-bold text-gray-900">Rs. {Math.abs(party.net_balance).toLocaleString('en-NP')}</p>
+          </div>
+        </div>
+
+        {/* Financial Summary Cards (screen only) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
           {/* Money Given Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow print:shadow-none print:border-gray-800 print:p-3 print:rounded-none">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-2xl font-bold text-gray-900 mb-2">
@@ -416,7 +379,7 @@ export default function PartyDetailPage() {
           </div>
 
           {/* Money Received Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow print:shadow-none print:border-gray-800 print:p-3 print:rounded-none">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-2xl font-bold text-gray-900 mb-2">
@@ -432,7 +395,7 @@ export default function PartyDetailPage() {
           </div>
 
           {/* Net Balance Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow print:shadow-none print:border-gray-800 print:p-3 print:rounded-none">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className={`text-2xl font-bold mb-2 ${
@@ -459,12 +422,12 @@ export default function PartyDetailPage() {
         </div>
 
         {/* Transaction History Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-gray-800 print:rounded-none">
-          <div className="border-b border-gray-200 bg-gray-50/50 px-5 py-3 print:bg-white print:border-gray-800">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none print:rounded-none">
+          <div className="border-b border-gray-200 bg-gray-50/50 px-5 py-3 print:bg-white print:border-gray-300 print:px-0">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Transaction History</h2>
-                <p className="text-xs text-gray-600 mt-0.5">Complete ledger of all transactions</p>
+                <p className="text-xs text-gray-600 mt-0.5 print:hidden">Complete ledger of all transactions</p>
               </div>
               <div className="flex gap-2 print:hidden">
                 <Button
@@ -513,7 +476,7 @@ export default function PartyDetailPage() {
             </div>
           </div>
           
-          <div className="p-5 print:p-3">
+          <div className="p-5 print:p-0 print:pt-3">
             <PartyTransactions
               partyId={party.id}
               onOpenDialog={() => {}}
@@ -546,9 +509,10 @@ export default function PartyDetailPage() {
           
           <div className="space-y-4 py-4">
             <p className="text-sm text-gray-600">
-              Share this secure link to allow others to view {party.name}'s ledger without logging in:
+              Share this secure link to allow others to view {party.name}'s ledger without logging in.
+              Any link shared before this one will stop working.
             </p>
-            
+
             <div className="flex gap-2">
               <input
                 type="text"

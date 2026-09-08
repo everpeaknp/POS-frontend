@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Download, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "@/lib/api/client";
 
 interface SharedTransaction {
   id: number;
@@ -16,6 +17,17 @@ interface SharedTransaction {
   payment_method_display?: string;
   receipt_url?: string;
   note: string;
+  tenant: {
+    name: string;
+    workspace_name: string;
+    logo_url: string | null;
+  };
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
 }
 
 export default function PublicSharePage() {
@@ -35,7 +47,7 @@ export default function PublicSharePage() {
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/finance/public-share/${token}/`);
+        const response = await fetch(`${API_BASE_URL}/finance/public-share/${token}/`);
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -99,12 +111,30 @@ export default function PublicSharePage() {
   const amountLabel = isMoneyOut
     ? `Paid to ${data.party_name}`
     : `Received from ${data.party_name}`;
+  const businessName = data.tenant?.workspace_name || data.tenant?.name || "";
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
+        {/* Letterhead */}
         <div className="bg-white rounded-t-lg border border-gray-200 border-b-0 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            {data.tenant?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.tenant.logo_url}
+                alt={businessName}
+                className="h-10 w-10 rounded-lg object-cover border border-gray-200"
+              />
+            ) : businessName ? (
+              <div className="h-10 w-10 rounded-lg bg-[var(--color-accent-custom,#22C55E)]/10 flex items-center justify-center border border-gray-200 shrink-0">
+                <span className="text-sm font-bold text-[var(--color-accent-custom,#22C55E)]">
+                  {getInitials(businessName)}
+                </span>
+              </div>
+            ) : null}
+            {businessName && <p className="text-sm font-semibold text-gray-700">{businessName}</p>}
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Transaction Details</h1>
           <p className="text-gray-600 mt-1">Shared read-only view</p>
         </div>
@@ -188,9 +218,9 @@ export default function PublicSharePage() {
           )}
 
           {/* Footer */}
-          <div className="border-t pt-6 text-center text-xs text-gray-500">
-            <p>This is a read-only shared view of a transaction.</p>
-            <p>No changes can be made to this data.</p>
+          <div className="border-t pt-6 text-center text-xs text-gray-500 space-y-1">
+            <p>This is a read-only shared view of a transaction. No changes can be made to this data.</p>
+            {businessName && <p className="text-gray-400">Generated from {businessName} · Khata Business OS</p>}
           </div>
         </div>
       </div>

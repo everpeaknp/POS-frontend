@@ -161,7 +161,7 @@ export default function HardwareDashboardPage() {
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Hardware business overview`;
+  const subtitle = `${workspaceName} · Hardware business dashboard`;
 
   useEffect(() => {
     fetchDashboardData();

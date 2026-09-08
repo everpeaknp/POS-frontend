@@ -214,10 +214,22 @@
     -webkit-text-fill-color: var(--autofill-text, #111827) !important;
   }
 
+  /* `color-scheme` must follow the app's own theme toggle (the `.dark` class
+     on <html>), not the OS's prefers-color-scheme — otherwise the native
+     calendar/clock icon on these inputs can render in a color that's
+     invisible against our manually-chosen background (e.g. a dark icon
+     rendered on our dark theme's dark input background, because the OS is
+     still set to light mode). */
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"] {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark input[type="datetime-local"] {
+    color-scheme: dark;
   }
 
   html[data-reduce-motion="true"] *:not(.khata-loader):not(.khata-loader *),

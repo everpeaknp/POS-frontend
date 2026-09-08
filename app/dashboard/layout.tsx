@@ -38,17 +38,57 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           display: none !important;
           visibility: hidden !important;
         }
+
+        /* The dashboard shell is a fixed h-screen flexbox with overflow
+           clipping so the app scrolls internally on screen — printing
+           needs the opposite: normal document flow so content can flow
+           across multiple pages instead of being clipped to one
+           screen-height. */
+        html, body, .dashboard-print-flow {
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          display: block !important;
+        }
+
+        /* Printed pages should always be light (dark ink-wasting
+           backgrounds carried over from the on-screen dark theme are
+           never wanted on paper) — the beforeprint/afterprint handlers
+           below temporarily drop the .dark class so every dark: variant
+           (Tailwind utilities and the CSS custom properties they use)
+           reverts to its light value for the duration of the print. */
+        html {
+          background: #ffffff !important;
+          color-scheme: light !important;
+        }
       }
     `;
     if (!document.getElementById('dashboard-print-styles')) {
       document.head.appendChild(style);
     }
-    
+
+    // Temporarily disable dark mode for printing — Tailwind's `dark:`
+    // variants are gated purely on the `.dark` class on <html>, so this is
+    // the only way to revert every dark-mode override (utility classes and
+    // CSS custom properties alike) at once, rather than fighting each one.
+    let wasDark = false;
+    const handleBeforePrint = () => {
+      wasDark = document.documentElement.classList.contains('dark');
+      document.documentElement.classList.remove('dark');
+    };
+    const handleAfterPrint = () => {
+      if (wasDark) document.documentElement.classList.add('dark');
+    };
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
     return () => {
       const existingStyle = document.getElementById('dashboard-print-styles');
       if (existingStyle) {
         document.head.removeChild(existingStyle);
       }
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
     };
   }, []);
 
@@ -95,20 +135,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Top:  [Sidebar][horizontal AppIconRail above content]
   if (!desktopMode) {
     return (
-      <div className="flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
+      <div className="dashboard-print-flow flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
         <div data-app-icon-rail className="print:hidden">
           {!railOnTop && <AppIconRail />}
         </div>
         <div data-sidebar className="print:hidden">
           <Sidebar />
         </div>
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="dashboard-print-flow flex-1 flex flex-col min-h-0 overflow-hidden">
           <div data-app-icon-rail className="print:hidden">
             {railOnTop && <AppIconRail forceHorizontal />}
           </div>
           <div
             key={pathname}
-            className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green"
+            className="dashboard-print-flow flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green"
           >
             {children}
           </div>

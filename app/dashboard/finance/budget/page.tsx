@@ -2,7 +2,24 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Edit2, CheckCircle2, TrendingUp, TrendingDown, AlertCircle, Search, X, LayoutGrid, List, Trash2 } from "lucide-react";
+import { Plus, Edit2, CheckCircle2, TrendingUp, TrendingDown, AlertCircle, Search, X, Trash2, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +27,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MonthYearPicker } from "@/components/shared/MonthYearPicker";
+import { QuickAddCategoryDialog } from "@/components/personal-finance/transactions/QuickAddCategoryDialog";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useDateSystemStore } from "@/lib/stores/dateSystemStore";
+import { NEPALI_MONTHS } from "@/lib/dates";
+import { adIsoToBsParts } from "@/lib/dates/convert";
+import { scopedSidebarKey } from "@/lib/dashboard/nav-items";
 import { formatCurrency } from "@/lib/utils";
 import { 
   financeBudgetAPI, 
@@ -27,8 +49,162 @@ type Category = FinanceCategory;
 type Budget = FinanceBudget;
 type Transaction = FinanceTransaction;
 
+const BUDGET_CARD_ORDER_KEY = "khata-budget-card-order";
+
+const AD_MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** "2026-09" -> "September 2026" (AD) or the equivalent BS month/year, per the user's date system. */
+function formatSelectedMonthLabel(yearMonth: string, dateSystem: "AD" | "BS"): string {
+  if (dateSystem === "BS") {
+    const bsParts = adIsoToBsParts(`${yearMonth}-15`);
+    if (bsParts) return `${NEPALI_MONTHS[bsParts.monthIndex]} ${bsParts.year}`;
+  }
+  const [year, month] = yearMonth.split("-").map(Number);
+  if (!year || !month) return yearMonth;
+  return `${AD_MONTH_NAMES[month - 1]} ${year}`;
+}
+
+function getProgressColor(percentUsed: number, isOverBudget: boolean) {
+  if (isOverBudget) return "bg-red-500";
+  if (percentUsed >= 90) return "bg-amber-500";
+  if (percentUsed >= 75) return "bg-yellow-500";
+  return "bg-[var(--color-accent-custom,#22C55E)]";
+}
+
+interface BudgetCardData {
+  category: Category;
+  budget: Budget | undefined;
+  spent: number;
+  budgeted: number;
+  remaining: number;
+  percentUsed: number;
+  isOverBudget: boolean;
+}
+
+function SortableBudgetCard({
+  data,
+  onEdit,
+  onDelete,
+  onSetBudget,
+}: {
+  data: BudgetCardData;
+  onEdit: (budget: Budget) => void;
+  onDelete: (budget: Budget) => void;
+  onSetBudget: (categoryId: number) => void;
+}) {
+  const { category, budget, spent, budgeted, remaining, percentUsed, isOverBudget } = data;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white border border-gray-200 rounded-lg p-4 ${isDragging ? "shadow-lg opacity-90 z-10 relative" : ""}`}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start gap-1.5 min-w-0">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="mt-0.5 shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+            aria-label={`Drag to reorder ${category.name}`}
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <div className="min-w-0">
+            <h3 className="font-medium text-gray-900 truncate">{category.name}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {formatCurrency(spent)} of {formatCurrency(budgeted)} spent
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {budget ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(budget)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(budget)}
+                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onSetBudget(category.id)}
+              className="h-8 px-3 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Set Budget
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {budget && (
+        <>
+          {/* Progress Bar */}
+          <div className="mb-2">
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all ${getProgressColor(percentUsed, isOverBudget)}`}
+                style={{ width: `${Math.min(percentUsed, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-between text-xs">
+            <span className={`font-medium ${isOverBudget ? "text-red-600" : remaining < budgeted * 0.1 ? "text-amber-600" : "text-gray-600"}`}>
+              {isOverBudget ? `Over by ${formatCurrency(Math.abs(remaining))}` : `${formatCurrency(remaining)} left`}
+            </span>
+            <span className="text-gray-500">{percentUsed.toFixed(0)}%</span>
+          </div>
+
+          {isOverBudget && (
+            <div className="mt-2 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              Budget exceeded
+            </div>
+          )}
+        </>
+      )}
+
+      {!budget && spent > 0 && (
+        <div className="text-xs text-gray-500 mt-2">
+          Spending detected, but no budget set for this category.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BudgetPage() {
   const { user } = useAuth();
+  const dateSystem = useDateSystemStore((state) => state.dateSystem);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -64,7 +240,24 @@ export default function BudgetPage() {
   const [filterType, setFilterType] = useState<string>("all"); // "all" | "expense" | "income"
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  // User's saved drag-and-drop order for budget cards, keyed by category id.
+  const [cardOrder, setCardOrder] = useState<number[]>([]);
+  const tenantSlug = user?.tenant?.slug;
+
+  // Load saved card order (scoped per tenant, since it's a per-workplace preference)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(scopedSidebarKey(BUDGET_CARD_ORDER_KEY, tenantSlug));
+      setCardOrder(raw ? JSON.parse(raw) : []);
+    } catch {
+      setCardOrder([]);
+    }
+  }, [tenantSlug]);
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
 
@@ -73,6 +266,14 @@ export default function BudgetPage() {
     category: null,
     amount: "0",
   });
+
+  // Quick "add new category" dialog, launched from inside the Add/Edit Budget dialog
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState<{
+    name?: string;
+    type?: "income" | "expense";
+    description?: string;
+  }>({ name: "", type: "expense", description: "" });
 
   const workspaceName = user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
   const subtitle = `${workspaceName} · Budget planning and tracking`;
@@ -233,6 +434,42 @@ export default function BudgetPage() {
     }
   };
 
+  const openAddCategoryDialog = () => {
+    setCategoryFormData({ name: "", type: "expense", description: "" });
+    setShowCategoryDialog(true);
+  };
+
+  const handleQuickAddCategory = async () => {
+    const name = categoryFormData.name?.trim();
+    if (!name) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    const isDuplicate = categories.some(
+      (c) => c.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (isDuplicate) {
+      toast.error(`"${name}" already exists as a category`);
+      return;
+    }
+
+    try {
+      const newCategory = await financeCategoryAPI.create({
+        name,
+        type: categoryFormData.type as "income" | "expense",
+        description: categoryFormData.description || "",
+      });
+      setCategories((prev) => [...prev, newCategory]);
+      setFormData((prev) => ({ ...prev, category: newCategory.id }));
+      setShowCategoryDialog(false);
+      toast.success("Category added successfully");
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
+  };
+
   const handleDelete = async (budgetId: number) => {
     try {
       await financeBudgetAPI.delete(budgetId);
@@ -251,247 +488,6 @@ export default function BudgetPage() {
     setDeleteConfirmDialog(true);
   };
 
-  const getProgressColor = (percentUsed: number, isOverBudget: boolean) => {
-    if (isOverBudget) return "bg-red-500";
-    if (percentUsed >= 90) return "bg-amber-500";
-    if (percentUsed >= 75) return "bg-yellow-500";
-    return "bg-[var(--color-accent-custom,#22C55E)]";
-  };
-
-  const renderBudgetCard = (data: typeof budgetData[0]) => {
-    const { category, budget, spent, budgeted, remaining, percentUsed, isOverBudget } = data;
-
-    return (
-      <div key={category.id} className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="font-medium text-gray-900">{category.name}</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {formatCurrency(spent)} of {formatCurrency(budgeted)} spent
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {budget ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => openEditDialog(budget)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => openDeleteConfirm(budget)}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => openAddDialog(category.id)}
-                className="h-8 px-3 text-xs"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Set Budget
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {budget && (
-          <>
-            {/* Progress Bar */}
-            <div className="mb-2">
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all ${getProgressColor(percentUsed, isOverBudget)}`}
-                  style={{ width: `${Math.min(percentUsed, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center justify-between text-xs">
-              <span className={`font-medium ${isOverBudget ? "text-red-600" : remaining < budgeted * 0.1 ? "text-amber-600" : "text-gray-600"}`}>
-                {isOverBudget ? `Over by ${formatCurrency(Math.abs(remaining))}` : `${formatCurrency(remaining)} left`}
-              </span>
-              <span className="text-gray-500">{percentUsed.toFixed(0)}%</span>
-            </div>
-
-            {isOverBudget && (
-              <div className="mt-2 text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Budget exceeded
-              </div>
-            )}
-          </>
-        )}
-
-        {!budget && spent > 0 && (
-          <div className="text-xs text-gray-500 mt-2">
-            Spending detected, but no budget set for this category.
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderBudgetsTable = () => {
-    if (filteredBudgetData.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          {hasActiveFilters ? (
-            <>
-              <p className="text-gray-500 mb-4">No budgets match your filters</p>
-              <Button variant="outline" onClick={clearFilters}>
-                Clear filters
-              </Button>
-            </>
-          ) : (
-            <>
-              <p className="text-gray-500 mb-4">No budgets set for {selectedMonth}</p>
-              <Button onClick={() => openAddDialog()} className="bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Budget
-              </Button>
-            </>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Budgeted
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Spent
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Remaining
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Progress
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredBudgetData.map((data) => {
-              const { category, budget, spent, budgeted, remaining, percentUsed, isOverBudget } = data;
-
-              return (
-                <tr key={category.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {category.name}
-                  </td>
-                  <td className="px-4 py-3">
-                    {category.type === "income" ? (
-                      <div className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-custom,#22C55E)]">
-                        <TrendingUp className="h-3 w-3" />
-                        Income
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center gap-1 text-xs text-red-600">
-                        <TrendingDown className="h-3 w-3" />
-                        Expense
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-900">
-                    {budget ? formatCurrency(budgeted) : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-600">
-                    {formatCurrency(spent)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right">
-                    {budget ? (
-                      <span className={isOverBudget ? "text-red-600 font-medium" : "text-[var(--color-accent-custom,#22C55E)]"}>
-                        {formatCurrency(remaining)}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {budget ? (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden min-w-[80px]">
-                          <div
-                            className={`h-full transition-all ${getProgressColor(percentUsed, isOverBudget)}`}
-                            style={{ width: `${Math.min(percentUsed, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-500 shrink-0 w-10 text-right">
-                          {percentUsed.toFixed(0)}%
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">No budget</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {budget ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(budget)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteConfirm(budget)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openAddDialog(category.id)}
-                          className="h-8 px-3 text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Set Budget
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   // Search + status filter, applied on top of budgetData
   const filteredBudgetData = useMemo(() => {
     let filtered = budgetData;
@@ -508,6 +504,32 @@ export default function BudgetPage() {
     }
     return filtered;
   }, [budgetData, searchTerm, filterStatus]);
+
+  // Apply the user's saved drag-and-drop order on top of the filtered list.
+  // Categories not yet in the saved order (e.g. newly added ones) keep
+  // appearing, just appended after the ordered ones.
+  const orderedBudgetData = useMemo(() => {
+    if (cardOrder.length === 0) return filteredBudgetData;
+    const rank = new Map(cardOrder.map((id, index) => [id, index]));
+    return [...filteredBudgetData].sort((a, b) => {
+      const rankA = rank.has(a.category.id) ? rank.get(a.category.id)! : cardOrder.length + a.category.id;
+      const rankB = rank.has(b.category.id) ? rank.get(b.category.id)! : cardOrder.length + b.category.id;
+      return rankA - rankB;
+    });
+  }, [filteredBudgetData, cardOrder]);
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = orderedBudgetData.findIndex((d) => d.category.id === active.id);
+    const newIndex = orderedBudgetData.findIndex((d) => d.category.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(orderedBudgetData, oldIndex, newIndex).map((d) => d.category.id);
+    setCardOrder(newOrder);
+    localStorage.setItem(scopedSidebarKey(BUDGET_CARD_ORDER_KEY, tenantSlug), JSON.stringify(newOrder));
+  };
 
   const hasActiveFilters = Boolean(searchTerm || filterStatus !== "all" || filterType !== "all");
   const clearFilters = () => {
@@ -624,27 +646,6 @@ export default function BudgetPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-                className={`h-9 w-9 ${viewMode === "list" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
-                title="List view"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90" : ""}`}
-                title="Grid view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-
             <Button onClick={() => openAddDialog()} className="h-9 shrink-0 bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom,#22C55E)]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Budget
@@ -654,9 +655,7 @@ export default function BudgetPage() {
 
         {/* Budgets List */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {viewMode === "list" ? (
-            renderBudgetsTable()
-          ) : filteredBudgetData.length === 0 ? (
+          {filteredBudgetData.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               {hasActiveFilters ? (
@@ -678,9 +677,24 @@ export default function BudgetPage() {
             </div>
           ) : (
             <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredBudgetData.map(renderBudgetCard)}
-              </div>
+              <DndContext sensors={dragSensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
+                <SortableContext
+                  items={orderedBudgetData.map((d) => d.category.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {orderedBudgetData.map((data) => (
+                      <SortableBudgetCard
+                        key={data.category.id}
+                        data={data}
+                        onEdit={openEditDialog}
+                        onDelete={openDeleteConfirm}
+                        onSetBudget={openAddDialog}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
           )}
         </div>
@@ -707,7 +721,13 @@ export default function BudgetPage() {
               </Label>
               <select
                 value={formData.category?.toString() || ""}
-                onChange={(e) => setFormData({ ...formData, category: parseInt(e.target.value) })}
+                onChange={(e) => {
+                  if (e.target.value === "__add_new__") {
+                    openAddCategoryDialog();
+                    return;
+                  }
+                  setFormData({ ...formData, category: parseInt(e.target.value) });
+                }}
                 disabled={!!editingBudget}
                 className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
               >
@@ -726,6 +746,9 @@ export default function BudgetPage() {
                     </option>
                   ))}
                 </optgroup>
+                {!editingBudget && (
+                  <option value="__add_new__">+ Add new category…</option>
+                )}
               </select>
               {editingBudget && (
                 <p className="text-xs text-gray-500 mt-1">Category cannot be changed after creation</p>
@@ -754,14 +777,13 @@ export default function BudgetPage() {
 
             <div>
               <Label>Month</Label>
-              <div className="mt-1">
-                <MonthYearPicker
-                  value={selectedMonth}
-                  onChange={() => {}} // Disabled - can't change month in edit mode
-                  className="opacity-50 pointer-events-none"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Budget will be set for the selected month</p>
+              <p className="mt-1 text-sm">
+                This budget applies to{" "}
+                <span className="font-medium">{formatSelectedMonthLabel(selectedMonth, dateSystem)}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Switch months using the page&apos;s month selector to add a budget for a different month.
+              </p>
             </div>
           </div>
 
@@ -806,6 +828,15 @@ export default function BudgetPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Quick Add Category Dialog (launched from inside Add/Edit Budget) */}
+      <QuickAddCategoryDialog
+        open={showCategoryDialog}
+        onOpenChange={setShowCategoryDialog}
+        formData={categoryFormData}
+        onFormDataChange={(data) => setCategoryFormData({ ...categoryFormData, ...data })}
+        onAdd={handleQuickAddCategory}
+      />
     </div>
   );
 }

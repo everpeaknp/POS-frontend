@@ -32,8 +32,7 @@ interface TransactionFiltersProps {
   onClearFilters: () => void;
   categories: Category[];
   accounts: Account[];
-  onAddIncome: () => void;
-  onAddExpense: () => void;
+  onAddTransaction: () => void;
 }
 
 export function TransactionFilters({
@@ -53,8 +52,7 @@ export function TransactionFilters({
   onClearFilters,
   categories,
   accounts,
-  onAddIncome,
-  onAddExpense,
+  onAddTransaction,
 }: TransactionFiltersProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -147,20 +145,12 @@ export function TransactionFilters({
           )}
         </div>
 
-        <Button 
-          onClick={onAddIncome} 
-          className="h-7 px-2.5 shrink-0 text-sm bg-emerald-600 hover:bg-emerald-700"
+        <Button
+          onClick={onAddTransaction}
+          className="h-7 px-2.5 shrink-0 text-sm"
         >
           <Plus className="h-3 w-3 mr-1" />
-          Add Income
-        </Button>
-
-        <Button 
-          onClick={onAddExpense} 
-          className="h-7 px-2.5 shrink-0 text-sm bg-red-600 hover:bg-red-700"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Add Expense
+          Add Transaction
         </Button>
       </div>
     </div>

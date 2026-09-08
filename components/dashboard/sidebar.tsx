@@ -49,10 +49,19 @@ function SidebarItem({
 
   const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
-  
+
   // Check if this is a "direct link with add button" pattern (has href AND single child with createHref)
   const hasDirectAdd = item.href && item.children?.length === 1 && item.children[0].createHref;
   const addHref = hasDirectAdd ? item.children[0].createHref : undefined;
+
+  // Parent is BOTH a direct link (e.g. a module's own dashboard) AND has
+  // several children to expand. Its own href is often the exact same route
+  // as another standalone top-level link (e.g. "Dashboard" and "Construction"
+  // both point at /dashboard/construction) — highlighting on exact href match
+  // would light up both rows at once, so this row instead only highlights
+  // when one of ITS OWN children (a sub-page) is active, never the shared root.
+  const isLinkAndExpandable = Boolean(item.href) && !hasDirectAdd && (item.children?.length ?? 0) > 0;
+  const isExpandableParentActive = isLinkAndExpandable ? isChildActive : isParentActive;
 
   // Close quick menu when clicking outside
   useEffect(() => {
@@ -186,45 +195,77 @@ function SidebarItem({
   // Expandable menu with children
   return (
     <div data-tour={`nav-${item.label.toLowerCase()}`}>
-      <button
-        type="button"
-        onClick={() => !alwaysExpanded && onToggle(item.label)}
-        title={item.label}
-        data-tour={`nav-${item.label.toLowerCase()}-toggle`}
+      <div
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-          compact && "justify-center px-2",
-          alwaysExpanded && "cursor-default",
-          isParentActive && !isOpen
+          "flex items-center gap-1 rounded-lg transition-all",
+          compact && "justify-center",
+          isExpandableParentActive && !isOpen
             ? "bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] text-white"
             : isOpen
               ? "bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))] text-[var(--sidebar-fg,#ffffff)]"
-              : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
+              : "!text-[var(--sidebar-fg-muted,#9ca3af)] hover:!text-[var(--sidebar-fg,#ffffff)]"
         )}
       >
-        <item.icon size={17} className={cn(
-          "shrink-0",
-          isParentActive && !isOpen
-            ? "!text-[var(--sidebar-fg,#ffffff)]"
-            : isOpen
-              ? "!text-[var(--sidebar-fg,#ffffff)]"
-              : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
-        )} />
-        {!compact && (
-          <>
-            <span className="flex-1 text-left">{item.label}</span>
-            {!alwaysExpanded && (
-              <ChevronDown
-                size={14}
-                className={cn(
-                  "shrink-0 transition-transform duration-200",
-                  isOpen && "rotate-180"
-                )}
-              />
+        {isLinkAndExpandable ? (
+          <Link
+            href={item.href!}
+            title={item.label}
+            onClick={() => {
+              // Clicking the row navigates AND toggles the submenu open or
+              // closed, same as clicking the chevron — one click does both.
+              if (!alwaysExpanded) onToggle(item.label);
+            }}
+            className={cn(
+              "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium min-w-0",
+              compact && "justify-center px-2"
             )}
-          </>
+          >
+            <item.icon size={17} className={cn(
+              "shrink-0",
+              isExpandableParentActive ? "!text-[var(--sidebar-fg,#ffffff)]" : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
+            )} />
+            {!compact && <span className="flex-1 text-left truncate">{item.label}</span>}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => !alwaysExpanded && onToggle(item.label)}
+            title={item.label}
+            className={cn(
+              "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium min-w-0",
+              compact && "justify-center px-2"
+            )}
+          >
+            <item.icon size={17} className={cn(
+              "shrink-0",
+              isExpandableParentActive && !isOpen
+                ? "!text-[var(--sidebar-fg,#ffffff)]"
+                : isOpen
+                  ? "!text-[var(--sidebar-fg,#ffffff)]"
+                  : "!text-[var(--sidebar-fg-muted,#9ca3af)]"
+            )} />
+            {!compact && <span className="flex-1 text-left">{item.label}</span>}
+          </button>
         )}
-      </button>
+
+        {!compact && !alwaysExpanded && (
+          <button
+            type="button"
+            onClick={() => onToggle(item.label)}
+            title={isOpen ? `Collapse ${item.label}` : `Expand ${item.label}`}
+            data-tour={`nav-${item.label.toLowerCase()}-toggle`}
+            className="p-2 mr-1 rounded hover:bg-[var(--color-accent-custom,var(--color-accent-custom,#22C55E))] shrink-0"
+          >
+            <ChevronDown
+              size={14}
+              className={cn(
+                "shrink-0 transition-transform duration-200",
+                isOpen && "rotate-180"
+              )}
+            />
+          </button>
+        )}
+      </div>
 
       {!compact && (
         <div

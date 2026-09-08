@@ -443,12 +443,12 @@ export function PartyTransactions({ partyId, onOpenDialog, initialEditTransactio
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden print:border-none print:rounded-none">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 border-b border-gray-200 print:bg-white print:border-b-2 print:border-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:hidden">Transaction ID</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date & Time
                       <Badge variant="outline" className="ml-2 text-xs font-normal">{dateSystem}</Badge>
@@ -456,19 +456,19 @@ export function PartyTransactions({ partyId, onOpenDialog, initialEditTransactio
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:hidden">Receipt</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:hidden">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 print:divide-gray-300">
                   {filteredTransactions.map(txn => (
                     <tr 
                       key={txn.id} 
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => router.push(`/dashboard/finance/parties/${generatePartySlug(party)}/${generateShortId(txn.id)}`)}
                     >
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm print:hidden">
                         <span className="font-mono text-xs text-gray-900">#{generateShortId(txn.id)}</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
@@ -496,7 +496,7 @@ export function PartyTransactions({ partyId, onOpenDialog, initialEditTransactio
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm print:hidden">
                         {txn.receipt_url ? (
                           <Button
                             size="sm"

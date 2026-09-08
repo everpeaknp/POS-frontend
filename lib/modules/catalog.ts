@@ -342,7 +342,7 @@ export function getModuleCatalogSections(accountType?: string): ModuleCatalogSec
 
     case 'construction':
       primaryModuleIds = ['construction', 'inventory', 'reports'];
-      optionalModuleIds = [];
+      optionalModuleIds = ['sales', 'purchase', 'customers', 'pos', 'hr', 'hardware'];
       break;
 
     case 'hardware':
