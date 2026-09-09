@@ -323,7 +323,7 @@ export default function NotificationsPage() {
                     className={`rounded-lg border px-4 py-3 ${
                       notification.is_read
                         ? "border-border bg-muted/30"
-                        : "border-[#22C55E]/30 bg-[#22C55E]/5"
+                        : "border-[#4A5D7A]/30 bg-[#4A5D7A]/5"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -335,7 +335,7 @@ export default function NotificationsPage() {
                         </p>
                       </div>
                       {!notification.is_read && (
-                        <span className="text-[10px] font-semibold uppercase text-[#22C55E]">
+                        <span className="text-[10px] font-semibold uppercase text-[#4A5D7A]">
                           New
                         </span>
                       )}
@@ -347,7 +347,7 @@ export default function NotificationsPage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/settings/security"
-                className="text-sm text-[#22C55E] hover:underline"
+                className="text-sm text-[#4A5D7A] hover:underline"
               >
                 Manage active sessions
               </Link>

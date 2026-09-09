@@ -314,7 +314,7 @@ export default function POSDiscountsPage() {
             <Button
               size="sm"
               onClick={() => setShowDialog(true)}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 shrink-0"
             >
               <Plus className="h-4 w-4" /> Add Discount
             </Button>
@@ -351,7 +351,7 @@ export default function POSDiscountsPage() {
                       <td className="px-4 py-3 font-medium text-sm">{discount.name}</td>
                       <td className="px-4 py-3 text-sm font-mono">{discount.code}</td>
                       <td className="px-4 py-3 text-sm capitalize">{discount.discount_type}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-[#22C55E]">
+                      <td className="px-4 py-3 text-sm font-semibold text-[#4A5D7A]">
                         {discount.discount_type === "percentage"
                           ? `${discount.discount_value}%`
                           : `Rs. ${discount.discount_value}`}
@@ -360,7 +360,7 @@ export default function POSDiscountsPage() {
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           discount.is_active
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-slate-100 text-slate-700"
                             : "bg-gray-100 text-gray-700"
                         }`}>
                           {discount.is_active ? "Active" : "Inactive"}
@@ -538,7 +538,7 @@ export default function POSDiscountsPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={2}
-                className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[#22C55E]"
+                className="w-full mt-1 text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-[#4A5D7A]"
                 placeholder="Optional description..."
               />
             </div>
@@ -568,7 +568,7 @@ export default function POSDiscountsPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="bg-[#22C55E] hover:bg-[#16A34A]"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52]"
               >
                 {submitting ? "Saving..." : (
                   editingId ? "Update Discount" : "Create Discount"

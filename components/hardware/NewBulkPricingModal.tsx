@@ -11,7 +11,7 @@ import { Save } from "lucide-react";
 import toast from "react-hot-toast";
 
 const fieldClass =
-  "w-full h-10 px-3 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
+  "w-full h-10 px-3 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent";
 
 const emptyForm = {
   product: "",
@@ -174,7 +174,7 @@ export function NewBulkPricingModal({ open, onClose, onSuccess }: NewBulkPricing
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             >
               {!loading && <Save className="h-4 w-4" />}
               {loading ? "Creating..." : "Create Rule"}

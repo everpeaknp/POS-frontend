@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { type POSHeldOrder } from "@/lib/api/pos";
 import { Trash2, Play } from "lucide-react";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface HeldOrdersDialogProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface HeldOrdersDialogProps {
 }
 
 export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onDelete }: HeldOrdersDialogProps) {
+  const { t } = useLanguage();
+  
   const handleDelete = (order: POSHeldOrder) => {
     toast((t) => (
       <div className="flex flex-col gap-4 min-w-[320px] p-2">
@@ -24,9 +27,9 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
             <Trash2 className="h-5 w-5 text-red-600" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">Delete held order?</p>
+            <p className="font-semibold text-gray-900 text-base">{t('pos.delete_held_order')}</p>
             <p className="text-sm text-gray-600 mt-1">
-              {order.customer_name || 'Walk-in customer'} - {order.items.length} item(s)
+              {order.customer_name || t('pos.walkin_customer')} - {order.items.length} {t('pos.items')}
             </p>
           </div>
         </div>
@@ -35,17 +38,17 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
             onClick={() => toast.dismiss(t.id)}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => {
               toast.dismiss(t.id);
               onDelete(order.id);
-              toast.success("Held order deleted");
+              toast.success(t('pos.held_deleted'));
             }}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
           >
-            Delete
+            {t('common.delete')}
           </button>
         </div>
       </div>
@@ -59,16 +62,16 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Held Orders</DialogTitle>
+          <DialogTitle>{t('pos.held_orders')}</DialogTitle>
           <DialogDescription>
-            Resume or delete previously held orders
+            {t('pos.resume_delete_orders')}
           </DialogDescription>
         </DialogHeader>
         
         {heldOrders.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <Play className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No held orders</p>
+            <p>{t('pos.no_held_orders')}</p>
           </div>
         ) : (
           <ScrollArea className="max-h-[60vh] pr-4">
@@ -80,14 +83,14 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                 const itemCount = order.items.length;
                 
                 return (
-                  <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-colors">
+                  <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-slate-300 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="font-semibold text-sm">
-                          {order.customer_name || 'Walk-in Customer'}
+                          {order.customer_name || t('pos.walkin_customer')}
                         </div>
                         <div className="text-xs text-gray-500">
-                          Held {new Date(order.held_at).toLocaleString()}
+                          {t('pos.held')} {new Date(order.held_at).toLocaleString()}
                         </div>
                         {order.notes && (
                           <div className="text-xs text-gray-600 mt-1 italic">
@@ -96,17 +99,17 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-[#22C55E]">
+                        <div className="font-bold text-[#4A5D7A]">
                           Rs. {total.toLocaleString()}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {itemCount} item{itemCount !== 1 ? 's' : ''}
+                          {itemCount} {t('pos.item')}{itemCount !== 1 ? 's' : ''}
                         </div>
                       </div>
                     </div>
 
                     <div className="border-t pt-3 mt-3">
-                      <div className="text-xs text-gray-600 mb-2">Items:</div>
+                      <div className="text-xs text-gray-600 mb-2">{t('pos.items')}:</div>
                       <div className="space-y-1 mb-3">
                         {order.items.map((item: any, idx: number) => (
                           <div key={idx} className="flex justify-between text-xs">
@@ -128,10 +131,10 @@ export function HeldOrdersDialog({ open, onOpenChange, heldOrders, onResume, onD
                           onResume(order);
                           onOpenChange(false);
                         }}
-                        className="flex-1 bg-[#22C55E] hover:bg-[#16A34A]"
+                        className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52]"
                       >
                         <Play className="h-4 w-4 mr-1" />
-                        Resume
+                        {t('pos.resume')}
                       </Button>
                       <Button
                         size="sm"

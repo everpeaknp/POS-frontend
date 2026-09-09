@@ -60,7 +60,7 @@ export function ThemeAwareToaster() {
         success: {
           duration: 3000,
           iconTheme: {
-            primary: "#22c55e",
+            primary: "#4A5D7A",
             secondary: isDark ? "oklch(0.205 0 0)" : "#ffffff",
           },
         },

@@ -13,11 +13,13 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { useApi } from "@/lib/hooks/useApi";
 import { inventoryApi } from "@/lib/api/inventory";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import toast from "react-hot-toast";
 
 export default function UOMPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [formData, setFormData] = useState({ 
@@ -237,7 +239,7 @@ export default function UOMPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Units of Measure" subtitle="Define measurement units for products" />
+        <DashHeader title={t('inventory.units_of_measure')} subtitle={t('inventory.define_measurement_units')} />
         <div className="flex-1 p-6">
           <SkeletonTable rows={5} />
         </div>
@@ -252,13 +254,13 @@ export default function UOMPage() {
   if (unitList.length === 0 && !searchTerm) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Units of Measure" subtitle="Define measurement units for products" />
+        <DashHeader title={t('inventory.units_of_measure')} subtitle={t('inventory.define_measurement_units')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Ruler}
-            title="No units yet"
-            description="Create your first unit of measure to define how products are measured"
-            actionLabel="Add Unit"
+            title={t('inventory.no_units_yet')}
+            description={t('inventory.create_first_unit')}
+            actionLabel={t('inventory.add_unit')}
             onAction={() => setOpen(true)}
           />
         </div>
@@ -305,7 +307,7 @@ export default function UOMPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
@@ -321,7 +323,7 @@ export default function UOMPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Units of Measure" subtitle={`${totalCount} units`} />
+      <DashHeader title={t('inventory.units_of_measure')} subtitle={`${totalCount} ${t('inventory.units')}`} />
       <div className="flex-1 p-6 space-y-4">
         <div className="flex gap-3 items-center justify-between">
           <div className="relative flex-1 max-w-md">
@@ -347,7 +349,7 @@ export default function UOMPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedUnits.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> Add Unit
             </Button>
           </div>
@@ -442,7 +444,7 @@ export default function UOMPage() {
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                           currentPage === page
-                            ? "bg-[#22C55E] text-white"
+                            ? "bg-[#4A5D7A] text-white"
                             : "text-gray-600 hover:bg-gray-100"
                         }`}
                       >
@@ -508,7 +510,7 @@ export default function UOMPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}

@@ -20,28 +20,28 @@ const personalFinanceActions: QuickAction[] = [
     label_en: "Add Expense",
     label_ne: "खर्च जोड्नुहोस्",
     icon: TrendingDown,
-    href: "/dashboard/personal-finance/transactions?new=1&type=expense",
+    href: "/dashboard/finance/transactions?new=1&type=expense",
   },
   {
     id: "add-income",
     label_en: "Add Income",
     label_ne: "आय जोड्नुहोस्",
     icon: TrendingDown,
-    href: "/dashboard/personal-finance/transactions?new=1&type=income",
+    href: "/dashboard/finance/transactions?new=1&type=income",
   },
   {
     id: "pay-bill",
     label_en: "Pay a Bill",
     label_ne: "बिल तिर्नुहोस्",
     icon: CreditCard,
-    href: "/dashboard/personal-finance/bills?new=1",
+    href: "/dashboard/finance/bills?new=1",
   },
   {
     id: "check-tax",
     label_en: "Check Tax Estimate",
     label_ne: "कर अनुमान जाँच्नुहोस्",
     icon: BarChart3,
-    href: "/dashboard/personal-finance/tax",
+    href: "/dashboard/finance/tax",
   },
 ];
 
@@ -130,7 +130,7 @@ export function QuickActionButton({
                     onClick={() => handleAction(action.href)}
                     className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-50 transition whitespace-nowrap"
                   >
-                    <Icon className="h-5 w-5 text-[#22C55E]" />
+                    <Icon className="h-5 w-5 text-[#4A5D7A]" />
                     <span className="text-sm font-medium text-gray-900">
                       {language === "en" ? action.label_en : action.label_ne}
                     </span>
@@ -147,7 +147,7 @@ export function QuickActionButton({
             e.stopPropagation();
             setIsOpen(!isOpen);
           }}
-          className="flex items-center justify-center h-14 w-14 rounded-full bg-[#22C55E] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+          className="flex items-center justify-center h-14 w-14 rounded-full bg-[#4A5D7A] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
           aria-label={isOpen ? "Close menu" : "Open quick actions"}
           onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
           title="Quick Actions (drag to move)"

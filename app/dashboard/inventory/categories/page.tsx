@@ -13,6 +13,7 @@ import { SkeletonCard } from "@/components/shared/Skeleton";
 import { Pagination } from "@/components/shared/Pagination";
 import { useApi } from "@/lib/hooks/useApi";
 import { inventoryApi } from "@/lib/api/inventory";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import toast from "react-hot-toast";
 
 const ITEMS_PER_PAGE = 20;
@@ -20,6 +21,7 @@ const ITEMS_PER_PAGE = 20;
 export default function CategoriesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", description: "", parent: "" });
@@ -260,7 +262,7 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Product Categories" subtitle="Organize your products" />
+        <DashHeader title={t('inventory.product_categories')} subtitle={t('inventory.organize_products')} />
         <div className="flex-1 p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <SkeletonCard />
@@ -275,13 +277,13 @@ export default function CategoriesPage() {
   if (filteredCategories.length === 0 && !searchQuery) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Product Categories" subtitle="Organize your products" />
+        <DashHeader title={t('inventory.product_categories')} subtitle={t('inventory.organize_products')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Package}
-            title="No categories yet"
-            description="Create your first product category to organize your inventory"
-            actionLabel="Add Category"
+            title={t('inventory.no_categories_yet')}
+            description={t('inventory.create_first_category')}
+            actionLabel={t('inventory.add_category')}
             onAction={() => setOpen(true)}
           />
         </div>
@@ -304,7 +306,7 @@ export default function CategoriesPage() {
                 <select
                   value={formData.parent}
                   onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#4A5D7A]"
                 >
                   <option value="">None (Root Category)</option>
                   {categoryList.map((cat: any) => (
@@ -326,7 +328,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}
@@ -342,7 +344,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Product Categories" subtitle={`${filteredCategories.length} categories`} />
+      <DashHeader title={t('inventory.product_categories')} subtitle={`${filteredCategories.length} ${t('inventory.categories_count')}`} />
       <div className="flex-1 p-6 space-y-4">
         <div className="flex gap-3 items-center justify-between">
           <div className="relative flex-1 max-w-md">
@@ -365,7 +367,7 @@ export default function CategoriesPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedCategories.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> Add Category
             </Button>
           </div>
@@ -462,7 +464,7 @@ export default function CategoriesPage() {
                 <select
                   value={formData.parent}
                   onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#22C55E]"
+                  className="h-9 text-sm border border-gray-200 rounded-md px-3 bg-white focus:outline-none focus:border-[#4A5D7A]"
                 >
                   <option value="">None (Root Category)</option>
                   {categoryList
@@ -495,7 +497,7 @@ export default function CategoriesPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : "Save"}

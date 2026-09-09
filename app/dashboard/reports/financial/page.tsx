@@ -289,7 +289,7 @@ export default function FinancialReportPage() {
                   ))}
                   <tr
                     className={`font-bold ${
-                      data.profit_and_loss.net_profit >= 0 ? "bg-green-50" : "bg-red-50"
+                      data.profit_and_loss.net_profit >= 0 ? "bg-slate-50" : "bg-red-50"
                     }`}
                   >
                     <td className="py-2">
@@ -438,7 +438,7 @@ export default function FinancialReportPage() {
                     <span
                       className={
                         data.cash_flow.net_cash_change >= 0
-                          ? "text-green-600"
+                          ? "text-slate-600"
                           : "text-red-600"
                       }
                     >

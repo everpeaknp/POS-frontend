@@ -122,7 +122,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             The department you are looking for does not exist.
           </p>
           <Link href="/dashboard/hr/departments">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View all departments</Button>
+            <Button className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">View all departments</Button>
           </Link>
         </div>
       </HRPageShell>
@@ -140,7 +140,7 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[#22C55E] hover:text-white hover:border-[#22C55E]"
+              className="h-8 gap-1.5 bg-white dark:bg-card border-gray-200 dark:border-border shadow-sm hover:bg-[#4A5D7A] hover:text-white hover:border-[#4A5D7A]"
               onClick={() => router.push(`/dashboard/hr/departments/${unwrappedParams.id}/edit`)}
             >
               <Edit className="h-3.5 w-3.5" />
@@ -158,8 +158,8 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           <div className="flex items-start gap-4 mb-6 pr-44">
-            <div className="w-16 h-16 rounded-lg bg-green-100 flex items-center justify-center">
-              <Users className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Users className="w-8 h-8 text-slate-600" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{department.name}</h2>
@@ -212,8 +212,8 @@ export default function DepartmentDetailPage({ params }: { params: Promise<{ id:
                   className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <User className="w-5 h-5 text-green-600" />
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{emp.name}</p>

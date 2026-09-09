@@ -133,7 +133,7 @@ export function CustomReportBuilder({
         {[1, 2, 3, 4, 5, 6].map((s) => (
           <div
             key={s}
-            className={`flex-1 h-2 rounded-full ${s <= step ? "bg-[#22C55E]" : "bg-gray-200 dark:bg-muted"}`}
+            className={`flex-1 h-2 rounded-full ${s <= step ? "bg-[#4A5D7A]" : "bg-gray-200 dark:bg-muted"}`}
           />
         ))}
       </div>
@@ -229,7 +229,7 @@ export function CustomReportBuilder({
                 }
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   formData.module === mod.value
-                    ? "border-[#22C55E] bg-green-50 dark:bg-green-500/10"
+                    ? "border-[#4A5D7A] bg-slate-50 dark:bg-slate-500/10"
                     : "border-gray-200 dark:border-border hover:border-gray-300"
                 }`}
               >
@@ -259,7 +259,7 @@ export function CustomReportBuilder({
                       key={field.key}
                       type="button"
                       onClick={() => addField(field.key)}
-                      className="w-full text-left p-2 bg-gray-50 dark:bg-muted rounded text-sm hover:bg-green-50 dark:hover:bg-green-500/10"
+                      className="w-full text-left p-2 bg-gray-50 dark:bg-muted rounded text-sm hover:bg-slate-50 dark:hover:bg-slate-500/10"
                     >
                       {field.label}
                       <span className="text-xs text-gray-400 ml-2">({field.type})</span>
@@ -272,7 +272,7 @@ export function CustomReportBuilder({
               <p className="text-sm font-medium text-gray-700 dark:text-foreground mb-2">
                 Selected Fields ({selectedFields.length})
               </p>
-              <div className="border border-gray-200 dark:border-border rounded-lg p-3 space-y-2 h-64 overflow-y-auto bg-green-50/50 dark:bg-green-500/5">
+              <div className="border border-gray-200 dark:border-border rounded-lg p-3 space-y-2 h-64 overflow-y-auto bg-slate-50/50 dark:bg-slate-500/5">
                 {selectedFields.length === 0 ? (
                   <p className="text-sm text-gray-500 p-2">Click fields on the left to add them</p>
                 ) : (
@@ -562,7 +562,7 @@ export function CustomReportBuilder({
             <Button
               type="button"
               onClick={goNext}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               disabled={loading}
             >
               Next
@@ -572,7 +572,7 @@ export function CustomReportBuilder({
               <Button
                 type="button"
                 onClick={onSave}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                 disabled={loading || !formData.name}
               >
                 {loading ? "Saving..." : "Save Report"}

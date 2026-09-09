@@ -20,7 +20,7 @@ import { getDepartments, deleteDepartment, type Department } from "@/lib/api/hr"
 
 const DEPARTMENT_COLOR_CLASSES = [
   { bg: "bg-blue-100", text: "text-blue-600" },
-  { bg: "bg-green-100", text: "text-green-600" },
+  { bg: "bg-slate-100", text: "text-slate-600" },
   { bg: "bg-purple-100", text: "text-purple-600" },
   { bg: "bg-orange-100", text: "text-orange-600" },
   { bg: "bg-pink-100", text: "text-pink-600" },
@@ -250,7 +250,7 @@ export default function DepartmentsPage() {
           </div>
         </div>
         <Link href="/dashboard/hr/departments/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Department
           </Button>
         </Link>
@@ -296,7 +296,7 @@ export default function DepartmentsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 font-medium">Status</p>
-                        <p className="text-lg font-bold text-green-600">Active</p>
+                        <p className="text-lg font-bold text-slate-600">Active</p>
                       </div>
                     </div>
                   </Link>
@@ -341,7 +341,7 @@ export default function DepartmentsPage() {
                     <td className="px-4 py-3 font-medium text-gray-900">
                       <Link
                         href={`/dashboard/hr/departments/${dept.id}`}
-                        className="hover:text-[#22C55E]"
+                        className="hover:text-[#4A5D7A]"
                       >
                         {dept.name}
                       </Link>

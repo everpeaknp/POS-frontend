@@ -40,7 +40,7 @@ type SiteDashboard = {
 };
 
 function getBudgetHealthColor(percentage: number) {
-  if (percentage < 80) return "text-green-700 bg-green-50 border-green-200";
+  if (percentage < 80) return "text-slate-700 bg-slate-50 border-slate-200";
   if (percentage < 100) return "text-yellow-700 bg-yellow-50 border-yellow-200";
   return "text-red-700 bg-red-50 border-red-200";
 }
@@ -54,7 +54,7 @@ function getBudgetHealthLabel(percentage: number) {
 function getStatusColor(status: string) {
   switch (status) {
     case "active":
-      return "bg-green-100 text-green-800";
+      return "bg-slate-100 text-slate-800";
     case "planned":
       return "bg-blue-100 text-blue-800";
     case "on_hold":
@@ -236,7 +236,7 @@ export default function SiteDetailPage() {
 
   const budgetPct = site.budget_percentage ?? 0;
   const progressColor =
-    budgetPct < 80 ? "bg-green-500" : budgetPct < 100 ? "bg-yellow-500" : "bg-red-500";
+    budgetPct < 80 ? "bg-slate-500" : budgetPct < 100 ? "bg-yellow-500" : "bg-red-500";
 
   const costItems = [
     { label: "Material", value: site.material_cost ?? 0 },
@@ -297,7 +297,7 @@ export default function SiteDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#4A5D7A] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {site.name
                   .split(" ")
                   .map((n) => n[0])
@@ -337,8 +337,8 @@ export default function SiteDetailPage() {
                 label="Present (7 days)"
                 value={siteDashboard.attendance?.present ?? 0}
                 icon={ClipboardCheck}
-                iconClass="bg-green-50 text-green-600"
-                valueClass="text-green-600"
+                iconClass="bg-slate-50 text-slate-600"
+                valueClass="text-slate-600"
               />
               <StatCard
                 label="Material Logs (30d)"
@@ -361,7 +361,7 @@ export default function SiteDetailPage() {
             <div className={`${constructionCardClass} p-6 xl:col-span-2`}>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-[#22C55E]" />
+                  <Wallet className="h-5 w-5 text-[#4A5D7A]" />
                   <h3 className="text-base font-semibold text-gray-900">Budget Overview</h3>
                 </div>
                 <span
@@ -394,7 +394,7 @@ export default function SiteDetailPage() {
                     label: "Remaining",
                     value: formatNPR(site.remaining_budget ?? 0),
                     className:
-                      (site.remaining_budget ?? 0) >= 0 ? "text-green-600" : "text-red-600",
+                      (site.remaining_budget ?? 0) >= 0 ? "text-slate-600" : "text-red-600",
                   },
                   { label: "Budget Used", value: `${budgetPct.toFixed(1)}%` },
                 ].map((item) => (
@@ -423,7 +423,7 @@ export default function SiteDetailPage() {
             <div className="space-y-6">
               <div className={`${constructionCardClass} p-6`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Building2 className="h-5 w-5 text-[#22C55E]" />
+                  <Building2 className="h-5 w-5 text-[#4A5D7A]" />
                   <h3 className="text-base font-semibold text-gray-900">Site Details</h3>
                 </div>
                 <div className="space-y-4">
@@ -442,7 +442,7 @@ export default function SiteDetailPage() {
 
               <div className={`${constructionCardClass} p-6`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="h-5 w-5 text-[#22C55E]" />
+                  <Calendar className="h-5 w-5 text-[#4A5D7A]" />
                   <h3 className="text-base font-semibold text-gray-900">Timeline</h3>
                 </div>
                 <div className="space-y-4">
@@ -467,7 +467,7 @@ export default function SiteDetailPage() {
           {/* Cost breakdown */}
           <div className={`${constructionCardClass} p-6`}>
             <div className="flex items-center gap-2 mb-5">
-              <BarChart3 className="h-5 w-5 text-[#22C55E]" />
+              <BarChart3 className="h-5 w-5 text-[#4A5D7A]" />
               <h3 className="text-base font-semibold text-gray-900">Cost Breakdown</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -481,7 +481,7 @@ export default function SiteDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
               <span className="text-sm font-medium text-gray-700">Total Actual Spend</span>
               <span className="text-lg font-bold text-gray-900">
                 {formatNPR(site.actual_spend ?? 0)}
@@ -497,7 +497,7 @@ export default function SiteDetailPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[#22C55E]/30 hover:bg-green-50/50 hover:text-[#22C55E] transition-colors"
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[#4A5D7A]/30 hover:bg-slate-50/50 hover:text-[#4A5D7A] transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                   {label}

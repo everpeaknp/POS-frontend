@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
@@ -59,6 +60,7 @@ function normalizeTrialBalance(data: TrialBalanceData): TrialBalanceData {
 }
 
 export default function TrialBalancePage() {
+  const { t } = useLanguage();
   const { formatDate } = useDateSystem();
   const { user } = useAuth();
   const [asOf, setAsOf] = useState("");
@@ -180,7 +182,7 @@ export default function TrialBalancePage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Trial Balance" subtitle="Verify debit and credit totals" />
+      <DashHeader title={t('accounting.trial_balance')} subtitle={t('accounting.verify_debit_credit')} />
       <div className="flex-1 p-6 space-y-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -199,7 +201,7 @@ export default function TrialBalancePage() {
               <Button
                 onClick={handleGenerate}
                 disabled={generating}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6 h-9 shrink-0"
               >
                 {generating ? "Generating..." : "Generate"}
               </Button>
@@ -240,10 +242,10 @@ export default function TrialBalancePage() {
                 <p className="text-xl font-bold text-gray-800 mt-1">{fmt(grandCredit)}</p>
               </div>
               <div
-                className={`rounded-xl border shadow-sm p-4 ${balanced ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}`}
+                className={`rounded-xl border shadow-sm p-4 ${balanced ? "bg-slate-50 border-slate-100" : "bg-red-50 border-red-100"}`}
               >
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
-                <p className={`text-xl font-bold mt-1 ${balanced ? "text-green-700" : "text-red-600"}`}>
+                <p className={`text-xl font-bold mt-1 ${balanced ? "text-slate-700" : "text-red-600"}`}>
                   {balanced ? "Balanced" : `Off by ${fmt(Math.abs(grandDebit - grandCredit))}`}
                 </p>
               </div>
@@ -326,7 +328,7 @@ export default function TrialBalancePage() {
                 </tfoot>
               </table>
               <div
-                className={`px-5 py-3 flex items-center gap-2 text-sm font-medium ${balanced ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+                className={`px-5 py-3 flex items-center gap-2 text-sm font-medium ${balanced ? "bg-slate-50 text-slate-700" : "bg-red-50 text-red-600"}`}
               >
                 {balanced
                   ? "✓ Trial Balance is balanced"

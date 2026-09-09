@@ -50,7 +50,7 @@ function cellTint(summary: DaySummary, weekend: boolean, isFuture: boolean) {
   if (marked === 0) return "bg-white dark:bg-card border-gray-100 dark:border-border";
 
   const rate = (summary.present + summary.late + summary.halfDay * 0.5) / summary.total;
-  if (rate >= 0.85) return "bg-green-50 dark:bg-green-500/10 border-green-100 dark:border-green-500/20";
+  if (rate >= 0.85) return "bg-slate-50 dark:bg-slate-500/10 border-slate-100 dark:border-slate-500/20";
   if (rate >= 0.6) return "bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20";
   return "bg-red-50 dark:bg-red-500/10 border-red-100 dark:border-red-500/20";
 }
@@ -156,18 +156,18 @@ export function AttendanceMonthCalendar({
                     key={day}
                     type="button"
                     onClick={() => onSelectDay(day)}
-                    className={`min-h-[72px] sm:min-h-[88px] rounded-lg border p-2 text-left transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]/40 ${cellTint(
+                    className={`min-h-[72px] sm:min-h-[88px] rounded-lg border p-2 text-left transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]/40 ${cellTint(
                       summary,
                       weekend,
                       isFuture
-                    )} ${isSelected ? "ring-2 ring-[#22C55E] shadow-sm" : ""}`}
+                    )} ${isSelected ? "ring-2 ring-[#4A5D7A] shadow-sm" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <div className="min-w-0">
                         <span
                           className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
                             isToday
-                              ? "bg-[#22C55E] text-white"
+                              ? "bg-[#4A5D7A] text-white"
                               : "text-gray-900 dark:text-foreground"
                           }`}
                         >

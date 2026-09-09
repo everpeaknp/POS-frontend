@@ -2,6 +2,20 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
+// Get the backend base URL for media files (remove /api suffix)
+export const getBackendBaseURL = () => {
+  return API_BASE_URL.replace(/\/api\/?$/, '');
+};
+
+// Convert a media path to a full URL
+export const getMediaURL = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path; // Already a full URL
+  }
+  return `${getBackendBaseURL()}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 function persistAccessToken(access: string) {
   localStorage.setItem('access_token', access);
   if (typeof document !== 'undefined') {

@@ -74,7 +74,7 @@ export function Pagination({
               onClick={() => onPageChange(page)}
               className={`h-8 w-8 p-0 ${
                 currentPage === page
-                  ? "bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  ? "bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   : ""
               }`}
             >

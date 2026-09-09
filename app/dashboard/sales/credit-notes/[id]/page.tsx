@@ -15,7 +15,7 @@ import { format } from "date-fns";
 const statusColors = {
   Draft: "bg-gray-100 text-gray-700",
   Issued: "bg-blue-100 text-blue-700",
-  Applied: "bg-green-100 text-green-700",
+  Applied: "bg-slate-100 text-slate-700",
 };
 
 export default function CreditNoteDetailPage() {
@@ -162,7 +162,7 @@ export default function CreditNoteDetailPage() {
                 <Button
                   variant="link"
                   onClick={() => router.push(`/dashboard/sales/invoices/${creditNote.invoice}`)}
-                  className="p-0 h-auto text-[#22C55E] hover:text-[#16A34A] font-medium"
+                  className="p-0 h-auto text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
                 >
                   {creditNote.invoice_number}
                 </Button>

@@ -19,6 +19,21 @@ export class ImageProcessor {
   }
 
   /**
+   * A video element's `.width`/`.height` IDL properties reflect its HTML
+   * width/height attributes (0 when unset, as ours are — sized via CSS
+   * instead), not the actual frame resolution. Use `videoWidth`/`videoHeight`
+   * for those; images/canvases report their real pixel size correctly as-is.
+   */
+  private getSourceDimensions(
+    source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement
+  ): { width: number; height: number } {
+    if (source instanceof HTMLVideoElement) {
+      return { width: source.videoWidth, height: source.videoHeight };
+    }
+    return { width: source.width, height: source.height };
+  }
+
+  /**
    * Crop a region from a video frame or image
    */
   cropRegion(
@@ -30,7 +45,8 @@ export class ImageProcessor {
     const paddedBox = this.addPadding(box, padding);
 
     // Ensure box is within bounds
-    const clampedBox = this.clampBox(paddedBox, source.width, source.height);
+    const { width: sourceWidth, height: sourceHeight } = this.getSourceDimensions(source);
+    const clampedBox = this.clampBox(paddedBox, sourceWidth, sourceHeight);
 
     // Create canvas for cropped region
     const croppedCanvas = document.createElement("canvas");
@@ -239,9 +255,10 @@ export class ImageProcessor {
       results.push(sharpened);
     } else {
       // No box - process full frame
-      this.canvas.width = source.width;
-      this.canvas.height = source.height;
-      this.ctx.drawImage(source, 0, 0);
+      const { width, height } = this.getSourceDimensions(source);
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.ctx.drawImage(source, 0, 0, width, height);
 
       results.push(this.canvas);
 

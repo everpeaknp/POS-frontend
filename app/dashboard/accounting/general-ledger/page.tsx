@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { AccountTypeBadge } from "@/components/accounting/AccountTypeBadge";
 import { DateInput } from "@/components/shared/DateInput";
 import { FormattedDate } from "@/components/shared/FormattedDate";
@@ -33,6 +34,7 @@ function normalizeLedgerEntries(data: LedgerEntry[]): LedgerEntry[] {
 }
 
 export default function GeneralLedgerPage() {
+  const { t } = useLanguage();
   const { formatDate } = useDateSystem();
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -205,7 +207,7 @@ export default function GeneralLedgerPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="General Ledger" subtitle="Account transaction history" />
+        <DashHeader title={t('accounting.general_ledger')} subtitle={t('accounting.account_transaction_history')} />
         <PageLoading message="Loading accounts…" />
       </div>
     );
@@ -213,7 +215,7 @@ export default function GeneralLedgerPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="General Ledger" subtitle="Account transaction history" />
+      <DashHeader title={t('accounting.general_ledger')} subtitle={t('accounting.account_transaction_history')} />
       <div className="flex-1 p-6 space-y-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
@@ -266,7 +268,7 @@ export default function GeneralLedgerPage() {
               <Button
                 onClick={handleGenerate}
                 disabled={!accountId || generating || postableAccounts.length === 0}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6 h-9 shrink-0"
               >
                 {generating ? "Generating..." : "Generate"}
               </Button>
@@ -308,7 +310,7 @@ export default function GeneralLedgerPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Closing Balance</p>
-                <p className="font-semibold text-[#22C55E]">{fmt(closing)}</p>
+                <p className="font-semibold text-[#4A5D7A]">{fmt(closing)}</p>
               </div>
             </div>
 
@@ -332,7 +334,7 @@ export default function GeneralLedgerPage() {
                       <td className="px-4 py-3 text-gray-600">
                         <FormattedDate value={entry.date} />
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">{entry.reference || "—"}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A]">{entry.reference || "—"}</td>
                       <td className="px-4 py-3 text-gray-700">{entry.description}</td>
                       <td className="px-4 py-3 text-gray-800">{entry.debit > 0 ? fmt(entry.debit) : "—"}</td>
                       <td className="px-4 py-3 text-gray-500">{entry.credit > 0 ? fmt(entry.credit) : "—"}</td>
@@ -350,7 +352,7 @@ export default function GeneralLedgerPage() {
                     </td>
                     <td className="px-4 py-3 font-bold text-gray-800">{fmt(totalDebits)}</td>
                     <td className="px-4 py-3 font-bold text-gray-800">{fmt(totalCredits)}</td>
-                    <td className="px-4 py-3 font-bold text-[#22C55E]">{fmt(closing)}</td>
+                    <td className="px-4 py-3 font-bold text-[#4A5D7A]">{fmt(closing)}</td>
                     <td />
                   </tr>
                 </tfoot>

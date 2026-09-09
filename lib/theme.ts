@@ -5,12 +5,12 @@ export const AUTH_LOGIN_EVENT = "khata:auth-login";
 
 export const defaultAppearancePreferences: AppearancePreferences = {
   theme: "light",
-  language: "en-US",
+  language: "en",
   timezone: "UTC",
   date_calendar_system: "AD",
   compact_mode: true,
   smooth_animations: true,
-  navbar_position: "left",
+  navbar_position: "top",
 };
 
 export function resolveIsDark(theme: AppearancePreferences["theme"]): boolean {
@@ -69,4 +69,4 @@ export function notifyAppearanceRefresh() {
 }
 
 /** Inline script source — must stay in sync with resolveIsDark / applyAppearancePreferences */
-export const themeBootstrapScript = `(function(){try{var k="khata-appearance";var r=localStorage.getItem(k);var p=r?JSON.parse(r):{theme:"light",compact_mode:true,smooth_animations:true,navbar_position:"left"};var t=p.theme||"light";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;el.classList.toggle("dark",d);el.dataset.theme=t;el.dataset.compact=p.compact_mode!==false?"true":"false";el.dataset.reduceMotion=p.smooth_animations===false?"true":"false";el.dataset.navbarPosition=p.navbar_position||"left";el.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+export const themeBootstrapScript = `(function(){try{var k="khata-appearance";var r=localStorage.getItem(k);var p=r?JSON.parse(r):{theme:"light",compact_mode:true,smooth_animations:true,navbar_position:"top"};var t=p.theme||"light";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;el.classList.toggle("dark",d);el.dataset.theme=t;el.dataset.compact=p.compact_mode!==false?"true":"false";el.dataset.reduceMotion=p.smooth_animations===false?"true":"false";el.dataset.navbarPosition=p.navbar_position||"top";el.style.colorScheme=d?"dark":"light";}catch(e){}})();`;

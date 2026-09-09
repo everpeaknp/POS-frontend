@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  LogOut,
   Menu,
   Search,
   X,
@@ -30,11 +31,19 @@ function AccountSidebarContent({
   searchFocusNonce?: number;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [planName, setPlanName] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
   const [modKey, setModKey] = useState("Ctrl");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const displayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
@@ -111,7 +120,7 @@ function AccountSidebarContent({
               compact && "justify-center flex-1"
             )}
           >
-            <div className="w-9 h-9 rounded-lg bg-[#22C55E] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
+            <div className="w-9 h-9 rounded-lg bg-[#4A5D7A] flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -134,7 +143,7 @@ function AccountSidebarContent({
             {!compact ? (
               <KhataLogo size="md" />
             ) : (
-              <div className="w-9 h-9 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+              <div className="w-9 h-9 rounded-lg bg-[#4A5D7A] grid place-items-center text-white text-sm font-bold">
                 K
               </div>
             )}
@@ -189,7 +198,7 @@ function AccountSidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#4A5D7A]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (
               <button
@@ -241,7 +250,7 @@ function AccountSidebarContent({
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                     compact && "justify-center px-2",
                     active
-                      ? "bg-[#22C55E] text-white"
+                      ? "bg-[#4A5D7A] text-white"
                       : "text-gray-400 hover:text-white hover:bg-white/10"
                   )}
                 >
@@ -252,18 +261,37 @@ function AccountSidebarContent({
             })}
 
             {showBack && (
-              <Link
-                href="/erp"
-                title="Back"
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
-                  compact && "justify-center px-2"
-                )}
-              >
-                <ArrowLeft size={17} className="shrink-0" />
-                {!compact && "Back"}
-              </Link>
+              <>
+                <Link
+                  href="/erp"
+                  title="Back"
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all mt-1",
+                    compact && "justify-center px-2"
+                  )}
+                >
+                  <ArrowLeft size={17} className="shrink-0" />
+                  {!compact && "Back"}
+                </Link>
+
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout();
+                    onClose?.();
+                  }}
+                  title="Logout"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all",
+                    compact && "justify-center px-2"
+                  )}
+                >
+                  <LogOut size={17} className="shrink-0" />
+                  {!compact && "Logout"}
+                </button>
+              </>
             )}
           </>
         )}

@@ -163,12 +163,12 @@ export function JournalLinesTable({ lines, onChange, readOnly, accounts = [] }: 
       </div>
 
       {!readOnly && (
-        <button onClick={addLine} className="flex items-center gap-1.5 text-sm text-[#22C55E] hover:text-[#16A34A] font-medium transition-colors">
+        <button onClick={addLine} className="flex items-center gap-1.5 text-sm text-[#4A5D7A] hover:text-[#2E3E52] font-medium transition-colors">
           <Plus className="h-4 w-4" /> Add Line
         </button>
       )}
 
-      <div className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg ${balanced ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+      <div className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg ${balanced ? "bg-slate-50 text-slate-700" : "bg-red-50 text-red-600"}`}>
         {balanced ? "✓ Balanced" : `⚠ Difference: Rs. ${Math.abs(totalDebit - totalCredit).toLocaleString("en-IN")}`}
         <span className="text-gray-500 font-normal ml-2">Debit: Rs. {totalDebit.toLocaleString("en-IN")} | Credit: Rs. {totalCredit.toLocaleString("en-IN")}</span>
       </div>

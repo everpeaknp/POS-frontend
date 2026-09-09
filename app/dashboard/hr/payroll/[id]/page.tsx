@@ -72,7 +72,7 @@ export default function PayrollDetailPage() {
           </div>
           <div className={hrStatCardClass}>
             <p className="text-xs text-gray-500 font-medium">Net Payroll</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">Rs. {net.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-slate-600 mt-1">Rs. {net.toLocaleString()}</p>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export default function PayrollDetailPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/dashboard/hr/payroll/${encodeURIComponent(monthKey)}/slip/${r.id}`}
-                      className="text-[#22C55E] hover:underline text-xs font-medium"
+                      className="text-[#4A5D7A] hover:underline text-xs font-medium"
                     >
                       View slip
                     </Link>

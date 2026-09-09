@@ -100,7 +100,7 @@ function drawScanningGuide(
   const cornerLength = 30;
   const cornerWidth = 4;
 
-  let color = "#22C55E"; // Green
+  let color = "#4A5D7A"; // Green
   if (state === "detected") color = "#3B82F6"; // Blue
   else if (state === "stabilizing") color = "#F59E0B"; // Orange
   else if (state === "scanning" || state === "success") color = "#10B981"; // Emerald

@@ -83,7 +83,7 @@ export function InviteUserForm({
         <Button
           type="submit"
           size="sm"
-          className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+          className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
         >
           Send Invite
         </Button>

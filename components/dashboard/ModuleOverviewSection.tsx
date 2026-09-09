@@ -17,12 +17,12 @@ import { dashboardCardClass } from "@/components/dashboard/DashboardPageShell";
 import type { OrgModuleDefinition } from "@/lib/modules/catalog";
 
 const statusStyle: Record<string, string> = {
-  Paid: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  Paid: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
   Pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300",
   Cancelled: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   Draft: "bg-gray-100 text-gray-700 dark:bg-muted dark:text-muted-foreground",
   Confirmed: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  Delivered: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  Delivered: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
   critical: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   low: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
 };
@@ -62,8 +62,8 @@ export function ModuleOverviewSection({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-border">
         <div className="flex items-center gap-3 min-w-0">
           {Icon ? (
-            <div className="w-10 h-10 rounded-lg bg-[#22C55E]/15 flex items-center justify-center shrink-0">
-              <Icon className="h-5 w-5 text-[#22C55E]" />
+            <div className="w-10 h-10 rounded-lg bg-[#4A5D7A]/15 flex items-center justify-center shrink-0">
+              <Icon className="h-5 w-5 text-[#4A5D7A]" />
             </div>
           ) : null}
           <div className="min-w-0">
@@ -77,7 +77,7 @@ export function ModuleOverviewSection({
           {headerExtra}
           <Link
             href={module.href}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4A5D7A] hover:text-[#2E3E52] transition-colors"
           >
             Open module
             <ArrowRight className="h-4 w-4" />
@@ -100,7 +100,7 @@ export function ModuleOverviewSection({
                 {typeof stat.change === "number" ? (
                   <div
                     className={`inline-flex items-center gap-0.5 text-xs font-medium mt-1 ${
-                      stat.change >= 0 ? "text-green-600" : "text-red-500"
+                      stat.change >= 0 ? "text-slate-600" : "text-red-500"
                     }`}
                   >
                     {stat.change >= 0 ? (
@@ -125,8 +125,8 @@ export function ModuleOverviewSection({
               <AreaChart data={module.chart.data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id={`chart-${module.id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#4A5D7A" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#4A5D7A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "oklch(1 0 0 / 8%)" : "#F3F4F6"} />
@@ -150,7 +150,7 @@ export function ModuleOverviewSection({
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#22C55E"
+                  stroke="#4A5D7A"
                   strokeWidth={2}
                   fill={`url(#chart-${module.id})`}
                   dot={false}

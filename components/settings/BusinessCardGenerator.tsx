@@ -698,21 +698,21 @@ const GeometricCard = ({ data }: TemplateProps) => (
 
 // Nature Template
 const NatureCard = ({ data }: TemplateProps) => (
-  <div className="w-full h-full bg-gradient-to-br from-green-50 to-teal-50 p-6 flex flex-col justify-between border-2 border-green-200">
+  <div className="w-full h-full bg-gradient-to-br from-slate-50 to-teal-50 p-6 flex flex-col justify-between border-2 border-slate-200">
     <div className="flex justify-between items-start">
       <div className="flex-1">
-        <h2 className="text-2xl font-bold text-green-800 mb-1">{data.companyName}</h2>
-        <p className="text-sm text-green-600">{data.businessType}</p>
+        <h2 className="text-2xl font-bold text-slate-800 mb-1">{data.companyName}</h2>
+        <p className="text-sm text-slate-600">{data.businessType}</p>
       </div>
       <div className="w-14 h-14 bg-white rounded-full p-2 ml-4 flex items-center justify-center shadow-sm">
         {data.logo ? (
           <img src={data.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
         ) : (
-          <span className="text-xs font-bold text-green-700">LOGO</span>
+          <span className="text-xs font-bold text-slate-700">LOGO</span>
         )}
       </div>
     </div>
-    <div className="text-xs text-green-700 space-y-0.5">
+    <div className="text-xs text-slate-700 space-y-0.5">
       <p>{data.phone}</p>
       <p>{data.email}</p>
       <p>{data.address}</p>
@@ -1178,7 +1178,7 @@ const DhakaPatternCard = ({ data }: TemplateProps) => (
           <div key={i} className="border border-red-600" style={{ 
             background: i % 3 === 0 ? 'linear-gradient(45deg, #dc2626 25%, transparent 25%, transparent 75%, #dc2626 75%)' : 
                        i % 3 === 1 ? 'linear-gradient(-45deg, #0891b2 25%, transparent 25%, transparent 75%, #0891b2 75%)' : 
-                       'linear-gradient(90deg, #16a34a 25%, transparent 25%, transparent 75%, #16a34a 75%)',
+                       'linear-gradient(90deg, #2E3E52 25%, transparent 25%, transparent 75%, #2E3E52 75%)',
             backgroundSize: '8px 8px'
           }}></div>
         ))}
@@ -1272,7 +1272,7 @@ const PrayerFlagsCard = ({ data }: TemplateProps) => (
       <div className="flex-1 h-2 bg-blue-600"></div>
       <div className="flex-1 h-2 bg-white"></div>
       <div className="flex-1 h-2 bg-red-600"></div>
-      <div className="flex-1 h-2 bg-green-600"></div>
+      <div className="flex-1 h-2 bg-slate-600"></div>
       <div className="flex-1 h-2 bg-yellow-500"></div>
     </div>
     <div className="relative z-10 flex justify-between items-start mt-2">
@@ -1642,8 +1642,8 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
                           }}
                           className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                             selectedTemplate === template.id
-                              ? "border-[#22C55E] shadow-lg"
-                              : "border-gray-200 hover:border-[#22C55E] hover:shadow-md"
+                              ? "border-[#4A5D7A] shadow-lg"
+                              : "border-gray-200 hover:border-[#4A5D7A] hover:shadow-md"
                           }`}
                         >
                           <div className="w-full aspect-[7/4] bg-white overflow-hidden">
@@ -1657,7 +1657,7 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
                             </span>
                           </div>
                           {selectedTemplate === template.id && (
-                            <div className="absolute top-0.5 right-0.5 bg-[#22C55E] text-white text-[9px] px-1.5 py-0.5 rounded">
+                            <div className="absolute top-0.5 right-0.5 bg-[#4A5D7A] text-white text-[9px] px-1.5 py-0.5 rounded">
                               ✓
                             </div>
                           )}
@@ -1680,8 +1680,8 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
                           }}
                           className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                             selectedTemplate === template.id
-                              ? "border-[#22C55E] shadow-lg"
-                              : "border-gray-200 hover:border-[#22C55E] hover:shadow-md"
+                              ? "border-[#4A5D7A] shadow-lg"
+                              : "border-gray-200 hover:border-[#4A5D7A] hover:shadow-md"
                           }`}
                         >
                           <div className="w-full aspect-[7/4] bg-white overflow-hidden">
@@ -1695,7 +1695,7 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
                             </span>
                           </div>
                           {selectedTemplate === template.id && (
-                            <div className="absolute top-0.5 right-0.5 bg-[#22C55E] text-white text-[9px] px-1.5 py-0.5 rounded">
+                            <div className="absolute top-0.5 right-0.5 bg-[#4A5D7A] text-white text-[9px] px-1.5 py-0.5 rounded">
                               ✓
                             </div>
                           )}
@@ -1710,7 +1710,7 @@ export function BusinessCardGenerator({ tenant, logoUrl }: { tenant: any; logoUr
             {/* Actions */}
             <div className="flex gap-2 pt-2">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex-1 h-10 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-lg inline-flex items-center justify-center font-medium disabled:opacity-50" disabled={downloading}>
+                <DropdownMenuTrigger className="flex-1 h-10 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white rounded-lg inline-flex items-center justify-center font-medium disabled:opacity-50" disabled={downloading}>
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </DropdownMenuTrigger>

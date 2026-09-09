@@ -103,7 +103,7 @@ const POSInvoice = forwardRef<HTMLDivElement, POSInvoiceProps>(
             <span>{formatNPR(transaction.subtotal)}</span>
           </div>
           {transaction.discount_amount > 0 && (
-            <div className="flex justify-between text-green-600">
+            <div className="flex justify-between text-slate-600">
               <span>Discount:</span>
               <span>-{formatNPR(transaction.discount_amount)}</span>
             </div>

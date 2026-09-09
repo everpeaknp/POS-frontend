@@ -93,10 +93,10 @@ export default function DebugPOSPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">5. Diagnosis</h2>
           {user && user.tenant && user.tenant.active_modules?.includes('pos') && permissions.canView('pos') ? (
-            <div className="bg-green-50 border border-green-200 p-4 rounded">
-              <p className="text-green-800 font-semibold">✅ All checks pass - POS should be visible!</p>
-              <p className="text-sm text-green-700 mt-2">If you still don't see POS in the sidebar, try:</p>
-              <ol className="list-decimal list-inside text-sm text-green-700 mt-2 space-y-1">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded">
+              <p className="text-slate-800 font-semibold">✅ All checks pass - POS should be visible!</p>
+              <p className="text-sm text-slate-700 mt-2">If you still don't see POS in the sidebar, try:</p>
+              <ol className="list-decimal list-inside text-sm text-slate-700 mt-2 space-y-1">
                 <li>Hard refresh the page (Ctrl+Shift+R)</li>
                 <li>Check browser console for errors</li>
                 <li>Verify sidebar component is rendering correctly</li>
@@ -164,7 +164,7 @@ export default function DebugPOSPage() {
               onClick={() => {
                 window.location.href = '/dashboard';
               }}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
             >
               Go to Dashboard
             </button>

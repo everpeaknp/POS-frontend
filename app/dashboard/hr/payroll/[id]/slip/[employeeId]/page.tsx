@@ -86,10 +86,10 @@ export default function PayslipPage() {
             </tbody>
           </table>
 
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <div className="flex justify-between items-center">
               <span className="text-sm font-bold text-gray-900">NET PAY</span>
-              <span className="text-2xl font-bold text-green-600">Rs. {Number(record.net_salary).toLocaleString()}</span>
+              <span className="text-2xl font-bold text-slate-600">Rs. {Number(record.net_salary).toLocaleString()}</span>
             </div>
           </div>
         </div>

@@ -23,6 +23,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   /** Top mode: horizontal bar above content, to the right of the sidebar. */
   const railOnTop = preferences.navbar_position === "top";
 
+  // Add global print styles for dashboard
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'dashboard-print-styles';
+    style.textContent = `
+      @media print {
+        /* Hide all dashboard chrome elements */
+        [data-sidebar],
+        [data-app-icon-rail],
+        [data-dashboard-widgets],
+        .sidebar,
+        .app-icon-rail {
+          display: none !important;
+          visibility: hidden !important;
+        }
+      }
+    `;
+    if (!document.getElementById('dashboard-print-styles')) {
+      document.head.appendChild(style);
+    }
+    
+    return () => {
+      const existingStyle = document.getElementById('dashboard-print-styles');
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
+    };
+  }, []);
+
   // Re-fetch profile so a just-disabled membership cannot keep an open dashboard session
   useEffect(() => {
     let cancelled = false;
@@ -67,10 +96,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!desktopMode) {
     return (
       <div className="flex h-screen bg-[#F3F4F6] dark:bg-background overflow-hidden">
-        {!railOnTop && <AppIconRail />}
-        <Sidebar />
+        <div data-app-icon-rail className="print:hidden">
+          {!railOnTop && <AppIconRail />}
+        </div>
+        <div data-sidebar className="print:hidden">
+          <Sidebar />
+        </div>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {railOnTop && <AppIconRail forceHorizontal />}
+          <div data-app-icon-rail className="print:hidden">
+            {railOnTop && <AppIconRail forceHorizontal />}
+          </div>
           <div
             key={pathname}
             className="flex flex-1 min-h-0 flex-col overflow-y-auto scrollbar-green"
@@ -78,7 +113,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
           </div>
         </div>
-        <DashboardWidgets />
+        <div data-dashboard-widgets className="print:hidden">
+          <DashboardWidgets />
+        </div>
       </div>
     );
   }
@@ -93,7 +130,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </DesktopShell>
       </DesktopWorkspaceProvider>
-      <DashboardWidgets />
+      <div data-dashboard-widgets className="print:hidden">
+        <DashboardWidgets />
+      </div>
     </div>
   );
 }

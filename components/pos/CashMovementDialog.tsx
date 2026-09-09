@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import posApi from "@/lib/api/pos";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface CashMovementDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface CashMovementDialogProps {
 }
 
 export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMovementDialogProps) {
+  const { t } = useLanguage();
   const [movementType, setMovementType] = useState<'in' | 'out'>('in');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
@@ -41,7 +43,7 @@ export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMoveme
         reason,
         notes: notes || undefined,
       });
-      toast.success(`Cash ${movementType === 'in' ? 'In' : 'Out'} recorded successfully`);
+      toast.success(t(`pos.cash_${movementType}_recorded`));
       
       // Reset form
       setAmount('');
@@ -62,28 +64,28 @@ export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMoveme
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Cash Movement</DialogTitle>
+          <DialogTitle>{t('pos.cash_movement')}</DialogTitle>
           <DialogDescription>
-            Record cash in or cash out from the register
+            {t('pos.record_cash_movement')}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div>
-            <Label>Movement Type *</Label>
+            <Label>{t('pos.movement_type')} *</Label>
             <Select value={movementType} onValueChange={(v) => setMovementType(v as 'in' | 'out')}>
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="in">Cash In</SelectItem>
-                <SelectItem value="out">Cash Out</SelectItem>
+                <SelectItem value="in">{t('pos.cash_in')}</SelectItem>
+                <SelectItem value="out">{t('pos.cash_out')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label>Amount *</Label>
+            <Label>{t('pos.amount')} *</Label>
             <Input
               type="number"
               value={amount}
@@ -96,22 +98,22 @@ export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMoveme
           </div>
 
           <div>
-            <Label>Reason *</Label>
+            <Label>{t('pos.reason')} *</Label>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g., Petty cash refill, Expense payment"
+              placeholder={t('pos.reason_placeholder')}
               className="mt-1"
               maxLength={255}
             />
           </div>
 
           <div>
-            <Label>Notes (Optional)</Label>
+            <Label>{t('pos.notes')} ({t('common.optional')})</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional details..."
+              placeholder={t('pos.additional_details')}
               className="mt-1 resize-none"
               rows={2}
             />
@@ -120,14 +122,14 @@ export function CashMovementDialog({ open, onOpenChange, onSuccess }: CashMoveme
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={loading}
-            className="bg-[#22C55E] hover:bg-[#16A34A]"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52]"
           >
-            {loading ? "Recording..." : "Record Movement"}
+            {loading ? t('pos.recording') : t('pos.record_movement')}
           </Button>
         </DialogFooter>
       </DialogContent>

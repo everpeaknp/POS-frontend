@@ -29,18 +29,23 @@ export default function DashboardPage() {
   const isPersonal = user?.tenant?.account_type === "personal";
   const isConstruction = user?.tenant?.account_type === "construction";
   const isHardware = user?.tenant?.account_type === "hardware";
-  const isKiranaOrRetail = user?.tenant?.business_type === "kirana" || user?.tenant?.business_type === "retail";
+  // account_type is authoritative; business_type is checked too only for
+  // older tenants predating account_type (see nav-items.ts's isKirana).
+  const isKiranaOrRetail =
+    user?.tenant?.account_type === "retail" ||
+    user?.tenant?.business_type === "kirana" ||
+    user?.tenant?.business_type === "retail";
 
   // Redirect accounts to their specific dashboards
   useEffect(() => {
     if (isPersonal) {
-      router.replace("/dashboard/personal-finance");
+      router.replace("/dashboard/finance");
     } else if (isConstruction) {
       router.replace("/dashboard/construction");
     } else if (isHardware) {
       router.replace("/dashboard/hardware");
     } else if (isKiranaOrRetail) {
-      router.replace("/dashboard/kirana");
+      router.replace("/dashboard/retail");
     }
   }, [isPersonal, isConstruction, isHardware, isKiranaOrRetail, router]);
 
@@ -125,7 +130,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => loadDashboard()}
-                className="text-xs font-medium text-[#22C55E] hover:text-[#16A34A] shrink-0"
+                className="text-xs font-medium text-[#4A5D7A] hover:text-[#2E3E52] shrink-0"
               >
                 Retry
               </button>
@@ -145,7 +150,7 @@ export default function DashboardPage() {
               {data.modules.length === 0 ? (
                 <Link
                   href="/dashboard/settings/modules"
-                  className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#22C55E] text-white text-sm font-medium hover:bg-[#16A34A] transition-colors"
+                  className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#4A5D7A] text-white text-sm font-medium hover:bg-[#2E3E52] transition-colors"
                 >
                   <Settings className="h-4 w-4" />
                   Manage modules

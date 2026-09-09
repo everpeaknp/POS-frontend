@@ -197,7 +197,7 @@ export default function PurchaseRequestDetailPage() {
     { label: "Request Submitted", date: req.date, color: "bg-gray-400", by: req.requested_by_name || req.requested_by || "—" },
     ...(req.status !== "Draft" ? [{ label: "Under Review", date: req.date, color: "bg-yellow-400", by: "Manager" }] : []),
     ...(req.status === "Approved" || req.status === "Converted to PO"
-      ? [{ label: "Approved", date: req.approved_at || req.required_by, color: "bg-green-500", by: req.approved_by_name || "Manager" }]
+      ? [{ label: "Approved", date: req.approved_at || req.required_by, color: "bg-slate-500", by: req.approved_by_name || "Manager" }]
       : []),
     ...(req.status === "Rejected"
       ? [{ label: "Rejected", date: req.updated_at, color: "bg-red-500", by: req.approved_by_name || "Manager" }]
@@ -223,7 +223,7 @@ export default function PurchaseRequestDetailPage() {
           {req.status === "Draft" && (
             <Button
               size="sm"
-              className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-8 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
               onClick={handleSubmitForApproval}
               disabled={updating}
             >
@@ -234,7 +234,7 @@ export default function PurchaseRequestDetailPage() {
             <>
               <Button
                 size="sm"
-                className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+                className="h-8 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
                 onClick={handleApprove}
                 disabled={updating}
               >
@@ -255,7 +255,7 @@ export default function PurchaseRequestDetailPage() {
           {req.status === "Approved" && (
             <Button
               size="sm"
-              className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-8 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
               onClick={openConvertModal}
               disabled={updating}
             >
@@ -327,7 +327,7 @@ export default function PurchaseRequestDetailPage() {
           <div className="flex justify-end mt-3">
             <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2">
               <span className="text-sm text-gray-600">Estimated Total: </span>
-              <span className="font-bold text-[#22C55E]">{formatCurrency(req.estimated_amount)}</span>
+              <span className="font-bold text-[#4A5D7A]">{formatCurrency(req.estimated_amount)}</span>
             </div>
           </div>
         </div>
@@ -353,7 +353,7 @@ export default function PurchaseRequestDetailPage() {
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
+              className="w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#4A5D7A]"
               placeholder="Reason for rejection..."
             />
             <div className="flex gap-2">
@@ -399,7 +399,7 @@ export default function PurchaseRequestDetailPage() {
               <Button
                 onClick={handleConvertToPO}
                 disabled={updating}
-                className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               >
                 Create PO
               </Button>

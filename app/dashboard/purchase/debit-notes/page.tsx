@@ -79,7 +79,7 @@ export default function DebitNotesPage() {
             <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm border-gray-200" placeholder="Search debit notes..." />
           </div>
           <div className="flex-1" />
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/debit-notes/new")}>
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/debit-notes/new")}>
             <Plus className="h-4 w-4" /> New Debit Note
           </Button>
         </div>
@@ -100,7 +100,7 @@ export default function DebitNotesPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((dn) => (
                     <tr key={dn.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/debit-notes/${dn.id}`)}>{dn.debit_note_number}</td>
+                      <td className="px-4 py-3 font-medium text-[#4A5D7A] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/debit-notes/${dn.id}`)}>{dn.debit_note_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={dn.date} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{dn.supplier_name}</td>
                       <td className="px-4 py-3 text-blue-600 font-medium">{dn.invoice_number}</td>

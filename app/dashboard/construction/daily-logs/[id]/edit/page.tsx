@@ -53,7 +53,7 @@ export default function EditDailyLogPage() {
         <div className={`${constructionCardClass} p-8 text-center w-full min-h-full`}>
           <Link
             href="/dashboard/construction/daily-logs"
-            className="text-[#22C55E] hover:text-[#16A34A] font-medium"
+            className="text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
           >
             Back to Daily Logs
           </Link>

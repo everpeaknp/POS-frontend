@@ -249,7 +249,7 @@ export default function NewSalesOrderPage() {
                   <button 
                     type="button"
                     onClick={() => setCustomerDialogOpen(true)}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E] hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 hover:border-[#4A5D7A] hover:text-[#4A5D7A] hover:bg-gray-50 transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -323,7 +323,7 @@ export default function NewSalesOrderPage() {
                       <Button 
                         type="button"
                         onClick={handleCreateCustomer}
-                        className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                        className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                         disabled={creatingCustomer}
                       >
                         {creatingCustomer ? "Creating..." : (
@@ -440,7 +440,7 @@ export default function NewSalesOrderPage() {
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={4} 
                 placeholder="Payment terms, delivery notes..."
-                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#22C55E]" 
+                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#4A5D7A]" 
               />
             </div>
             <SalesSummaryBox 
@@ -463,7 +463,7 @@ export default function NewSalesOrderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleSubmit('Draft')}
-              className="border-[#22C55E] text-[#22C55E] hover:bg-green-50"
+              className="border-[#4A5D7A] text-[#4A5D7A] hover:bg-slate-50"
               disabled={submitting}
             >
 
@@ -471,7 +471,7 @@ export default function NewSalesOrderPage() {
             </Button>
             <Button 
               onClick={() => handleSubmit('Confirmed')}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               disabled={submitting}
             >
 

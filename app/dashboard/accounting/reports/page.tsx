@@ -258,7 +258,7 @@ export default function AccountingReportsPage() {
             key={t.id}
             variant={tab === t.id ? "default" : "outline"}
             size="sm"
-            className={tab === t.id ? "bg-[#22C55E] hover:bg-[#16A34A]" : ""}
+            className={tab === t.id ? "bg-[#4A5D7A] hover:bg-[#2E3E52]" : ""}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -284,7 +284,7 @@ export default function AccountingReportsPage() {
             <Button
               onClick={runReport}
               disabled={loading}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white shrink-0"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white shrink-0"
             >
               <FileText className="h-4 w-4 mr-1" />
               {loading ? "Generating…" : "Generate"}
@@ -339,7 +339,7 @@ export default function AccountingReportsPage() {
               {(agingAR.customers ?? []).map((c) => (
                 <tr key={c.customer_id} className="border-t border-gray-100">
                   <td className="px-3 py-2">
-                    <Link href={`/dashboard/sales/customers/${c.customer_id}`} className="text-[#22C55E] hover:underline">
+                    <Link href={`/dashboard/sales/customers/${c.customer_id}`} className="text-[#4A5D7A] hover:underline">
                       {c.customer_name}
                     </Link>
                   </td>
@@ -377,7 +377,7 @@ export default function AccountingReportsPage() {
               {(agingAP.suppliers ?? []).map((s) => (
                 <tr key={s.supplier_id} className="border-t border-gray-100">
                   <td className="px-3 py-2">
-                    <Link href={`/dashboard/purchase/suppliers/${s.supplier_id}`} className="text-[#22C55E] hover:underline">
+                    <Link href={`/dashboard/purchase/suppliers/${s.supplier_id}`} className="text-[#4A5D7A] hover:underline">
                       {s.supplier_name}
                     </Link>
                   </td>

@@ -113,14 +113,17 @@ function ErpPageContent() {
   }, [searchParams]);
 
   const fetchTenants = useCallback(async () => {
+    console.log('[ERP DEBUG] fetchTenants started');
     try {
       setLoading(true);
       const data = await tenantApi.getAll();
+      console.log('[ERP DEBUG] fetchTenants success, got', data.length, 'tenants');
       setTenants(data);
     } catch (error) {
       console.error("[ERP] Failed to fetch tenants:", error);
-      toast.error("Failed to load organizations");
+      toast.error("Failed to load workplaces");
     } finally {
+      console.log('[ERP DEBUG] fetchTenants finished, setting loading to false');
       setLoading(false);
     }
   }, []);
@@ -135,14 +138,21 @@ function ErpPageContent() {
   }, []);
 
   useEffect(() => {
+    console.log('[ERP DEBUG] useEffect triggered:', { authLoading, hasUser: !!user, loading });
+    
     // Wait for AuthContext — redirecting while loading causes
     // middleware (cookie→/erp) ↔ this push (/auth/login) loops in Electron.
-    if (authLoading) return;
+    if (authLoading) {
+      console.log('[ERP DEBUG] Still auth loading, returning early');
+      return;
+    }
     if (!user) {
+      console.log('[ERP DEBUG] No user found, redirecting to login');
       router.push("/auth/login");
       return;
     }
 
+    console.log('[ERP DEBUG] User logged in, fetching tenants');
     fetchTenants();
     fetchInvitations();
     billingApi.getAccountLimits().then(setAccountLimits).catch(() => {});
@@ -164,7 +174,7 @@ function ErpPageContent() {
     if (accountLimits && !accountLimits.can_create_org) {
       const limit = accountLimits.max_orgs ?? 0;
       toast.error(
-        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} organization${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
+        `Your ${accountLimits.account_plan_name} plan allows up to ${limit} workplace${limit === 1 ? "" : "s"}. Upgrade a workspace to create more.`
       );
       return;
     }
@@ -174,7 +184,7 @@ function ErpPageContent() {
   const handleAcceptInvitation = async (id: number) => {
     try {
       const response = await invitationApi.respond(id, "accept");
-      toast.success("Invitation accepted! You've joined the organization.");
+      toast.success("Invitation accepted! You've joined the workplace.");
       await fetchInvitations();
       const updatedTenants = await tenantApi.getAll();
       setTenants(updatedTenants);
@@ -210,13 +220,26 @@ function ErpPageContent() {
       const newOrder = arrayMove(organizations, oldIndex, newIndex).map((org) => org.id);
       setOrgOrder(newOrder);
       localStorage.setItem("khata-org-order", JSON.stringify(newOrder));
-      toast.success("Organization order saved");
+      toast.success("Workplace order saved");
     }
   };
 
-  if (authLoading || !user || loading) {
-    return <PageLoading fullScreen message="Loading organizations…" />;
+  // Show loading only during auth check or while fetching tenants
+  // Don't show loading if !user, as useEffect will redirect to login
+  console.log('[ERP DEBUG] Render check:', { authLoading, hasUser: !!user, loading });
+  
+  if (authLoading || loading) {
+    console.log('[ERP DEBUG] Showing loading screen');
+    return <PageLoading fullScreen message="Loading workplaces…" />;
   }
+
+  // If no user after auth loading is done, return null (useEffect will redirect)
+  if (!user) {
+    console.log('[ERP DEBUG] No user, returning null');
+    return null;
+  }
+  
+  console.log('[ERP DEBUG] Rendering main content');
 
   const organizations = tenants.map((tenant) => mapTenantToOrganization(tenant, user.id));
 
@@ -252,19 +275,19 @@ function ErpPageContent() {
   const pageMeta =
     {
       organizations: {
-        title: "Your organizations",
+        title: "Your workplaces",
         subtitle: "Open a Khata workspace or create a new one",
       },
       requests: {
         title: "Requests",
-        subtitle: "Organization join requests will appear here",
+        subtitle: "Workplace join requests will appear here",
       },
       invitation: {
         title: "Invitations",
-        subtitle: "Accept invites to join other organizations",
+        subtitle: "Accept invites to join other workplaces",
       },
     }[activeTab] ?? {
-      title: "Organizations",
+      title: "Workplaces",
       subtitle: "Manage your Khata workspaces",
     };
 
@@ -288,10 +311,10 @@ function ErpPageContent() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search organizations..."
+                  placeholder="Search workplaces..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/20"
+                  className="pl-10 h-10 border-gray-200 dark:border-border bg-white dark:bg-card focus-visible:border-[#4A5D7A] focus-visible:ring-[#4A5D7A]/20"
                   disabled={hasNoTenants}
                 />
               </div>
@@ -304,7 +327,7 @@ function ErpPageContent() {
                 <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={Building2}
-                    title="No organization yet"
+                    title="No workplace yet"
                     subtitle="Get started by creating your first Khata workspace"
                     showButton={accountLimits?.can_create_org ?? true}
                     onAction={handleCreateOrganization}
@@ -331,7 +354,7 @@ function ErpPageContent() {
                 <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm">
                   <EmptyState
                     icon={SearchX}
-                    title="No organizations found"
+                    title="No workplaces found"
                     subtitle="Try adjusting your search"
                     showButton={false}
                   />
@@ -345,7 +368,7 @@ function ErpPageContent() {
               <EmptyState
                 icon={ClipboardList}
                 title="No pending requests"
-                subtitle="Organization join requests will appear here"
+                subtitle="Workplace join requests will appear here"
                 showButton={false}
               />
             </div>
@@ -357,7 +380,7 @@ function ErpPageContent() {
                 <EmptyState
                   icon={Mail}
                   title="No invitations"
-                  subtitle="Invitations to join other organizations will appear here"
+                  subtitle="Invitations to join other workplaces will appear here"
                   showButton={false}
                 />
               </div>
@@ -366,12 +389,12 @@ function ErpPageContent() {
                 {invitations.map((invitation) => (
                   <div
                     key={invitation.id}
-                    className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-5 sm:p-6 hover:border-[#22C55E]/30 hover:shadow-md transition-all"
+                    className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-5 sm:p-6 hover:border-[#4A5D7A]/30 hover:shadow-md transition-all"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-11 h-11 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-[#16A34A] font-bold text-lg shrink-0">
+                          <div className="w-11 h-11 rounded-xl bg-[#4A5D7A]/10 flex items-center justify-center text-[#2E3E52] font-bold text-lg shrink-0">
                             {invitation.tenant_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -386,7 +409,7 @@ function ErpPageContent() {
 
                         <div className="flex flex-wrap items-center gap-2 text-sm">
                           <span className="text-muted-foreground">Role:</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#22C55E]/15 text-[#22C55E] capitalize">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#4A5D7A]/15 text-[#4A5D7A] capitalize">
                             {invitation.role}
                           </span>
                           {invitation.is_expired && (
@@ -412,7 +435,7 @@ function ErpPageContent() {
                         <div className="flex gap-2 shrink-0">
                           <Button
                             onClick={() => handleAcceptInvitation(invitation.id)}
-                            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-9"
+                            className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 h-9"
                           >
                             <Check className="h-4 w-4" />
                             Accept
@@ -442,8 +465,8 @@ function ErpPageContent() {
         <button
           type="button"
           onClick={handleCreateOrganization}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
-          aria-label="Add new organization"
+          className="fixed bottom-8 right-8 w-14 h-14 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300 z-50"
+          aria-label="Add new workplace"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -454,7 +477,7 @@ function ErpPageContent() {
 
 export default function ErpPage() {
   return (
-    <Suspense fallback={<PageLoading fullScreen message="Loading organizations…" />}>
+    <Suspense fallback={<PageLoading fullScreen message="Loading workplaces…" />}>
       <ErpPageContent />
     </Suspense>
   );

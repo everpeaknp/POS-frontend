@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PayrollStatusBadge } from "@/components/hr/PayrollStatusBadge";
 import { getPayrolls, Payroll } from "@/lib/api/hr";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import toast from "react-hot-toast";
 
 interface PayrollGroup {
@@ -33,6 +34,7 @@ type StatusFilter = "all" | "draft" | "processed" | "paid";
 
 export default function PayrollPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [month, setMonth] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -182,7 +184,7 @@ export default function PayrollPage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/payroll/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Run Payroll
           </Button>
         </Link>

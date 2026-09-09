@@ -4,7 +4,6 @@ import {
   Key,
   Bell,
   Palette,
-  CreditCard,
 } from "lucide-react";
 
 export type SettingsNavItem = {
@@ -49,14 +48,6 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     description: "Customize your workspace theme and display density.",
     href: "/settings/appearance",
     icon: Palette,
-  },
-  {
-    id: "billing",
-    label: "Billing",
-    title: "Billing & Subscription",
-    description: "Organization plan, eSewa payments, and payment history.",
-    href: "/settings/billing",
-    icon: CreditCard,
   },
 ];
 

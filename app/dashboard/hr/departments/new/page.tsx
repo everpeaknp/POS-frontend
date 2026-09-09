@@ -136,7 +136,7 @@ export default function NewDepartmentPage() {
                   placeholder="Enter department description" 
                   value={formData.description} 
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })} 
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                   rows={4}
                   disabled={loading}
                 />
@@ -154,7 +154,7 @@ export default function NewDepartmentPage() {
               </Button>
               <Button 
                 type="submit" 
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
                 disabled={loading}
               >
                 {loading ? "Saving..." : "Save Department"}

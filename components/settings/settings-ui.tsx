@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const settingsInputClass =
-  "w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed";
+  "w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]/20 focus:border-[#4A5D7A] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed";
 
 export function SettingsPageContent({ children }: { children: React.ReactNode }) {
   return <div className="space-y-6">{children}</div>;
@@ -74,10 +74,10 @@ export function SettingsCardHeader({
           <div
             className={cn(
               "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-              variant === "danger" ? "bg-red-100 dark:bg-red-900/40" : "bg-[#22C55E]/10"
+              variant === "danger" ? "bg-red-100 dark:bg-red-900/40" : "bg-[#4A5D7A]/10"
             )}
           >
-            <Icon className={cn("h-4 w-4", variant === "danger" ? "text-red-600 dark:text-red-400" : "text-[#22C55E]")} />
+            <Icon className={cn("h-4 w-4", variant === "danger" ? "text-red-600 dark:text-red-400" : "text-[#4A5D7A]")} />
           </div>
         )}
         <div className="min-w-0">
@@ -142,7 +142,7 @@ export function SettingsSwitch({
         onChange={onChange}
         disabled={disabled}
       />
-      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#22C55E] peer-disabled:opacity-50 peer-disabled:cursor-not-allowed" />
+      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#4A5D7A] peer-disabled:opacity-50 peer-disabled:cursor-not-allowed" />
     </label>
   );
 }

@@ -169,15 +169,16 @@ export interface POSRefund {
   refund_number: string;
   original_transaction: string;
   original_transaction_number?: string;
-  refund_transaction?: string;
-  refund_transaction_number?: string;
   reason: string;
+  notes?: string;
   refund_method: string;
-  total_refund_amount: number;
-  status: string;
+  subtotal_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  refunded_by?: string;
+  refunded_by_name?: string;
+  refunded_at?: string;
   created_at: string;
-  created_by?: string;
-  created_by_name?: string;
   lines: POSRefundLine[];
 }
 
@@ -242,8 +243,52 @@ const posApi = {
   },
 
   createTransaction: async (data: POSTransaction): Promise<POSTransaction> => {
-    const response = await apiClient.post('/pos/transactions/', data);
-    return response.data;
+    console.log('createTransaction called with data:', JSON.stringify(data, null, 2));
+    
+    // Ensure product IDs in lines are integers, not objects
+    const sanitizedData = {
+      ...data,
+      lines: (data.lines || []).map((line: any, idx: number) => {
+        // Extract product ID - handle multiple formats
+        let productId = line.product;
+        if (typeof productId === 'object' && productId !== null) {
+          productId = productId.id;
+        }
+        productId = parseInt(String(productId));
+        
+        if (isNaN(productId)) {
+          console.error(`Line ${idx}: ERROR - Invalid product ID:`, line.product);
+          throw new Error(`Line ${idx}: Invalid product ID - received: ${JSON.stringify(line.product)}`);
+        }
+        
+        console.log(`Line ${idx}: product=${productId} (type: number)`);
+        
+        return {
+          ...line,
+          product: productId,  // Ensure this is always an integer
+          product_id: undefined,
+        };
+      })
+    };
+    
+    console.log('Sanitized transaction data:', JSON.stringify(sanitizedData, null, 2));
+    
+    try {
+      const response = await apiClient.post('/pos/transactions/', sanitizedData);
+      console.log('Transaction created successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('API createTransaction error:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Full error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+      throw error;
+    }
   },
 
   cancelTransaction: async (id: string): Promise<POSTransaction> => {
@@ -390,7 +435,7 @@ const posApi = {
   // Loyalty
   getLoyaltyProgram: async (): Promise<POSLoyaltyProgram | null> => {
     try {
-      const response = await apiClient.get('/pos/loyalty/program/');
+      const response = await apiClient.get('/pos/loyalty-program/');
       return response.data;
     } catch {
       return null;
@@ -399,7 +444,7 @@ const posApi = {
 
   getCustomerLoyalty: async (customerId: string): Promise<POSCustomerLoyalty | null> => {
     try {
-      const response = await apiClient.get(`/pos/loyalty/customers/${customerId}/`);
+      const response = await apiClient.get(`/pos/loyalty/${customerId}/`);
       return response.data;
     } catch {
       return null;

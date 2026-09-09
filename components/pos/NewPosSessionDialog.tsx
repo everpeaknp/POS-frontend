@@ -23,6 +23,7 @@ import {
 import posApi from "@/lib/api/pos";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 const emptyForm = {
   opening_cash: "",
@@ -42,6 +43,7 @@ export function NewPosSessionDialog({
   onCreated,
 }: NewPosSessionDialogProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
@@ -85,7 +87,7 @@ export function NewPosSessionDialog({
       }
 
       const session = await posApi.createSession(data);
-      toast.success("Session opened successfully");
+      toast.success(t('pos.session_opened'));
       onOpenChange(false);
       onCreated?.();
       router.push(`/dashboard/pos/sessions/${session.id}`);
@@ -93,7 +95,7 @@ export function NewPosSessionDialog({
       console.error("Error creating session:", error);
       const err = error as { response?: { data?: Record<string, unknown> } };
       const body = err.response?.data;
-      let message = "Failed to open session";
+      let message = t('pos.failed_open_session');
       if (typeof body?.detail === "string") {
         message = body.detail;
       } else if (body && typeof body === "object") {
@@ -114,19 +116,19 @@ export function NewPosSessionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Open New POS Session</DialogTitle>
+          <DialogTitle>{t('pos.open_new_session')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div>
             <Label htmlFor="opening_cash" className="text-sm font-medium text-gray-700">
-              Opening Cash (Rs.) *
+              {t('pos.opening_cash')} (Rs.) *
             </Label>
             <Input
               id="opening_cash"
               type="number"
               step="0.01"
-              placeholder="Enter opening cash amount"
+              placeholder={t('pos.enter_opening_cash')}
               value={formData.opening_cash}
               onChange={(e) =>
                 setFormData({ ...formData, opening_cash: e.target.value })
@@ -139,7 +141,7 @@ export function NewPosSessionDialog({
 
           <div>
             <Label htmlFor="warehouse" className="text-sm font-medium text-gray-700">
-              Warehouse (Optional)
+              {t('pos.warehouse')} ({t('common.optional')})
             </Label>
             <Select
               value={formData.warehouse}
@@ -148,7 +150,7 @@ export function NewPosSessionDialog({
               }
             >
               <SelectTrigger className="mt-1 h-9 border-gray-200">
-                <SelectValue placeholder="Select warehouse" />
+                <SelectValue placeholder={t('pos.select_warehouse')} />
               </SelectTrigger>
               <SelectContent>
                 {warehouses.map((w) => (
@@ -162,12 +164,12 @@ export function NewPosSessionDialog({
 
           <div>
             <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-              Notes (Optional)
+              {t('pos.notes')} ({t('common.optional')})
             </Label>
             <Input
               id="notes"
               type="text"
-              placeholder="Enter any notes"
+              placeholder={t('pos.enter_notes')}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="mt-1 h-9 border-gray-200"
@@ -181,16 +183,14 @@ export function NewPosSessionDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
-              {loading ? "Opening..." : (
-                "Open Session"
-              )}
+              {loading ? t('pos.opening') : t('pos.open_session')}
             </Button>
           </DialogFooter>
         </form>

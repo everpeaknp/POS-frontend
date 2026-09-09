@@ -240,7 +240,7 @@ export default function NewRefundPage() {
               <Button 
                 onClick={handleSearchTransaction}
                 disabled={loading}
-                className="bg-[#22C55E] hover:bg-[#16A34A]"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52]"
               >
                 <Search className="h-4 w-4 mr-2" />
                 {loading ? "Searching..." : "Search"}
@@ -248,7 +248,7 @@ export default function NewRefundPage() {
             </div>
             
             {transaction && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Transaction:</span>
@@ -422,7 +422,7 @@ export default function NewRefundPage() {
               <Button
                 onClick={handleSubmit}
                 disabled={processing}
-                className="bg-[#22C55E] hover:bg-[#16A34A]"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52]"
               >
                 {processing ? "Processing..." : `Process Refund (Rs. ${totalRefundAmount.toLocaleString()})`}
               </Button>

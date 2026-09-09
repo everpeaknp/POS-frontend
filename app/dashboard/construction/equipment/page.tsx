@@ -33,13 +33,13 @@ function formatStatusLabel(status: string) {
 
 function getOwnershipBadge(type: Equipment["ownership_type"]) {
   return type === "owned"
-    ? "bg-green-100 text-green-700"
+    ? "bg-slate-100 text-slate-700"
     : "bg-blue-100 text-blue-700";
 }
 
 function getStatusBadge(status: Equipment["status"]) {
   const colors: Record<Equipment["status"], string> = {
-    available: "bg-green-100 text-green-700",
+    available: "bg-slate-100 text-slate-700",
     in_use: "bg-yellow-100 text-yellow-700",
     maintenance: "bg-orange-100 text-orange-700",
     retired: "bg-gray-100 text-gray-500",
@@ -214,7 +214,7 @@ export default function EquipmentPage() {
             </Select>
           </div>
           <Link href="/dashboard/construction/equipment/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Equipment
             </Button>
           </Link>
@@ -250,7 +250,7 @@ export default function EquipmentPage() {
                   <tr key={item.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {item.name
                             .split(" ")
                             .map((n) => n[0])
@@ -260,7 +260,7 @@ export default function EquipmentPage() {
                         </div>
                         <Link
                           href={`/dashboard/construction/equipment/${item.id}`}
-                          className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                          className="font-medium text-gray-800 hover:text-[#4A5D7A] hover:underline"
                         >
                           {item.name}
                         </Link>

@@ -16,7 +16,7 @@ export function showSplash(): BrowserWindow {
     center: true,
     alwaysOnTop: true,
     skipTaskbar: true,
-    backgroundColor: "#14532d",
+    backgroundColor: "#2E3E52",
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -26,7 +26,7 @@ export function showSplash(): BrowserWindow {
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <style>
-  body{margin:0;font-family:Segoe UI,system-ui,sans-serif;background:linear-gradient(160deg,#14532d,#166534 55%,#22C55E);
+  body{margin:0;font-family:Segoe UI,system-ui,sans-serif;background:linear-gradient(160deg,#2E3E52,#166534 55%,#4A5D7A);
   color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
   h1{font-size:28px;margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
   p{opacity:.85;margin:0 0 24px;font-size:13px}

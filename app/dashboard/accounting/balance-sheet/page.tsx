@@ -11,6 +11,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { DateInput } from "@/components/shared/DateInput";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { accountsAPI } from "@/lib/api/accounting";
 import {
   exportTableAsCsv,
@@ -115,7 +116,7 @@ function Row({
     >
       <span className={`text-sm ${bold ? "font-bold text-gray-900" : italic ? "italic text-gray-600" : "text-gray-700"}`}>
         {accountId ? (
-          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[#22C55E] hover:underline">
+          <Link href={`/dashboard/accounting/chart-of-accounts/${accountId}`} className="text-[#4A5D7A] hover:underline">
             {label}
           </Link>
         ) : (
@@ -239,6 +240,7 @@ function LiabilitiesEquitySection({ data }: { data: BalanceSheetData }) {
 }
 
 export default function BalanceSheetPage() {
+  const { t } = useLanguage();
   const { formatDate } = useDateSystem();
   const { user } = useAuth();
   const [asOf, setAsOf] = useState("");
@@ -393,7 +395,7 @@ export default function BalanceSheetPage() {
   if (loading && !bsData) {
     return (
       <div className="flex flex-col h-full min-h-0">
-        <DashHeader title="Balance Sheet" subtitle="Assets, liabilities and equity" />
+        <DashHeader title={t('accounting.balance_sheet')} subtitle={t('accounting.assets_liabilities_equity')} />
         <PageLoading message="Loading balance sheet…" />
       </div>
     );
@@ -401,7 +403,7 @@ export default function BalanceSheetPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Balance Sheet" subtitle="Assets, liabilities and equity" />
+      <DashHeader title={t('accounting.balance_sheet')} subtitle={t('accounting.assets_liabilities_equity')} />
       <div className="flex-1 overflow-y-auto p-6 space-y-4 w-full">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 lg:p-6 w-full">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -420,7 +422,7 @@ export default function BalanceSheetPage() {
               <Button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 h-9 shrink-0"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6 h-9 shrink-0"
               >
                 {loading ? "Generating..." : "Generate"}
               </Button>
@@ -459,10 +461,10 @@ export default function BalanceSheetPage() {
                 <p className="text-xl font-bold text-purple-700 mt-1">{fmt(totalLiabEquity)}</p>
               </div>
               <div
-                className={`rounded-xl border shadow-sm p-4 ${balanced ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}`}
+                className={`rounded-xl border shadow-sm p-4 ${balanced ? "bg-slate-50 border-slate-100" : "bg-red-50 border-red-100"}`}
               >
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
-                <p className={`text-xl font-bold mt-1 ${balanced ? "text-green-700" : "text-red-600"}`}>
+                <p className={`text-xl font-bold mt-1 ${balanced ? "text-slate-700" : "text-red-600"}`}>
                   {balanced ? "Balanced" : `Off by ${fmt(Math.abs(totalAssets - totalLiabEquity))}`}
                 </p>
               </div>
@@ -495,18 +497,18 @@ export default function BalanceSheetPage() {
             )}
 
             {hasActivity && (
-              <div className={`bg-white rounded-xl border shadow-sm p-6 lg:p-8 w-full ${balanced ? "border-green-100" : "border-red-100"}`}>
+              <div className={`bg-white rounded-xl border shadow-sm p-6 lg:p-8 w-full ${balanced ? "border-slate-100" : "border-red-100"}`}>
                 <div
-                  className={`rounded-lg px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${balanced ? "bg-green-50" : "bg-red-50"}`}
+                  className={`rounded-lg px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${balanced ? "bg-slate-50" : "bg-red-50"}`}
                 >
                   <div>
                     <span className="font-bold text-gray-900 text-lg block">Total Liabilities + Equity</span>
-                    <span className={`text-sm font-medium ${balanced ? "text-green-700" : "text-red-600"}`}>
+                    <span className={`text-sm font-medium ${balanced ? "text-slate-700" : "text-red-600"}`}>
                       {balanced ? "✓ Balance sheet is balanced" : `⚠ Difference: ${fmt(Math.abs(totalAssets - totalLiabEquity))}`}
                     </span>
                   </div>
                   <div className="sm:text-right">
-                    <span className={`font-bold text-2xl ${balanced ? "text-[#22C55E]" : "text-red-600"}`}>
+                    <span className={`font-bold text-2xl ${balanced ? "text-[#4A5D7A]" : "text-red-600"}`}>
                       {fmt(totalLiabEquity)}
                     </span>
                     <p className="text-sm text-gray-500 mt-1">Total Assets: {fmt(totalAssets)}</p>

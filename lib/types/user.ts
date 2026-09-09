@@ -91,7 +91,7 @@ export interface ProfileUpdateData {
 
 export interface AppearancePreferences {
   theme: 'light' | 'dark' | 'system';
-  language: 'en-US' | 'en-GB' | 'es' | 'fr' | 'de' | 'hi';
+  language: 'en' | 'ne';
   timezone: string;
   date_calendar_system: 'AD' | 'BS';
   compact_mode: boolean;

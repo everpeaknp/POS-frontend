@@ -210,7 +210,7 @@ export default function TaxReportPage() {
                             <span
                               className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 month.status === "filed"
-                                  ? "bg-green-100 text-green-700"
+                                  ? "bg-slate-100 text-slate-700"
                                   : "bg-yellow-100 text-yellow-700"
                               }`}
                             >
@@ -293,7 +293,7 @@ export default function TaxReportPage() {
                             <span
                               className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 item.submitted
-                                  ? "bg-green-100 text-green-700"
+                                  ? "bg-slate-100 text-slate-700"
                                   : "bg-yellow-100 text-yellow-700"
                               }`}
                             >

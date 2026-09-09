@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
@@ -18,6 +19,7 @@ import toast from "react-hot-toast";
 
 export default function CustomersPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
 
@@ -99,7 +101,7 @@ export default function CustomersPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Customers" subtitle="Loading..." />
+        <DashHeader title={t('sales.customers')} subtitle="Loading..." />
         <div className="flex-1 p-6">
           <SkeletonTable rows={10} />
         </div>
@@ -112,7 +114,7 @@ export default function CustomersPage() {
   if (customers.length === 0 && !search && status === "All") {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Customers" subtitle="Manage your customers" />
+        <DashHeader title={t('sales.customers')} subtitle={t('sales.manage_your_customers')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Users}
@@ -136,7 +138,7 @@ export default function CustomersPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Customers" subtitle={`${filtered.length} customers`} />
+      <DashHeader title={t('sales.customers')} subtitle={`${filtered.length} ${t('sales.customers_count')}`} />
       <div className="flex-1 p-6 space-y-4">
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div className="flex flex-wrap items-center gap-2">
@@ -161,7 +163,7 @@ export default function CustomersPage() {
             </Select>
           </div>
           <Link href="/dashboard/sales/customers/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Customer
             </Button>
           </Link>
@@ -186,12 +188,12 @@ export default function CustomersPage() {
                 <tr key={c.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                         {c.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
                       </div>
                       <Link 
                         href={`/dashboard/sales/customers/${c.id}`} 
-                        className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                        className="font-medium text-gray-800 hover:text-[#4A5D7A] hover:underline"
                       >
                         {c.name}
                       </Link>

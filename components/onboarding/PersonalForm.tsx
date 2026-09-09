@@ -111,7 +111,7 @@ export function PersonalForm({
     }
   };
 
-  const inputCls = "h-11 w-full rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/15 focus-visible:ring-3 text-sm";
+  const inputCls = "h-11 w-full rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-[#4A5D7A] focus-visible:ring-[#4A5D7A]/15 focus-visible:ring-3 text-sm";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
@@ -139,26 +139,26 @@ export function PersonalForm({
               />
             </FieldGroup>
 
-            <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-              <p className="text-xs font-medium text-green-800 mb-1">Your workspace URL</p>
-              <p className="text-sm font-mono text-[#16A34A] break-all">{workspaceUrl}</p>
+            <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3">
+              <p className="text-xs font-medium text-slate-800 mb-1">Your workspace URL</p>
+              <p className="text-sm font-mono text-[#2E3E52] break-all">{workspaceUrl}</p>
             </div>
           </FormSection>
         </div>
       </div>
 
       {/* Agreement */}
-      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-green-100 bg-green-50/50">
+      <div className="flex items-start gap-3 p-4 mt-6 rounded-xl border border-slate-100 bg-slate-50/50">
         <Checkbox
           id="terms"
           checked={form.agreeToTerms}
           onCheckedChange={(checked) => setForm({ ...form, agreeToTerms: checked === true })}
-          className="mt-0.5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+          className="mt-0.5 data-[state=checked]:bg-[#4A5D7A] data-[state=checked]:border-[#4A5D7A]"
         />
         <Label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
           I agree to Khata.app&apos;s{" "}
-          <a href="#" className="text-[#22C55E] underline font-medium hover:text-[#16A34A]">Terms of Service</a> and{" "}
-          <a href="#" className="text-[#22C55E] underline font-medium hover:text-[#16A34A]">Privacy Policy</a>
+          <a href="#" className="text-[#4A5D7A] underline font-medium hover:text-[#2E3E52]">Terms of Service</a> and{" "}
+          <a href="#" className="text-[#4A5D7A] underline font-medium hover:text-[#2E3E52]">Privacy Policy</a>
         </Label>
       </div>
 
@@ -178,7 +178,7 @@ export function PersonalForm({
         <Button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-green-500/20"
+          className="h-12 flex-1 sm:flex-none sm:min-w-[200px] rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white font-extrabold disabled:opacity-40 gap-1.5 border-transparent shadow-md shadow-slate-500/20"
         >
           {submitLabel || "Continue"} <ArrowRight className="h-4 w-4" />
         </Button>

@@ -110,7 +110,7 @@ export default function FiscalYearPage() {
         </div>
         <Button
           size="sm"
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+          className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 shrink-0"
           onClick={handleEnsureCurrent}
         >
           <Plus className="h-4 w-4" /> Ensure current FY
@@ -155,7 +155,7 @@ export default function FiscalYearPage() {
                         <Lock className="h-3 w-3" /> Closed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded text-xs">
+                      <span className="inline-flex items-center gap-1 text-slate-700 bg-slate-50 px-2 py-0.5 rounded text-xs">
                         <Calendar className="h-3 w-3" /> Open
                       </span>
                     )}

@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ArrowRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
+import type { AccountType } from "@/components/account-type-selection";
+import { getCreationCopy, getDashboardHref } from "@/lib/onboarding/creation-copy";
 
 interface OrgCreationSuccessProps {
   organizationName: string;
+  accountType?: AccountType | null;
 }
 
-export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps) {
+export function OrgCreationSuccess({ organizationName, accountType }: OrgCreationSuccessProps) {
   const router = useRouter();
+  const copy = getCreationCopy(accountType);
 
   useEffect(() => {
     // Trigger confetti animation
@@ -49,35 +53,35 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
   }, []);
 
   const handleGoToDashboard = () => {
-    router.push("/dashboard");
+    router.push(getDashboardHref(accountType));
   };
 
   const handleGoToAccount = () => {
-    router.push("/dashboard/settings/org");
+    router.push(copy.secondaryHref);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col">
       <main className="flex-1 flex items-center justify-center px-4 py-10">
-      <div className="bg-white dark:bg-card rounded-[28px] shadow-[0_18px_45px_rgba(22,163,74,0.12)] border border-green-100/60 dark:border-border p-10 sm:p-12 w-full max-w-md text-center">
+      <div className="bg-white dark:bg-card rounded-[28px] shadow-[0_18px_45px_rgba(22,163,74,0.12)] border border-slate-100/60 dark:border-border p-10 sm:p-12 w-full max-w-md text-center">
         <div className="flex justify-center mb-6">
-          <div className="h-[84px] w-[84px] bg-green-100 rounded-full flex items-center justify-center">
+          <div className="h-[84px] w-[84px] bg-slate-100 rounded-full flex items-center justify-center">
             <CheckCircle2 className="h-12 w-12 text-[#166534]" />
           </div>
         </div>
 
         <h2 className="text-3xl font-bold text-gray-900 dark:text-foreground mb-3 tracking-tight">
-          Your workspace is ready
+          {copy.successHeading}
         </h2>
 
         <p className="text-gray-500 dark:text-muted-foreground text-base mb-2 leading-relaxed">
-          <strong className="text-[#16A34A]">{organizationName}</strong> is set up and ready to use.
+          <strong className="text-[#2E3E52]">{organizationName}</strong> is set up and ready to use.
         </p>
 
         <div className="space-y-3 mt-8">
           <Button
             onClick={handleGoToDashboard}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold text-base gap-2 border-transparent shadow-md shadow-green-500/20"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white font-extrabold text-base gap-2 border-transparent shadow-md shadow-slate-500/20"
           >
             Go to dashboard
             <ArrowRight className="h-5 w-5" />
@@ -89,12 +93,12 @@ export function OrgCreationSuccess({ organizationName }: OrgCreationSuccessProps
             className="w-full h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent font-bold text-base gap-2 shadow-none"
           >
             <User className="h-5 w-5" />
-            Organization settings
+            {copy.secondaryLabel}
           </Button>
         </div>
 
         <p className="text-xs text-gray-500 mt-8">
-          You can access your organization anytime from the dashboard
+          You can access your workspace anytime from the dashboard
         </p>
       </div>
       </main>

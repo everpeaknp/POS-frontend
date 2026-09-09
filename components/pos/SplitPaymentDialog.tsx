@@ -86,14 +86,14 @@ export function SplitPaymentDialog({ open, onOpenChange, totalAmount, onConfirm 
             </div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-600">Total Paid:</span>
-              <span className={`font-semibold ${paidTotal >= totalAmount ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`font-semibold ${paidTotal >= totalAmount ? 'text-slate-600' : 'text-red-600'}`}>
                 Rs. {paidTotal.toFixed(2)}
               </span>
             </div>
             {remaining !== 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{remaining > 0 ? 'Remaining:' : 'Change:'}</span>
-                <span className={`font-semibold ${remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`font-semibold ${remaining > 0 ? 'text-red-600' : 'text-slate-600'}`}>
                   Rs. {Math.abs(remaining).toFixed(2)}
                 </span>
               </div>
@@ -165,7 +165,7 @@ export function SplitPaymentDialog({ open, onOpenChange, totalAmount, onConfirm 
           <Button 
             onClick={handleConfirm}
             disabled={paidTotal < totalAmount}
-            className="bg-[#22C55E] hover:bg-[#16A34A]"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52]"
           >
             Confirm Split Payment
           </Button>

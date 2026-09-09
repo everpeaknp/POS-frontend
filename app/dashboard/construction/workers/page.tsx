@@ -52,7 +52,7 @@ function getCategoryColor(category: string) {
     mason: "bg-blue-100 text-blue-800",
     carpenter: "bg-yellow-100 text-yellow-800",
     electrician: "bg-purple-100 text-purple-800",
-    plumber: "bg-green-100 text-green-800",
+    plumber: "bg-slate-100 text-slate-800",
     painter: "bg-pink-100 text-pink-800",
     helper: "bg-gray-100 text-gray-800",
     welder: "bg-orange-100 text-orange-800",
@@ -220,7 +220,7 @@ export default function WorkersPage() {
             </Select>
           </div>
           <Link href="/dashboard/construction/workers/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Worker
             </Button>
           </Link>
@@ -255,7 +255,7 @@ export default function WorkersPage() {
                   <tr key={worker.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {worker.name
                             .split(" ")
                             .map((n) => n[0])
@@ -266,7 +266,7 @@ export default function WorkersPage() {
                         <div>
                           <Link
                             href={`/dashboard/construction/workers/${worker.id}`}
-                            className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                            className="font-medium text-gray-800 hover:text-[#4A5D7A] hover:underline"
                           >
                             {worker.name}
                           </Link>

@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, AlertTriangle, Package } from "lucide-react";
+import { Plus, Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, AlertTriangle, Package, LayoutGrid, List, FolderTree, Scale, Layers } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { inventoryApi, Product } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { formatCurrency } from "@/lib/utils";
-import { StockAdjustmentPanel } from "@/components/inventory/StockAdjustmentPanel";
 import toast from "react-hot-toast";
 
 export default function ProductsListPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -25,6 +26,7 @@ export default function ProductsListPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     type: 'single' | 'bulk';
@@ -114,7 +116,7 @@ export default function ProductsListPage() {
 
   const handleBulkDelete = async () => {
     if (selectedProducts.size === 0) {
-      toast.error("No products selected");
+      toast.error(t('inventory.no_products_selected'));
       return;
     }
 
@@ -127,29 +129,71 @@ export default function ProductsListPage() {
   const confirmDelete = async () => {
     try {
       if (confirmDialog.type === 'single' && confirmDialog.productId) {
-        await inventoryApi.products.delete(Number(confirmDialog.productId));
-        toast.success("Product deleted successfully");
+        console.log('Attempting to delete product:', confirmDialog.productId);
+        const response = await inventoryApi.products.delete(Number(confirmDialog.productId));
+        
+        // Check if response indicates product was discontinued instead of deleted
+        if (response?.data?.action === 'discontinued') {
+          toast.success(response.data.detail || t('inventory.product_marked_discontinued'));
+        } else {
+          toast.success(t('inventory.product_deleted_successfully'));
+        }
+        
         refetch();
         setSelectedProducts(new Set());
       } else if (confirmDialog.type === 'bulk') {
         let deleted = 0;
+        let discontinued = 0;
+        let failed = 0;
+        
         for (const id of selectedProducts) {
           try {
-            await inventoryApi.products.delete(Number(id));
-            deleted++;
-          } catch (error) {
+            const response = await inventoryApi.products.delete(Number(id));
+            
+            if (response?.data?.action === 'discontinued') {
+              discontinued++;
+            } else {
+              deleted++;
+            }
+          } catch (error: any) {
+            failed++;
             console.error(`Failed to delete product ${id}:`, error);
+            console.error('Error details:', error.response?.data);
           }
         }
-        toast.success(`Deleted ${deleted} product(s)`);
+        
+        const messages = [];
+        if (deleted > 0) messages.push(`${deleted} ${t('inventory.deleted')}`);
+        if (discontinued > 0) messages.push(`${discontinued} ${t('inventory.discontinued_had_transactions')}`);
+        if (failed > 0) messages.push(`${failed} ${t('inventory.failed')}`);
+        
+        if (messages.length > 0) {
+          toast.success(`${t('inventory.products')}: ${messages.join(', ')}`);
+        }
+        
         refetch();
         setSelectedProducts(new Set());
       }
     } catch (error: any) {
       console.error('Delete error:', error);
       console.error('Error response:', error.response?.data);
-      const errorMsg = error.response?.data?.detail || error.response?.data?.error || "Failed to delete product";
-      toast.error(errorMsg);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMsg = t('inventory.failed_to_delete_product');
+      
+      if (error.response?.status === 403) {
+        errorMsg = t('inventory.permission_denied_delete');
+      } else if (error.response?.status === 404) {
+        errorMsg = t('inventory.product_not_found_or_deleted');
+      } else if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      toast.error(errorMsg, { duration: 5000 });
     } finally {
       setConfirmDialog({ isOpen: false, type: 'single' });
     }
@@ -158,7 +202,7 @@ export default function ProductsListPage() {
   if (productsLoading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Products" subtitle="Manage your product inventory" />
+        <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
         <div className="flex-1 p-6">
           <SkeletonTable rows={10} />
         </div>
@@ -169,13 +213,13 @@ export default function ProductsListPage() {
   if (products.length === 0 && !searchTerm && statusFilter === "all") {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Products" subtitle="Manage your product inventory" />
+        <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Package}
-            title="No products yet"
-            description="Get started by creating your first product."
-            actionLabel="Create Product"
+            title={t('inventory.no_products_yet')}
+            description={t('inventory.get_started_create_first_product')}
+            actionLabel={t('inventory.create_product')}
             actionHref="/dashboard/inventory/products/new"
           />
         </div>
@@ -185,7 +229,7 @@ export default function ProductsListPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Products" subtitle="Manage your product inventory" />
+      <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
       <div className="flex-1 p-6 space-y-4">
         {/* Toolbar */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -195,26 +239,42 @@ export default function ProductsListPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search by name or SKU..."
+                placeholder={t('inventory.search_by_name_or_sku')}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="h-9 pl-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300"
+                className="h-9 pl-9 text-sm border-gray-200 dark:border-gray-700 focus-visible:ring-0 focus-visible:border-gray-300 dark:focus-visible:border-gray-600"
               />
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Filter className="h-4 w-4 text-gray-400 shrink-0" />
+              
+              {/* Warehouse Selector */}
+              {warehouses.length > 0 && (
+                <select
+                  value={selectedWarehouse}
+                  onChange={(e) => setSelectedWarehouse(e.target.value)}
+                  className="h-9 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 text-gray-900 dark:text-gray-100"
+                >
+                  {warehouses.map((wh) => (
+                    <option key={wh.id} value={String(wh.id)}>
+                      {wh.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              
               <select
                 value={categoryFilter}
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
+                className="h-9 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
@@ -230,7 +290,7 @@ export default function ProductsListPage() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
+                className="h-9 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -247,7 +307,7 @@ export default function ProductsListPage() {
                     setCategoryFilter("all");
                     setCurrentPage(1);
                   }}
-                  className="text-xs text-gray-500 hover:text-gray-700 underline whitespace-nowrap"
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline whitespace-nowrap"
                 >
                   Clear all
                 </button>
@@ -255,8 +315,69 @@ export default function ProductsListPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
+          {/* Shortcut & Action Buttons */}
+          <div className="flex gap-2 flex-wrap">
+            {/* Shortcut Buttons */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/inventory/categories')}
+              className="h-9 gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Manage Categories"
+            >
+              <FolderTree className="h-4 w-4" />
+              Categories
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/inventory/stock-adjustment')}
+              className="h-9 gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Stock Adjustment"
+            >
+              <Layers className="h-4 w-4" />
+              Stock
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/inventory/uom')}
+              className="h-9 gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Units of Measure"
+            >
+              <Scale className="h-4 w-4" />
+              Units
+            </Button>
+
+            {/* Divider */}
+            <div className="h-9 w-px bg-gray-200 dark:bg-gray-700"></div>
+
+            {/* View Mode Toggle */}
+            <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-[#4A5D7A] text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 dark:border-gray-700 ${
+                  viewMode === 'grid'
+                    ? 'bg-[#4A5D7A] text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
+            
             {selectedProducts.size > 0 && (
               <Button
                 type="button"
@@ -271,7 +392,7 @@ export default function ProductsListPage() {
             <Button
               type="button"
               onClick={() => router.push('/dashboard/inventory/products/new')}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               New Product
@@ -279,201 +400,351 @@ export default function ProductsListPage() {
           </div>
         </div>
 
-        {/* Stock Adjustment Panel */}
-        <StockAdjustmentPanel
-          warehouseId={selectedWarehouse ? Number(selectedWarehouse) : undefined}
-          onStockUpdated={() => refetch()}
-        />
+        {/* Products Display - List or Grid */}
+        {viewMode === 'list' ? (
+          /* Products Table */
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.size === products.length && products.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="rounded border-gray-300"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Product Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">SKU</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Category</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Unit</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Cost Price</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Selling Price</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Stock</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {products.map((product: Product) => {
+                    const stock = product.total_stock ?? 0;
+                    const isLowStock = stock > 0 && stock <= product.reorder_level;
+                    const isOutOfStock = stock === 0;
 
-        {/* Warehouse Selection */}
-        {warehouses.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-blue-900">Warehouse:</label>
-              <select
-                value={selectedWarehouse}
-                onChange={(e) => setSelectedWarehouse(e.target.value)}
-                className="h-9 rounded-md border border-blue-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {warehouses.map((wh) => (
-                  <option key={wh.id} value={String(wh.id)}>
-                    {wh.name}
-                  </option>
-                ))}
-              </select>
+                    return (
+                      <tr key={product.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedProducts.has(product.id)}
+                            onChange={(e) => handleSelectProduct(product.id, e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{product.name}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{product.sku}</td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{product.category_name || "-"}</td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{product.unit_name}</td>
+                        <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{formatCurrency(product.cost_price)}</td>
+                        <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{formatCurrency(product.selling_price)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`font-semibold ${
+                            isOutOfStock ? "text-red-600" : 
+                            isLowStock ? "text-orange-600" : 
+                            "text-gray-900 dark:text-gray-100"
+                          }`}>
+                            {stock.toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={product.status}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value as 'active' | 'inactive' | 'discontinued';
+                              try {
+                                await inventoryApi.products.update(Number(product.id), { status: newStatus });
+                                toast.success(`Product status updated to ${newStatus}`);
+                                refetch();
+                              } catch (error) {
+                                toast.error('Failed to update status');
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] ${
+                              isOutOfStock ? "border-red-200 bg-red-50 text-red-700" :
+                              isLowStock ? "border-orange-200 bg-orange-50 text-orange-700" :
+                              product.status === "active" ? "border-slate-200 bg-slate-50 text-slate-700" :
+                              product.status === "inactive" ? "border-gray-200 bg-gray-50 text-gray-700" :
+                              "border-red-200 bg-red-50 text-red-700"
+                            }`}
+                            disabled={isOutOfStock || isLowStock}
+                            title={isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Change status"}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="discontinued">Discontinued</option>
+                          </select>
+                          {(isOutOfStock || isLowStock) && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {isOutOfStock ? "Out of Stock" : "Low Stock"}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-gray-500 hover:text-[#4A5D7A] hover:bg-slate-50 dark:hover:bg-slate-950"
+                              onClick={() => router.push(`/dashboard/inventory/products/new?edit=${product.id}`)}
+                              title="Edit"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} products
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="h-9 w-9 border-gray-200 dark:border-gray-700"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        type="button"
+                        variant={currentPage === page ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={
+                          currentPage === page
+                            ? 'h-9 min-w-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white'
+                            : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
+                        }
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-9 w-9 border-gray-200 dark:border-gray-700"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Products Grid */
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {products.map((product: Product) => {
+                const stock = product.total_stock ?? 0;
+                const isLowStock = stock > 0 && stock <= product.reorder_level;
+                const isOutOfStock = stock === 0;
+                const isSelected = selectedProducts.has(product.id);
+
+                return (
+                  <div
+                    key={product.id}
+                    className={`
+                      relative text-left rounded-xl border-2 transition-all duration-200 overflow-hidden cursor-pointer
+                      ${
+                        isOutOfStock
+                          ? "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50"
+                          : isSelected
+                            ? "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 border-slate-500 shadow-lg ring-2 ring-slate-200 dark:ring-slate-800"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-slate-400 hover:shadow-lg hover:scale-[1.02] active:scale-95"
+                      }
+                    `}
+                    onClick={() => handleSelectProduct(product.id, !isSelected)}
+                  >
+                    {/* Selection Checkbox */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleSelectProduct(product.id, e.target.checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-gray-300"
+                      />
+                    </div>
+
+                    {/* Product Image at Top */}
+                    <div className="relative w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Package className="h-8 w-8 text-gray-300 dark:text-gray-600" />
+                        </div>
+                      )}
+
+                      {/* SKU at bottom of image */}
+                      {product.sku && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-2 py-0.5">
+                          <div className="text-[10px] text-white font-mono truncate">
+                            {product.sku}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stock Badge on Image */}
+                      <div className={`absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-semibold shadow-md backdrop-blur-sm ${
+                        isOutOfStock 
+                          ? 'bg-red-500/90 text-white' 
+                          : isLowStock
+                            ? 'bg-amber-500/90 text-white'
+                            : 'bg-slate-500/90 text-white'
+                      }`}>
+                        {isOutOfStock ? 'Out' : `${stock.toFixed(0)}`}
+                      </div>
+                    </div>
+
+                    {/* Product Details Below Image */}
+                    <div className="p-2 space-y-1">
+                      {/* Price */}
+                      <div className="flex items-baseline gap-0.5">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Rs.</span>
+                        <span className="text-base font-bold text-slate-600 dark:text-slate-400">
+                          {Number(product.selling_price).toFixed(0)}
+                        </span>
+                      </div>
+
+                      {/* Product Name */}
+                      <div className="font-medium text-xs text-gray-900 dark:text-gray-100 line-clamp-2 leading-tight">
+                        {product.name}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons - Shown on Hover */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity p-2 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-slate-400 hover:bg-white/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/dashboard/inventory/products/new?edit=${product.id}`);
+                        }}
+                      >
+                        <Edit2 className="h-2.5 w-2.5 mr-0.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-red-400 hover:bg-white/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteProduct(product.id, product.name);
+                        }}
+                      >
+                        <Trash2 className="h-2.5 w-2.5 mr-0.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Grid Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} products
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="h-9 w-9 border-gray-200 dark:border-gray-700"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        type="button"
+                        variant={currentPage === page ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={
+                          currentPage === page
+                            ? 'h-9 min-w-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white'
+                            : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
+                        }
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-9 w-9 border-gray-200 dark:border-gray-700"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-
-        {/* Products Table */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.size === products.length && products.length > 0}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">SKU</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Unit</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Cost Price</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Selling Price</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Stock</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {products.map((product: Product) => {
-                  const stock = product.total_stock ?? 0;
-                  const isLowStock = stock > 0 && stock <= product.reorder_level;
-                  const isOutOfStock = stock === 0;
-
-                  return (
-                    <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.has(product.id)}
-                          onChange={(e) => handleSelectProduct(product.id, e.target.checked)}
-                          className="rounded border-gray-300"
-                        />
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-500">{product.sku}</td>
-                      <td className="px-4 py-3 text-gray-600">{product.category_name || "-"}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{product.unit_name}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(product.cost_price)}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(product.selling_price)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`font-semibold ${
-                          isOutOfStock ? "text-red-600" : 
-                          isLowStock ? "text-orange-600" : 
-                          "text-gray-900"
-                        }`}>
-                          {stock.toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={product.status}
-                          onChange={async (e) => {
-                            const newStatus = e.target.value as 'active' | 'inactive' | 'discontinued';
-                            try {
-                              await inventoryApi.products.update(Number(product.id), { status: newStatus });
-                              toast.success(`Product status updated to ${newStatus}`);
-                              refetch();
-                            } catch (error) {
-                              toast.error('Failed to update status');
-                            }
-                          }}
-                          className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#22C55E] ${
-                            isOutOfStock ? "border-red-200 bg-red-50 text-red-700" :
-                            isLowStock ? "border-orange-200 bg-orange-50 text-orange-700" :
-                            product.status === "active" ? "border-green-200 bg-green-50 text-green-700" :
-                            product.status === "inactive" ? "border-gray-200 bg-gray-50 text-gray-700" :
-                            "border-red-200 bg-red-50 text-red-700"
-                          }`}
-                          disabled={isOutOfStock || isLowStock}
-                          title={isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Change status"}
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                          <option value="discontinued">Discontinued</option>
-                        </select>
-                        {(isOutOfStock || isLowStock) && (
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {isOutOfStock ? "Out of Stock" : "Low Stock"}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-500 hover:text-[#22C55E] hover:bg-green-50"
-                            onClick={() => router.push(`/dashboard/inventory/products/${product.id}`)}
-                            title="Edit"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => handleDeleteProduct(product.id, product.name)}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <div className="text-sm text-gray-600">
-                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} products
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 border-gray-200"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      type="button"
-                      variant={currentPage === page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setCurrentPage(page)}
-                      className={
-                        currentPage === page
-                          ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
-                          : 'h-9 min-w-9 border-gray-200'
-                      }
-                    >
-                      {page}
-                    </Button>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 border-gray-200"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Empty search result */}
         {products.length === 0 && (searchTerm || statusFilter !== "all" || categoryFilter !== "all") && (
@@ -487,7 +758,7 @@ export default function ProductsListPage() {
                 setCategoryFilter("all");
                 setCurrentPage(1);
               }}
-              className="mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] hover:underline"
+              className="mt-4 text-sm font-medium text-[#4A5D7A] hover:text-[#2E3E52] hover:underline"
             >
               Clear filters
             </button>

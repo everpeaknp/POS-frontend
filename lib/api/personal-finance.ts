@@ -78,6 +78,20 @@ export interface FinanceBill {
   updated_at: string;
 }
 
+export interface FinanceLoan {
+  id: number;
+  name: string;
+  type: 'home' | 'car' | 'personal' | 'education';
+  type_display: string;
+  principal: string;
+  emi: string;
+  remaining_balance: string;
+  interest_rate: string;
+  start_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PartyLender {
   id: number;
   name: string;
@@ -358,94 +372,31 @@ export interface PersonalFinanceDashboardData {
 
 export const personalFinanceDashboardAPI = {
   get: async (): Promise<PersonalFinanceDashboardData> => {
-    // TODO: Replace with actual API endpoints when backend is ready
-    // For now, returning mock data matching the structure
-    
-    // Simulating API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    const response = await apiClient.get<PersonalFinanceDashboardData>('/finance/dashboard/');
+    return response.data;
+  },
+};
 
-    // Mock data for development
-    return {
-      summary: {
-        total_balance: 150000,
-        total_investments: 250000,
-        total_debt: 50000,
-        upcoming_renewals: 3,
-      },
-      netWorthTrend: [
-        { month: 'Jan', value: 320000 },
-        { month: 'Feb', value: 335000 },
-        { month: 'Mar', value: 340000 },
-        { month: 'Apr', value: 350000 },
-        { month: 'May', value: 350000 },
-      ],
-      alerts: [
-        {
-          type: 'emi',
-          message: 'Home Loan EMI due in 3 days',
-          amount: 15000,
-          date: '2026-08-16',
-        },
-        {
-          type: 'insurance',
-          message: 'Health Insurance renewal due',
-          amount: 12000,
-          date: '2026-08-20',
-        },
-        {
-          type: 'over_budget',
-          message: 'Shopping budget exceeded by 15%',
-          amount: 3000,
-        },
-      ],
-      activities: [
-        {
-          type: 'transaction',
-          action: 'created',
-          description: 'Added expense: Grocery Shopping',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          amount: 2500,
-        },
-        {
-          type: 'account',
-          action: 'created',
-          description: 'Created new account: Emergency Fund',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-        },
-        {
-          type: 'budget',
-          action: 'updated',
-          description: 'Updated budget: Monthly Groceries',
-          timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-          amount: 15000,
-        },
-        {
-          type: 'transaction',
-          action: 'created',
-          description: 'Added income: Salary Payment',
-          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-          amount: 50000,
-        },
-        {
-          type: 'category',
-          action: 'created',
-          description: 'Created new category: Entertainment',
-          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        },
-        {
-          type: 'bill',
-          action: 'created',
-          description: 'Added recurring bill: Internet',
-          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
-          amount: 1200,
-        },
-      ],
-      topAccounts: [
-        { name: 'Savings Account - ABC Bank', balance: 85000, type: 'bank' },
-        { name: 'Salary Account - XYZ Bank', balance: 45000, type: 'bank' },
-        { name: 'Cash Wallet', balance: 15000, type: 'wallet' },
-        { name: 'Emergency Fund', balance: 5000, type: 'cash' },
-      ],
-    };
+
+// Loans API
+export const financeLoanAPI = {
+  list: async () => {
+    const response = await apiClient.get<{ results: FinanceLoan[] }>('/finance/loans/');
+    return response.data.results;
+  },
+  get: async (id: number) => {
+    const response = await apiClient.get<FinanceLoan>(`/finance/loans/${id}/`);
+    return response.data;
+  },
+  create: async (data: Partial<FinanceLoan>) => {
+    const response = await apiClient.post<FinanceLoan>('/finance/loans/', data);
+    return response.data;
+  },
+  update: async (id: number, data: Partial<FinanceLoan>) => {
+    const response = await apiClient.put<FinanceLoan>(`/finance/loans/${id}/`, data);
+    return response.data;
+  },
+  delete: async (id: number) => {
+    await apiClient.delete(`/finance/loans/${id}/`);
   },
 };

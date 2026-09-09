@@ -87,7 +87,7 @@ export default function SupplierProfilePage() {
       <div className="flex-1 p-6 space-y-4">
 
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-wrap items-start gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-2xl font-bold text-[#22C55E]">
+          <div className="w-14 h-14 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center text-2xl font-bold text-[#4A5D7A]">
             {supplier.name[0]}
           </div>
           <div className="flex-1 min-w-0">
@@ -191,7 +191,7 @@ export default function SupplierProfilePage() {
                     className="hover:bg-gray-50/50 cursor-pointer"
                     onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}
                   >
-                    <td className="px-4 py-3 font-medium text-[#22C55E]">{o.po_number}</td>
+                    <td className="px-4 py-3 font-medium text-[#4A5D7A]">{o.po_number}</td>
                     <td className="px-4 py-3 text-gray-600"><FormattedDate value={o.date} /></td>
                     <td className="px-4 py-3 text-gray-600"><FormattedDate value={o.expected_delivery_date} /></td>
                     <td className="px-4 py-3 text-gray-600">{o.items_count ?? o.lines?.length ?? 0}</td>
@@ -225,7 +225,7 @@ export default function SupplierProfilePage() {
                     className="hover:bg-gray-50/50 cursor-pointer"
                     onClick={() => router.push(`/dashboard/purchase/invoices/${inv.id}`)}
                   >
-                    <td className="px-4 py-3 font-medium text-[#22C55E]">{inv.invoice_number}</td>
+                    <td className="px-4 py-3 font-medium text-[#4A5D7A]">{inv.invoice_number}</td>
                     <td className="px-4 py-3 text-gray-600"><FormattedDate value={inv.date} /></td>
                     <td className="px-4 py-3 text-gray-600">
                       {inv.due_date ? <FormattedDate value={inv.due_date} /> : "—"}

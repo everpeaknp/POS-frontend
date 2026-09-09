@@ -14,7 +14,7 @@ interface NotFoundViewProps {
 }
 
 const primaryBtn =
-  "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white transition-colors";
+  "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium bg-[#4A5D7A] hover:bg-[#2E3E52] text-white transition-colors";
 const secondaryBtn =
   "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors";
 
@@ -38,7 +38,7 @@ export function NotFoundView({
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-10">
-        <p className="text-6xl sm:text-7xl font-bold tracking-tight text-[#22C55E] leading-none">
+        <p className="text-6xl sm:text-7xl font-bold tracking-tight text-[#4A5D7A] leading-none">
           {code}
         </p>
         <h1 className="mt-4 text-xl font-bold text-gray-900">{title}</h1>
@@ -81,11 +81,11 @@ export function NotFoundView({
           <h2 className="text-3xl font-bold leading-tight mb-3">
             This page could not be found
           </h2>
-          <p className="text-green-300/90 text-sm leading-relaxed max-w-sm">
+          <p className="text-slate-300/90 text-sm leading-relaxed max-w-sm">
             Check the URL for typos, or return to your dashboard to continue managing your business.
           </p>
         </div>
-        <p className="text-green-400/60 text-xs">Khata — Nepal&apos;s Business Operating System</p>
+        <p className="text-slate-400/60 text-xs">Khata — Nepal&apos;s Business Operating System</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">

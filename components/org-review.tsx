@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { getModuleById } from "@/lib/modules/catalog";
 
 interface OrgReviewProps {
-  accountType?: "organization" | "personal";
+  accountType?: "organization" | "personal" | "construction" | "hardware" | "retail";
   organizationData: {
     name: string;
     business_type: string;
@@ -109,10 +109,14 @@ export function OrgReview({
     onCreationStart();
 
     try {
-      const tenant = await tenantApi.create({
+      const result = await tenantApi.create({
         ...organizationData,
+        account_type: accountType,
         active_modules: selectedModules,
       });
+
+      // Extract tenant from response (new format returns { tenant, tokens })
+      const tenant = result.tenant || result;
 
       // Show success first so plan-limit checks after refreshUser cannot redirect away
       onCreationSuccess(tenant.name);
@@ -158,7 +162,7 @@ export function OrgReview({
               variant="ghost"
               size="sm"
               onClick={onEdit}
-              className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
+              className="h-8 text-[#4A5D7A] hover:text-[#2E3E52] hover:bg-slate-50"
             >
               Edit
             </Button>
@@ -169,7 +173,7 @@ export function OrgReview({
               icon={Globe}
               label="Workspace URL"
               value={workspaceUrl}
-              valueClassName="font-mono text-[#16A34A] text-xs sm:text-sm"
+              valueClassName="font-mono text-[#2E3E52] text-xs sm:text-sm"
             />
             {!isPersonal && (
               <DetailRow
@@ -217,7 +221,7 @@ export function OrgReview({
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="h-8 text-[#22C55E] hover:text-[#16A34A] hover:bg-green-50"
+                className="h-8 text-[#4A5D7A] hover:text-[#2E3E52] hover:bg-slate-50"
               >
                 Edit
               </Button>
@@ -232,10 +236,10 @@ export function OrgReview({
               return (
                 <div
                   key={moduleId}
-                  className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-green-50/60 px-3 py-2.5"
+                  className="flex items-center gap-2.5 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-100">
-                    <IconComponent className="h-4 w-4 text-[#22C55E]" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100">
+                    <IconComponent className="h-4 w-4 text-[#4A5D7A]" />
                   </div>
                   <span className="text-sm font-medium text-gray-900 truncate">{moduleName}</span>
                 </div>

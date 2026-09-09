@@ -140,7 +140,7 @@ export default function BankAccountDetailPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-4">{error || 'Account not found'}</p>
-            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+            <Button onClick={() => router.push('/dashboard/accounting/bank-accounts')} size="sm" className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">
               Back to Bank Accounts
             </Button>
           </div>
@@ -161,8 +161,8 @@ export default function BankAccountDetailPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-[#22C55E]/10 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-[#22C55E]" />
+              <div className="w-12 h-12 rounded-lg bg-[#4A5D7A]/10 flex items-center justify-center">
+                <CreditCard className="h-6 w-6 text-[#4A5D7A]" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">{account.bank_name}</h2>
@@ -171,7 +171,7 @@ export default function BankAccountDetailPage() {
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               account.status === "active" 
-                ? "bg-green-100 text-green-700" 
+                ? "bg-slate-100 text-slate-700" 
                 : account.status === "closed"
                 ? "bg-red-100 text-red-700"
                 : "bg-gray-100 text-gray-500"
@@ -232,7 +232,7 @@ export default function BankAccountDetailPage() {
                 >
                   <CheckCircle className="h-3.5 w-3.5" /> Reconcile
                 </Button>
-                <Button size="sm" className="gap-1.5 h-8 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white" onClick={() => setShowAddTx((v) => !v)}>
+                <Button size="sm" className="gap-1.5 h-8 text-xs bg-[#4A5D7A] hover:bg-[#2E3E52] text-white" onClick={() => setShowAddTx((v) => !v)}>
                   <Plus className="h-3.5 w-3.5" /> Add Transaction
                 </Button>
               </div>
@@ -266,7 +266,7 @@ export default function BankAccountDetailPage() {
                   <Input type="number" step="0.01" min="0" className="h-9 text-sm mt-1" value={txForm.amount} onChange={(e) => setTxForm((f) => ({ ...f, amount: e.target.value }))} />
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button type="submit" size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white" disabled={savingTx}>
+                  <Button type="submit" size="sm" className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white" disabled={savingTx}>
                     {savingTx ? "Saving..." : "Save"}
                   </Button>
                   <Button type="button" size="sm" variant="ghost" onClick={() => setShowAddTx(false)}>Cancel</Button>
@@ -332,7 +332,7 @@ export default function BankAccountDetailPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{tx.description}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          tx.type === "Credit" ? "bg-green-100 text-green-700" :
+                          tx.type === "Credit" ? "bg-slate-100 text-slate-700" :
                           tx.type === "Debit" ? "bg-red-100 text-red-700" :
                           "bg-blue-100 text-blue-700"
                         }`}>
@@ -342,7 +342,7 @@ export default function BankAccountDetailPage() {
                       <td className="px-6 py-4 text-sm text-right text-red-600">
                         {tx.debit > 0 ? fmt(tx.debit) : '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-right text-green-600">
+                      <td className="px-6 py-4 text-sm text-right text-slate-600">
                         {tx.credit > 0 ? fmt(tx.credit) : '-'}
                       </td>
                       <td className="px-6 py-4 text-sm text-right font-medium text-gray-800">
@@ -350,7 +350,7 @@ export default function BankAccountDetailPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          tx.reconciled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                          tx.reconciled ? "bg-slate-100 text-slate-700" : "bg-gray-100 text-gray-600"
                         }`}>
                           {tx.reconciled ? 'Reconciled' : 'Pending'}
                         </span>
@@ -360,7 +360,7 @@ export default function BankAccountDetailPage() {
                           <button
                             type="button"
                             onClick={() => handleReconcile(tx.id)}
-                            className="text-xs text-[#22C55E] hover:underline"
+                            className="text-xs text-[#4A5D7A] hover:underline"
                           >
                             Reconcile
                           </button>

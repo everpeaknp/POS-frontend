@@ -185,7 +185,7 @@ export default function InventoryReportsPage() {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey="stock" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="stock" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -247,7 +247,7 @@ export default function InventoryReportsPage() {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                       <Tooltip formatter={(v) => [`Rs. ${Number(v).toLocaleString()}`, "Value"]} />
-                      <Bar dataKey="value" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -265,13 +265,13 @@ export default function InventoryReportsPage() {
                           <td className="px-4 py-3 text-gray-600">{Math.round(p.stock)}</td>
                           <td className="px-4 py-3 text-gray-600">Rs. {p.cost_price.toLocaleString()}</td>
                           <td className="px-4 py-3 font-semibold text-gray-800">Rs. {Math.round(p.total_cost_value).toLocaleString()}</td>
-                          <td className="px-4 py-3 text-[#22C55E] font-semibold">Rs. {Math.round(p.total_sale_value).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-[#4A5D7A] font-semibold">Rs. {Math.round(p.total_sale_value).toLocaleString()}</td>
                         </tr>
                       ))}
                       <tr className="bg-gray-50 font-bold">
                         <td className="px-4 py-3 text-gray-700" colSpan={3}>Total</td>
                         <td className="px-4 py-3 text-gray-900">Rs. {Math.round(valuationSummary.total_cost_value).toLocaleString()}</td>
-                        <td className="px-4 py-3 text-[#22C55E]">Rs. {Math.round(valuationSummary.total_sale_value).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-[#4A5D7A]">Rs. {Math.round(valuationSummary.total_sale_value).toLocaleString()}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -332,7 +332,7 @@ export default function InventoryReportsPage() {
                       <td className="px-4 py-3 font-medium text-gray-800">{p.name}</td>
                       <td className="px-4 py-3 text-gray-600">{p.category || '-'}</td>
                       <td className="px-4 py-3 text-gray-600">{Math.round(p.opening)}</td>
-                      <td className="px-4 py-3 text-green-600 font-medium">+{Math.round(p.in)}</td>
+                      <td className="px-4 py-3 text-slate-600 font-medium">+{Math.round(p.in)}</td>
                       <td className="px-4 py-3 text-red-500 font-medium">-{Math.round(p.out)}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">{Math.round(p.closing)}</td>
                     </tr>

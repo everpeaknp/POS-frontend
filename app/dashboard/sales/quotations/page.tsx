@@ -118,8 +118,8 @@ export default function QuotationsPage() {
     toast((t) => (
       <div className="flex flex-col gap-4 min-w-[320px] p-2">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -140,7 +140,7 @@ export default function QuotationsPage() {
               toast.dismiss(t.id);
               confirmConvert();
             }}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#4A5D7A] rounded-lg hover:bg-[#2E3E52] transition-colors"
           >
             Convert
           </button>
@@ -231,7 +231,7 @@ export default function QuotationsPage() {
             </Select>
           </div>
           <Link href="/dashboard/sales/quotations/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
               <Plus className="h-4 w-4" /> New Quotation
             </Button>
           </Link>
@@ -268,7 +268,7 @@ export default function QuotationsPage() {
               <tbody className="divide-y divide-gray-50">
                 {quotations.map((q) => (
                   <tr key={q.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">
                       <Link href={`/dashboard/sales/quotations/${q.id}`} className="hover:underline">
                         {q.quotation_number}
                       </Link>

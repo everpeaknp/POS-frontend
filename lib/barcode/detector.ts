@@ -6,13 +6,24 @@
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { NotFoundException } from "@zxing/library";
 import Quagga from "@ericblade/quagga2";
+import type { ImageProcessor } from "./imageProcessor";
 import type { DetectedBarcode, DetectionResult, DetectionStrategy, BoundingBox } from "./types";
+
+export interface SmartDetectOptions {
+  /** Last frame's barcode region, in full-frame coordinates — used to crop a fast region-of-interest pass and, on repeated misses, to target the enhancement fallback. */
+  lastKnownBox?: BoundingBox;
+  /** Run grayscale/contrast/sharpen variants of the region through detection when the raw frame fails. Expensive — only enable after several consecutive misses. */
+  allowEnhancement?: boolean;
+  imageProcessor?: ImageProcessor;
+}
 
 export class BarcodeDetector {
   private nativeBarcodeDetector: any | null = null;
   private zxingReader: BrowserMultiFormatReader | null = null;
   private preferredStrategy: DetectionStrategy = "all";
   private supportsNative = false;
+  /** Reused scratch canvas for the region-of-interest crop, to avoid allocating a new canvas on every frame of the hot detection loop. */
+  private roiCanvas: HTMLCanvasElement | null = null;
 
   constructor(strategy: DetectionStrategy = "all") {
     this.preferredStrategy = strategy;
@@ -116,6 +127,106 @@ export class BarcodeDetector {
   }
 
   /**
+   * Detect with region-of-interest tracking and an enhancement fallback.
+   *
+   * When the previous frame's barcode position is known, a small padded crop
+   * around it is tried first — far fewer pixels than the full frame, so it's
+   * both faster and (since the same physical barcode is usually still near
+   * there) more likely to hit on the first attempt. If that and a full-frame
+   * pass both fail and `allowEnhancement` is set, grayscale/contrast/sharpen
+   * variants of that same region are tried before giving up — this is what
+   * rescues glare, low-contrast, or slightly-blurred barcodes that the raw
+   * frame alone can't decode. Enhancement is deliberately opt-in per call
+   * (the caller should only allow it after a few consecutive misses) since
+   * the pixel-by-pixel convolution passes are too costly to run every frame.
+   */
+  async detectSmart(
+    source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement,
+    options: SmartDetectOptions = {}
+  ): Promise<DetectionResult> {
+    const { lastKnownBox, allowEnhancement, imageProcessor } = options;
+
+    if (lastKnownBox) {
+      const roi = this.cropToROI(source, lastKnownBox);
+      if (roi) {
+        const roiResult = await this.detect(roi.canvas);
+        if (roiResult.success && roiResult.barcode) {
+          return { ...roiResult, barcode: this.remapBarcode(roiResult.barcode, roi.offsetX, roi.offsetY) };
+        }
+      }
+    }
+
+    const fullResult = await this.detect(source);
+    if (fullResult.success) {
+      return fullResult;
+    }
+
+    if (allowEnhancement && lastKnownBox && imageProcessor) {
+      try {
+        const variants = imageProcessor.enhanceBarcodeRegion(source, lastKnownBox);
+        // The crop offset is the same for every enhanced variant — they're
+        // all derived from the same padded region of `source`.
+        const offsetX = Math.max(0, lastKnownBox.x - lastKnownBox.width * 0.05);
+        const offsetY = Math.max(0, lastKnownBox.y - lastKnownBox.height * 0.05);
+        for (const variant of variants) {
+          const variantResult = await this.detect(variant);
+          if (variantResult.success && variantResult.barcode) {
+            return { ...variantResult, barcode: this.remapBarcode(variantResult.barcode, offsetX, offsetY) };
+          }
+        }
+      } catch (error) {
+        console.warn("Barcode enhancement fallback failed:", error);
+      }
+    }
+
+    return fullResult;
+  }
+
+  /** Crops a padded region around `box` into a reused scratch canvas, so the hot per-frame path doesn't allocate. */
+  private cropToROI(
+    source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement,
+    box: BoundingBox
+  ): { canvas: HTMLCanvasElement; offsetX: number; offsetY: number } | null {
+    const sourceWidth =
+      source instanceof HTMLVideoElement ? source.videoWidth : (source as HTMLImageElement | HTMLCanvasElement).width;
+    const sourceHeight =
+      source instanceof HTMLVideoElement ? source.videoHeight : (source as HTMLImageElement | HTMLCanvasElement).height;
+    if (!sourceWidth || !sourceHeight) return null;
+
+    // Pad generously — the barcode may have shifted slightly since the last frame.
+    const padX = box.width * 0.4;
+    const padY = box.height * 0.4;
+    const x = Math.max(0, Math.floor(box.x - padX));
+    const y = Math.max(0, Math.floor(box.y - padY));
+    const width = Math.min(sourceWidth - x, Math.ceil(box.width + padX * 2));
+    const height = Math.min(sourceHeight - y, Math.ceil(box.height + padY * 2));
+    if (width <= 0 || height <= 0) return null;
+
+    if (!this.roiCanvas) {
+      this.roiCanvas = document.createElement("canvas");
+    }
+    this.roiCanvas.width = width;
+    this.roiCanvas.height = height;
+    const ctx = this.roiCanvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.drawImage(source, x, y, width, height, 0, 0, width, height);
+    return { canvas: this.roiCanvas, offsetX: x, offsetY: y };
+  }
+
+  /** Shifts a detection result's coordinates from a cropped region back into full-frame space. */
+  private remapBarcode(barcode: DetectedBarcode, offsetX: number, offsetY: number): DetectedBarcode {
+    if (!offsetX && !offsetY) return barcode;
+    return {
+      ...barcode,
+      boundingBox: barcode.boundingBox
+        ? { ...barcode.boundingBox, x: barcode.boundingBox.x + offsetX, y: barcode.boundingBox.y + offsetY }
+        : undefined,
+      cornerPoints: barcode.cornerPoints?.map((p) => ({ x: p.x + offsetX, y: p.y + offsetY })),
+    };
+  }
+
+  /**
    * Detect using native BarcodeDetector API
    */
   private async detectNative(
@@ -176,7 +287,19 @@ export class BarcodeDetector {
     }
 
     try {
-      const result = await this.zxingReader.decodeFromImageElement(source as any);
+      // `decodeFromImageElement` only accepts an HTMLImageElement (or a URL
+      // string) — silently throwing "Couldn't get imageElement from
+      // imageSource!" for anything else, which the catch below swallows as
+      // an ordinary "no barcode found". That meant every live-camera frame
+      // (an HTMLVideoElement) and every ROI/enhancement crop (an
+      // HTMLCanvasElement) never actually reached the decoder at all — only
+      // gallery-upload's real <img> ever worked. `decode()` draws any media
+      // element to a canvas first, and `decodeFromCanvas()` handles an
+      // already-a-canvas source directly.
+      const result =
+        source instanceof HTMLCanvasElement
+          ? await this.zxingReader.decodeFromCanvas(source)
+          : await this.zxingReader.decode(source as HTMLVideoElement | HTMLImageElement);
 
       if (result) {
         // Extract bounding box from result points

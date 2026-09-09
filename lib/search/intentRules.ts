@@ -26,7 +26,7 @@ export function matchIntent(query: string, language: "en" | "ne"): IntentMatch {
   ) {
     return {
       type: "navigate",
-      link: "/dashboard/personal-finance/tax",
+      link: "/dashboard/finance/tax",
       action: "view_tax",
     };
   }
@@ -41,7 +41,7 @@ export function matchIntent(query: string, language: "en" | "ne"): IntentMatch {
   ) {
     return {
       type: "navigate",
-      link: "/dashboard/personal-finance/bills",
+      link: "/dashboard/finance/bills",
       action: "view_bills",
     };
   }
@@ -58,7 +58,7 @@ export function matchIntent(query: string, language: "en" | "ne"): IntentMatch {
   ) {
     return {
       type: "navigate",
-      link: "/dashboard/personal-finance/transactions",
+      link: "/dashboard/finance/transactions",
       action: "view_transactions",
     };
   }
@@ -75,7 +75,7 @@ export function matchIntent(query: string, language: "en" | "ne"): IntentMatch {
   ) {
     return {
       type: "navigate",
-      link: "/dashboard/personal-finance/transactions",
+      link: "/dashboard/finance/transactions",
       action: "view_transactions",
     };
   }
@@ -90,7 +90,7 @@ export function matchIntent(query: string, language: "en" | "ne"): IntentMatch {
   ) {
     return {
       type: "navigate",
-      link: "/dashboard/personal-finance",
+      link: "/dashboard/finance",
       action: undefined,
     };
   }

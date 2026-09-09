@@ -67,7 +67,7 @@ export function StockAdjustmentPanel({ warehouseId, onStockUpdated }: StockAdjus
       <div className="bg-white rounded-lg border shadow-sm p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Scan className="h-5 w-5 text-[#22C55E]" />
+          <Scan className="h-5 w-5 text-[#4A5D7A]" />
           <h3 className="text-lg font-semibold text-gray-900">Stock Adjustment</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export function StockAdjustmentPanel({ warehouseId, onStockUpdated }: StockAdjus
 
       {processing && (
         <div className="text-center py-4">
-          <div className="animate-pulse text-[#22C55E] text-sm">Processing adjustment...</div>
+          <div className="animate-pulse text-[#4A5D7A] text-sm">Processing adjustment...</div>
         </div>
       )}
     </div>

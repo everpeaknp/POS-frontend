@@ -24,7 +24,10 @@ export interface OrgModuleDefinition {
   required?: boolean;
 }
 
-export const REQUIRED_MODULE_IDS = ["settings", "dashboard"] as const;
+// Mirrors backend's `TenantViewSet.CORE_MODULES` — these three can never be
+// deactivated (the backend rejects it), so the frontend must treat them as
+// required everywhere too, instead of silently omitting them from pickers.
+export const REQUIRED_MODULE_IDS = ["dashboard", "settings", "accounting"] as const;
 
 /** Modules a Personal account gets — no business/org modules, ever. */
 export const PERSONAL_ACCOUNT_MODULE_IDS = [
@@ -32,23 +35,6 @@ export const PERSONAL_ACCOUNT_MODULE_IDS = [
   "personal_finance",
 ] as const;
 
-/** Modules a Construction account gets */
-export const CONSTRUCTION_ACCOUNT_MODULE_IDS = [
-  "settings",
-  "dashboard",
-  "construction",
-  "inventory",
-  "reports",
-] as const;
-
-/** Modules a Hardware account gets */
-export const HARDWARE_ACCOUNT_MODULE_IDS = [
-  "settings",
-  "dashboard",
-  "hardware",
-  "inventory",
-  "reports",
-] as const;
 
 /**
  * Personal Finance is only ever assigned to Personal accounts, never offered
@@ -102,7 +88,7 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
     description: "Organization overview with snapshots from all enabled modules",
     icon: LayoutDashboard,
     defaultEnabled: true,
-    required: true,
+    recommended: true,
   },
   {
     id: "accounting",
@@ -112,7 +98,14 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
     icon: BarChart3,
     defaultEnabled: true,
     recommended: true,
-    required: true,
+  },
+  {
+    id: "customers",
+    name: "Customers",
+    description: "Customer relationship management, contact details, and customer tracking",
+    icon: Users,
+    defaultEnabled: true,
+    recommended: true,
   },
   {
     id: "inventory",
@@ -152,7 +145,7 @@ export const ORG_MODULE_CATALOG: OrgModuleDefinition[] = [
       "Organization settings, user management, permissions, and system configuration",
     icon: Settings,
     defaultEnabled: true,
-    required: true,
+    recommended: true,
   },
   {
     id: "pos",
@@ -218,6 +211,40 @@ export function getDefaultSelectedModuleIds(): string[] {
   return ORG_MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.id);
 }
 
+/**
+ * Get default modules based on account/workplace type
+ */
+export function getDefaultModulesByAccountType(accountType?: string): string[] {
+  const type = accountType?.toLowerCase();
+  
+  switch (type) {
+    case "personal":
+      // Personal Finance only
+      return ["settings", "personal_finance"];
+    
+    case "retail":
+    case "kirana":
+      return [
+        "dashboard", "accounting", "settings",
+        "pos", "customers", "purchase", "inventory", "sales", "reports", "hr",
+      ];
+
+    case "construction":
+      return ["dashboard", "accounting", "settings", "construction", "inventory", "reports"];
+
+    case "hardware":
+      return [
+        "dashboard", "accounting", "settings",
+        "hardware", "pos", "sales", "purchase", "inventory", "customers", "hr", "reports",
+      ];
+
+    case "organization":
+    default:
+      // Full suite for general organization
+      return ["dashboard", "accounting", "settings", "customers", "inventory", "sales", "purchase", "reports"];
+  }
+}
+
 export function normalizeModuleList(modules: string[]): string[] {
   const withRequired = new Set(modules.map((m) => m.toLowerCase()));
   REQUIRED_MODULE_IDS.forEach((id) => withRequired.add(id));
@@ -244,7 +271,7 @@ export function isModuleActive(activeModules: string[] | undefined, moduleId: st
   return isModuleInActiveList(activeModules, moduleId);
 }
 
-export type ModuleCatalogSectionKey = "required" | "recommended" | "other";
+export type ModuleCatalogSectionKey = "core" | "primary" | "optional";
 
 export interface ModuleCatalogSection {
   key: ModuleCatalogSectionKey;
@@ -252,56 +279,118 @@ export interface ModuleCatalogSection {
   modules: OrgModuleDefinition[];
 }
 
-function sortByCatalogOrder(modules: OrgModuleDefinition[]): OrgModuleDefinition[] {
-  const order = new Map(ORG_MODULE_CATALOG.map((module, index) => [module.id, index]));
-  return [...modules].sort(
-    (a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)
-  );
+/** Sorts modules to match the given id sequence, not the master catalog's fixed order — lets each workplace type present its own dedicated module order. */
+function sortByIdOrder(modules: OrgModuleDefinition[], idOrder: string[]): OrgModuleDefinition[] {
+  const order = new Map(idOrder.map((id, index) => [id, index]));
+  return [...modules].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 }
 
 export function isRecommendedModule(module: OrgModuleDefinition): boolean {
   return Boolean(module.recommended) && !module.required && !isRequiredModule(module.id);
 }
 
+/**
+ * Get module sections organized by workplace relevance
+ * Returns modules grouped as: Core (always on), Primary (workplace-specific), Optional (additional)
+ */
 export function getModuleCatalogSections(accountType?: string): ModuleCatalogSection[] {
-  // Filter out account-type-specific modules from the catalog
-  let filteredCatalog = ORG_MODULE_CATALOG;
+  const type = (accountType || 'organization').toLowerCase();
   
-  // For retail accounts, exclude construction and hardware modules
-  if (accountType === "retail") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "construction" && module.id !== "hardware"
-    );
-  }
-  // For construction accounts, exclude hardware module
-  else if (accountType === "construction") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "hardware"
-    );
-  }
-  // For hardware accounts, exclude construction module
-  else if (accountType === "hardware") {
-    filteredCatalog = ORG_MODULE_CATALOG.filter(
-      (module) => module.id !== "construction"
-    );
-  }
+  // Core modules (always required, always on)
+  const coreModules = ORG_MODULE_CATALOG.filter(
+    (module) => module.required || isRequiredModule(module.id)
+  );
   
-  const required = sortByCatalogOrder(
-    filteredCatalog.filter((module) => module.required || isRequiredModule(module.id))
-  );
-  const recommended = sortByCatalogOrder(
-    filteredCatalog.filter((module) => isRecommendedModule(module))
-  );
-  const other = sortByCatalogOrder(
-    filteredCatalog.filter(
-      (module) =>
-        !(module.required || isRequiredModule(module.id)) && !isRecommendedModule(module)
-    )
+  // Define primary and optional modules based on workspace type. Each type
+  // lists only the modules relevant to it (a dedicated, curated set) rather
+  // than every catalog module with irrelevant ones marked "optional" —
+  // Retail/Construction/Hardware get a focused list; Organization sees
+  // everything, with the niche vertical modules kept as optional add-ons.
+  let primaryModuleIds: string[] = [];
+  let optionalModuleIds: string[] = [];
+
+  switch (type) {
+    case 'retail':
+    case 'kirana':
+      primaryModuleIds = ['pos', 'customers', 'purchase', 'inventory', 'sales', 'reports', 'hr'];
+      optionalModuleIds = [];
+      break;
+
+    case 'construction':
+      primaryModuleIds = ['construction', 'inventory', 'reports'];
+      optionalModuleIds = [];
+      break;
+
+    case 'hardware':
+      primaryModuleIds = ['hardware', 'pos', 'sales', 'purchase', 'inventory', 'customers', 'hr', 'reports'];
+      optionalModuleIds = [];
+      break;
+
+    case 'organization':
+    default:
+      primaryModuleIds = ['customers', 'inventory', 'sales', 'purchase', 'reports', 'pos', 'hr'];
+      optionalModuleIds = ['construction', 'hardware'];
+      break;
+  }
+
+  const primaryModules = sortByIdOrder(
+    ORG_MODULE_CATALOG.filter(
+      (module) => primaryModuleIds.includes(module.id) && !coreModules.includes(module)
+    ),
+    primaryModuleIds
   );
 
-  return [
-    { key: "required" as const, label: "Required", modules: required },
-    { key: "recommended" as const, label: "Recommended", modules: recommended },
-    { key: "other" as const, label: "Other modules", modules: other },
-  ].filter((section) => section.modules.length > 0);
+  const optionalModules = sortByIdOrder(
+    ORG_MODULE_CATALOG.filter(
+      (module) =>
+        optionalModuleIds.includes(module.id) &&
+        !coreModules.includes(module) &&
+        !primaryModules.includes(module)
+    ),
+    optionalModuleIds
+  );
+  
+  const sections: ModuleCatalogSection[] = [
+    { 
+      key: "core" as const, 
+      label: "Core Modules", 
+      modules: coreModules 
+    },
+  ];
+  
+  if (primaryModules.length > 0) {
+    sections.push({
+      key: "primary" as const,
+      label: getWorkplaceSpecificLabel(type),
+      modules: primaryModules
+    });
+  }
+  
+  if (optionalModules.length > 0) {
+    sections.push({
+      key: "optional" as const,
+      label: "Additional Modules",
+      modules: optionalModules
+    });
+  }
+  
+  return sections.filter((section) => section.modules.length > 0);
+}
+
+/**
+ * Get workplace-specific label for primary modules section
+ */
+function getWorkplaceSpecificLabel(accountType: string): string {
+  switch (accountType) {
+    case 'retail':
+    case 'kirana':
+      return 'Retail & Store Operations';
+    case 'construction':
+      return 'Construction Management';
+    case 'hardware':
+      return 'Hardware Store Operations';
+    case 'organization':
+    default:
+      return 'Business Operations';
+  }
 }

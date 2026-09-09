@@ -22,7 +22,8 @@ import { billingApi } from "@/lib/api/billing";
 import toast from "react-hot-toast";
 import { PageLoading } from "@/components/shared/PageLoading";
 import confetti from "canvas-confetti";
-import { PERSONAL_ACCOUNT_MODULE_IDS, CONSTRUCTION_ACCOUNT_MODULE_IDS, HARDWARE_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { PERSONAL_ACCOUNT_MODULE_IDS } from "@/lib/modules/catalog";
+import { getCreationCopy } from "@/lib/onboarding/creation-copy";
 
 type OrganizationFormData = {
   name: string;
@@ -92,11 +93,14 @@ function SkipLink({ onClick }: { onClick: () => void }) {
 
 function OnboardingSuccess({
   organizationName,
+  accountType,
   onContinue,
 }: {
   organizationName: string;
+  accountType: AccountType | null;
   onContinue: () => void;
 }) {
+  const copy = getCreationCopy(accountType);
   useEffect(() => {
     const duration = 2500;
     const animationEnd = Date.now() + duration;
@@ -123,23 +127,23 @@ function OnboardingSuccess({
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col">
       <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="bg-white dark:bg-card rounded-[28px] shadow-[0_18px_45px_rgba(22,163,74,0.12)] border border-green-100/60 dark:border-border p-10 sm:p-12 w-full max-w-md text-center">
+        <div className="bg-white dark:bg-card rounded-[28px] shadow-[0_18px_45px_rgba(22,163,74,0.12)] border border-slate-100/60 dark:border-border p-10 sm:p-12 w-full max-w-md text-center">
           <div className="flex justify-center mb-6">
-            <div className="h-[84px] w-[84px] bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center">
+            <div className="h-[84px] w-[84px] bg-slate-100 dark:bg-slate-500/15 rounded-full flex items-center justify-center">
               <CheckCircle2 className="h-12 w-12 text-[#166534]" />
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-foreground mb-3 tracking-tight">
-            Your workspace is ready
+            {copy.successHeading}
           </h2>
           <p className="text-gray-500 dark:text-muted-foreground leading-relaxed mb-8">
             {organizationName || "Your account"} is ready. We'll show you around the dashboard next.
           </p>
           <Button
             type="button"
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white font-extrabold border-transparent shadow-md shadow-green-500/20"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white font-extrabold border-transparent shadow-md shadow-slate-500/20"
             onClick={onContinue}
           >
             Go to dashboard & start tour
@@ -169,13 +173,7 @@ export function OnboardingOverlay() {
     if (accountType === "personal") {
       return [ACCOUNT_TYPE_STEP, PERSONAL_DETAILS_STEP, REVIEW_STEP];
     }
-    if (accountType === "construction") {
-      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
-    }
-    if (accountType === "hardware") {
-      return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, REVIEW_STEP];
-    }
-    if (accountType === "organization") {
+    if (accountType) {
       return [ACCOUNT_TYPE_STEP, ORG_DETAILS_STEP, MODULES_STEP, REVIEW_STEP];
     }
     return [ACCOUNT_TYPE_STEP];
@@ -237,15 +235,9 @@ export function OnboardingOverlay() {
     setOrganizationData(data);
     if (accountType === "personal") {
       setSelectedModules([...PERSONAL_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
-    } else if (accountType === "construction") {
-      setSelectedModules([...CONSTRUCTION_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
-    } else if (accountType === "hardware") {
-      setSelectedModules([...HARDWARE_ACCOUNT_MODULE_IDS]);
-      setStep(3); // straight to review
+      setStep(3); // straight to review — no module picker for Personal
     } else {
-      setStep(3); // modules step
+      setStep(3); // modules step — retail, organization, construction, hardware all pick modules
     }
   };
 
@@ -256,7 +248,7 @@ export function OnboardingOverlay() {
 
   if (limitsLoading || !user) {
     return (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col overflow-y-auto">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col overflow-y-auto">
         <PageLoading message="Preparing setup…" className="flex-1 min-h-[50vh]" />
       </div>
     );
@@ -264,9 +256,9 @@ export function OnboardingOverlay() {
 
   if (!canCreateOrg && !canCreatePersonal) {
     return (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col overflow-y-auto">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col overflow-y-auto">
         <main className="flex-1 flex items-center justify-center px-4 py-10">
-          <div className="bg-white dark:bg-card rounded-[28px] border border-green-100/60 dark:border-border shadow-[0_18px_45px_rgba(22,163,74,0.12)] max-w-md w-full p-8 text-center">
+          <div className="bg-white dark:bg-card rounded-[28px] border border-slate-100/60 dark:border-border shadow-[0_18px_45px_rgba(22,163,74,0.12)] max-w-md w-full p-8 text-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-foreground">
               Account limit reached
             </h2>
@@ -275,7 +267,7 @@ export function OnboardingOverlay() {
             </p>
             <Button
               type="button"
-              className="mt-6 h-12 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent font-extrabold shadow-md shadow-green-500/20"
+              className="mt-6 h-12 rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white border-transparent font-extrabold shadow-md shadow-slate-500/20"
               onClick={skipOverlay}
             >
               Go to organizations
@@ -289,7 +281,7 @@ export function OnboardingOverlay() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[100] overflow-y-auto">
-        <OrgCreationLoading />
+        <OrgCreationLoading accountType={accountType} />
       </div>
     );
   }
@@ -299,13 +291,14 @@ export function OnboardingOverlay() {
       <div className="fixed inset-0 z-[100] overflow-y-auto">
         <OnboardingSuccess
           organizationName={createdOrgName}
+          accountType={accountType}
           onContinue={() => void handleEnterDashboard()}
         />
       </div>
     );
   }
 
-  const reviewStep = accountType === "personal" || accountType === "construction" || accountType === "hardware" ? 3 : 4;
+  const reviewStep = accountType === "personal" ? 3 : 4;
 
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto overscroll-none">
@@ -333,7 +326,7 @@ export function OnboardingOverlay() {
           />
         )}
 
-        {accountType === "organization" && step === 3 && organizationData && (
+        {accountType && accountType !== "personal" && step === 3 && organizationData && (
           <ModuleSelection
             accountType={accountType}
             organizationData={organizationData}

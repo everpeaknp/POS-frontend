@@ -80,7 +80,7 @@ function SectionCard({
   return (
     <div className={`${constructionCardClass} p-6 ${className}`}>
       <div className="flex items-center gap-2 mb-5">
-        <Icon className="h-5 w-5 text-[#22C55E]" />
+        <Icon className="h-5 w-5 text-[#4A5D7A]" />
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       </div>
       {children}
@@ -101,12 +101,12 @@ function formatStatusLabel(status: string) {
 }
 
 function getOwnershipBadge(type: Equipment["ownership_type"]) {
-  return type === "owned" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700";
+  return type === "owned" ? "bg-slate-100 text-slate-700" : "bg-blue-100 text-blue-700";
 }
 
 function getStatusBadge(status: Equipment["status"]) {
   const colors: Record<Equipment["status"], string> = {
-    available: "bg-green-100 text-green-700",
+    available: "bg-slate-100 text-slate-700",
     in_use: "bg-yellow-100 text-yellow-700",
     maintenance: "bg-orange-100 text-orange-700",
     retired: "bg-gray-100 text-gray-500",
@@ -116,7 +116,7 @@ function getStatusBadge(status: Equipment["status"]) {
 
 function getStatusIconClass(status: Equipment["status"]) {
   const colors: Record<Equipment["status"], string> = {
-    available: "bg-green-50 text-green-600",
+    available: "bg-slate-50 text-slate-600",
     in_use: "bg-yellow-50 text-yellow-600",
     maintenance: "bg-orange-50 text-orange-600",
     retired: "bg-gray-100 text-gray-500",
@@ -335,7 +335,7 @@ export default function EquipmentDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#4A5D7A] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
@@ -364,7 +364,7 @@ export default function EquipmentDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-gray-500">{primaryCost.label}</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{primaryCost.value}</p>
+                <p className="text-2xl font-bold text-[#4A5D7A]">{primaryCost.value}</p>
                 {equipment.ownership_type === "rented" && (
                   <p className="text-xs text-gray-400 mt-0.5">per day</p>
                 )}
@@ -380,10 +380,10 @@ export default function EquipmentDetailPage() {
               icon={Wallet}
               iconClass={
                 equipment.ownership_type === "owned"
-                  ? "bg-green-50 text-green-600"
+                  ? "bg-slate-50 text-slate-600"
                   : "bg-blue-50 text-blue-600"
               }
-              valueClass={equipment.ownership_type === "owned" ? "text-green-600" : "text-blue-600"}
+              valueClass={equipment.ownership_type === "owned" ? "text-slate-600" : "text-blue-600"}
             />
             <StatCard
               label="Status"
@@ -392,7 +392,7 @@ export default function EquipmentDetailPage() {
               iconClass={getStatusIconClass(equipment.status)}
               valueClass={
                 equipment.status === "available"
-                  ? "text-green-600"
+                  ? "text-slate-600"
                   : equipment.status === "retired"
                     ? "text-gray-500"
                     : "text-gray-900"
@@ -411,7 +411,7 @@ export default function EquipmentDetailPage() {
               }
               icon={Wallet}
               iconClass="bg-purple-50 text-purple-600"
-              valueClass="text-[#22C55E]"
+              valueClass="text-[#4A5D7A]"
             />
             <StatCard
               label="Assigned Site"
@@ -492,7 +492,7 @@ export default function EquipmentDetailPage() {
                   {equipment.ownership_type === "owned" ? (
                     <DetailItem label="Purchase Cost">
                       {equipment.purchase_cost ? (
-                        <span className="text-[#22C55E]">{formatNPR(equipment.purchase_cost)}</span>
+                        <span className="text-[#4A5D7A]">{formatNPR(equipment.purchase_cost)}</span>
                       ) : (
                         "—"
                       )}
@@ -500,7 +500,7 @@ export default function EquipmentDetailPage() {
                   ) : (
                     <DetailItem label="Rental Cost / Day">
                       {equipment.rental_cost_per_day ? (
-                        <span className="text-[#22C55E]">
+                        <span className="text-[#4A5D7A]">
                           {formatNPR(equipment.rental_cost_per_day)}
                         </span>
                       ) : (
@@ -522,7 +522,7 @@ export default function EquipmentDetailPage() {
                     {equipment.assigned_site && equipment.assigned_site_name ? (
                       <Link
                         href={`/dashboard/construction/sites/${equipment.assigned_site}`}
-                        className="text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                        className="text-[#4A5D7A] hover:text-[#2E3E52] transition-colors"
                       >
                         {equipment.assigned_site_name}
                       </Link>

@@ -243,7 +243,7 @@ export default function StockTransferPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Creating..." : "Create Transfer"}
@@ -272,7 +272,7 @@ export default function StockTransferPage() {
             />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => setOpen(true)}>
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4" /> New Transfer
             </Button>
           </div>
@@ -296,7 +296,7 @@ export default function StockTransferPage() {
               <tbody className="divide-y divide-gray-50">
                 {paginatedTransfers.map((t: any) => (
                   <tr key={t.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-medium text-[#22C55E]">#{t.id}</td>
+                    <td className="px-4 py-3 font-medium text-[#4A5D7A]">#{t.id}</td>
                     <td className="px-4 py-3 text-gray-600"><FormattedDate value={t.created_at} /></td>
                     <td className="px-4 py-3 font-medium text-gray-800">{t.product_name}</td>
                     <td className="px-4 py-3 font-semibold text-gray-800">{Math.abs(parseFloat(t.quantity))}</td>
@@ -388,7 +388,7 @@ export default function StockTransferPage() {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Creating..." : "Create Transfer"}

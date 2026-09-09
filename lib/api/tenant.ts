@@ -14,6 +14,7 @@ export interface TenantData {
   email?: string;
   phone?: string;
   active_modules?: string[];
+  disabled_features?: string[];
   logo?: File | null;
 }
 
@@ -46,6 +47,7 @@ export interface Tenant {
   is_active: boolean;
   plan_type: string;
   active_modules: string[];
+  disabled_features?: string[];
   allowed_modules?: string[];
   created_at: string;
   updated_at: string;
@@ -75,8 +77,16 @@ export const tenantApi = {
   },
 
   // Create a new tenant
-  create: async (data: TenantData): Promise<Tenant> => {
+  create: async (data: TenantData): Promise<{ tenant: Tenant; tokens?: { access: string; refresh: string } }> => {
     const response = await apiClient.post('/tenants/', data);
+    
+    // If new tokens are returned, update them in localStorage
+    if (response.data.tokens) {
+      localStorage.setItem('accessToken', response.data.tokens.access);
+      localStorage.setItem('refreshToken', response.data.tokens.refresh);
+      console.log('✅ Updated JWT tokens with new tenant_id');
+    }
+    
     return response.data;
   },
 

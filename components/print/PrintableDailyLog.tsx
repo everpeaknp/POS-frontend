@@ -161,9 +161,9 @@ export const PrintableDailyLog = React.forwardRef<HTMLDivElement, PrintableDaily
         )}
 
         {log.manager_comments && (
-          <div className="mb-6 border border-green-200 bg-green-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-green-900 mb-2">Manager Comments</h3>
-            <p className="text-sm text-green-900 whitespace-pre-wrap">{log.manager_comments}</p>
+          <div className="mb-6 border border-slate-200 bg-slate-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-slate-900 mb-2">Manager Comments</h3>
+            <p className="text-sm text-slate-900 whitespace-pre-wrap">{log.manager_comments}</p>
           </div>
         )}
 

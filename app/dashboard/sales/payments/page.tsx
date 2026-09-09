@@ -34,7 +34,7 @@ export default function PaymentsPage() {
   );
 
   const paymentMethodColors: Record<string, string> = {
-    cash: "bg-green-100 text-green-700",
+    cash: "bg-slate-100 text-slate-700",
     bank: "bg-blue-100 text-blue-700",
     esewa: "bg-purple-100 text-purple-700",
     khalti: "bg-pink-100 text-pink-700",
@@ -106,7 +106,7 @@ export default function PaymentsPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/sales/payments/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2 shrink-0"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-2 shrink-0"
           >
             <Plus className="h-4 w-4" />
             Record Payment
@@ -132,7 +132,7 @@ export default function PaymentsPage() {
               <tbody className="divide-y divide-gray-50">
                 {filteredPayments.map((payment: any) => (
                   <tr key={payment.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">
                       {payment.payment_number}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
@@ -141,7 +141,7 @@ export default function PaymentsPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/dashboard/sales/customers/${payment.customer}`}
-                        className="text-gray-700 hover:text-[#22C55E] font-medium"
+                        className="text-gray-700 hover:text-[#4A5D7A] font-medium"
                       >
                         {payment.customer_name}
                       </Link>

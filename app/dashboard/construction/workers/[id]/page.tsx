@@ -51,7 +51,7 @@ function getCategoryColor(category: string) {
     mason: "bg-blue-100 text-blue-800",
     carpenter: "bg-yellow-100 text-yellow-800",
     electrician: "bg-purple-100 text-purple-800",
-    plumber: "bg-green-100 text-green-800",
+    plumber: "bg-slate-100 text-slate-800",
     painter: "bg-pink-100 text-pink-800",
     helper: "bg-gray-100 text-gray-800",
     welder: "bg-orange-100 text-orange-800",
@@ -62,7 +62,7 @@ function getCategoryColor(category: string) {
 }
 
 function getStatusColor(status: string) {
-  return status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500";
+  return status === "active" ? "bg-slate-100 text-slate-800" : "bg-gray-100 text-gray-500";
 }
 
 function StatCard({
@@ -279,7 +279,7 @@ export default function WorkerDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#4A5D7A] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {worker.name
                   .split(" ")
                   .map((n) => n[0])
@@ -307,7 +307,7 @@ export default function WorkerDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-gray-500">Daily Wage</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{formatNPR(worker.daily_wage)}</p>
+                <p className="text-2xl font-bold text-[#4A5D7A]">{formatNPR(worker.daily_wage)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">per day</p>
               </div>
             </div>
@@ -317,7 +317,7 @@ export default function WorkerDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className={`${constructionCardClass} p-6`}>
               <div className="flex items-center gap-2 mb-5">
-                <User className="h-5 w-5 text-[#22C55E]" />
+                <User className="h-5 w-5 text-[#4A5D7A]" />
                 <h3 className="text-base font-semibold text-gray-900">Personal Information</h3>
               </div>
               <div className="space-y-4">
@@ -340,7 +340,7 @@ export default function WorkerDetailPage() {
 
             <div className={`${constructionCardClass} p-6`}>
               <div className="flex items-center gap-2 mb-5">
-                <HardHat className="h-5 w-5 text-[#22C55E]" />
+                <HardHat className="h-5 w-5 text-[#4A5D7A]" />
                 <h3 className="text-base font-semibold text-gray-900">Work Information</h3>
               </div>
               <div className="space-y-4">
@@ -352,7 +352,7 @@ export default function WorkerDetailPage() {
                   </span>
                 </DetailItem>
                 <DetailItem label="Daily Wage">
-                  <span className="text-[#22C55E]">{formatNPR(worker.daily_wage)}</span>
+                  <span className="text-[#4A5D7A]">{formatNPR(worker.daily_wage)}</span>
                 </DetailItem>
                 <DetailItem label="Status">
                   <span
@@ -365,7 +365,7 @@ export default function WorkerDetailPage() {
                   {worker.assigned_site && worker.assigned_site_name ? (
                     <Link
                       href={`/dashboard/construction/sites/${worker.assigned_site}`}
-                      className="text-[#22C55E] hover:underline font-medium"
+                      className="text-[#4A5D7A] hover:underline font-medium"
                     >
                       {worker.assigned_site_name}
                     </Link>
@@ -385,7 +385,7 @@ export default function WorkerDetailPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[#22C55E]/30 hover:bg-green-50/50 hover:text-[#22C55E] transition-colors"
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-700 hover:border-[#4A5D7A]/30 hover:bg-slate-50/50 hover:text-[#4A5D7A] transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                   {label}
@@ -397,7 +397,7 @@ export default function WorkerDetailPage() {
           {/* Record info */}
           <div className={`${constructionCardClass} p-6`}>
             <div className="flex items-center gap-2 mb-5">
-              <Clock className="h-5 w-5 text-[#22C55E]" />
+              <Clock className="h-5 w-5 text-[#4A5D7A]" />
               <h3 className="text-base font-semibold text-gray-900">Record Information</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

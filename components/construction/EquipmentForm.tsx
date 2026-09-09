@@ -135,7 +135,7 @@ export default function EquipmentForm({
           <input
             {...register('name')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Enter equipment name"
           />
         </FormField>
@@ -148,7 +148,7 @@ export default function EquipmentForm({
         >
           <select
             {...register('equipment_type')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           >
             <option value="">Select type</option>
             {equipmentTypes.map((type) => (
@@ -167,7 +167,7 @@ export default function EquipmentForm({
         >
           <select
             {...register('ownership_type')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           >
             <option value="owned">Owned</option>
             <option value="rented">Rented</option>
@@ -182,7 +182,7 @@ export default function EquipmentForm({
           <input
             {...register('registration_number')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Vehicle/Equipment registration"
           />
         </FormField>
@@ -197,7 +197,7 @@ export default function EquipmentForm({
               {...register('rental_cost_per_day')}
               type="number"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               placeholder="0.00"
             />
           </FormField>
@@ -210,7 +210,7 @@ export default function EquipmentForm({
         >
           <select
             {...register('assigned_site')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             disabled={loadingSites}
           >
             <option value="">No site assigned</option>
@@ -230,7 +230,7 @@ export default function EquipmentForm({
         >
           <select
             {...register('status')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           >
             <option value="available">Available</option>
             <option value="in_use">In Use</option>
@@ -251,7 +251,7 @@ export default function EquipmentForm({
         <textarea
           {...register('notes')}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           placeholder="Additional notes about the equipment"
         />
       </FormField>
@@ -270,7 +270,7 @@ export default function EquipmentForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading
             ? isEdit

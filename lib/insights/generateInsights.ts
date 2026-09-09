@@ -45,7 +45,7 @@ export async function generateInsights(
       message_en: `${bill.name} is due in ${daysUntilDue} day${daysUntilDue > 1 ? "s" : ""} — Rs. ${bill.amount.toLocaleString()}`,
       message_ne: `${bill.name} ${daysUntilDue} दिन मा देय छ — रु. ${bill.amount.toLocaleString()}`,
       priority: 1,
-      action_link: `/dashboard/personal-finance/bills`,
+      action_link: `/dashboard/finance/bills`,
       action_label: "View Bills",
     });
   });
@@ -74,7 +74,7 @@ export async function generateInsights(
         message_en: `You've exceeded your ${budget.category?.name || "budget"} budget by Rs. ${Math.round(categorySpent - budgetAmount).toLocaleString()}`,
         message_ne: `तपाईंले आफ्नो ${budget.category?.name || "बजेट"} बजेट रु. ${Math.round(categorySpent - budgetAmount).toLocaleString()} ले अतिक्रम गरेको हुनुहुन्छ`,
         priority: 2,
-        action_link: `/dashboard/personal-finance/budget`,
+        action_link: `/dashboard/finance/budget`,
         action_label: "View Budget",
       });
     } else if (percentUsed >= 80) {
@@ -83,7 +83,7 @@ export async function generateInsights(
         message_en: `You're at ${Math.round(percentUsed)}% of your ${budget.category?.name || "budget"} budget (Rs. ${Math.round(budgetAmount).toLocaleString()})`,
         message_ne: `तपाई आफ्नो ${budget.category?.name || "बजेट"} बजेटको ${Math.round(percentUsed)}% मा पुगेको हुनुहुन्छ (रु. ${Math.round(budgetAmount).toLocaleString()})`,
         priority: 3,
-        action_link: `/dashboard/personal-finance/budget`,
+        action_link: `/dashboard/finance/budget`,
         action_label: "View Budget",
       });
     }
@@ -123,7 +123,7 @@ export async function generateInsights(
           message_en: `You spent ${Math.abs(Math.round(percentChange))}% ${direction} this month than last month`,
           message_ne: `तपाईंले यो महिना गत महिना भन्दा ${Math.abs(Math.round(percentChange))}% ${directionNe} खर्च गरेको हुनुहुन्छ`,
           priority: 4,
-          action_link: `/dashboard/personal-finance/transactions`,
+          action_link: `/dashboard/finance/transactions`,
           action_label: "View Transactions",
         });
       }
@@ -139,7 +139,7 @@ export async function generateInsights(
       message_en: `Estimated tax this year: ~Rs. ${estimatedTax.toLocaleString()} (based on current income)`,
       message_ne: `यस वर्ष अनुमानित कर: ~रु. ${estimatedTax.toLocaleString()} (वर्तमान आय अनुसार)`,
       priority: 5,
-      action_link: `/dashboard/personal-finance/tax`,
+      action_link: `/dashboard/finance/tax`,
       action_label: "View Tax",
     });
   }

@@ -25,7 +25,7 @@ export function OrgTabs({ activeTab, onChange, pendingInvitationsCount = 0 }: Or
               onClick={() => onChange(tab.id)}
               className={`shrink-0 px-4 py-3.5 text-sm font-medium border-b-2 transition-all inline-flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? "border-[#22C55E] text-[#22C55E]"
+                  ? "border-[#4A5D7A] text-[#4A5D7A]"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               }`}
             >

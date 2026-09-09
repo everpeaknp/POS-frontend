@@ -54,7 +54,7 @@ interface ConsumptionFormProps {
 }
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E] disabled:bg-gray-100";
+  "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] disabled:bg-gray-100";
 
 export default function ConsumptionForm({
   siteId,
@@ -288,14 +288,14 @@ export default function ConsumptionForm({
           </FormField>
 
           {selectedSite && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Package className="w-4 h-4 text-[#22C55E] mt-0.5 shrink-0" />
+                <Package className="w-4 h-4 text-[#4A5D7A] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-green-900">
+                  <p className="text-sm font-medium text-slate-900">
                     Warehouse: {selectedSite.warehouse_name}
                   </p>
-                  <p className="text-xs text-green-700 mt-0.5">
+                  <p className="text-xs text-slate-700 mt-0.5">
                     Stock will be deducted from this warehouse
                   </p>
                 </div>
@@ -321,7 +321,7 @@ export default function ConsumptionForm({
                 <button
                   type="button"
                   onClick={addItem}
-                  className="px-4 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] transition-colors inline-flex items-center gap-2"
+                  className="px-4 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] transition-colors inline-flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Product
@@ -352,7 +352,7 @@ export default function ConsumptionForm({
                             <select
                               value={item.product}
                               onChange={(e) => updateItem(item.id, "product", e.target.value)}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                             >
                               <option value="">Select product</option>
                               {products.map((product) => (
@@ -377,7 +377,7 @@ export default function ConsumptionForm({
                               value={item.quantity}
                               onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
                               placeholder="0.00"
-                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                             />
                             {item.unitName && (
                               <p className="text-xs text-gray-500 mt-1">Unit: {item.unitName}</p>
@@ -393,7 +393,7 @@ export default function ConsumptionForm({
                               value={item.unit_cost}
                               onChange={(e) => updateItem(item.id, "unit_cost", e.target.value)}
                               placeholder="0.00"
-                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                             />
                           </div>
 
@@ -430,7 +430,7 @@ export default function ConsumptionForm({
                 <button
                   type="button"
                   onClick={addItem}
-                  className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#22C55E] hover:text-[#22C55E] transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#4A5D7A] hover:text-[#4A5D7A] transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Another Product
@@ -480,7 +480,7 @@ export default function ConsumptionForm({
         <button
           type="submit"
           disabled={isSubmitting || items.length === 0}
-          className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {isSubmitting ? "Logging..." : `Log ${items.length || ""} Consumption${items.length !== 1 ? "s" : ""}`}
         </button>

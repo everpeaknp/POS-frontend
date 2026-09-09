@@ -145,7 +145,7 @@ export default function POSReportsPage() {
               <Button
                 onClick={handleGenerateReport}
                 disabled={generating}
-                className="w-full bg-[#22C55E] hover:bg-[#16A34A]"
+                className="w-full bg-[#4A5D7A] hover:bg-[#2E3E52]"
               >
                 {generating ? "Generating..." : (
                   <>
@@ -224,12 +224,12 @@ export default function POSReportsPage() {
                     </div>
                   </div>
 
-                  <div className="bg-green-50 rounded-lg p-4">
+                  <div className="bg-slate-50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">Gross Sales</span>
+                      <DollarSign className="h-4 w-4 text-slate-600" />
+                      <span className="text-xs text-slate-600 font-medium">Gross Sales</span>
                     </div>
-                    <div className="text-2xl font-bold text-green-700">
+                    <div className="text-2xl font-bold text-slate-700">
                       Rs. {report.gross_sales.toLocaleString()}
                     </div>
                   </div>

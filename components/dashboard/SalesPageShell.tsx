@@ -53,7 +53,7 @@ export function SalesPageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-muted-foreground hover:text-[#4A5D7A] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Sales
@@ -81,7 +81,7 @@ export function SalesPageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               >
                 Try again
               </Button>
@@ -101,13 +101,13 @@ export const salesCardClass =
 export const salesTableWrapClass = `${salesCardClass} overflow-hidden`;
 
 export const salesInputClass =
-  "w-full h-9 px-3 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent";
+  "w-full h-9 px-3 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent";
 
 export const salesSectionTitleClass =
   "text-sm font-semibold text-gray-700 dark:text-foreground border-b border-gray-100 dark:border-border pb-2";
 
 export const salesStatCardClass = `${salesCardClass} p-4`;
 
-export const salesFilterPillActive = "bg-[#22C55E] text-white";
+export const salesFilterPillActive = "bg-[#4A5D7A] text-white";
 export const salesFilterPillInactive =
   "bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-muted/80";

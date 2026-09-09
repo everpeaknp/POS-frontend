@@ -127,7 +127,7 @@ export default function BulkPricingPage() {
           />
         </div>
         <Link href="/dashboard/inventory/bulk-pricing/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Bulk Pricing
           </Button>
         </Link>
@@ -160,7 +160,7 @@ export default function BulkPricingPage() {
                   <td className="px-4 py-3 text-gray-600">{price.discount_percent}%</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      price.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                      price.is_active ? "bg-slate-100 text-slate-700" : "bg-gray-100 text-gray-600"
                     }`}>
                       {price.is_active ? "Active" : "Inactive"}
                     </span>

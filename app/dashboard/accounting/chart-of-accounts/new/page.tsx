@@ -188,7 +188,7 @@ export default function NewAccountPage() {
                 type="button"
                 onClick={handleSeed}
                 disabled={seeding}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white shrink-0"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white shrink-0"
               >
                 {seeding ? "Creating..." : "Create Standard Accounts"}
               </Button>
@@ -291,7 +291,7 @@ export default function NewAccountPage() {
               <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Description</h3>
               <Field label="Description">
                 <textarea
-                  className="w-full h-20 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
+                  className="w-full h-20 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#4A5D7A]"
                   placeholder="Account description..."
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
@@ -341,7 +341,7 @@ export default function NewAccountPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
                 disabled={submitting || seeding}
               >
                 {submitting ? "Saving..." : (

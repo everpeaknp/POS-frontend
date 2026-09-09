@@ -74,7 +74,7 @@ export default function CustomerAgingReportPage() {
   }
 
   const ageBuckets = [
-    { label: "Current (0-30 days)", value: aging.current, color: "bg-green-100 text-green-700" },
+    { label: "Current (0-30 days)", value: aging.current, color: "bg-slate-100 text-slate-700" },
     { label: "31-60 days", value: aging.days_30_60, color: "bg-yellow-100 text-yellow-700" },
     { label: "61-90 days", value: aging.days_60_90, color: "bg-orange-100 text-orange-700" },
     { label: "90+ days", value: aging.days_90_plus, color: "bg-red-100 text-red-700" },
@@ -187,7 +187,7 @@ export default function CustomerAgingReportPage() {
               <tbody className="divide-y divide-gray-50">
                 {aging.overdue_invoices.map((invoice: any) => (
                   <tr key={invoice.invoice_id || invoice.invoice_number} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">
                       {invoice.invoice_id ? (
                         <Link href={`/dashboard/sales/invoices/${invoice.invoice_id}`} className="hover:underline">
                           {invoice.invoice_number}
@@ -210,7 +210,7 @@ export default function CustomerAgingReportPage() {
                         invoice.days_overdue > 90 ? 'bg-red-100 text-red-700' :
                         invoice.days_overdue > 60 ? 'bg-orange-100 text-orange-700' :
                         invoice.days_overdue > 30 ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
+                        'bg-slate-100 text-slate-700'
                       }`}>
                         {invoice.days_overdue} days
                       </span>

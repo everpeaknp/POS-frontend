@@ -279,7 +279,7 @@ export function buildProductTourSteps(opts: {
   accountType?: string | null;
 }): TourStep[] {
   const position: NavbarPosition = opts.navbarPosition === "top" ? "top" : "left";
-  const homeRoute = opts.accountType === "personal" ? "/dashboard/personal-finance" : "/dashboard";
+  const homeRoute = opts.accountType === "personal" ? "/dashboard/finance" : "/dashboard";
 
   const intro =
     position === "top" ? introForTopNavbar(homeRoute) : introForLeftNavbar(homeRoute);

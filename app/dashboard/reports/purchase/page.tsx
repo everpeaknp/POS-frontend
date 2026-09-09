@@ -22,6 +22,7 @@ import { reportsAPI, type PurchaseReportsData } from "@/lib/api/reports";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { ExportTableData } from "@/lib/utils/export";
+import { PrintableReport } from "@/components/reports/PrintableReport";
 
 type PurchasePeriod = "week" | "month" | "quarter" | "year";
 
@@ -136,9 +137,9 @@ export default function PurchaseReportPage() {
                   <Line
                     type="monotone"
                     dataKey="purchases"
-                    stroke="#22C55E"
+                    stroke="#4A5D7A"
                     strokeWidth={2}
-                    dot={{ fill: "#22C55E" }}
+                    dot={{ fill: "#4A5D7A" }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -188,7 +189,7 @@ export default function PurchaseReportPage() {
                           <span
                             className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                               supplier.status === "active"
-                                ? "bg-green-50 text-green-700"
+                                ? "bg-slate-50 text-slate-700"
                                 : "bg-gray-50 text-gray-700"
                             }`}
                           >
@@ -248,54 +249,90 @@ export default function PurchaseReportPage() {
             )}
           </div>
 
-          <div className={reportsCardClass}>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900">VAT Summary (13%)</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 mb-1">Total Taxable</p>
-                  <p className="text-lg font-semibold">
-                    {formatNPR(reportData.tax_report.total_taxable)}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 mb-1">Total VAT</p>
-                  <p className="text-lg font-semibold">
-                    {formatNPR(reportData.tax_report.total_vat)}
-                  </p>
-                </div>
-              </div>
-              {reportData.tax_report.monthly_data.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        {["Month", "Taxable", "VAT"].map((h) => (
-                          <th
-                            key={h}
-                            className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {reportData.tax_report.monthly_data.map((item) => (
-                        <tr key={item.month}>
-                          <td className="px-6 py-3 font-medium">{item.month}</td>
-                          <td className="px-6 py-3">{formatNPR(item.taxable)}</td>
-                          <td className="px-6 py-3 font-medium">{formatNPR(item.vat)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
+          <PrintableReport reportTitle="Purchase Report">
+            <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+              Summary
+            </h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #d1d5db", marginBottom: "20px" }}>
+              <tbody>
+                <tr style={{ borderBottom: "1px solid #d1d5db" }}>
+                  <td style={{ padding: "8px", fontWeight: "600", color: "#000" }}>Total Purchases</td>
+                  <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(reportData.summary.total_purchases)}</td>
+                </tr>
+                <tr style={{ borderBottom: "1px solid #d1d5db" }}>
+                  <td style={{ padding: "8px", fontWeight: "600", color: "#000" }}>Total POs</td>
+                  <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{reportData.summary.total_orders}</td>
+                </tr>
+                <tr style={{ borderBottom: "1px solid #d1d5db" }}>
+                  <td style={{ padding: "8px", fontWeight: "600", color: "#000" }}>Avg PO Value</td>
+                  <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(reportData.summary.avg_order_value)}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "8px", fontWeight: "600", color: "#000" }}>Payment Rate</td>
+                  <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{Number(reportData.summary.payment_rate_percentage ?? 0).toFixed(1)}%</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+              Top Suppliers
+            </h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #d1d5db", marginBottom: "20px" }}>
+              <thead style={{ backgroundColor: "#f3f4f6" }}>
+                <tr>
+                  {["Rank", "Supplier", "Orders", "Total", "Outstanding", "Status"].map((h) => (
+                    <th
+                      key={h}
+                      style={{ padding: "8px", textAlign: "left", fontWeight: "600", borderBottom: "1px solid #d1d5db", color: "#000" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.by_supplier.map((supplier, index) => (
+                  <tr key={supplier.supplier_id} style={{ borderBottom: "1px solid #d1d5db" }}>
+                    <td style={{ padding: "8px", color: "#000" }}>{index + 1}</td>
+                    <td style={{ padding: "8px", color: "#000" }}>{supplier.supplier_name}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{supplier.orders}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(supplier.amount)}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(supplier.outstanding)}</td>
+                    <td style={{ padding: "8px", color: "#000" }}>{supplier.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+              Purchase by Product
+            </h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #d1d5db" }}>
+              <thead style={{ backgroundColor: "#f3f4f6" }}>
+                <tr>
+                  {["Product", "Qty", "Unit", "Total", "Avg Price"].map((h) => (
+                    <th
+                      key={h}
+                      style={{ padding: "8px", textAlign: "left", fontWeight: "600", borderBottom: "1px solid #d1d5db", color: "#000" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.by_product.map((product) => (
+                  <tr key={product.product_id} style={{ borderBottom: "1px solid #d1d5db" }}>
+                    <td style={{ padding: "8px", color: "#000" }}>{product.product_name}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{product.qty}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{product.unit}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(product.amount)}</td>
+                    <td style={{ padding: "8px", textAlign: "right", color: "#000" }}>{formatNPR(product.avg_price)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </PrintableReport>
         </>
       )}
     </ReportsPageShell>

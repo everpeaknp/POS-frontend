@@ -113,7 +113,7 @@ export default function OrganizationModulesPage() {
             </p>
             <Link
               href="/erp"
-              className="inline-flex mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A]"
+              className="inline-flex mt-4 text-sm font-medium text-[#4A5D7A] hover:text-[#2E3E52]"
             >
               Go to ERP
             </Link>
@@ -144,7 +144,7 @@ export default function OrganizationModulesPage() {
             </div>
             <Link
               href="/dashboard/settings/org"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#22C55E] hover:text-[#16A34A]"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#4A5D7A] hover:text-[#2E3E52]"
             >
               Organization settings
               <ChevronRight className="h-3.5 w-3.5" />
@@ -163,6 +163,7 @@ export default function OrganizationModulesPage() {
               tenantSlug={tenantMeta.slug}
               activeModules={activeModules}
               allowedModules={allowedModules}
+              accountType={user?.tenant?.account_type}
               planName={planLabel}
               canEdit={canEdit}
               onUpdated={handleModulesUpdated}

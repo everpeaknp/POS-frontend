@@ -21,7 +21,7 @@ export interface Tenant {
   id: number;
   name: string;
   slug: string;
-  account_type?: "organization" | "personal";
+  account_type?: "organization" | "personal" | "construction" | "hardware" | "retail";
   workspace_name?: string;
   address?: string;
   email?: string;
@@ -29,6 +29,7 @@ export interface Tenant {
   is_active: boolean;
   plan_type: string;
   active_modules: string[];
+  disabled_features?: string[];
   created_by?: number | null;
 }
 

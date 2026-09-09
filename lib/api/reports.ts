@@ -2,6 +2,85 @@ import apiClient from './client';
 import type { UnifiedDashboardData } from '@/lib/dashboard/types';
 
 // ============================================================================
+// SALES REPORTS TYPES
+// ============================================================================
+
+export interface SalesSummaryData {
+  summary: {
+    total_sales: number;
+    total_orders: number;
+    avg_order_value: number;
+    cash_collected: number;
+    collection_rate: number;
+  };
+  monthly_trend: Array<{
+    month: string;
+    sales: number;
+    orders: number;
+    collected: number;
+    outstanding: number;
+  }>;
+  period: {
+    start_date: string;
+    end_date: string;
+  };
+}
+
+export interface SalesByCustomerData {
+  customers: Array<{
+    customer_id: string;
+    customer_name: string;
+    orders: number;
+    revenue: number;
+    avg_order: number;
+    status: string;
+  }>;
+  period: {
+    start_date: string | null;
+    end_date: string | null;
+  };
+}
+
+export interface SalesByProductData {
+  products: Array<{
+    product_id: string;
+    product_name: string;
+    unit: string;
+    qty_sold: number;
+    revenue: number;
+    avg_price: number;
+    percentage: number;
+  }>;
+  total_revenue: number;
+  period: {
+    start_date: string | null;
+    end_date: string | null;
+  };
+}
+
+export interface DayBookTransaction {
+  time: string;
+  type: string;
+  reference: string;
+  party: string;
+  debit: number;
+  credit: number;
+  balance_effect: number;
+  description: string;
+}
+
+export interface DayBookData {
+  date: string;
+  transactions: DayBookTransaction[];
+  summary: {
+    total_transactions: number;
+    total_debit: number;
+    total_credit: number;
+    net_cash_flow: number;
+  };
+}
+
+// ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
 
@@ -309,6 +388,49 @@ export interface MainDashboardData {
 
 export const reportsAPI = {
   /**
+   * Get sales summary report with monthly trends
+   */
+  salesSummary: async (params: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<SalesSummaryData>('/sales/reports/summary/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get sales by customer report
+   */
+  salesByCustomer: async (params?: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<SalesByCustomerData>('/sales/reports/by_customer/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get sales by product report
+   */
+  salesByProduct: async (params?: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<SalesByProductData>('/sales/reports/by_product/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get day book report - daily transaction summary
+   */
+  dayBook: async (params?: {
+    date?: string;
+  }) => {
+    const response = await apiClient.get<DayBookData>('/reports/day-book/', { params });
+    return response.data;
+  },
+
+  /**
    * Get complete dashboard summary
    * Includes financials, inventory alerts, and construction budget alerts
    */
@@ -521,6 +643,68 @@ export const reportsAPI = {
     const response = await apiClient.get<TaxReportsData>('/reports/tax-reports/', { params });
     return response.data;
   },
+
+  /**
+   * Get all transactions report
+   * Complete transaction history with date range filtering
+   */
+  allTransactions: async (params?: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<AllTransactionsData>('/reports/all-transactions/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get customer statement
+   * Individual customer transaction history and ledger
+   */
+  customerStatement: async (params: {
+    customer_id: number;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<CustomerStatementData>('/reports/customer-statement/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get payables report
+   * Money owed to suppliers
+   */
+  payables: async (params?: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<PayablesData>('/reports/payables/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get supplier statement
+   * Individual supplier transaction history and ledger
+   */
+  supplierStatement: async (params: {
+    supplier_id: number;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<SupplierStatementData>('/reports/supplier-statement/', { params });
+    return response.data;
+  },
+
+  /**
+   * Get party-wise profit report
+   * Profit analysis grouped by customer
+   */
+  partyProfit: async (params?: {
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const response = await apiClient.get<PartyProfitData>('/reports/party-profit/', { params });
+    return response.data;
+  },
 };
 
 // ============================================================================
@@ -604,6 +788,147 @@ export interface InventoryReportsData {
   stock_data: InventoryStockData[];
 }
 
+// ============================================================================
+// ALL TRANSACTIONS REPORT TYPES
+// ============================================================================
+
+export interface AllTransactionItem {
+  date: string;
+  type: 'Sales' | 'Purchase' | 'Receipt' | 'Income' | 'Expense';
+  reference: string;
+  party: string;
+  debit: number;
+  credit: number;
+  description: string;
+}
+
+export interface AllTransactionsSummary {
+  total_transactions: number;
+  total_debit: number;
+  total_credit: number;
+  net_flow: number;
+}
+
+export interface AllTransactionsData {
+  start_date: string;
+  end_date: string;
+  transactions: AllTransactionItem[];
+  summary: AllTransactionsSummary;
+}
+
+// ============================================================================
+// CUSTOMER STATEMENT TYPES
+// ============================================================================
+
+export interface CustomerStatementTransaction {
+  date: string;
+  type: 'Invoice' | 'Payment' | 'Credit Note';
+  reference: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface CustomerStatementSummary {
+  total_transactions: number;
+  current_balance: number;
+  total_sales: number;
+  total_payments: number;
+}
+
+export interface CustomerStatementData {
+  customer_id: number;
+  customer_name: string;
+  start_date: string;
+  end_date: string;
+  transactions: CustomerStatementTransaction[];
+  summary: CustomerStatementSummary;
+}
+
+// ============================================================================
+// PAYABLES REPORT TYPES
+// ============================================================================
+
+export interface PayablesSupplier {
+  supplier_id: number;
+  supplier_name: string;
+  contact: string;
+  outstanding: number;
+  invoices_count: number;
+  status: string;
+}
+
+export interface PayablesSummary {
+  total_suppliers: number;
+  total_payable: number;
+  suppliers_with_balance: number;
+}
+
+export interface PayablesData {
+  start_date: string;
+  end_date: string;
+  suppliers: PayablesSupplier[];
+  summary: PayablesSummary;
+}
+
+// ============================================================================
+// SUPPLIER STATEMENT TYPES
+// ============================================================================
+
+export interface SupplierStatementTransaction {
+  date: string;
+  type: 'Invoice' | 'Debit Note';
+  reference: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface SupplierStatementSummary {
+  total_transactions: number;
+  current_balance: number;
+  total_purchases: number;
+}
+
+export interface SupplierStatementData {
+  supplier_id: number;
+  supplier_name: string;
+  start_date: string;
+  end_date: string;
+  transactions: SupplierStatementTransaction[];
+  summary: SupplierStatementSummary;
+}
+
+// ============================================================================
+// PARTY-WISE PROFIT TYPES
+// ============================================================================
+
+export interface PartyProfitCustomer {
+  customer_id: number;
+  customer_name: string;
+  orders_count: number;
+  revenue: number;
+  profit: number;
+  profit_margin: number;
+  avg_order_value: number;
+}
+
+export interface PartyProfitSummary {
+  total_customers: number;
+  total_revenue: number;
+  total_profit: number;
+  overall_margin: number;
+}
+
+export interface PartyProfitData {
+  start_date: string;
+  end_date: string;
+  customers: PartyProfitCustomer[];
+  summary: PartyProfitSummary;
+}
+
 // Alias for consistency with other API modules
 export const reportsApi = reportsAPI;
 
@@ -667,7 +992,7 @@ export const formatCurrency = (amount: number): string => {
  */
 export const getBudgetHealthColor = (health: 'green' | 'yellow' | 'red'): string => {
   const colors = {
-    green: '#22C55E',
+    green: '#4A5D7A',
     yellow: '#F59E0B',
     red: '#EF4444',
   };

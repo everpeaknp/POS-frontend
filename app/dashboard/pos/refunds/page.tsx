@@ -13,7 +13,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import posApi, { type POSRefund, POS_PAGE_SIZE } from "@/lib/api/pos";
 import toast from "react-hot-toast";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
-import NepaliDate from "nepali-date-converter";
+import { formatDisplayDate as formatDate } from "@/lib/dates";
 import Link from "next/link";
 
 export default function POSRefundsPage() {
@@ -23,7 +23,6 @@ export default function POSRefundsPage() {
   const [refunds, setRefunds] = useState<POSRefund[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [reasonFilter, setReasonFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [customStartDate, setCustomStartDate] = useState("");
@@ -80,7 +79,6 @@ export default function POSRefundsPage() {
       };
 
       if (searchQuery) params.search = searchQuery;
-      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
       if (reasonFilter && reasonFilter !== "all") params.reason = reasonFilter;
 
       const dateRange = getDateRange(dateFilter);
@@ -100,21 +98,20 @@ export default function POSRefundsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, reasonFilter, searchQuery, dateFilter, customStartDate, customEndDate]);
+  }, [page, reasonFilter, searchQuery, dateFilter, customStartDate, customEndDate]);
 
   // Calculate summary statistics from current refunds
+  // (POSRefund has no status/cancellation workflow — every refund that exists is final)
   const summaryStats = useMemo(() => {
-    const completedRefunds = refunds.filter(r => r.status === 'completed' || !r.status);
-    
-    const totalAmount = completedRefunds.reduce((sum, r) => sum + Number(r.total_refund_amount || 0), 0);
-    const totalRefunds = completedRefunds.length;
-    const totalItems = completedRefunds.reduce((sum, r) => sum + (r.lines?.length || 0), 0);
-    
+    const totalAmount = refunds.reduce((sum, r) => sum + Number(r.total_amount || 0), 0);
+    const totalRefunds = refunds.length;
+    const totalItems = refunds.reduce((sum, r) => sum + (r.lines?.length || 0), 0);
+
     // Calculate reason breakdown
     const reasonTotals: Record<string, number> = {};
-    completedRefunds.forEach(r => {
+    refunds.forEach(r => {
       const reason = r.reason || 'other';
-      reasonTotals[reason] = (reasonTotals[reason] || 0) + Number(r.total_refund_amount || 0);
+      reasonTotals[reason] = (reasonTotals[reason] || 0) + Number(r.total_amount || 0);
     });
 
     return {
@@ -145,34 +142,6 @@ export default function POSRefundsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleCancelRefund = async (id: number, refundNumber: string | number) => {
-    if (window.confirm(`Are you sure you want to cancel refund ${refundNumber}?`)) {
-      try {
-        // Assuming there's a cancel refund endpoint
-        // await posApi.cancelRefund(id);
-        toast.success("Refund cancelled successfully");
-        fetchRefunds();
-      } catch (error: any) {
-        toast.error(error.response?.data?.error || "Failed to cancel refund");
-      }
-    }
-  };
-
-  const formatDisplayDate = (dateString: string) => {
-    const date = new Date(dateString);
-    
-    if (dateSystem === 'nepali') {
-      const nepaliDate = new NepaliDate(date);
-      return nepaliDate.format('YYYY-MM-DD');
-    }
-    
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   const formatDisplayTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
@@ -197,7 +166,7 @@ export default function POSRefundsPage() {
         subtitle="View and manage product returns"
         actions={
           <Link href="/dashboard/pos/refunds/new">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] gap-2">
+            <Button className="bg-[#4A5D7A] hover:bg-[#2E3E52] gap-2">
               <Plus className="h-4 w-4" />
               New Refund
             </Button>
@@ -321,7 +290,7 @@ export default function POSRefundsPage() {
 
         {/* Filters Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Search */}
             <div className="lg:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -333,21 +302,8 @@ export default function POSRefundsPage() {
               />
             </div>
 
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-
             {/* Reason Filter */}
-            <Select value={reasonFilter} onValueChange={setReasonFilter}>
+            <Select value={reasonFilter} onValueChange={(v) => setReasonFilter(v ?? "all")}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder="All Reasons" />
               </SelectTrigger>
@@ -362,7 +318,7 @@ export default function POSRefundsPage() {
             </Select>
 
             {/* Date Filter */}
-            <Select value={dateFilter} onValueChange={setDateFilter}>
+            <Select value={dateFilter} onValueChange={(v) => setDateFilter(v ?? "all")}>
               <SelectTrigger className="h-10">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="All Time" />
@@ -404,17 +360,12 @@ export default function POSRefundsPage() {
           )}
 
           {/* Active Filters Display */}
-          {(searchQuery || statusFilter !== "all" || reasonFilter !== "all" || dateFilter !== "all") && (
+          {(searchQuery || reasonFilter !== "all" || dateFilter !== "all") && (
             <div className="mt-3 flex items-center gap-2 text-sm">
               <span className="text-gray-600">Active filters:</span>
               {searchQuery && (
                 <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
                   Search: {searchQuery}
-                </span>
-              )}
-              {statusFilter !== "all" && (
-                <span className="px-2 py-1 bg-green-50 text-green-700 rounded">
-                  Status: {statusFilter}
                 </span>
               )}
               {reasonFilter !== "all" && (
@@ -430,7 +381,6 @@ export default function POSRefundsPage() {
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setStatusFilter("all");
                   setReasonFilter("all");
                   setDateFilter("all");
                   setCustomStartDate("");
@@ -485,7 +435,7 @@ export default function POSRefundsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {formatDisplayDate(refund.created_at)}
+                          {formatDate(refund.created_at, dateSystem)}
                         </div>
                         <div className="text-xs text-gray-500">
                           {formatDisplayTime(refund.created_at)}
@@ -503,29 +453,21 @@ export default function POSRefundsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="text-sm font-bold text-red-600">
-                          Rs. {Number(refund.total_refund_amount || 0).toLocaleString()}
+                          Rs. {Number(refund.total_amount || 0).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          !refund.status || refund.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : refund.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {refund.status?.replace(/_/g, ' ').toUpperCase() || 'COMPLETED'}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                          COMPLETED
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
+                          <DropdownMenuTrigger
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-100 transition-colors"
+                          >
+                            <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenuItem
@@ -534,18 +476,6 @@ export default function POSRefundsPage() {
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            {(!refund.status || refund.status === "completed") && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => handleCancelRefund(refund.id!, refund.refund_number)}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <X className="h-4 w-4 mr-2" />
-                                  Cancel Refund
-                                </DropdownMenuItem>
-                              </>
-                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>

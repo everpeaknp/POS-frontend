@@ -30,6 +30,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { StatusBadge } from "@/components/purchase/StatusBadge";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import {
   purchaseOrdersAPI,
   purchaseInvoicesAPI,
@@ -41,7 +42,7 @@ import {
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444", "#6B7280"];
+const COLORS = ["#4A5D7A", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444", "#6B7280"];
 
 const quickActions = [
   {
@@ -56,7 +57,7 @@ const quickActions = [
     label: "New Request",
     sub: "Request materials",
     icon: ClipboardList,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-slate-50 text-[#4A5D7A]",
   },
   {
     href: "/dashboard/purchase/suppliers/new",
@@ -85,6 +86,7 @@ function parseAmount(value: string | number | undefined): number {
 export default function PurchaseDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [invoices, setInvoices] = useState<PurchaseInvoice[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -92,7 +94,7 @@ export default function PurchaseDashboardPage() {
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Purchase overview and analytics`;
+  const subtitle = `${workspaceName} · ${t('purchase.purchase_overview_and_analytics')}`;
 
   useEffect(() => {
     fetchDashboardData();
@@ -179,7 +181,7 @@ export default function PurchaseDashboardPage() {
       value: formatNPR(totalPurchases),
       sub: `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""}`,
       icon: TrendingDown,
-      color: "text-green-600 bg-green-50",
+      color: "text-slate-600 bg-slate-50",
     },
     {
       label: "Purchase Orders",
@@ -262,7 +264,7 @@ export default function PurchaseDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -294,7 +296,7 @@ export default function PurchaseDashboardPage() {
                     tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                  <Bar dataKey="purchases" name="Purchases" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="purchases" name="Purchases" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -341,7 +343,7 @@ export default function PurchaseDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Recent Purchase Orders</h3>
               <Link
                 href="/dashboard/purchase/orders"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -373,7 +375,7 @@ export default function PurchaseDashboardPage() {
                       className="hover:bg-gray-50/50 cursor-pointer"
                       onClick={() => router.push(`/dashboard/purchase/orders/${o.id}`)}
                     >
-                      <td className="px-4 py-3 font-medium text-[#22C55E]">{o.po_number}</td>
+                      <td className="px-4 py-3 font-medium text-[#4A5D7A]">{o.po_number}</td>
                       <td className="px-4 py-3 text-gray-700">{o.supplier_name}</td>
                       <td className="px-4 py-3 font-medium text-gray-800">
                         {formatNPR(parseAmount(o.total))}
@@ -393,7 +395,7 @@ export default function PurchaseDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Top Suppliers</h3>
               <Link
                 href="/dashboard/purchase/suppliers"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -427,7 +429,7 @@ export default function PurchaseDashboardPage() {
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E]">
+                          <div className="w-7 h-7 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center text-xs font-bold text-[#4A5D7A]">
                             {s.name[0]}
                           </div>
                           <span className="font-medium text-gray-800 truncate max-w-[140px]">

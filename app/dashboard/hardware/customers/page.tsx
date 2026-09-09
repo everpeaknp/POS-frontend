@@ -115,7 +115,7 @@ export default function HardwareCustomersPage() {
           </Select>
         </div>
         <Link href="/dashboard/hardware/customers/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 shrink-0">
             <Plus className="h-4 w-4" /> New Customer
           </Button>
         </Link>
@@ -164,7 +164,7 @@ export default function HardwareCustomersPage() {
                         className={`text-sm font-medium tabular-nums ${
                           (customer.current_balance || 0) > 0
                             ? "text-red-600 dark:text-red-400"
-                            : "text-green-600 dark:text-green-400"
+                            : "text-slate-600 dark:text-slate-400"
                         }`}
                       >
                         {formatNPR(customer.current_balance || 0)}
@@ -177,7 +177,7 @@ export default function HardwareCustomersPage() {
                           e.stopPropagation();
                           router.push(`/dashboard/hardware/customers/${customer.id}`);
                         }}
-                        className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                        className="text-sm text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
                       >
                         View
                       </button>

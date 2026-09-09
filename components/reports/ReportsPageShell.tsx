@@ -3,6 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { PageLoading } from "@/components/shared/PageLoading";
 import { Button } from "@/components/ui/button";
+import { PrintButton } from "./PrintButton";
 
 export const reportsCardClass =
   "bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm";
@@ -21,6 +22,7 @@ interface ReportsPageShellProps {
   loadingMessage?: string;
   error?: string | null;
   onRetry?: () => void;
+  showPrint?: boolean;
 }
 
 export function ReportsPageShell({
@@ -35,6 +37,7 @@ export function ReportsPageShell({
   loadingMessage,
   error,
   onRetry,
+  showPrint = true,
 }: ReportsPageShellProps) {
   if (loading) {
     return <PageLoading message={loadingMessage ?? "Loading report…"} />;
@@ -47,14 +50,14 @@ export function ReportsPageShell({
         {showBack && backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#22C55E] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#4A5D7A] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Reports
           </Link>
         )}
 
-        {(toolbar || action) && (
+        {(toolbar || action || showPrint) && (
           <div className={`${reportsCardClass} p-4 lg:p-5`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               {toolbar ? (
@@ -62,7 +65,10 @@ export function ReportsPageShell({
                   {toolbar}
                 </div>
               ) : null}
-              {action ? <div className="shrink-0">{action}</div> : null}
+              <div className="flex gap-2 items-center shrink-0">
+                {action ? <div>{action}</div> : null}
+                {showPrint && <PrintButton />}
+              </div>
             </div>
           </div>
         )}
@@ -73,7 +79,7 @@ export function ReportsPageShell({
             {onRetry && (
               <Button
                 onClick={onRetry}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               >
                 Try again
               </Button>

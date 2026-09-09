@@ -44,7 +44,7 @@ export function DesktopShell({ children }: { children: React.ReactNode }) {
             <div
               role="separator"
               aria-orientation="vertical"
-              className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[#22C55E]/40 z-20"
+              className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[#4A5D7A]/40 z-20"
               onMouseDown={(e) => {
                 e.preventDefault();
                 dragging.current = true;

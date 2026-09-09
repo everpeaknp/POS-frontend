@@ -12,7 +12,7 @@ export interface Organization {
   created_by?: number | null;
   can_delete?: boolean;
   active_modules?: string[];
-  account_type?: "organization" | "personal";
+  account_type?: "organization" | "personal" | "construction" | "hardware" | "retail";
 }
 
 export interface User {

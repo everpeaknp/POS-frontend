@@ -1,6 +1,6 @@
 export function CustomerStatusBadge({ status }: { status: "active" | "inactive" }) {
   const styles = {
-    active: "bg-green-100 text-green-700",
+    active: "bg-slate-100 text-slate-700",
     inactive: "bg-gray-100 text-gray-700",
   };
 

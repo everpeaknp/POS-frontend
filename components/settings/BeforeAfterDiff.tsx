@@ -26,7 +26,7 @@ export function BeforeAfterDiff({
         {after && (
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">After</p>
-            <pre className="bg-green-50 border border-green-200 rounded p-2 text-xs overflow-auto max-h-40 text-green-700">
+            <pre className="bg-slate-50 border border-slate-200 rounded p-2 text-xs overflow-auto max-h-40 text-slate-700">
               {JSON.stringify(after, null, 2)}
             </pre>
           </div>

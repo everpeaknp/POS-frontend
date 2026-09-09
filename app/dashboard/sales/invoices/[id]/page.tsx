@@ -20,7 +20,7 @@ const statusColors = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
   "Partially Paid": "bg-yellow-100 text-yellow-700",
-  Paid: "bg-green-100 text-green-700",
+  Paid: "bg-slate-100 text-slate-700",
   Overdue: "bg-red-100 text-red-700",
 };
 
@@ -149,7 +149,7 @@ export default function InvoiceDetailPage() {
           {invoice.balance > 0 && invoice.status !== "Paid" && (
             <Button
               onClick={() => setPaymentOpen(true)}
-              className="gap-2 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="gap-2 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               <DollarSign className="h-4 w-4" />
               Record Payment
@@ -173,7 +173,7 @@ export default function InvoiceDetailPage() {
         {/* Invoice Details */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#22C55E] to-[#16A34A] p-6 text-white">
+          <div className="bg-gradient-to-r from-[#4A5D7A] to-[#2E3E52] p-6 text-white">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-2">{invoice.invoice_number}</h2>
@@ -232,7 +232,7 @@ export default function InvoiceDetailPage() {
                 <Button
                   variant="link"
                   onClick={() => router.push(`/dashboard/sales/orders/${invoice.sales_order}`)}
-                  className="p-0 h-auto text-[#22C55E] hover:text-[#16A34A]"
+                  className="p-0 h-auto text-[#4A5D7A] hover:text-[#2E3E52]"
                 >
                   View Sales Order
                 </Button>
@@ -250,14 +250,14 @@ export default function InvoiceDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Paid Amount</span>
-                  <span className="text-lg font-medium text-green-600">
+                  <span className="text-lg font-medium text-slate-600">
                     Rs. {Number(invoice.paid_amount).toLocaleString()}
                   </span>
                 </div>
                 <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                   <span className="text-gray-900 font-medium">Balance Due</span>
                   <span className={`text-2xl font-bold ${
-                    invoice.balance > 0 ? "text-red-600" : "text-green-600"
+                    invoice.balance > 0 ? "text-red-600" : "text-slate-600"
                   }`}>
                     Rs. {Number(invoice.balance).toLocaleString()}
                   </span>

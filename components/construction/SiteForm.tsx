@@ -228,7 +228,7 @@ export default function SiteForm({
               {...register('name')}
               type="text"
               id="name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               placeholder="Enter site name"
             />
           </FormField>
@@ -243,7 +243,7 @@ export default function SiteForm({
               {...register('location')}
               type="text"
               id="location"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               placeholder="Enter site location"
             />
           </FormField>
@@ -257,7 +257,7 @@ export default function SiteForm({
               {...register('client_name')}
               type="text"
               id="client_name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               placeholder="Enter client name (optional)"
             />
           </FormField>
@@ -272,7 +272,7 @@ export default function SiteForm({
               {...register('allocated_budget')}
               type="text"
               id="allocated_budget"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               placeholder="0.00 (optional)"
             />
           </FormField>
@@ -320,7 +320,7 @@ export default function SiteForm({
             <select
               {...register('manager')}
               id="manager"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             >
               <option value="">Select manager (optional)</option>
               {managers.map((manager) => (
@@ -340,7 +340,7 @@ export default function SiteForm({
             <select
               {...register('warehouse')}
               id="warehouse"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             >
               <option value="">Select warehouse (optional)</option>
               {warehouses.map((warehouse) => (
@@ -360,7 +360,7 @@ export default function SiteForm({
             <select
               {...register('status')}
               id="status"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             >
               <option value="planned">Planned</option>
               <option value="active">Active</option>
@@ -382,7 +382,7 @@ export default function SiteForm({
             {...register('description')}
             id="description"
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Optional site description, notes, or special requirements"
           />
         </FormField>
@@ -393,7 +393,7 @@ export default function SiteForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
 
           {isSubmitting ? 'Saving...' : isEdit ? 'Update Site' : 'Create Site'}

@@ -17,8 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateInput } from '@/components/shared/DateInput';
 import { cn } from '@/lib/utils';
-import BarcodeScanner from './BarcodeScanner';
-import { BarcodeScannerModal } from '@/components/pos/BarcodeScannerModal';
+import { BarcodeSkuScanner } from '@/components/barcode/BarcodeSkuScanner';
 
 const inputClass = 'h-9 text-sm border-gray-200 focus-visible:ring-0 focus-visible:border-gray-300';
 
@@ -86,6 +85,8 @@ type ProductFormData = z.infer<typeof productSchema>;
 interface ProductFormProps {
   productId?: string;
   initialData?: Partial<ProductFormData>;
+  /** Pre-fills the SKU field, e.g. when arriving from a "barcode not found" scan. */
+  initialSku?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -102,6 +103,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function ProductForm({
   productId,
   initialData,
+  initialSku,
   onSuccess,
   onCancel,
 }: ProductFormProps) {
@@ -172,7 +174,7 @@ export default function ProductForm({
       status: initialData.status || 'active',
     } : {
       name: '',
-      sku: '',
+      sku: initialSku || '',
       category: null,
       unit: null,
       cost_price: '',
@@ -367,6 +369,11 @@ export default function ProductForm({
     }
 
     try {
+      // Debug logging
+      console.log('Form data before submit:', data);
+      console.log('Image field:', data.image);
+      console.log('Image is File?:', data.image instanceof File);
+      
       const formData = new FormData();
       
       formData.append('name', data.name.trim());
@@ -384,9 +391,18 @@ export default function ProductForm({
       formData.append('description', data.description?.trim() || '');
       formData.append('status', data.status);
 
-      // Handle image upload
-      if (data.image instanceof File) {
+      // Handle image upload - ONLY append if it's a new File object
+      if (data.image && data.image instanceof File) {
+        console.log('Appending image to formData:', data.image.name, data.image.type, data.image.size);
         formData.append('image', data.image);
+      } else {
+        console.log('No image to append or not a File object');
+      }
+
+      // Debug: Log all formData entries
+      console.log('FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value instanceof File ? `File(${value.name})` : value);
       }
 
       if (isEdit && productId) {
@@ -400,6 +416,9 @@ export default function ProductForm({
       }
       onSuccess?.();
     } catch (error: any) {
+      console.error('Submit error:', error);
+      console.error('Error response:', error.response?.data);
+      
       if (isValidationError(error)) {
         mapDjangoErrorsToForm(error.response.data, setError, toast.error);
         const errorData = error.response.data;
@@ -408,6 +427,11 @@ export default function ProductForm({
           if (String(skuError).includes('already exists') || String(skuError).includes('unique')) {
             setError('sku', { message: 'This SKU is already in use' });
           }
+        }
+        // Log image error for debugging
+        if (errorData.image) {
+          console.error('Image upload error:', errorData.image);
+          toast.error(`Image error: ${JSON.stringify(errorData.image)}`);
         }
       } else {
         toast.error(getErrorMessage(error));
@@ -530,7 +554,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#4A5D7A] hover:text-[#4A5D7A]"
                 onClick={() => setShowCategoryDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -607,7 +631,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#4A5D7A] hover:text-[#4A5D7A]"
                 onClick={() => setShowUnitDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -651,7 +675,7 @@ export default function ProductForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E]"
+                className="h-9 w-9 shrink-0 border-gray-200 hover:border-[#4A5D7A] hover:text-[#4A5D7A]"
                 onClick={() => setShowBarcodeScanner(true)}
                 title="Scan Barcode"
               >
@@ -769,7 +793,7 @@ export default function ProductForm({
               ) : (
                 <label
                   htmlFor="image"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#4A5D7A] hover:bg-gray-50 transition-colors"
                 >
                   <Upload className="h-10 w-10 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600 font-medium">Click to upload image</span>
@@ -813,7 +837,7 @@ export default function ProductForm({
         <Button
           type="submit"
           disabled={isSubmitting || hasMissingData}
-          className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+          className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
         >
           {isSubmitting ? "Saving..." : isEdit ? (
             'Update Product'
@@ -873,7 +897,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {creatingCategory ? "Creating..." : (
                 'Create Category'
@@ -935,7 +959,7 @@ export default function ProductForm({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {creatingUnit ? "Creating..." : (
                 'Create Unit'
@@ -945,24 +969,16 @@ export default function ProductForm({
         </DialogContent>
       </Dialog>
 
-      {/* Barcode Scanner Dialog - Enhanced with AI Scanner */}
-      <Dialog open={showBarcodeScanner} onOpenChange={setShowBarcodeScanner}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Scan Product Barcode</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <BarcodeScanner
-              onScanSuccess={(barcode) => {
-                setValue('sku', barcode, { shouldValidate: true });
-                setShowBarcodeScanner(false);
-                toast.success(`Barcode ${barcode} added to SKU field`);
-              }}
-              onClose={() => setShowBarcodeScanner(false)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Barcode Scanner - same scanner modal used in POS checkout */}
+      <BarcodeSkuScanner
+        open={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onBarcodeScanned={(barcode) => {
+          setValue('sku', barcode, { shouldValidate: true });
+          setShowBarcodeScanner(false);
+          toast.success(`Barcode ${barcode} added to SKU field`);
+        }}
+      />
     </form>
   );
 }

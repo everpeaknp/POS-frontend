@@ -6,7 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, RotateCcw, Calendar, User, Package, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import posApi, { type POSRefund } from "@/lib/api/pos";
+import posApi, { type POSRefund, type POSRefundLine } from "@/lib/api/pos";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { PageLoading } from "@/components/shared/PageLoading";
@@ -130,14 +130,8 @@ export default function RefundDetailPage() {
                   </div>
                   <div className="flex justify-between gap-4 items-center">
                     <span className="text-gray-500">Status</span>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      !refund.status || refund.status === 'completed'
-                        ? 'bg-green-100 text-green-700'
-                        : refund.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {refund.status?.replace(/_/g, ' ').toUpperCase() || 'COMPLETED'}
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                      COMPLETED
                     </span>
                   </div>
                 </div>
@@ -150,7 +144,7 @@ export default function RefundDetailPage() {
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                   <span className="font-semibold text-gray-900">Total Refund</span>
                   <span className="text-xl font-bold text-red-600">
-                    {formatNPR(refund.total_refund_amount || 0)}
+                    {formatNPR(refund.total_amount || 0)}
                   </span>
                 </div>
               </div>
@@ -193,7 +187,7 @@ export default function RefundDetailPage() {
                   <table className="min-w-full text-sm">
                     <thead className="bg-gray-50 border-b border-gray-100">
                       <tr>
-                        {["Product", "Quantity", "Unit Price", "Refund Amount"].map((h) => (
+                        {["Product", "Quantity", "Refund Amount"].map((h) => (
                           <th
                             key={h}
                             className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
@@ -207,7 +201,7 @@ export default function RefundDetailPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {refund.lines && refund.lines.length > 0 ? (
-                        refund.lines.map((line: any, index: number) => (
+                        refund.lines.map((line: POSRefundLine, index: number) => (
                           <tr
                             key={line.id || index}
                             className="hover:bg-gray-50/50"
@@ -218,9 +212,6 @@ export default function RefundDetailPage() {
                             <td className="px-4 py-3 text-right text-gray-900">
                               {line.quantity}
                             </td>
-                            <td className="px-4 py-3 text-right text-gray-900">
-                              {formatNPR(line.unit_price || 0)}
-                            </td>
                             <td className="px-4 py-3 text-right font-semibold text-gray-900">
                               {formatNPR(line.refund_amount || 0)}
                             </td>
@@ -228,7 +219,7 @@ export default function RefundDetailPage() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                          <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
                             No items in this refund
                           </td>
                         </tr>
@@ -237,13 +228,13 @@ export default function RefundDetailPage() {
                     <tfoot className="bg-gray-50 border-t border-gray-100">
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={2}
                           className="px-4 py-3 text-right text-sm font-medium text-gray-600"
                         >
                           Total Refund
                         </td>
                         <td className="px-4 py-3 text-right text-base font-bold text-red-600">
-                          {formatNPR(refund.total_refund_amount || 0)}
+                          {formatNPR(refund.total_amount || 0)}
                         </td>
                       </tr>
                     </tfoot>

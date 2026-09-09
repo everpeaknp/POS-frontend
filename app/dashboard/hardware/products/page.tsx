@@ -25,7 +25,7 @@ function stockBadge(product: Product) {
   const reorder = product.reorder_level || 0;
   if (stock === 0) return { label: "Out of Stock", className: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400", key: "out_of_stock" as const };
   if (stock <= reorder) return { label: "Low Stock", className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400", key: "low_stock" as const };
-  return { label: "In Stock", className: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400", key: "in_stock" as const };
+  return { label: "In Stock", className: "bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400", key: "in_stock" as const };
 }
 
 export default function HardwareProductsPage() {
@@ -114,7 +114,7 @@ export default function HardwareProductsPage() {
           </Select>
         </div>
         <Link href="/dashboard/hardware/products/new">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 shrink-0">
             <Plus className="h-4 w-4" /> New Product
           </Button>
         </Link>
@@ -178,7 +178,7 @@ export default function HardwareProductsPage() {
                             e.stopPropagation();
                             router.push(`/dashboard/hardware/products/${product.id}`);
                           }}
-                          className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                          className="text-sm text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
                         >
                           View
                         </button>

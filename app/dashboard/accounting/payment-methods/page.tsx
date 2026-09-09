@@ -25,7 +25,7 @@ const METHOD_TYPES = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  cash: 'bg-green-100 text-green-800',
+  cash: 'bg-slate-100 text-slate-800',
   card: 'bg-blue-100 text-blue-800',
   digital_wallet: 'bg-purple-100 text-purple-800',
   cheque: 'bg-orange-100 text-orange-800',
@@ -218,7 +218,7 @@ export default function PaymentMethodsPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button onClick={fetchPaymentMethods} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+            <Button onClick={fetchPaymentMethods} className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">
               Retry
             </Button>
           </div>
@@ -261,7 +261,7 @@ export default function PaymentMethodsPage() {
           
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
             <DialogTrigger asChild>
-              <Button onClick={openCreateDialog} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+              <Button onClick={openCreateDialog} className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Payment Method
               </Button>
@@ -336,7 +336,7 @@ export default function PaymentMethodsPage() {
                   <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={saving} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+                  <Button type="submit" disabled={saving} className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">
                     {saving ? 'Saving...' : editingMethod ? 'Update' : 'Create'}
                   </Button>
                 </div>
@@ -421,7 +421,7 @@ export default function PaymentMethodsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleActivate(method)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="text-slate-600 hover:text-slate-700 hover:bg-slate-50"
                               >
                                 Activate
                               </Button>
@@ -455,7 +455,7 @@ export default function PaymentMethodsPage() {
           </div>
           <div className="rounded-lg border bg-card p-4">
             <div className="text-sm font-medium text-muted-foreground">Active</div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-slate-600">
               {paymentMethods.filter(pm => pm.is_active).length}
             </div>
           </div>

@@ -173,7 +173,7 @@ export function SmartSearchBar({ language }: SmartSearchBarProps) {
                   disabled={isLoading}
                   className={`p-2 rounded-lg transition ${
                     isListening
-                      ? "bg-[#22C55E] text-white"
+                      ? "bg-[#4A5D7A] text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                   title={
@@ -203,7 +203,7 @@ export function SmartSearchBar({ language }: SmartSearchBarProps) {
               {/* Loading state */}
               {isLoading && (
                 <div className="p-4 flex items-center gap-2 text-sm text-gray-600">
-                  <div className="h-4 w-4 border-2 border-gray-300 border-t-[#22C55E] rounded-full animate-spin" />
+                  <div className="h-4 w-4 border-2 border-gray-300 border-t-[#4A5D7A] rounded-full animate-spin" />
                   {language === "en" ? "Searching..." : "खोजिदै छ..."}
                 </div>
               )}

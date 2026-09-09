@@ -98,14 +98,14 @@ export default function PurchaseOrderDetailPage() {
       <div className="flex flex-col gap-4 min-w-[320px] p-2">
         <div className="flex items-start gap-3">
           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-            isDestructive ? 'bg-red-100' : 'bg-green-100'
+            isDestructive ? 'bg-red-100' : 'bg-slate-100'
           }`}>
             {isDestructive ? (
               <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6 text-[#22C55E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6 text-[#4A5D7A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
@@ -130,7 +130,7 @@ export default function PurchaseOrderDetailPage() {
             className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
               isDestructive 
                 ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-[#22C55E] hover:bg-[#16A34A]'
+                : 'bg-[#4A5D7A] hover:bg-[#2E3E52]'
             }`}
           >
             Confirm
@@ -230,7 +230,7 @@ export default function PurchaseOrderDetailPage() {
             <Button 
               size="sm" 
               onClick={() => setShowReceiveModal(true)}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 h-8"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 h-8"
             >
               <Package className="h-3.5 w-3.5" />
               Receive Items
@@ -380,7 +380,7 @@ export default function PurchaseOrderDetailPage() {
             
             {order.status === 'Received' && (
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-green-500" />
+                <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-slate-500" />
                 <div>
                   <p className="text-sm font-medium text-gray-800">Fully Received</p>
                   <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">

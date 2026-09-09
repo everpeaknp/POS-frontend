@@ -97,9 +97,20 @@ export interface BankAccount {
   gl_account: string;
   gl_account_name?: string;
   gl_account_code?: string;
+  qr_code_image?: string;
   balance: number;
   last_reconciled?: string;
   status: 'active' | 'inactive' | 'closed';
+  // Digital wallet sub-methods
+  esewa_enabled?: boolean;
+  esewa_number?: string;
+  esewa_qr?: string;
+  khalti_enabled?: boolean;
+  khalti_number?: string;
+  khalti_qr?: string;
+  fonepay_enabled?: boolean;
+  fonepay_number?: string;
+  fonepay_qr?: string;
   created_at: string;
   updated_at: string;
 }
@@ -734,6 +745,58 @@ export const bankAccountsAPI = {
   statement: async (id: string) => {
     const response = await apiClient.get<BankTransaction[] | Paginated<BankTransaction>>(`/accounting/bank-accounts/${id}/statement/`);
     return unwrapList(response.data);
+  },
+
+  // Get bank accounts with enabled digital wallets for POS
+  posPaymentMethods: async () => {
+    const response = await apiClient.get<BankAccount[]>('/accounting/bank-accounts/pos-payment-methods/');
+    return response.data;
+  },
+};
+
+// ============================================================================
+// PAYMENT METHODS API
+// ============================================================================
+
+export const paymentMethodsAPI = {
+  // List all payment methods
+  list: async (params?: {
+    method_type?: string;
+    is_active?: boolean;
+    is_system_default?: boolean;
+    search?: string;
+    ordering?: string;
+  }) => {
+    return fetchAllPages<PaymentMethod>('/accounting/payment-methods/', params);
+  },
+
+  // Get payment method by ID
+  get: async (id: string) => {
+    const response = await apiClient.get<PaymentMethod>(`/accounting/payment-methods/${id}/`);
+    return response.data;
+  },
+
+  // Create new payment method
+  create: async (data: Partial<PaymentMethod>) => {
+    const response = await apiClient.post<PaymentMethod>('/accounting/payment-methods/', data);
+    return response.data;
+  },
+
+  // Update payment method
+  update: async (id: string, data: Partial<PaymentMethod>) => {
+    const response = await apiClient.put<PaymentMethod>(`/accounting/payment-methods/${id}/`, data);
+    return response.data;
+  },
+
+  // Partial update
+  patch: async (id: string, data: Partial<PaymentMethod>) => {
+    const response = await apiClient.patch<PaymentMethod>(`/accounting/payment-methods/${id}/`, data);
+    return response.data;
+  },
+
+  // Delete payment method (blocked for system defaults on backend)
+  delete: async (id: string) => {
+    await apiClient.delete(`/accounting/payment-methods/${id}/`);
   },
 };
 

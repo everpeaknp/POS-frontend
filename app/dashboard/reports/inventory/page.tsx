@@ -20,6 +20,7 @@ import {
 } from "@/components/reports/ReportsPageShell";
 import { reportsAPI } from "@/lib/api/reports";
 import { formatNPR } from "@/lib/utils";
+import { PrintableReport } from "@/components/reports/PrintableReport";
 import toast from "react-hot-toast";
 import type { ExportTableData } from "@/lib/utils/export";
 
@@ -165,7 +166,7 @@ export default function InventoryReportPage() {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey="stock" fill="#22C55E" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="stock" fill="#4A5D7A" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -206,7 +207,7 @@ export default function InventoryReportPage() {
                             <span
                               className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 product.stock > 50
-                                  ? "bg-green-100 text-green-700"
+                                  ? "bg-slate-100 text-slate-700"
                                   : product.stock > 10
                                     ? "bg-yellow-100 text-yellow-700"
                                     : "bg-red-100 text-red-700"
@@ -375,6 +376,138 @@ export default function InventoryReportPage() {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Printable Version - Hidden on screen, shown only when printing */}
+          <PrintableReport reportTitle="Inventory Report">
+            {/* Summary Stats */}
+            <div style={{ marginBottom: "20px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "12px" }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Total Products:</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{summary.summary.total_products}</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Total Units:</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{Math.round(summary.summary.total_units).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Low Stock:</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{summary.summary.low_stock}</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Out of Stock:</td>
+                    <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{summary.summary.out_of_stock}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Current Tab Content */}
+            {activeTab === "stock" && summary.stock_data.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+                  Stock Overview
+                </h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Units</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.stock_data.map((product) => (
+                      <tr key={product.name}>
+                        <td>{product.name}</td>
+                        <td>{Math.round(product.stock)} units</td>
+                        <td>{product.stock > 50 ? "Good" : product.stock > 10 ? "Low" : "Critical"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === "low" && lowStock && lowStock.items.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+                  Low Stock Alerts ({lowStock.total_count} items)
+                </h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>SKU</th>
+                      <th>Current</th>
+                      <th>Reorder</th>
+                      <th>Shortage</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lowStock.items.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td>{item.sku}</td>
+                        <td>{item.current_stock} {item.unit}</td>
+                        <td>{item.reorder_level}</td>
+                        <td>{item.shortage}</td>
+                        <td>{item.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === "valuation" && valuation && valuation.items.length > 0 && (
+              <div>
+                <div style={{ marginBottom: "12px" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Cost Value:</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{formatNPR(valuation.summary.total_cost_value)}</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Sale Value:</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{formatNPR(valuation.summary.total_sale_value)}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>Potential Profit:</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{formatNPR(valuation.summary.potential_profit)}</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db", fontWeight: "600" }}>SKUs Valued:</td>
+                        <td style={{ padding: "6px", border: "1px solid #d1d5db" }}>{valuation.items.length}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#000" }}>
+                  Inventory Valuation
+                </h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>SKU</th>
+                      <th>Stock</th>
+                      <th>Cost</th>
+                      <th>Sale Price</th>
+                      <th>Cost Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {valuation.items.slice(0, 50).map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td>{item.sku}</td>
+                        <td>{item.stock} {item.unit}</td>
+                        <td>{formatNPR(item.cost_price)}</td>
+                        <td>{formatNPR(item.selling_price)}</td>
+                        <td>{formatNPR(item.total_cost_value)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </PrintableReport>
         </>
       )}
     </ReportsPageShell>
