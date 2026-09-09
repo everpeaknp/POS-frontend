@@ -328,10 +328,10 @@ export function BarcodeSkuScanner({
 
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
+          <div className="flex items-center justify-between p-4 border-b dark:border-gray-800 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="p-2 bg-slate-100 dark:bg-slate-900 rounded-lg">
+                <Camera className="h-5 w-5 text-slate-600 dark:text-slate-400" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Scan Barcode</h2>
@@ -363,7 +363,7 @@ export function BarcodeSkuScanner({
             {!cameraError && (
               <div className="space-y-3">
                 <div
-                  className="rounded-lg overflow-hidden border-2 border-green-500 bg-black relative"
+                  className="rounded-lg overflow-hidden border-2 border-slate-500 bg-black relative"
                   style={{ height: "400px" }}
                 >
                   <video
@@ -384,7 +384,7 @@ export function BarcodeSkuScanner({
                     <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5">
                       {scannerState === "searching" && (
                         <>
-                          <Loader2 className="h-3 w-3 text-green-400 animate-spin" />
+                          <Loader2 className="h-3 w-3 text-slate-400 animate-spin" />
                           <span className="text-xs text-white font-medium">Searching...</span>
                         </>
                       )}
@@ -402,7 +402,7 @@ export function BarcodeSkuScanner({
                       )}
                       {scannerState === "success" && (
                         <>
-                          <Zap className="h-3 w-3 text-green-400" />
+                          <Zap className="h-3 w-3 text-slate-400" />
                           <span className="text-xs text-white font-medium">Success!</span>
                         </>
                       )}

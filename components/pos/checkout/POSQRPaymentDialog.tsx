@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface POSQRPaymentDialogProps {
   open: boolean;
@@ -18,17 +19,18 @@ export function POSQRPaymentDialog({
   qrImageUrl,
   total,
 }: POSQRPaymentDialogProps) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
-            {paymentMethod} Payment
+            {paymentMethod} {t('pos.payment')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="text-center bg-emerald-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+            <p className="text-sm text-gray-600 mb-1">{t('pos.total_amount')}</p>
             <p className="text-3xl font-bold text-emerald-600">
               Rs. {total.toFixed(2)}
             </p>
@@ -36,9 +38,9 @@ export function POSQRPaymentDialog({
 
           {paymentNumber === "Not configured" ? (
             <div className="text-center p-8 bg-amber-50 rounded-lg border-2 border-amber-200">
-              <p className="text-amber-800 font-medium mb-2">Payment method not configured</p>
+              <p className="text-amber-800 font-medium mb-2">{t('pos.payment_not_configured')}</p>
               <p className="text-sm text-amber-600">
-                Please configure {paymentMethod} in POS Settings
+                {t('pos.configure_payment')} {paymentMethod} {t('pos.in_settings')}
               </p>
             </div>
           ) : (
@@ -54,9 +56,9 @@ export function POSQRPaymentDialog({
               ) : (
                 <div className="flex justify-center bg-white p-6 rounded-lg border-2 border-amber-200">
                   <div className="text-center">
-                    <p className="text-amber-700 font-medium mb-2">No QR Code Uploaded</p>
+                    <p className="text-amber-700 font-medium mb-2">{t('pos.no_qr')}</p>
                     <p className="text-sm text-amber-600">
-                      Upload a QR code in POS Settings for easier payments
+                      {t('pos.upload_qr')}
                     </p>
                   </div>
                 </div>
@@ -64,16 +66,16 @@ export function POSQRPaymentDialog({
 
               <div className="text-center space-y-2">
                 <p className="text-sm font-medium text-gray-700">
-                  {paymentMethod === "Bank Transfer" ? "Bank Details" : "Merchant Information"}
+                  {paymentMethod === "Bank Transfer" ? t('pos.bank_details') : t('pos.merchant_information')}
                 </p>
                 <div className="bg-gray-50 rounded-lg p-3">
                   {paymentMethod === "Bank Transfer" ? (
                     <div className="space-y-1 text-sm">
                       {paymentNumber.split('|').map((info, idx) => {
-                        const labels = ['Bank Name:', 'Account Number:', 'Account Name:'];
+                        const labels = [t('pos.bank_name'), t('pos.account_number'), t('pos.account_name')];
                         return info ? (
                           <p key={idx} className="text-gray-900">
-                            <span className="font-semibold">{labels[idx]}</span> {info}
+                            <span className="font-semibold">{labels[idx]}:</span> {info}
                           </p>
                         ) : null;
                       })}
@@ -86,10 +88,10 @@ export function POSQRPaymentDialog({
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   {paymentMethod === "Bank Transfer" 
-                    ? "Use these details for bank transfer"
+                    ? t('pos.use_bank_transfer')
                     : qrImageUrl 
-                      ? "Scan QR code with payment app" 
-                      : "Enter merchant ID in payment app"}
+                      ? t('pos.scan_qr_code')
+                      : t('pos.enter_merchant_id')}
                 </p>
               </div>
             </>
@@ -97,9 +99,9 @@ export function POSQRPaymentDialog({
 
           <Button
             onClick={() => onOpenChange(false)}
-            className="w-full bg-[#22C55E] hover:bg-[#22C55E]/90"
+            className="w-full bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
           >
-            Close
+            {t('common.close')}
           </Button>
         </div>
       </DialogContent>

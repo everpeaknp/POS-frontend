@@ -19,6 +19,7 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { customerAPI, type Customer } from "@/lib/api/sales";
 import { inventoryApi, type Product } from "@/lib/api/inventory";
 import { HARDWARE_LIST_PARAMS, unwrapList } from "@/lib/api/hardware-helpers";
@@ -53,7 +54,7 @@ const quickActions = [
     label: "Record Payment",
     sub: "Receive from customer",
     icon: DollarSign,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400",
   },
   {
     href: "/dashboard/hardware/products/new",
@@ -98,7 +99,7 @@ const moduleLinks = [
     label: "Orders",
     sub: "Sales history",
     icon: ShoppingCart,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400",
   },
   {
     href: "/dashboard/hardware/reports",
@@ -119,6 +120,7 @@ const moduleLinks = [
 export default function HardwareDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     lowStockCount: 0,
@@ -250,7 +252,7 @@ export default function HardwareDashboardPage() {
             <Link
               key={card.label}
               href={card.href}
-              className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all"
+              className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all"
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-gray-500 dark:text-muted-foreground">{card.label}</p>
@@ -275,7 +277,7 @@ export default function HardwareDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-lg ${action.color}`}>
@@ -302,7 +304,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/credit"
-                  className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
                 >
                   View all
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -322,7 +324,7 @@ export default function HardwareDashboardPage() {
                         onClick={() =>
                           router.push(`/dashboard/hardware/customers/${customer.id}`)
                         }
-                        className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-border hover:border-[#22C55E]/30 transition-colors text-left"
+                        className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-border hover:border-[#4A5D7A]/30 transition-colors text-left"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
@@ -349,7 +351,7 @@ export default function HardwareDashboardPage() {
                 </h3>
                 <Link
                   href="/dashboard/hardware/products"
-                  className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                  className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
                 >
                   View products
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -428,7 +430,7 @@ export default function HardwareDashboardPage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground hover:text-[#22C55E] transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground hover:text-[#4A5D7A] transition-colors"
                 >
                   <item.icon className="h-4 w-4" />
                   {item.label}
@@ -440,7 +442,7 @@ export default function HardwareDashboardPage() {
 
         <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-green-50 text-[#22C55E] dark:bg-green-500/10">
+            <div className="p-2 rounded-lg bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10">
               <Wrench className="h-5 w-5" />
             </div>
             <div>

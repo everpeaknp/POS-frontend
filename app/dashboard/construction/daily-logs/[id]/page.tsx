@@ -87,7 +87,7 @@ function SectionCard({
   return (
     <div className={`${constructionCardClass} p-6 ${className}`}>
       <div className="flex items-center gap-2 mb-5">
-        <Icon className="h-5 w-5 text-[#22C55E]" />
+        <Icon className="h-5 w-5 text-[#4A5D7A]" />
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       </div>
       {children}
@@ -105,7 +105,7 @@ function TextBlock({ children }: { children: React.ReactNode }) {
 
 function ReviewStatusBadge({ reviewed }: { reviewed: boolean }) {
   return reviewed ? (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
       <CheckCircle className="h-3.5 w-3.5" />
       Reviewed
     </span>
@@ -345,7 +345,7 @@ export default function DailyLogDetailPage() {
           {/* Hero */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 lg:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#22C55E] text-white text-lg font-bold flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#4A5D7A] text-white text-lg font-bold flex items-center justify-center shrink-0">
                 {siteInitials}
               </div>
               <div className="flex-1 min-w-0">
@@ -371,7 +371,7 @@ export default function DailyLogDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-gray-500">Total Spend</p>
-                <p className="text-2xl font-bold text-[#22C55E]">{formatNPR(totalSpend)}</p>
+                <p className="text-2xl font-bold text-[#4A5D7A]">{formatNPR(totalSpend)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">materials + other</p>
               </div>
             </div>
@@ -402,8 +402,8 @@ export default function DailyLogDetailPage() {
               label="Review Status"
               value={isReviewed ? "Reviewed" : "Pending"}
               icon={isReviewed ? CheckCircle : Clock}
-              iconClass={isReviewed ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}
-              valueClass={isReviewed ? "text-green-600" : "text-yellow-600"}
+              iconClass={isReviewed ? "bg-slate-50 text-slate-600" : "bg-yellow-50 text-yellow-600"}
+              valueClass={isReviewed ? "text-slate-600" : "text-yellow-600"}
             />
           </div>
 
@@ -424,10 +424,10 @@ export default function DailyLogDetailPage() {
                 <div className={`${constructionCardClass} overflow-hidden`}>
                   <div className="flex flex-wrap items-center justify-between gap-3 p-6 pb-4">
                     <div className="flex items-center gap-2">
-                      <Package className="h-5 w-5 text-[#22C55E]" />
+                      <Package className="h-5 w-5 text-[#4A5D7A]" />
                       <h3 className="text-base font-semibold text-gray-900">Material Consumptions</h3>
                     </div>
-                    <span className="text-sm font-semibold text-[#22C55E]">
+                    <span className="text-sm font-semibold text-[#4A5D7A]">
                       Total: {formatNPR(materialCost)}
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function DailyLogDetailPage() {
                           <td colSpan={3} className="px-4 py-3 text-sm font-medium text-gray-600 text-right">
                             Material Total
                           </td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#22C55E] text-right">
+                          <td className="px-4 py-3 text-sm font-bold text-[#4A5D7A] text-right">
                             {formatNPR(materialCost)}
                           </td>
                         </tr>
@@ -516,7 +516,7 @@ export default function DailyLogDetailPage() {
                     {log.site ? (
                       <Link
                         href={`/dashboard/construction/sites/${log.site}`}
-                        className="text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                        className="text-[#4A5D7A] hover:text-[#2E3E52] transition-colors"
                       >
                         {log.site_name}
                       </Link>
@@ -530,7 +530,7 @@ export default function DailyLogDetailPage() {
                   <DetailItem label="Weather">{log.weather || "—"}</DetailItem>
                   <DetailItem label="Other Expenses">
                     {otherExpenses > 0 ? (
-                      <span className="text-[#22C55E]">{formatNPR(otherExpenses)}</span>
+                      <span className="text-[#4A5D7A]">{formatNPR(otherExpenses)}</span>
                     ) : (
                       "—"
                     )}
@@ -546,16 +546,16 @@ export default function DailyLogDetailPage() {
               )}
 
               {log.manager_comments && (
-                <div className={`${constructionCardClass} p-6 border-green-200 bg-green-50/40`}>
+                <div className={`${constructionCardClass} p-6 border-slate-200 bg-slate-50/40`}>
                   <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <h3 className="text-base font-semibold text-green-900">Manager Comments</h3>
+                    <CheckCircle className="h-5 w-5 text-slate-600" />
+                    <h3 className="text-base font-semibold text-slate-900">Manager Comments</h3>
                   </div>
-                  <p className="text-sm text-green-900 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-sm text-slate-900 whitespace-pre-wrap leading-relaxed">
                     {log.manager_comments}
                   </p>
                   {log.reviewed_by_name && (
-                    <p className="text-xs text-green-700 mt-3 pt-3 border-t border-green-200">
+                    <p className="text-xs text-slate-700 mt-3 pt-3 border-t border-slate-200">
                       Reviewed by {log.reviewed_by_name}
                       {log.reviewed_at && <> · {formatDateTime(log.reviewed_at)}</>}
                     </p>

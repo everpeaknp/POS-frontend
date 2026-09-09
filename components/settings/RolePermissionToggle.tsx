@@ -18,7 +18,7 @@ export function RolePermissionToggle({
       <Checkbox
         checked={checked}
         onCheckedChange={onChange}
-        className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+        className="data-[state=checked]:bg-[#4A5D7A] data-[state=checked]:border-[#4A5D7A]"
       />
       <span className="text-sm text-gray-700">{permission}</span>
     </div>

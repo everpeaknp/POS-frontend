@@ -129,7 +129,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           <input
             {...register('name')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Enter worker name"
           />
         </FormField>
@@ -142,7 +142,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         >
           <select
             {...register('category')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           >
             <option value="">Select category</option>
             {categories.map((cat) => (
@@ -163,7 +163,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
             {...register('daily_wage')}
             type="number"
             step="0.01"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="0.00"
           />
         </FormField>
@@ -176,7 +176,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           <input
             {...register('phone')}
             type="tel"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Enter phone number"
           />
         </FormField>
@@ -189,7 +189,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           <input
             {...register('id_number')}
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Citizenship/ID number"
           />
         </FormField>
@@ -202,7 +202,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           <input
             {...register('emergency_contact')}
             type="tel"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             placeholder="Emergency contact number"
           />
         </FormField>
@@ -214,7 +214,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         >
           <select
             {...register('assigned_site')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             disabled={loadingSites}
           >
             <option value="">No site assigned</option>
@@ -234,7 +234,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         >
           <select
             {...register('status')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           >
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -253,7 +253,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         <textarea
           {...register('address')}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
           placeholder="Enter full address"
         />
       </FormField>
@@ -272,7 +272,7 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
 
           {isSubmitting

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface POSCustomerDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export function POSCustomerDialog({
   cameFromCheckout,
   onReturnToCheckout,
 }: POSCustomerDialogProps) {
+  const { t } = useLanguage();
   const handleClose = (isOpen: boolean) => {
     onOpenChange(isOpen);
     if (!isOpen && cameFromCheckout && onReturnToCheckout) {
@@ -42,20 +44,20 @@ export function POSCustomerDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogTitle>{t('pos.add_customer')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700">
-              Name <span className="text-red-500">*</span>
+              {t('pos.customer_name')} <span className="text-red-500">*</span>
             </label>
             <Input
               id="customer-name"
               type="text"
               value={customerName}
               onChange={(e) => onFieldChange('name', e.target.value)}
-              placeholder="Customer name"
+              placeholder={t('pos.customer_name')}
               className="h-9"
               autoFocus
               onKeyDown={(e) => {
@@ -68,14 +70,14 @@ export function POSCustomerDialog({
 
           <div className="space-y-2">
             <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700">
-              Phone <span className="text-red-500">*</span>
+              {t('pos.customer_phone')} <span className="text-red-500">*</span>
             </label>
             <Input
               id="customer-phone"
               type="text"
               value={customerPhone}
               onChange={(e) => onFieldChange('phone', e.target.value)}
-              placeholder="Phone number"
+              placeholder={t('pos.customer_phone')}
               className="h-9"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && customerName.trim() && customerPhone.trim()) {
@@ -87,7 +89,7 @@ export function POSCustomerDialog({
 
           <div className="space-y-2">
             <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700">
-              Email
+              {t('pos.customer_email')}
             </label>
             <Input
               id="customer-email"
@@ -101,21 +103,21 @@ export function POSCustomerDialog({
 
           <div className="space-y-2">
             <label htmlFor="customer-address" className="block text-sm font-medium text-gray-700">
-              Address
+              {t('pos.customer_address')}
             </label>
             <Input
               id="customer-address"
               type="text"
               value={customerAddress}
               onChange={(e) => onFieldChange('address', e.target.value)}
-              placeholder="Customer address"
+              placeholder={t('pos.customer_address')}
               className="h-9"
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="customer-type" className="block text-sm font-medium text-gray-700">
-              Type
+              {t('pos.customer_type')}
             </label>
             <Select
               value={customerType}
@@ -125,8 +127,8 @@ export function POSCustomerDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Individual">Individual</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
+                <SelectItem value="Individual">{t('pos.individual')}</SelectItem>
+                <SelectItem value="Business">{t('pos.business')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -137,15 +139,15 @@ export function POSCustomerDialog({
               onClick={() => handleClose(false)}
               className="flex-1"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={onAddCustomer}
               disabled={!customerName.trim() || !customerPhone.trim()}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-slate-600 hover:bg-slate-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add Customer
+              {t('pos.add_customer')}
             </Button>
           </div>
         </div>

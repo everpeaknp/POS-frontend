@@ -175,7 +175,7 @@ export default function TransactionDetailPage() {
         <DashHeader title="Transaction Receipt" subtitle={`${workspaceName} · Loading...`} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4A5D7A] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading receipt...</p>
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function TransactionDetailPage() {
               <Button
                 onClick={() => router.push(`/dashboard/finance/parties/${partyId}?edit-transaction=${transactionId}`)}
                 size="sm"
-                className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+                className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
               >
                 Edit
               </Button>
@@ -338,13 +338,13 @@ export default function TransactionDetailPage() {
 
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-slate-600" />
                   </div>
                   <div className="flex-1">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
                       Status
                     </label>
-                    <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                    <Badge className="bg-slate-100 text-slate-800 border-slate-300 text-xs">
                       Completed
                     </Badge>
                   </div>

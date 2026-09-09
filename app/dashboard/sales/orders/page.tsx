@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
@@ -22,6 +23,7 @@ const PAGE_SIZE = 10;
 
 export default function SalesOrdersPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [page, setPage] = useState(1);
@@ -155,7 +157,7 @@ export default function SalesOrdersPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Sales Orders" subtitle="Loading..." />
+        <DashHeader title={t('sales.sales_orders')} subtitle="Loading..." />
         <div className="flex-1 p-6">
           <SkeletonTable rows={10} />
         </div>
@@ -170,7 +172,7 @@ export default function SalesOrdersPage() {
   if (orders.length === 0 && !search && status === "All" && page === 1) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Sales Orders" subtitle="Manage your orders" />
+        <DashHeader title={t('sales.sales_orders')} subtitle={t('sales.manage_your_orders')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={ShoppingCart}
@@ -186,7 +188,7 @@ export default function SalesOrdersPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Sales Orders" subtitle={`${totalCount} orders`} />
+      <DashHeader title={t('sales.sales_orders')} subtitle={`${totalCount} ${t('sales.orders_count')}`} />
       <div className="flex-1 p-6 space-y-4">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3 justify-between">
@@ -232,7 +234,7 @@ export default function SalesOrdersPage() {
               <Download className="h-4 w-4" /> Export
             </Button>
             <Link href="/dashboard/sales/orders/new">
-              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> New Order
               </Button>
             </Link>
@@ -257,7 +259,7 @@ export default function SalesOrdersPage() {
               <tbody className="divide-y divide-gray-50">
                 {orders.map((o: any) => (
                   <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                    <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">
                       <Link href={`/dashboard/sales/orders/${o.id}`} className="hover:underline">
                         {o.order_number}
                       </Link>

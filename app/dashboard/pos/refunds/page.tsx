@@ -166,7 +166,7 @@ export default function POSRefundsPage() {
         subtitle="View and manage product returns"
         actions={
           <Link href="/dashboard/pos/refunds/new">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] gap-2">
+            <Button className="bg-[#4A5D7A] hover:bg-[#2E3E52] gap-2">
               <Plus className="h-4 w-4" />
               New Refund
             </Button>
@@ -457,7 +457,7 @@ export default function POSRefundsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                           COMPLETED
                         </span>
                       </td>

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
 import { Wallet, CreditCard, Smartphone, Eye, Plus, Receipt } from "lucide-react";
 import type { PaymentMethod } from "@/hooks/usePOSCheckout";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface Customer {
   id: string;
@@ -15,8 +16,11 @@ interface Customer {
 
 interface PaymentSettings {
   esewa_enabled: boolean;
+  esewa_qr?: string;
   khalti_enabled: boolean;
+  khalti_qr?: string;
   fonepay_enabled: boolean;
+  fonepay_qr?: string;
   bank_transfer_enabled: boolean;
 }
 
@@ -76,46 +80,47 @@ export function POSCheckoutDialog({
   openSession,
   onConfirmSale,
 }: POSCheckoutDialogProps) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">Complete Sale</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('pos.complete_sale')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
           {/* Order Summary */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg p-5 space-y-2.5 border border-green-200 dark:border-green-800">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 rounded-lg p-5 space-y-2.5 border border-slate-200 dark:border-slate-800">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-300 font-medium">Subtotal</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">{t('pos.subtotal')}</span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {subtotal.toFixed(2)}</span>
             </div>
             {discountValue > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-700 dark:text-gray-300 font-medium">
-                  Discount {appliedCoupon && `(${appliedCoupon.code})`}
+                  {t('pos.discount')} {appliedCoupon && `(${appliedCoupon.code})`}
                 </span>
                 <span className="font-semibold text-red-600 dark:text-red-400">- Rs. {Number(discountValue).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-300 font-medium">Tax ({(taxRate * 100).toFixed(1)}%)</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">{t('pos.tax')} ({(taxRate * 100).toFixed(1)}%)</span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">Rs. {taxAmount.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-green-300 dark:border-green-700">
-              <span className="text-gray-900 dark:text-gray-100">Total</span>
-              <span className="text-green-600 dark:text-green-400">Rs. {total.toFixed(0)}</span>
+            <div className="flex justify-between text-xl font-bold pt-2.5 border-t-2 border-slate-300 dark:border-slate-700">
+              <span className="text-gray-900 dark:text-gray-100">{t('pos.total')}</span>
+              <span className="text-slate-600 dark:text-slate-400">Rs. {total.toFixed(0)}</span>
             </div>
           </div>
 
           {/* Customer Selection */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Customer 
+              {t('pos.customer')} 
               {paymentMethod === "credit" ? (
                 <span className="text-red-500 dark:text-red-400 ml-1">*</span>
               ) : (
-                <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">(Optional)</span>
+                <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">({t('common.optional')})</span>
               )}
             </label>
             <div className="flex gap-2">
@@ -132,9 +137,9 @@ export function POSCheckoutDialog({
                   }))}
                   value={selectedCustomer}
                   onValueChange={onCustomerChange}
-                  placeholder="Search by name, phone, email..."
-                  searchPlaceholder="Search customers..."
-                  emptyText="No customer found."
+                  placeholder={t('pos.search_customers')}
+                  searchPlaceholder={t('pos.search_customers')}
+                  emptyText={t('pos.no_customer')}
                   className="h-11 text-sm w-full"
                   dropdownWidth={600}
                 />
@@ -144,7 +149,7 @@ export function POSCheckoutDialog({
                 variant="outline"
                 onClick={onAddCustomerClick}
                 className="h-11 w-11 p-0 border flex-shrink-0"
-                title="Add new customer"
+                title={t('pos.add_customer')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -154,7 +159,7 @@ export function POSCheckoutDialog({
           {/* Payment Method */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Payment Method <span className="text-red-500 dark:text-red-400">*</span>
+              {t('pos.payment_method')} <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             
             {/* Row 1: Cash, eSewa, FonePay, Khalti */}
@@ -165,12 +170,12 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("cash")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "cash"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <Wallet className="h-5 w-5" />
-                <span>Cash</span>
+                <span>{t('pos.cash')}</span>
               </button>
               
               {/* eSewa */}
@@ -181,7 +186,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("esewa")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "esewa"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -195,7 +200,7 @@ export function POSCheckoutDialog({
                       e.stopPropagation();
                       onShowQRCode("esewa");
                     }}
-                    title="View QR Code"
+                    title={t('pos.view_qr')}
                   >
                     <Eye className="h-3 w-3" />
                   </button>
@@ -214,7 +219,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("fonepay")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "fonepay"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -247,7 +252,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("khalti")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "khalti"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -283,7 +288,7 @@ export function POSCheckoutDialog({
                     onClick={() => onPaymentMethodChange("bank_transfer")}
                     className={`flex flex-col items-center justify-center gap-1 h-16 w-full rounded-lg border-2 font-medium text-xs transition-all ${
                       paymentMethod === "bank_transfer"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                        ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
@@ -314,12 +319,12 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("card")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "card"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <CreditCard className="h-5 w-5" />
-                <span>Card</span>
+                <span>{t('pos.card')}</span>
               </button>
 
               {/* Credit */}
@@ -328,20 +333,78 @@ export function POSCheckoutDialog({
                 onClick={() => onPaymentMethodChange("credit")}
                 className={`flex flex-col items-center justify-center gap-1 h-16 rounded-lg border-2 font-medium text-xs transition-all ${
                   paymentMethod === "credit"
-                    ? "border-green-500 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 ring-2 ring-green-200 dark:ring-green-800"
+                    ? "border-slate-500 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 ring-2 ring-slate-200 dark:ring-slate-800"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <Wallet className="h-5 w-5" />
-                <span>Credit</span>
+                <span>{t('pos.credit')}</span>
               </button>
             </div>
           </div>
 
+          {/* QR Code Display for Digital Wallets */}
+          {(paymentMethod === "esewa" || paymentMethod === "khalti" || paymentMethod === "fonepay") && (
+            <div className="bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950 dark:to-gray-900 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                  {t('pos.scan_qr')}
+                </p>
+                {paymentMethod === "esewa" && paymentSettings.esewa_qr ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={paymentSettings.esewa_qr} 
+                      alt="eSewa QR Code" 
+                      className="w-48 h-48 object-contain rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-white"
+                      onError={(e) => {
+                        console.error('Failed to load eSewa QR:', paymentSettings.esewa_qr);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : paymentMethod === "khalti" && paymentSettings.khalti_qr ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={paymentSettings.khalti_qr} 
+                      alt="Khalti QR Code" 
+                      className="w-48 h-48 object-contain rounded-lg border-2 border-purple-200 dark:border-purple-800 bg-white"
+                      onError={(e) => {
+                        console.error('Failed to load Khalti QR:', paymentSettings.khalti_qr);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : paymentMethod === "fonepay" && paymentSettings.fonepay_qr ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={paymentSettings.fonepay_qr} 
+                      alt="FonePay QR Code" 
+                      className="w-48 h-48 object-contain rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-white"
+                      onError={(e) => {
+                        console.error('Failed to load FonePay QR:', paymentSettings.fonepay_qr);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 px-4">
+                    <div className="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center mb-3">
+                      <Smartphone className="h-12 w-12 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      No QR code added<br />
+                      <span className="text-xs">Add one in Bank Account settings</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Cash Amount Input */}
           {paymentMethod === "cash" && (
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Cash Received <span className="text-red-500 dark:text-red-400">*</span></label>
+              <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('pos.cash_received')} <span className="text-red-500 dark:text-red-400">*</span></label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500 pointer-events-none">
                   Rs.
@@ -358,9 +421,9 @@ export function POSCheckoutDialog({
                 />
               </div>
               {cashGiven >= total && changeAmount > 0 && (
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg border border-green-300 dark:border-green-700">
-                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Change to Return</div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 rounded-lg border border-slate-300 dark:border-slate-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('pos.change')}</div>
+                  <div className="text-2xl font-bold text-slate-600 dark:text-slate-400 mt-1">
                     Rs. {changeAmount.toFixed(2)}
                   </div>
                 </div>
@@ -377,31 +440,28 @@ export function POSCheckoutDialog({
               className="flex-1 h-11"
               disabled={processing}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
-              onClick={() => {
-                onOpenChange(false);
-                onConfirmSale();
-              }}
+              onClick={onConfirmSale}
               disabled={
                 processing ||
                 !openSession ||
                 (paymentMethod === "cash" && cashGiven < total) ||
                 (paymentMethod === "credit" && !selectedCustomer)
               }
-              className="flex-1 h-11 bg-green-600 hover:bg-green-700"
+              className="flex-1 h-11 bg-slate-600 hover:bg-slate-700"
             >
               {processing ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processing...
+                  {t('common.processing')}
                 </>
               ) : (
                 <>
                   <Receipt className="h-4 w-4 mr-2" />
-                  Confirm Sale
+                  {t('pos.confirm_sale')}
                 </>
               )}
             </Button>

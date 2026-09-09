@@ -23,7 +23,7 @@ interface AuditLog {
 }
 
 const actionColors: Record<string, string> = {
-  create: "bg-green-100 text-green-700",
+  create: "bg-slate-100 text-slate-700",
   update: "bg-blue-100 text-blue-700",
   delete: "bg-red-100 text-red-700",
   view: "bg-gray-100 text-gray-600",
@@ -159,7 +159,7 @@ export default function AuditPage() {
           <Button
             size="sm"
             onClick={handleExport}
-            className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+            className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
           >
             <Download className="h-4 w-4" /> Export
           </Button>

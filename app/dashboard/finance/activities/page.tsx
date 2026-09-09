@@ -97,7 +97,7 @@ export default function ActivitiesPage() {
   // Helper function to get activity color
   const getActivityColor = (type: string, action: string) => {
     if (action === 'deleted') return 'text-red-500 bg-red-50';
-    if (action === 'created') return 'text-green-600 bg-green-50';
+    if (action === 'created') return 'text-slate-600 bg-slate-50';
     if (action === 'updated') return 'text-blue-600 bg-blue-50';
     return 'text-gray-600 bg-gray-50';
   };
@@ -106,7 +106,7 @@ export default function ActivitiesPage() {
   const getActionBadgeColor = (action: string) => {
     switch (action) {
       case 'created':
-        return 'bg-green-50 text-green-600 border-green-200';
+        return 'bg-slate-50 text-slate-600 border-slate-200';
       case 'updated':
         return 'bg-blue-50 text-blue-600 border-blue-200';
       case 'deleted':
@@ -171,7 +171,7 @@ export default function ActivitiesPage() {
         <DashHeader title="Activities" subtitle={subtitle} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4A5D7A] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading activities...</p>
           </div>
         </div>
@@ -213,11 +213,11 @@ export default function ActivitiesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Created</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-slate-600">
                   {activities.filter((a: any) => a.action === 'created').length}
                 </p>
               </div>
-              <ArrowUpCircle className="h-8 w-8 text-green-500" />
+              <ArrowUpCircle className="h-8 w-8 text-slate-500" />
             </div>
           </div>
 
@@ -375,7 +375,7 @@ export default function ActivitiesPage() {
                                   activity.description.toLowerCase().includes('expense')
                                     ? 'text-red-600'
                                     : activity.description.toLowerCase().includes('income')
-                                    ? 'text-green-600'
+                                    ? 'text-slate-600'
                                     : 'text-gray-900'
                                 }`}>
                                   {formatNPR(activity.amount)}

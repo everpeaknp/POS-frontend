@@ -41,7 +41,7 @@ export function OnboardingWelcome({
 
   return (
     <div className="flex flex-col">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#16A34A] mb-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2E3E52] mb-2">
         Welcome
       </p>
       <h2 className="text-2xl sm:text-[28px] font-medium text-gray-900 dark:text-foreground tracking-tight m-0 mb-2 leading-tight">
@@ -58,7 +58,7 @@ export function OnboardingWelcome({
             key={item.title}
             className="rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5"
           >
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 dark:bg-green-500/15 text-[#16A34A]">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-500/15 text-[#2E3E52]">
               <item.icon className="h-4 w-4" />
             </div>
             <p className="text-sm font-medium text-gray-900 dark:text-foreground mb-0.5">
@@ -82,7 +82,7 @@ export function OnboardingWelcome({
         <Button
           type="button"
           onClick={onStart}
-          className="h-10 rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent px-6 shadow-md shadow-green-500/20"
+          className="h-10 rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white border-transparent px-6 shadow-md shadow-slate-500/20"
         >
           Continue
         </Button>

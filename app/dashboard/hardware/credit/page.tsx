@@ -161,7 +161,7 @@ export default function HardwareCreditPage() {
                         className={`text-sm font-medium tabular-nums ${
                           (item.current_balance || 0) > 0
                             ? "text-red-600 dark:text-red-400"
-                            : "text-green-600 dark:text-green-400"
+                            : "text-slate-600 dark:text-slate-400"
                         }`}
                       >
                         {formatNPR(item.current_balance || 0)}
@@ -174,7 +174,7 @@ export default function HardwareCreditPage() {
                       <button
                         type="button"
                         onClick={() => router.push(`/dashboard/hardware/customers/${item.id}`)}
-                        className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                        className="text-sm text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
                       >
                         View
                       </button>

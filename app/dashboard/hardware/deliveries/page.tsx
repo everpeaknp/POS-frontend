@@ -17,7 +17,7 @@ const statusColors = {
   scheduled: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   loaded: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   in_transit: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-  delivered: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  delivered: "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300",
   partial: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
   failed: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   cancelled: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
@@ -119,7 +119,7 @@ export default function DeliveriesPage() {
             </div>
             <div className="bg-white dark:bg-card rounded-lg border border-gray-100 dark:border-border p-4">
               <div className="text-xs text-gray-500 dark:text-muted-foreground mb-1">Delivered</div>
-              <div className="text-2xl font-semibold text-green-600 dark:text-green-400">{stats.delivered}</div>
+              <div className="text-2xl font-semibold text-slate-600 dark:text-slate-400">{stats.delivered}</div>
             </div>
             <div className="bg-white dark:bg-card rounded-lg border border-gray-100 dark:border-border p-4">
               <div className="text-xs text-gray-500 dark:text-muted-foreground mb-1">Failed</div>
@@ -161,7 +161,7 @@ export default function DeliveriesPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/hardware/deliveries/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             New Delivery
@@ -178,7 +178,7 @@ export default function DeliveriesPage() {
             {!searchTerm && !statusFilter && (
               <Button
                 onClick={() => router.push("/dashboard/hardware/deliveries/new")}
-                className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="mt-4 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               >
                 Create First Delivery
               </Button>
@@ -206,7 +206,7 @@ export default function DeliveriesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium text-[#22C55E]">{delivery.delivery_number}</span>
+                        <span className="font-medium text-[#4A5D7A]">{delivery.delivery_number}</span>
                       </div>
                       {delivery.challan_number && (
                         <div className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">

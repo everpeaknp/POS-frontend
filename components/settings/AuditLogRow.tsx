@@ -17,11 +17,11 @@ interface AuditLogRowProps {
 }
 
 const actionColors: Record<string, string> = {
-  Created: "bg-green-100 text-green-700",
+  Created: "bg-slate-100 text-slate-700",
   Updated: "bg-blue-100 text-blue-700",
   Deleted: "bg-red-100 text-red-700",
   Posted: "bg-purple-100 text-purple-700",
-  Added: "bg-green-100 text-green-700",
+  Added: "bg-slate-100 text-slate-700",
   Stock: "bg-orange-100 text-orange-700",
   Login: "bg-indigo-100 text-indigo-700",
   Export: "bg-amber-100 text-amber-700",
@@ -48,7 +48,7 @@ export function AuditLogRow({
       <tr className="hover:bg-gray-50/50 border-b border-gray-50">
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E]">
+            <div className="w-6 h-6 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center text-xs font-bold text-[#4A5D7A]">
               {user[0]}
             </div>
             <span className="font-medium text-gray-800 text-sm">{user}</span>
@@ -64,7 +64,7 @@ export function AuditLogRow({
           </span>
         </td>
         <td className="px-4 py-3 text-gray-600 text-sm">{module}</td>
-        <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">{record}</td>
+        <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A]">{record}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{ip}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{device}</td>
         <td className="px-4 py-3 text-gray-500 text-xs">{timestamp}</td>

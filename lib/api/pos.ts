@@ -248,11 +248,27 @@ const posApi = {
     // Ensure product IDs in lines are integers, not objects
     const sanitizedData = {
       ...data,
-      lines: data.lines.map(line => ({
-        ...line,
-        product: typeof line.product === 'object' ? (line.product as any).id : line.product,
-        product_id: undefined, // Remove if accidentally included
-      }))
+      lines: (data.lines || []).map((line: any, idx: number) => {
+        // Extract product ID - handle multiple formats
+        let productId = line.product;
+        if (typeof productId === 'object' && productId !== null) {
+          productId = productId.id;
+        }
+        productId = parseInt(String(productId));
+        
+        if (isNaN(productId)) {
+          console.error(`Line ${idx}: ERROR - Invalid product ID:`, line.product);
+          throw new Error(`Line ${idx}: Invalid product ID - received: ${JSON.stringify(line.product)}`);
+        }
+        
+        console.log(`Line ${idx}: product=${productId} (type: number)`);
+        
+        return {
+          ...line,
+          product: productId,  // Ensure this is always an integer
+          product_id: undefined,
+        };
+      })
     };
     
     console.log('Sanitized transaction data:', JSON.stringify(sanitizedData, null, 2));
@@ -265,6 +281,12 @@ const posApi = {
       console.error('API createTransaction error:', error);
       console.error('Error response data:', error.response?.data);
       console.error('Error response status:', error.response?.status);
+      console.error('Full error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
       throw error;
     }
   },

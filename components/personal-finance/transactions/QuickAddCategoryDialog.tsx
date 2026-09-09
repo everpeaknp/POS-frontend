@@ -54,7 +54,7 @@ export function QuickAddCategoryDialog({
                 onClick={() => onFormDataChange({ type: "income" })}
                 className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all ${
                   formData.type === "income"
-                    ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                    ? "border-[#4A5D7A] bg-slate-50 text-[#2E3E52]"
                     : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                 }`}
               >
@@ -95,7 +95,7 @@ export function QuickAddCategoryDialog({
           >
             Cancel
           </Button>
-          <Button onClick={onAdd} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+          <Button onClick={onAdd} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
             Add Category
           </Button>
         </div>

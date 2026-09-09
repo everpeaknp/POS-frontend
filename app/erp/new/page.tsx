@@ -118,7 +118,7 @@ export default function NewOrgPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col">
         <PageLoading message="Loading…" className="flex-1 min-h-[50vh]" />
       </div>
     );
@@ -130,7 +130,7 @@ export default function NewOrgPage() {
 
   if (limitsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/90 dark:bg-background flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:bg-background flex flex-col">
         <PageLoading message="Checking plan limits…" className="flex-1 min-h-[50vh]" />
       </div>
     );

@@ -35,33 +35,123 @@ import {
 } from "@/components/reports/ReportsPageShell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { reportsAPI, type DashboardSummary } from "@/lib/api/reports";
 import { tenantApi } from "@/lib/api/tenant";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
+const COLORS = ["#4A5D7A", "#3B82F6", "#F59E0B", "#8B5CF6", "#EF4444"];
 
 const ALL_REPORT_CARDS = [
+  // Transaction & Sales Reports
   {
     module: "sales" as const,
+    category: "transactions",
     icon: TrendingUp,
     title: "Sales Report",
     desc: "Sales performance and trends",
     href: "/dashboard/reports/sales",
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "sales" as const,
+    category: "transactions",
+    icon: FileText,
+    title: "Day Book",
+    desc: "Daily transaction summary",
+    href: "/dashboard/reports/day-book",
+    color: "bg-blue-50 text-blue-600",
   },
   {
     module: "purchase" as const,
+    category: "transactions",
     icon: ShoppingCart,
     title: "Purchase Report",
     desc: "Purchase history and analysis",
     href: "/dashboard/reports/purchase",
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-indigo-50 text-indigo-600",
   },
   {
+    module: "sales" as const,
+    category: "transactions",
+    icon: FileText,
+    title: "Sales Returns",
+    desc: "Track credit notes and returns",
+    href: "/dashboard/reports/sales-returns",
+    color: "bg-orange-50 text-orange-600",
+  },
+  {
+    module: "purchase" as const,
+    category: "transactions",
+    icon: FileText,
+    title: "Purchase Returns",
+    desc: "Track debit notes and returns",
+    href: "/dashboard/reports/purchase-returns",
+    color: "bg-pink-50 text-pink-600",
+  },
+  {
+    module: "sales" as const,
+    category: "transactions",
+    icon: BarChart3,
+    title: "All Transactions",
+    desc: "Complete transaction history",
+    href: "/dashboard/reports/all-transactions",
+    color: "bg-teal-50 text-teal-600",
+  },
+
+  // Party & Customer Reports (Udhaaro)
+  {
+    module: "sales" as const,
+    category: "parties",
+    icon: TrendingUp,
+    title: "Customer Statements",
+    desc: "Individual customer transaction history",
+    href: "/dashboard/reports/customer-statements",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "sales" as const,
+    category: "parties",
+    icon: DollarSign,
+    title: "Receivables (Udhaaro)",
+    desc: "Money owed by customers",
+    href: "/dashboard/reports/receivables",
+    color: "bg-amber-50 text-amber-600",
+  },
+  {
+    module: "purchase" as const,
+    category: "parties",
+    icon: DollarSign,
+    title: "Payables",
+    desc: "Money owed to suppliers",
+    href: "/dashboard/reports/payables",
+    color: "bg-red-50 text-red-600",
+  },
+  {
+    module: "purchase" as const,
+    category: "parties",
+    icon: TrendingUp,
+    title: "Supplier Statements",
+    desc: "Individual supplier transaction history",
+    href: "/dashboard/reports/supplier-statements",
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    module: "sales" as const,
+    category: "parties",
+    icon: FileText,
+    title: "Party-wise Profit",
+    desc: "Profit analysis by customer",
+    href: "/dashboard/reports/party-profit",
+    color: "bg-blue-50 text-blue-600",
+  },
+
+  // Inventory Reports
+  {
     module: "inventory" as const,
+    category: "inventory",
     icon: Package,
     title: "Inventory Report",
     desc: "Stock levels and valuation",
@@ -69,7 +159,93 @@ const ALL_REPORT_CARDS = [
     color: "bg-amber-50 text-amber-600",
   },
   {
+    module: "inventory" as const,
+    category: "inventory",
+    icon: Package,
+    title: "Item Details",
+    desc: "Detailed product information",
+    href: "/dashboard/reports/item-details",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "inventory" as const,
+    category: "inventory",
+    icon: AlertTriangle,
+    title: "Low Stock Alert",
+    desc: "Products below reorder level",
+    href: "/dashboard/reports/low-stock",
+    color: "bg-red-50 text-red-600",
+  },
+  {
+    module: "inventory" as const,
+    category: "inventory",
+    icon: BarChart3,
+    title: "Stock Valuation",
+    desc: "Inventory value summary",
+    href: "/dashboard/reports/stock-valuation",
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    module: "inventory" as const,
+    category: "inventory",
+    icon: Package,
+    title: "Stock Movement",
+    desc: "Track stock in and out",
+    href: "/dashboard/reports/stock-movement",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    module: "inventory" as const,
+    category: "inventory",
+    icon: FileText,
+    title: "Item-wise Sales",
+    desc: "Sales breakdown by product",
+    href: "/dashboard/reports/item-sales",
+    color: "bg-teal-50 text-teal-600",
+  },
+
+  // Income & Expense Reports
+  {
     module: "accounting" as const,
+    category: "income-expense",
+    icon: DollarSign,
+    title: "Profit & Loss",
+    desc: "Income and expense summary",
+    href: "/dashboard/reports/profit-loss",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "accounting" as const,
+    category: "income-expense",
+    icon: TrendingUp,
+    title: "Income Report",
+    desc: "Categorized income breakdown",
+    href: "/dashboard/reports/income",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    module: "accounting" as const,
+    category: "income-expense",
+    icon: ShoppingCart,
+    title: "Expense Report",
+    desc: "Categorized expense breakdown",
+    href: "/dashboard/reports/expenses",
+    color: "bg-red-50 text-red-600",
+  },
+  {
+    module: "accounting" as const,
+    category: "income-expense",
+    icon: FileText,
+    title: "Cash Flow",
+    desc: "Cash inflows and outflows",
+    href: "/dashboard/reports/cash-flow",
+    color: "bg-purple-50 text-purple-600",
+  },
+
+  // Business & Financial Status Reports
+  {
+    module: "accounting" as const,
+    category: "financial",
     icon: DollarSign,
     title: "Financial Report",
     desc: "P&L, Balance Sheet, Trial Balance",
@@ -78,6 +254,54 @@ const ALL_REPORT_CARDS = [
   },
   {
     module: "accounting" as const,
+    category: "financial",
+    icon: DollarSign,
+    title: "Cash in Hand",
+    desc: "Current cash position",
+    href: "/dashboard/reports/cash-in-hand",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "accounting" as const,
+    category: "financial",
+    icon: FileText,
+    title: "Bank Statement",
+    desc: "Bank account transactions",
+    href: "/dashboard/reports/bank-statement",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    module: "accounting" as const,
+    category: "financial",
+    icon: BarChart3,
+    title: "Balance Sheet",
+    desc: "Assets, liabilities, and equity",
+    href: "/dashboard/reports/balance-sheet",
+    color: "bg-indigo-50 text-indigo-600",
+  },
+  {
+    module: "accounting" as const,
+    category: "financial",
+    icon: FileText,
+    title: "Trial Balance",
+    desc: "Account-wise balances",
+    href: "/dashboard/reports/trial-balance",
+    color: "bg-teal-50 text-teal-600",
+  },
+  {
+    module: "sales" as const,
+    category: "financial",
+    icon: DollarSign,
+    title: "Discount Summary",
+    desc: "Track all discounts given",
+    href: "/dashboard/reports/discounts",
+    color: "bg-orange-50 text-orange-600",
+  },
+
+  // Tax & Compliance Reports
+  {
+    module: "accounting" as const,
+    category: "tax",
     icon: FileText,
     title: "Tax Report",
     desc: "VAT, TDS and tax summaries",
@@ -85,7 +309,57 @@ const ALL_REPORT_CARDS = [
     color: "bg-red-50 text-red-600",
   },
   {
+    module: "accounting" as const,
+    category: "tax",
+    icon: FileText,
+    title: "VAT Report",
+    desc: "VAT collected and paid",
+    href: "/dashboard/reports/vat",
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    module: "accounting" as const,
+    category: "tax",
+    icon: FileText,
+    title: "TDS Report",
+    desc: "Tax deducted at source",
+    href: "/dashboard/reports/tds",
+    color: "bg-indigo-50 text-indigo-600",
+  },
+
+  // Staff & Activity Reports (if HR module exists)
+  {
+    module: "hr" as const,
+    category: "staff",
+    icon: TrendingUp,
+    title: "Staff Activity",
+    desc: "Employee performance tracking",
+    href: "/dashboard/reports/staff-activity",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    module: "hr" as const,
+    category: "staff",
+    icon: FileText,
+    title: "Payroll Summary",
+    desc: "Salary and wage breakdown",
+    href: "/dashboard/reports/payroll",
+    color: "bg-slate-50 text-[#4A5D7A]",
+  },
+  {
+    module: "hr" as const,
+    category: "staff",
+    icon: FileText,
+    title: "Attendance Report",
+    desc: "Employee attendance tracking",
+    href: "/dashboard/reports/attendance",
+    color: "bg-amber-50 text-amber-600",
+  },
+
+  // Custom Reports
+  {
     module: "reports" as const,
+    category: "custom",
     icon: Settings,
     title: "Custom Reports",
     desc: "Build your own report",
@@ -96,6 +370,7 @@ const ALL_REPORT_CARDS = [
 
 export default function ReportsPage() {
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const { hasModuleAccess } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [enablingModule, setEnablingModule] = useState(false);
@@ -106,7 +381,7 @@ export default function ReportsPage() {
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Business analytics and insights`;
+  const subtitle = `${workspaceName} · ${t('reports.business_analytics_and_insights')}`;
 
   const visibleReportCards = useMemo(
     () =>
@@ -116,6 +391,39 @@ export default function ReportsPage() {
       }),
     [hasModuleAccess, user?.tenant?.active_modules]
   );
+
+  // Group reports by category
+  const reportsByCategory = useMemo(() => {
+    const grouped: Record<string, typeof ALL_REPORT_CARDS> = {};
+    visibleReportCards.forEach((card) => {
+      const cat = card.category || "other";
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(card);
+    });
+    return grouped;
+  }, [visibleReportCards]);
+
+  const categoryTitles: Record<string, string> = {
+    transactions: "Transaction & Sales Reports",
+    parties: "Party & Customer Reports",
+    inventory: "Inventory Reports",
+    "income-expense": "Income & Expense Reports",
+    financial: "Business & Financial Status",
+    tax: "Tax & Compliance Reports",
+    staff: "Staff & Activity Reports",
+    custom: "Custom Reports",
+  };
+
+  const categoryOrder = [
+    "transactions",
+    "parties",
+    "inventory",
+    "income-expense",
+    "financial",
+    "tax",
+    "staff",
+    "custom",
+  ];
 
   useEffect(() => {
     if (!reportsModuleActive) {
@@ -143,10 +451,17 @@ export default function ReportsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log("[Reports] Fetching dashboard summary...");
       const data = await reportsAPI.dashboardSummary();
+      console.log("[Reports] Dashboard summary fetched:", data);
       setSummary(data);
     } catch (error) {
       console.error("Failed to fetch reports overview:", error);
+      console.error("[Reports] Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        status: error instanceof Error && 'response' in error ? (error.response as any)?.status : 'unknown',
+        data: error instanceof Error && 'response' in error ? (error.response as any)?.data : 'unknown',
+      });
       toast.error("Failed to load reports overview");
     } finally {
       setLoading(false);
@@ -157,6 +472,14 @@ export default function ReportsPage() {
   const showInventoryAlerts = hasModuleAccess("inventory");
   const showConstructionAlerts = hasModuleAccess("construction");
 
+  console.log("[Reports] Render state:", {
+    loading,
+    reportsModuleActive,
+    hasFinancials: !!financials,
+    financials,
+    lowStockCount: summary?.inventory?.low_stock_items?.length,
+  });
+
   const statCards = financials
     ? [
         {
@@ -164,7 +487,7 @@ export default function ReportsPage() {
           value: formatNPR(financials.total_revenue),
           sub: "Invoices + unbilled sales",
           icon: TrendingUp,
-          color: "bg-green-50 text-[#22C55E]",
+          color: "bg-slate-50 text-[#4A5D7A]",
         },
         {
           label: "Total Expenses",
@@ -248,6 +571,22 @@ export default function ReportsPage() {
     );
   }
 
+  // Show error state if data failed to load
+  if (!summary || !financials) {
+    return (
+      <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
+        <div className={`${reportsCardClass} p-8 text-center max-w-lg mx-auto`}>
+          <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Reports</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            The reports data could not be retrieved. This might be due to insufficient data or a temporary issue.
+          </p>
+          <Button onClick={fetchData}>Try Again</Button>
+        </div>
+      </ReportsPageShell>
+    );
+  }
+
   return (
     <ReportsPageShell title="Reports" subtitle={subtitle} showBack={false}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -265,34 +604,44 @@ export default function ReportsPage() {
         ))}
       </div>
 
-      <div>
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">All Reports</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {visibleReportCards.map((card) => (
-            <Link
-              key={card.title}
-              href={card.href}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`p-3 rounded-lg ${card.color} group-hover:scale-105 transition-transform`}
+      {/* Categorized Reports Sections */}
+      {categoryOrder.map((categoryKey) => {
+        const categoryCards = reportsByCategory[categoryKey];
+        if (!categoryCards || categoryCards.length === 0) return null;
+
+        return (
+          <div key={categoryKey}>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">
+              {categoryTitles[categoryKey] || "Other Reports"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categoryCards.map((card) => (
+                <Link
+                  key={card.title}
+                  href={card.href}
+                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
                 >
-                  <card.icon className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
-                  <span className="inline-flex items-center gap-1 text-xs text-[#22C55E] font-medium mt-2 group-hover:gap-1.5 transition-all">
-                    View report
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`p-3 rounded-lg ${card.color} group-hover:scale-105 transition-transform`}
+                    >
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm">{card.title}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">{card.desc}</p>
+                      <span className="inline-flex items-center gap-1 text-xs text-[#4A5D7A] font-medium mt-2 group-hover:gap-1.5 transition-all">
+                        View report
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className={`${reportsCardClass} p-5`}>
@@ -304,7 +653,7 @@ export default function ReportsPage() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v) => formatNPR(Number(v ?? 0))} />
-                <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -354,7 +703,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/reports/inventory"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -414,7 +763,7 @@ export default function ReportsPage() {
               </h3>
               <Link
                 href="/dashboard/construction/reports"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View report
                 <ChevronRight className="h-3.5 w-3.5" />

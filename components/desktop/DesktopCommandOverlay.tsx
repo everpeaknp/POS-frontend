@@ -166,7 +166,7 @@ export function DesktopCommandOverlay({ mode }: { mode: Mode }) {
               <button
                 type="button"
                 className={`w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors ${
-                  i === index ? "bg-[#22C55E]/20 text-white" : "hover:bg-white/5 text-white/85"
+                  i === index ? "bg-[#4A5D7A]/20 text-white" : "hover:bg-white/5 text-white/85"
                 }`}
                 onMouseEnter={() => setIndex(i)}
                 onClick={() => runItem(item)}

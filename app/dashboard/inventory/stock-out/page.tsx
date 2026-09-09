@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { inventoryApi } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { mapDjangoErrorsToForm, getErrorMessage } from "@/lib/utils/form-errors";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 
@@ -29,6 +30,7 @@ type StockOutFormData = z.infer<typeof stockOutSchema>;
 
 export default function StockOutPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch products and warehouses
@@ -87,8 +89,8 @@ export default function StockOutPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader
-          title="Stock Out"
-          subtitle="Issue stock from warehouse"
+          title={t('inventory.stock_out')}
+          subtitle={t('inventory.issue_stock_warehouse')}
         />
         <div className="flex-1 overflow-y-auto p-6">
           <SkeletonCard />

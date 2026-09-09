@@ -294,7 +294,7 @@ export default function NewSupplierPage() {
             </Button>
             <Button 
               onClick={handleSubmit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
               disabled={submitting}
             >
 

@@ -72,8 +72,8 @@ export default function CustomerProfilePage() {
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-[#22C55E]">{getInitials(customer.name)}</span>
+                <div className="h-16 w-16 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-[#4A5D7A]">{getInitials(customer.name)}</span>
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">{customer.name}</h2>
@@ -81,7 +81,7 @@ export default function CustomerProfilePage() {
                 </div>
               </div>
               <Link href={`/dashboard/sales/customers/${customer.id}/edit`}>
-                <Button size="sm" className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2">
+                <Button size="sm" className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-2">
                   <Edit className="h-4 w-4" />
                   Edit
                 </Button>
@@ -168,7 +168,7 @@ export default function CustomerProfilePage() {
                 <tbody className="divide-y divide-gray-100 dark:divide-border">
                   {invoices.map((inv: any) => (
                     <tr key={inv.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
-                      <td className="px-4 py-3 font-mono text-xs text-[#22C55E]">
+                      <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A]">
                         <Link href={`/dashboard/sales/invoices/${inv.id}`} className="hover:underline">
                           {inv.invoice_number}
                         </Link>

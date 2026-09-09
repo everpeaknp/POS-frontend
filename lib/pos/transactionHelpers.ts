@@ -1,7 +1,7 @@
 import posApi, { POSTransaction, POSSession } from "@/lib/api/pos";
 import { CartItem } from "./types";
 import { formatDecimal } from "./calculations";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 interface TransactionData {
   cart: CartItem[];
@@ -86,6 +86,11 @@ export async function createTransaction(
     console.log('Transaction data being sent:', JSON.stringify(transactionData, null, 2));
 
     const response = await posApi.createTransaction(transactionData as any);
+    
+    // Show success feedback
+    toast.success("Sale completed successfully! 🎉", { duration: 4000 });
+    console.log("Transaction created successfully:", response);
+    
     return response;
   } catch (error: any) {
     console.error("Transaction error:", error);
@@ -107,8 +112,6 @@ function handleTransactionError(error: any): string[] {
   console.log("Full error:", error);
   console.log("Response data:", error.response?.data);
   
-  toast.error("Transaction failed - analyzing error...");
-  
   let errorMsg = "Failed to complete sale";
   const invalidProductIds: string[] = [];
   
@@ -123,10 +126,16 @@ function handleTransactionError(error: any): string[] {
       if (errors.lines && Array.isArray(errors.lines)) {
         console.log("Processing lines errors:", errors.lines);
         
+        // Handle string error messages (e.g., "Colgate is out of stock at the selected warehouse.")
+        const lineErrors: string[] = [];
         errors.lines.forEach((lineError: any, index: number) => {
           console.log(`Line ${index} error:`, lineError);
           
-          if (lineError && lineError.product) {
+          if (typeof lineError === 'string') {
+            // String error message - display directly
+            lineErrors.push(lineError);
+          } else if (lineError && lineError.product) {
+            // Object error with product field
             const productErrors = Array.isArray(lineError.product) ? lineError.product : [lineError.product];
             
             productErrors.forEach((errMsg: string) => {
@@ -143,6 +152,13 @@ function handleTransactionError(error: any): string[] {
             });
           }
         });
+        
+        // If we have string errors, show them
+        if (lineErrors.length > 0) {
+          errorMsg = lineErrors.join('; ');
+          toast.error(errorMsg, { duration: 7000 });
+          return invalidProductIds;
+        }
         
         if (invalidProductIds.length > 0) {
           console.log("Invalid product IDs to remove:", invalidProductIds);

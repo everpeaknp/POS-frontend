@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { inventoryApi, Product } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonTable } from "@/components/shared/Skeleton";
 import { formatCurrency } from "@/lib/utils";
@@ -15,6 +16,7 @@ import toast from "react-hot-toast";
 
 export default function ProductsListPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -114,7 +116,7 @@ export default function ProductsListPage() {
 
   const handleBulkDelete = async () => {
     if (selectedProducts.size === 0) {
-      toast.error("No products selected");
+      toast.error(t('inventory.no_products_selected'));
       return;
     }
 
@@ -132,9 +134,9 @@ export default function ProductsListPage() {
         
         // Check if response indicates product was discontinued instead of deleted
         if (response?.data?.action === 'discontinued') {
-          toast.success(response.data.detail || "Product marked as discontinued (has existing transactions)");
+          toast.success(response.data.detail || t('inventory.product_marked_discontinued'));
         } else {
-          toast.success("Product deleted successfully");
+          toast.success(t('inventory.product_deleted_successfully'));
         }
         
         refetch();
@@ -161,12 +163,12 @@ export default function ProductsListPage() {
         }
         
         const messages = [];
-        if (deleted > 0) messages.push(`${deleted} deleted`);
-        if (discontinued > 0) messages.push(`${discontinued} discontinued (had transactions)`);
-        if (failed > 0) messages.push(`${failed} failed`);
+        if (deleted > 0) messages.push(`${deleted} ${t('inventory.deleted')}`);
+        if (discontinued > 0) messages.push(`${discontinued} ${t('inventory.discontinued_had_transactions')}`);
+        if (failed > 0) messages.push(`${failed} ${t('inventory.failed')}`);
         
         if (messages.length > 0) {
-          toast.success(`Products: ${messages.join(', ')}`);
+          toast.success(`${t('inventory.products')}: ${messages.join(', ')}`);
         }
         
         refetch();
@@ -177,12 +179,12 @@ export default function ProductsListPage() {
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
       
-      let errorMsg = "Failed to delete product";
+      let errorMsg = t('inventory.failed_to_delete_product');
       
       if (error.response?.status === 403) {
-        errorMsg = "Permission denied. You don't have permission to delete products.";
+        errorMsg = t('inventory.permission_denied_delete');
       } else if (error.response?.status === 404) {
-        errorMsg = "Product not found or already deleted.";
+        errorMsg = t('inventory.product_not_found_or_deleted');
       } else if (error.response?.data?.detail) {
         errorMsg = error.response.data.detail;
       } else if (error.response?.data?.error) {
@@ -200,7 +202,7 @@ export default function ProductsListPage() {
   if (productsLoading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Products" subtitle="Manage your product inventory" />
+        <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
         <div className="flex-1 p-6">
           <SkeletonTable rows={10} />
         </div>
@@ -211,13 +213,13 @@ export default function ProductsListPage() {
   if (products.length === 0 && !searchTerm && statusFilter === "all") {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Products" subtitle="Manage your product inventory" />
+        <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Package}
-            title="No products yet"
-            description="Get started by creating your first product."
-            actionLabel="Create Product"
+            title={t('inventory.no_products_yet')}
+            description={t('inventory.get_started_create_first_product')}
+            actionLabel={t('inventory.create_product')}
             actionHref="/dashboard/inventory/products/new"
           />
         </div>
@@ -227,7 +229,7 @@ export default function ProductsListPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Products" subtitle="Manage your product inventory" />
+      <DashHeader title={t('inventory.products')} subtitle={t('inventory.manage_product_inventory')} />
       <div className="flex-1 p-6 space-y-4">
         {/* Toolbar */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -237,7 +239,7 @@ export default function ProductsListPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search by name or SKU..."
+                placeholder={t('inventory.search_by_name_or_sku')}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -356,7 +358,7 @@ export default function ProductsListPage() {
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-[#22C55E] text-white'
+                    ? 'bg-[#4A5D7A] text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 title="List View"
@@ -367,7 +369,7 @@ export default function ProductsListPage() {
                 onClick={() => setViewMode('grid')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 dark:border-gray-700 ${
                   viewMode === 'grid'
-                    ? 'bg-[#22C55E] text-white'
+                    ? 'bg-[#4A5D7A] text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 title="Grid View"
@@ -390,7 +392,7 @@ export default function ProductsListPage() {
             <Button
               type="button"
               onClick={() => router.push('/dashboard/inventory/products/new')}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               New Product
@@ -469,10 +471,10 @@ export default function ProductsListPage() {
                                 toast.error('Failed to update status');
                               }
                             }}
-                            className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#22C55E] ${
+                            className={`px-2 py-1 rounded-md text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] ${
                               isOutOfStock ? "border-red-200 bg-red-50 text-red-700" :
                               isLowStock ? "border-orange-200 bg-orange-50 text-orange-700" :
-                              product.status === "active" ? "border-green-200 bg-green-50 text-green-700" :
+                              product.status === "active" ? "border-slate-200 bg-slate-50 text-slate-700" :
                               product.status === "inactive" ? "border-gray-200 bg-gray-50 text-gray-700" :
                               "border-red-200 bg-red-50 text-red-700"
                             }`}
@@ -495,7 +497,7 @@ export default function ProductsListPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-gray-500 hover:text-[#22C55E] hover:bg-green-50 dark:hover:bg-green-950"
+                              className="h-8 w-8 text-gray-500 hover:text-[#4A5D7A] hover:bg-slate-50 dark:hover:bg-slate-950"
                               onClick={() => router.push(`/dashboard/inventory/products/new?edit=${product.id}`)}
                               title="Edit"
                             >
@@ -547,7 +549,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -588,8 +590,8 @@ export default function ProductsListPage() {
                         isOutOfStock
                           ? "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50"
                           : isSelected
-                            ? "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-500 shadow-lg ring-2 ring-green-200 dark:ring-green-800"
-                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 hover:shadow-lg hover:scale-[1.02] active:scale-95"
+                            ? "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 border-slate-500 shadow-lg ring-2 ring-slate-200 dark:ring-slate-800"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-slate-400 hover:shadow-lg hover:scale-[1.02] active:scale-95"
                       }
                     `}
                     onClick={() => handleSelectProduct(product.id, !isSelected)}
@@ -637,7 +639,7 @@ export default function ProductsListPage() {
                           ? 'bg-red-500/90 text-white' 
                           : isLowStock
                             ? 'bg-amber-500/90 text-white'
-                            : 'bg-green-500/90 text-white'
+                            : 'bg-slate-500/90 text-white'
                       }`}>
                         {isOutOfStock ? 'Out' : `${stock.toFixed(0)}`}
                       </div>
@@ -648,7 +650,7 @@ export default function ProductsListPage() {
                       {/* Price */}
                       <div className="flex items-baseline gap-0.5">
                         <span className="text-xs text-gray-500 dark:text-gray-400">Rs.</span>
-                        <span className="text-base font-bold text-green-600 dark:text-green-400">
+                        <span className="text-base font-bold text-slate-600 dark:text-slate-400">
                           {Number(product.selling_price).toFixed(0)}
                         </span>
                       </div>
@@ -665,7 +667,7 @@ export default function ProductsListPage() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-green-400 hover:bg-white/10"
+                        className="flex-1 h-7 text-[10px] px-1 text-white hover:text-slate-400 hover:bg-white/10"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/dashboard/inventory/products/new?edit=${product.id}`);
@@ -720,7 +722,7 @@ export default function ProductsListPage() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? 'h-9 min-w-9 bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                            ? 'h-9 min-w-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white'
                             : 'h-9 min-w-9 border-gray-200 dark:border-gray-700'
                         }
                       >
@@ -756,7 +758,7 @@ export default function ProductsListPage() {
                 setCategoryFilter("all");
                 setCurrentPage(1);
               }}
-              className="mt-4 text-sm font-medium text-[#22C55E] hover:text-[#16A34A] hover:underline"
+              className="mt-4 text-sm font-medium text-[#4A5D7A] hover:text-[#2E3E52] hover:underline"
             >
               Clear filters
             </button>

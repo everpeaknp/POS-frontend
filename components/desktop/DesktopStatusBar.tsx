@@ -103,7 +103,7 @@ export function DesktopStatusBar() {
 
       <span className="inline-flex items-center gap-1" title="Internet / API network">
         {online && apiOk !== false ? (
-          <Wifi className="h-3 w-3 text-[#22C55E]" />
+          <Wifi className="h-3 w-3 text-[#4A5D7A]" />
         ) : (
           <WifiOff className="h-3 w-3 text-red-400" />
         )}
@@ -112,7 +112,7 @@ export function DesktopStatusBar() {
 
       <span className="inline-flex items-center gap-1" title="API">
         <Server
-          className={`h-3 w-3 ${apiOk === false ? "text-red-400" : "text-[#22C55E]"}`}
+          className={`h-3 w-3 ${apiOk === false ? "text-red-400" : "text-[#4A5D7A]"}`}
         />
         API {apiOk === null ? "…" : apiOk ? "OK" : "Down"}
       </span>
@@ -128,7 +128,7 @@ export function DesktopStatusBar() {
         onClick={() => void getDesktopApi()?.offline?.syncNow()}
       >
         <RefreshCw
-          className={`h-3 w-3 ${syncing ? "animate-spin text-[#22C55E]" : pending ? "text-amber-400" : "text-[#22C55E]"}`}
+          className={`h-3 w-3 ${syncing ? "animate-spin text-[#4A5D7A]" : pending ? "text-amber-400" : "text-[#4A5D7A]"}`}
         />
         {syncing ? "Syncing…" : pending > 0 ? `Queue ${pending}` : "Synced"}
       </button>
@@ -139,7 +139,7 @@ export function DesktopStatusBar() {
         title="Open diagnostics"
         onClick={() => ws?.setDiagnosticsOpen(true)}
       >
-        <Activity className="h-3 w-3 text-[#22C55E]" />
+        <Activity className="h-3 w-3 text-[#4A5D7A]" />
         {vaultOk === false ? "Vault off" : "Health"}
       </button>
 

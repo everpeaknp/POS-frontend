@@ -79,19 +79,19 @@ export function DateSystemPreferenceCard({
               onClick={() => handleChange(option.id)}
               className={`flex-1 rounded-xl border px-4 py-3 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                 active
-                  ? "border-[#22C55E] bg-green-50 ring-1 ring-[#22C55E]/30"
+                  ? "border-[#4A5D7A] bg-slate-50 ring-1 ring-[#4A5D7A]/30"
                   : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span
-                  className={`text-sm font-semibold ${active ? "text-green-800" : "text-gray-800"}`}
+                  className={`text-sm font-semibold ${active ? "text-slate-800" : "text-gray-800"}`}
                 >
                   {option.label}
                 </span>
                 <span
                   className={`h-4 w-4 rounded-full border-2 shrink-0 ${
-                    active ? "border-[#22C55E] bg-[#22C55E]" : "border-gray-300"
+                    active ? "border-[#4A5D7A] bg-[#4A5D7A]" : "border-gray-300"
                   }`}
                 />
               </div>

@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
-import { BankNameCombobox } from "@/components/accounting/BankNameCombobox";
-import { bankAccountsAPI } from "@/lib/api/accounting";
+import { Building2, Wallet } from "lucide-react";
+import { bankAccountsAPI, accountsAPI } from "@/lib/api/accounting";
 import { loadBankGlAccounts } from "@/lib/accounting/bank-gl-accounts";
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -23,24 +23,36 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-type AccountType = "Current" | "Savings" | "Fixed" | "Overdraft";
+type AccountTypeSelection = "bank" | "cash";
+type BankAccountType = "Current" | "Savings" | "Fixed" | "Overdraft";
 type Status = "active" | "inactive";
 
 export default function NewBankAccountPage() {
   const router = useRouter();
+  const [accountTypeSelection, setAccountTypeSelection] = useState<AccountTypeSelection>("bank");
   const [loading, setLoading] = useState(false);
   const [loadingGlAccounts, setLoadingGlAccounts] = useState(true);
   const [glAccounts, setGlAccounts] = useState<Awaited<ReturnType<typeof loadBankGlAccounts>>>([]);
+  const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
+  const [esewaQrFile, setEsewaQrFile] = useState<File | null>(null);
+  const [khaltiQrFile, setKhaltiQrFile] = useState<File | null>(null);
+  const [fonepayQrFile, setFonepayQrFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<{
     bank_name: string;
     account_name: string;
     account_number: string;
-    type: AccountType;
+    type: BankAccountType;
     branch: string;
     swift_code: string;
     gl_account: string;
     balance: string;
     status: Status;
+    esewa_enabled: boolean;
+    esewa_number: string;
+    khalti_enabled: boolean;
+    khalti_number: string;
+    fonepay_enabled: boolean;
+    fonepay_number: string;
   }>({
     bank_name: "",
     account_name: "",
@@ -51,6 +63,21 @@ export default function NewBankAccountPage() {
     gl_account: "",
     balance: "0",
     status: "active",
+    esewa_enabled: false,
+    esewa_number: "",
+    khalti_enabled: false,
+    khalti_number: "",
+    fonepay_enabled: false,
+    fonepay_number: "",
+  });
+  
+  // Cash account form state
+  const [cashFormData, setCashFormData] = useState({
+    code: "",
+    name: "",
+    gl_account: "",
+    balance: "0",
+    status: "active" as Status,
   });
 
   useEffect(() => {
@@ -84,64 +111,173 @@ export default function NewBankAccountPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.bank_name.trim()) {
-      toast.error('Bank name is required');
-      return;
-    }
-    if (!formData.account_name.trim()) {
-      toast.error('Account name is required');
-      return;
-    }
-    if (!formData.account_number.trim()) {
-      toast.error('Account number is required');
-      return;
-    }
-    if (!formData.gl_account) {
-      toast.error("GL account is required");
-      return;
-    }
-    if (glAccounts.length === 0) {
-      toast.error("Create a Bank or Cash account in Chart of Accounts first");
-      return;
-    }
+    if (accountTypeSelection === "bank") {
+      // Bank Account validation
+      if (!formData.bank_name.trim()) {
+        toast.error('Bank name is required');
+        return;
+      }
+      if (!formData.account_name.trim()) {
+        toast.error('Account name is required');
+        return;
+      }
+      if (!formData.account_number.trim()) {
+        toast.error('Account number is required');
+        return;
+      }
 
-    try {
-      setLoading(true);
-      await bankAccountsAPI.create({
-        bank_name: formData.bank_name.trim(),
-        account_name: formData.account_name.trim(),
-        account_number: formData.account_number.trim(),
-        type: formData.type,
-        branch: formData.branch.trim(),
-        swift_code: formData.swift_code.trim(),
-        gl_account: String(formData.gl_account),
-        balance: parseFloat(formData.balance) || 0,
-        status: formData.status,
-      });
-      toast.success('Bank account created successfully');
-      router.push('/dashboard/accounting/bank-accounts');
-    } catch (error: any) {
-      console.error('Failed to create bank account:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create bank account';
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+      try {
+        setLoading(true);
+        const formDataToSend = new FormData();
+        formDataToSend.append('bank_name', formData.bank_name.trim());
+        formDataToSend.append('account_name', formData.account_name.trim());
+        formDataToSend.append('account_number', formData.account_number.trim());
+        formDataToSend.append('type', formData.type);
+        formDataToSend.append('balance', String(parseFloat(formData.balance) || 0));
+        formDataToSend.append('status', 'active'); // Default status to active
+        
+        // Add digital wallet fields
+        formDataToSend.append('esewa_enabled', String(formData.esewa_enabled));
+        if (formData.esewa_number) {
+          formDataToSend.append('esewa_number', formData.esewa_number.trim());
+        }
+        if (esewaQrFile) {
+          formDataToSend.append('esewa_qr', esewaQrFile);
+        }
+        
+        formDataToSend.append('khalti_enabled', String(formData.khalti_enabled));
+        if (formData.khalti_number) {
+          formDataToSend.append('khalti_number', formData.khalti_number.trim());
+        }
+        if (khaltiQrFile) {
+          formDataToSend.append('khalti_qr', khaltiQrFile);
+        }
+        
+        formDataToSend.append('fonepay_enabled', String(formData.fonepay_enabled));
+        if (formData.fonepay_number) {
+          formDataToSend.append('fonepay_number', formData.fonepay_number.trim());
+        }
+        if (fonepayQrFile) {
+          formDataToSend.append('fonepay_qr', fonepayQrFile);
+        }
+        
+        // Add QR code image if provided
+        if (qrCodeFile) {
+          formDataToSend.append('qr_code_image', qrCodeFile);
+        }
+        
+        await bankAccountsAPI.create(formDataToSend);
+        toast.success('Bank account created successfully');
+        router.push('/dashboard/accounting/bank-accounts');
+      } catch (error: any) {
+        console.error('Failed to create bank account:', error);
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create bank account';
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Cash Account creation
+      if (!cashFormData.name.trim()) {
+        toast.error('Account name is required');
+        return;
+      }
+      if (!cashFormData.gl_account) {
+        toast.error("GL account is required");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const payload: Record<string, any> = {
+          code: cashFormData.code || `CASH-${Date.now()}`,
+          name: cashFormData.name,
+          type: 'Assets',
+          sub_type: 'Cash',
+          status: cashFormData.status,
+        };
+
+        if (cashFormData.gl_account) {
+          payload.parent = cashFormData.gl_account;
+        }
+
+        const openingAmount = parseFloat(cashFormData.balance);
+        if (!Number.isNaN(openingAmount) && openingAmount > 0) {
+          payload.opening_balance = openingAmount;
+          payload.balance_type = 'debit';
+        }
+
+        await accountsAPI.create(payload);
+        toast.success('Cash account created successfully');
+        router.push('/dashboard/accounting/chart-of-accounts');
+      } catch (error: any) {
+        console.error('Failed to create cash account:', error);
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create cash account';
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+  
+  const handleQrCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setQrCodeFile(file);
     }
   };
 
   return (
     <div className="flex flex-col min-h-0">
-      <DashHeader title="Add Bank Account" subtitle="Link a new bank account to your organization" />
+      <DashHeader title="Add Account" subtitle="Create a new bank account or cash account" />
       <div className="p-6">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 w-full">
+          {/* Account Type Selector */}
+          <div className="mb-6 pb-6 border-b border-gray-100">
+            <Label className="text-sm font-semibold text-gray-700 mb-3 block">Account Type *</Label>
+            <div className="grid grid-cols-2 gap-3 max-w-xs">
+              <button
+                type="button"
+                onClick={() => setAccountTypeSelection("bank")}
+                disabled={loading}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                  accountTypeSelection === "bank"
+                    ? "border-[#4A5D7A] bg-slate-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <Building2 className="h-5 w-5" />
+                <span className="text-sm font-medium">Bank Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccountTypeSelection("cash")}
+                disabled={loading}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                  accountTypeSelection === "cash"
+                    ? "border-[#4A5D7A] bg-slate-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <Wallet className="h-5 w-5" />
+                <span className="text-sm font-medium">Cash Account</span>
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Bank Account Details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* Bank Account Form */}
+            {accountTypeSelection === "bank" && (
+              <>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Bank Account Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Bank Name" required>
-                  <BankNameCombobox
+                  <Input 
+                    className="h-9 text-sm border-gray-200" 
+                    placeholder="e.g. Nabil Bank Ltd."
                     value={formData.bank_name}
-                    onChange={(bank_name) => setFormData({ ...formData, bank_name })}
+                    onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
                     disabled={loading}
                   />
                 </Field>
@@ -163,69 +299,6 @@ export default function NewBankAccountPage() {
                     disabled={loading}
                   />
                 </Field>
-                <Field label="Account Type" required>
-                  <Select 
-                    value={formData.type} 
-                    onValueChange={(value) => setFormData({ ...formData, type: value as AccountType })}
-                    disabled={loading}
-                  >
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select account type" /></SelectTrigger>
-                    <SelectContent>
-                      {(["Current", "Savings", "Overdraft", "Fixed"] as const).map((t) => <SelectItem key={t} value={t}>{t === "Fixed" ? "Fixed Deposit" : t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Branch Name">
-                  <Input 
-                    className="h-9 text-sm border-gray-200" 
-                    placeholder="e.g. Thamel, Kathmandu"
-                    value={formData.branch}
-                    onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                    disabled={loading}
-                  />
-                </Field>
-                <Field label="SWIFT Code">
-                  <Input 
-                    className="h-9 text-sm border-gray-200" 
-                    placeholder="e.g. NEBLNPKA"
-                    value={formData.swift_code}
-                    onChange={(e) => setFormData({ ...formData, swift_code: e.target.value })}
-                    disabled={loading}
-                  />
-                </Field>
-                <Field label="Link to GL Account" required>
-                  {loadingGlAccounts ? (
-                    <p className="text-sm text-gray-500 py-2">Loading accounts...</p>
-                  ) : glAccounts.length === 0 ? (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                      No GL accounts found.{" "}
-                      <Link
-                        href="/dashboard/accounting/chart-of-accounts/new"
-                        className="font-medium underline text-[#22C55E]"
-                      >
-                        Create a Bank account
-                      </Link>{" "}
-                      in Chart of Accounts (type Assets, sub-type Bank).
-                    </div>
-                  ) : (
-                    <>
-                      <Combobox
-                        options={glAccountOptions}
-                        value={formData.gl_account || undefined}
-                        onValueChange={(value) => setFormData({ ...formData, gl_account: value })}
-                        placeholder="Search GL account..."
-                        searchPlaceholder="Code or name..."
-                        emptyText="No account found."
-                        disabled={loading}
-                      />
-                      {!hasAssetAccounts && (
-                        <p className="text-xs text-amber-600 mt-1">
-                          No Asset accounts yet — showing all active accounts. Prefer creating a Bank account under Assets.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </Field>
                 <Field label="Opening Balance (Rs.)">
                   <Input 
                     type="number" 
@@ -237,21 +310,215 @@ export default function NewBankAccountPage() {
                     disabled={loading}
                   />
                 </Field>
-                <Field label="Status">
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
-                    disabled={loading}
-                  >
-                    <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
               </div>
             </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Payment QR Code (Optional)</h3>
+              <Field label="QR Code Image">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleQrCodeChange}
+                  disabled={loading}
+                  className="h-9 text-sm border-gray-200"
+                />
+              </Field>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Digital Wallet Sub-Methods (Optional)</h3>
+              <p className="text-xs text-gray-500 mb-4">Enable digital wallets linked to this bank account for POS checkout</p>
+              
+              {/* eSewa */}
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="esewa_enabled"
+                    checked={formData.esewa_enabled}
+                    onChange={(e) => setFormData({ ...formData, esewa_enabled: e.target.checked })}
+                    disabled={loading}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="esewa_enabled" className="text-sm font-medium cursor-pointer">
+                    Enable eSewa payments via this bank
+                  </Label>
+                </div>
+                {formData.esewa_enabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-6">
+                    <Field label="eSewa Number/ID">
+                      <Input
+                        className="h-9 text-sm border-gray-200"
+                        placeholder="e.g. 98XXXXXXXX"
+                        value={formData.esewa_number}
+                        onChange={(e) => setFormData({ ...formData, esewa_number: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="eSewa QR Code">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setEsewaQrFile(e.target.files?.[0] || null)}
+                        disabled={loading}
+                        className="h-9 text-sm border-gray-200"
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
+
+              {/* Khalti */}
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="khalti_enabled"
+                    checked={formData.khalti_enabled}
+                    onChange={(e) => setFormData({ ...formData, khalti_enabled: e.target.checked })}
+                    disabled={loading}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="khalti_enabled" className="text-sm font-medium cursor-pointer">
+                    Enable Khalti payments via this bank
+                  </Label>
+                </div>
+                {formData.khalti_enabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-6">
+                    <Field label="Khalti Number/ID">
+                      <Input
+                        className="h-9 text-sm border-gray-200"
+                        placeholder="e.g. 98XXXXXXXX"
+                        value={formData.khalti_number}
+                        onChange={(e) => setFormData({ ...formData, khalti_number: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="Khalti QR Code">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setKhaltiQrFile(e.target.files?.[0] || null)}
+                        disabled={loading}
+                        className="h-9 text-sm border-gray-200"
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
+
+              {/* FonePay */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="fonepay_enabled"
+                    checked={formData.fonepay_enabled}
+                    onChange={(e) => setFormData({ ...formData, fonepay_enabled: e.target.checked })}
+                    disabled={loading}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="fonepay_enabled" className="text-sm font-medium cursor-pointer">
+                    Enable FonePay payments via this bank
+                  </Label>
+                </div>
+                {formData.fonepay_enabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-6">
+                    <Field label="FonePay Number/ID">
+                      <Input
+                        className="h-9 text-sm border-gray-200"
+                        placeholder="e.g. merchant ID"
+                        value={formData.fonepay_number}
+                        onChange={(e) => setFormData({ ...formData, fonepay_number: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="FonePay QR Code">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setFonepayQrFile(e.target.files?.[0] || null)}
+                        disabled={loading}
+                        className="h-9 text-sm border-gray-200"
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
+            </div>
+            </>
+            )}
+
+            {/* Cash Account Form */}
+            {accountTypeSelection === "cash" && (
+              <>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Cash Account Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Field label="Account Name" required>
+                      <Input 
+                        className="h-9 text-sm border-gray-200" 
+                        placeholder="e.g. Cash in Hand"
+                        value={cashFormData.name}
+                        onChange={(e) => setCashFormData({ ...cashFormData, name: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="Link to GL Account" required>
+                      {loadingGlAccounts ? (
+                        <p className="text-sm text-gray-500 py-2">Loading accounts...</p>
+                      ) : glAccounts.length === 0 ? (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                          No GL accounts found.{" "}
+                          <Link
+                            href="/dashboard/accounting/chart-of-accounts/new"
+                            className="font-medium underline text-[#4A5D7A]"
+                          >
+                            Create a Cash account
+                          </Link>{" "}
+                          in Chart of Accounts (type Assets, sub-type Cash).
+                        </div>
+                      ) : (
+                        <Combobox
+                          options={glAccountOptions}
+                          value={cashFormData.gl_account || undefined}
+                          onValueChange={(value) => setCashFormData({ ...cashFormData, gl_account: value })}
+                          placeholder="Search GL account..."
+                          searchPlaceholder="Code or name..."
+                          emptyText="No account found."
+                          disabled={loading}
+                        />
+                      )}
+                    </Field>
+                    <Field label="Opening Balance (Rs.)">
+                      <Input 
+                        type="number" 
+                        step="0.01"
+                        className="h-9 text-sm border-gray-200" 
+                        placeholder="0"
+                        value={cashFormData.balance}
+                        onChange={(e) => setCashFormData({ ...cashFormData, balance: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="Status">
+                      <Select 
+                        value={cashFormData.status} 
+                        onValueChange={(value) => setCashFormData({ ...cashFormData, status: value as Status })}
+                        disabled={loading}
+                      >
+                        <SelectTrigger className="h-9 text-sm border-gray-200"><SelectValue placeholder="Select status" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
               <Button 
@@ -264,10 +531,10 @@ export default function NewBankAccountPage() {
               </Button>
               <Button 
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
-                disabled={loading || loadingGlAccounts || glAccounts.length === 0}
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
+                disabled={loading || (accountTypeSelection === "cash" && (loadingGlAccounts || glAccounts.length === 0))}
               >
-                {loading ? "Saving..." : "Save Bank Account"}
+                {loading ? "Saving..." : accountTypeSelection === "bank" ? "Save Bank Account" : "Save Cash Account"}
               </Button>
             </div>
           </form>

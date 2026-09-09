@@ -130,7 +130,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => loadDashboard()}
-                className="text-xs font-medium text-[#22C55E] hover:text-[#16A34A] shrink-0"
+                className="text-xs font-medium text-[#4A5D7A] hover:text-[#2E3E52] shrink-0"
               >
                 Retry
               </button>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               {data.modules.length === 0 ? (
                 <Link
                   href="/dashboard/settings/modules"
-                  className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#22C55E] text-white text-sm font-medium hover:bg-[#16A34A] transition-colors"
+                  className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg bg-[#4A5D7A] text-white text-sm font-medium hover:bg-[#2E3E52] transition-colors"
                 >
                   <Settings className="h-4 w-4" />
                   Manage modules

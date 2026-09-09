@@ -290,7 +290,7 @@ export default function PartyDetailPage() {
         <DashHeader title="Party Details" subtitle={`${workspaceName} · Loading...`} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4A5D7A] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading party details...</p>
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function PartyDetailPage() {
           </div>
         </div>
         {/* Hero Section - Party Profile */}
-        <div className="bg-gradient-to-br from-[#22C55E] to-emerald-600 rounded-lg shadow-md overflow-hidden print:bg-white print:border print:border-gray-800 print:rounded-none print:shadow-none">
+        <div className="bg-gradient-to-br from-[#4A5D7A] to-emerald-600 rounded-lg shadow-md overflow-hidden print:bg-white print:border print:border-gray-800 print:rounded-none print:shadow-none">
           <div className="p-6 print:p-4">
             {/* Edit Profile Button - Top Right */}
             <div className="flex justify-end mb-4 print:hidden">
@@ -339,7 +339,7 @@ export default function PartyDetailPage() {
                   setEditDialogOpen(true);
                 }}
                 size="sm"
-                className="bg-white text-[#22C55E] hover:bg-white/90 gap-1.5 h-8 text-xs"
+                className="bg-white text-[#4A5D7A] hover:bg-white/90 gap-1.5 h-8 text-xs"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 Edit Profile
@@ -531,7 +531,7 @@ export default function PartyDetailPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5 text-[#22C55E]" />
+              <ExternalLink className="h-5 w-5 text-[#4A5D7A]" />
               Share Party Ledger
             </DialogTitle>
           </DialogHeader>
@@ -550,7 +550,7 @@ export default function PartyDetailPage() {
               />
               <Button
                 onClick={handleCopyShareLink}
-                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+                className={`gap-2 ${shareCopied ? 'bg-slate-600 hover:bg-slate-700' : 'bg-[#4A5D7A] hover:bg-[#4A5D7A]/90'}`}
               >
                 {shareCopied ? (
                   <>
@@ -574,7 +574,7 @@ export default function PartyDetailPage() {
                   className="flex-1 p-3 hover:bg-gray-100 rounded-lg transition flex items-center justify-center gap-2 border border-gray-200"
                   title="Share on WhatsApp"
                 >
-                  <WhatsAppIcon className="h-5 w-5 text-green-600" />
+                  <WhatsAppIcon className="h-5 w-5 text-slate-600" />
                   <span className="text-sm font-medium">WhatsApp</span>
                 </button>
                 <button
@@ -600,7 +600,7 @@ export default function PartyDetailPage() {
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
               onClick={() => setShareModalOpen(false)}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
             >
               Done
             </Button>
@@ -613,7 +613,7 @@ export default function PartyDetailPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-[#22C55E]" />
+              <Edit2 className="h-5 w-5 text-[#4A5D7A]" />
               Edit Party Profile
             </DialogTitle>
           </DialogHeader>
@@ -688,7 +688,7 @@ export default function PartyDetailPage() {
             </Button>
             <Button
               onClick={handleEditSave}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
             >
               Save Changes
             </Button>

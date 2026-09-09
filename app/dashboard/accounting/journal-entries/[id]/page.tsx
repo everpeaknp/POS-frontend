@@ -106,7 +106,7 @@ export default function JournalEntryDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center w-full min-h-full">
             <p className="text-gray-600">Journal entry not found</p>
             <Link href="/dashboard/accounting/journal-entries">
-              <Button className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white">Back to List</Button>
+              <Button className="mt-4 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">Back to List</Button>
             </Link>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function JournalEntryDetailPage() {
               <Link href={`/dashboard/accounting/journal-entries/${entry.id}/edit`}>
                 <Button variant="outline" size="sm" className="h-8 border-gray-200 text-gray-600">Edit</Button>
               </Link>
-              <Button size="sm" className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white" onClick={handlePost}>Post Entry</Button>
+              <Button size="sm" className="h-8 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white" onClick={handlePost}>Post Entry</Button>
             </>
           )}
           {entry.status === "posted" && (
@@ -192,7 +192,7 @@ export default function JournalEntryDetailPage() {
           <JournalLinesTable lines={lines} onChange={() => {}} readOnly />
         </div>
 
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${balanced ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${balanced ? "bg-slate-50 text-slate-700" : "bg-red-50 text-red-600"}`}>
           {balanced ? "✓ Entry is balanced" : "⚠ Entry is not balanced"}
           <span className="text-gray-500 font-normal ml-2">Total Debit: {fmt(Number(entry.total_debit))} | Total Credit: {fmt(Number(entry.total_credit))}</span>
         </div>

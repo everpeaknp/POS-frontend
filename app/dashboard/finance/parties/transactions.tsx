@@ -406,7 +406,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
             {transactions.length === 0 ? (
               <>
                 <p className="text-gray-500 mb-4">No transactions yet</p>
-                <Button onClick={() => openAddDialog()} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                <Button onClick={() => openAddDialog()} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
                   <Plus className="h-4 w-4 mr-2" />
                   Add First Transaction
                 </Button>
@@ -649,7 +649,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSave} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
               {editingTransaction ? "Update" : "Add"} Transaction
             </Button>
           </div>
@@ -702,7 +702,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
               />
               <Button
                 onClick={handleCopyShareLink}
-                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+                className={`gap-2 ${shareCopied ? 'bg-slate-600 hover:bg-slate-700' : 'bg-[#4A5D7A] hover:bg-[#4A5D7A]/90'}`}
               >
                 {shareCopied ? (
                   <>
@@ -725,7 +725,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
                 title="Share on WhatsApp"
               >
-                <WhatsAppIcon className="h-5 w-5 text-green-600" />
+                <WhatsAppIcon className="h-5 w-5 text-slate-600" />
               </button>
               <button
                 onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
@@ -754,7 +754,7 @@ export function PartyTransactions({ partyId, onOpenDialog }: Props) {
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
               onClick={() => setShareModalOpen(false)}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
             >
               Done
             </Button>

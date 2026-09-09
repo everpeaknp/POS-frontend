@@ -10,7 +10,7 @@ import { vehicleAPI, type Vehicle } from "@/lib/api/hardware";
 import toast from "react-hot-toast";
 
 const statusColors = {
-  available: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  available: "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300",
   on_delivery: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   maintenance: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   inactive: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
@@ -106,7 +106,7 @@ export default function VehiclesPage() {
           </div>
           <div className="bg-white dark:bg-card rounded-lg border border-gray-100 dark:border-border p-4">
             <div className="text-xs text-gray-500 dark:text-muted-foreground mb-1">Available</div>
-            <div className="text-2xl font-semibold text-green-600 dark:text-green-400">{stats.available}</div>
+            <div className="text-2xl font-semibold text-slate-600 dark:text-slate-400">{stats.available}</div>
           </div>
           <div className="bg-white dark:bg-card rounded-lg border border-gray-100 dark:border-border p-4">
             <div className="text-xs text-gray-500 dark:text-muted-foreground mb-1">On Delivery</div>
@@ -145,7 +145,7 @@ export default function VehiclesPage() {
           </div>
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             Add Vehicle
@@ -162,7 +162,7 @@ export default function VehiclesPage() {
             {!searchTerm && !statusFilter && (
               <Button
                 onClick={() => setShowForm(true)}
-                className="mt-4 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="mt-4 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               >
                 Add First Vehicle
               </Button>

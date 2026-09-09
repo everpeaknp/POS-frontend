@@ -60,7 +60,7 @@ export function DesktopDiagnosticsPanel() {
       />
       <aside className="w-full max-w-md h-full bg-[#0f1a24] text-white shadow-2xl flex flex-col border-l border-white/10">
         <header className="flex items-center gap-2 px-4 h-12 border-b border-white/10 shrink-0">
-          <Activity className="h-4 w-4 text-[#22C55E]" />
+          <Activity className="h-4 w-4 text-[#4A5D7A]" />
           <h2 className="text-sm font-semibold flex-1">Diagnostics</h2>
           <button
             type="button"
@@ -148,7 +148,7 @@ export function DesktopDiagnosticsPanel() {
               <h3 className="text-white/50 uppercase tracking-wide">Audit (recent)</h3>
               <button
                 type="button"
-                className="text-[#22C55E] hover:underline"
+                className="text-[#4A5D7A] hover:underline"
                 onClick={() => void refresh()}
               >
                 Refresh
@@ -164,7 +164,7 @@ export function DesktopDiagnosticsPanel() {
                   className="font-mono text-[10px] leading-snug border-b border-white/5 pb-1"
                 >
                   <span className="text-white/40">{row.ts?.slice(11, 19)}</span>{" "}
-                  <span className={row.ok === false ? "text-red-400" : "text-[#22C55E]"}>
+                  <span className={row.ok === false ? "text-red-400" : "text-[#4A5D7A]"}>
                     {row.category}/{row.action}
                   </span>
                 </li>

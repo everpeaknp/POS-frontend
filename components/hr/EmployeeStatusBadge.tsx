@@ -1,6 +1,6 @@
 export function EmployeeStatusBadge({ status }: { status: "active" | "inactive" | "on_leave" | "terminated" }) {
   const styles = {
-    active: "bg-green-100 text-green-700",
+    active: "bg-slate-100 text-slate-700",
     inactive: "bg-gray-100 text-gray-700",
     on_leave: "bg-amber-100 text-amber-700",
     terminated: "bg-red-100 text-red-700",

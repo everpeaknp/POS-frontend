@@ -10,6 +10,7 @@ import { Package, Loader2, ChevronDownIcon, Plus } from "@/lib/icons/lucide-reac
 import { inventoryApi, type Category, type UnitOfMeasure, type Product } from "@/lib/api/inventory";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface POSQuickAddProductDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function POSQuickAddProductDialog({
   warehouseId,
   onProductCreated,
 }: POSQuickAddProductDialogProps) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(emptyForm);
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<UnitOfMeasure[]>([]);
@@ -212,14 +214,14 @@ export function POSQuickAddProductDialog({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-[#22C55E]" />
-              Quick Add Product
+              <Package className="h-5 w-5 text-[#4A5D7A]" />
+              {t('pos.quick_add_product')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="qa-name">Product Name *</Label>
+              <Label htmlFor="qa-name">{t('pos.product_name')} *</Label>
               <Input
                 id="qa-name"
                 value={form.name}
@@ -231,7 +233,7 @@ export function POSQuickAddProductDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="qa-price">Selling Price *</Label>
+                <Label htmlFor="qa-price">{t('pos.selling_price')} *</Label>
                 <Input
                   id="qa-price"
                   type="number"
@@ -243,7 +245,7 @@ export function POSQuickAddProductDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="qa-stock">Opening Stock</Label>
+                <Label htmlFor="qa-stock">{t('pos.opening_stock')}</Label>
                 <Input
                   id="qa-stock"
                   type="number"
@@ -256,7 +258,7 @@ export function POSQuickAddProductDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="qa-sku">SKU (optional)</Label>
+              <Label htmlFor="qa-sku">{t('pos.sku')} ({t('common.optional')})</Label>
               <Input
                 id="qa-sku"
                 value={form.sku}
@@ -268,7 +270,7 @@ export function POSQuickAddProductDialog({
             <div className="grid grid-cols-2 gap-3">
               {/* Unit — searchable dropdown + quick "add new" */}
               <div className="space-y-2">
-                <Label>Unit *</Label>
+                <Label>{t('pos.unit')} *</Label>
                 <div className="flex gap-1.5">
                   <div className="flex-1 relative" data-dropdown>
                     <button
@@ -327,7 +329,7 @@ export function POSQuickAddProductDialog({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:text-[#22C55E]"
+                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#4A5D7A] hover:text-[#4A5D7A]"
                     onClick={() => setShowUnitDialog(true)}
                     title="Add new unit"
                   >
@@ -338,7 +340,7 @@ export function POSQuickAddProductDialog({
 
               {/* Category — searchable dropdown + quick "add new" */}
               <div className="space-y-2">
-                <Label>Category</Label>
+                <Label>{t('pos.category')}</Label>
                 <div className="flex gap-1.5">
                   <div className="flex-1 relative" data-dropdown>
                     <button
@@ -405,7 +407,7 @@ export function POSQuickAddProductDialog({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:text-[#22C55E]"
+                    className="h-10 w-10 shrink-0 border-gray-200 dark:border-gray-700 hover:border-[#4A5D7A] hover:text-[#4A5D7A]"
                     onClick={() => setShowCategoryDialog(true)}
                     title="Add new category"
                   >
@@ -422,16 +424,16 @@ export function POSQuickAddProductDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleSave}
               disabled={saving || loadingOptions}
-              className="bg-[#22C55E] hover:bg-[#16A34A] gap-2"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] gap-2"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              {saving ? "Adding..." : "Add & Add to Cart"}
+              {saving ? t('common.adding') : t('pos.add_to_cart')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -488,7 +490,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateUnit}
               disabled={creatingUnit}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {creatingUnit ? "Creating..." : "Create Unit"}
             </Button>
@@ -541,7 +543,7 @@ export function POSQuickAddProductDialog({
               type="button"
               onClick={handleCreateCategory}
               disabled={creatingCategory}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {creatingCategory ? "Creating..." : "Create Category"}
             </Button>

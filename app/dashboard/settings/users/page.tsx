@@ -64,7 +64,7 @@ const roleColors: Record<string, string> = {
   super_admin: "bg-emerald-100 text-emerald-800",
   admin: "bg-purple-100 text-purple-700",
   manager: "bg-blue-100 text-blue-700",
-  supervisor: "bg-green-100 text-green-700",
+  supervisor: "bg-slate-100 text-slate-700",
   accountant: "bg-orange-100 text-orange-700",
   cashier: "bg-teal-100 text-teal-700",
   viewer: "bg-gray-100 text-gray-600",
@@ -745,7 +745,7 @@ export default function UsersPage() {
             {userLimits && canManageUsers && !userLimits.can_invite && (
               <Link
                 href="/settings/billing"
-                className="text-xs font-semibold text-[#16A34A] hover:underline px-1"
+                className="text-xs font-semibold text-[#2E3E52] hover:underline px-1"
               >
                 Upgrade plan
               </Link>
@@ -755,7 +755,7 @@ export default function UsersPage() {
             <Button
               size="sm"
               onClick={handleInvite}
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             >
               <Mail className="h-4 w-4" /> Invite User
             </Button>
@@ -802,7 +802,7 @@ export default function UsersPage() {
                           <tr key={u.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-xs font-bold text-[#22C55E] shrink-0">
+                                <div className="w-9 h-9 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center text-xs font-bold text-[#4A5D7A] shrink-0">
                                   {u.first_name?.[0] || u.username[0].toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -847,7 +847,7 @@ export default function UsersPage() {
                               <span
                                 className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                   u.is_active
-                                    ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                                    ? "bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-400"
                                     : "bg-gray-100 text-gray-500 dark:bg-muted dark:text-muted-foreground"
                                 }`}
                               >
@@ -1087,7 +1087,7 @@ export default function UsersPage() {
                   className={`flex-1 text-white ${
                     userToToggleActive.is_active
                       ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-[#22C55E] hover:bg-[#16A34A]"
+                      : "bg-[#4A5D7A] hover:bg-[#2E3E52]"
                   }`}
                 >
                   {userToToggleActive.is_active ? "Disable Access" : "Enable Access"}
@@ -1123,7 +1123,7 @@ export default function UsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-700">
                   Current Role:{" "}
-                  <span className="text-[#22C55E]">{roleLabel(userToChangeRole.currentRole)}</span>
+                  <span className="text-[#4A5D7A]">{roleLabel(userToChangeRole.currentRole)}</span>
                 </p>
               </div>
 
@@ -1138,7 +1138,7 @@ export default function UsersPage() {
                   id="change-role-select"
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] bg-white"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] bg-white"
                 >
                   {roleOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1162,7 +1162,7 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={() => void handleRoleChangeConfirm()}
-                  className="flex-1 h-10 rounded-lg bg-[#22C55E] hover:bg-[#16A34A] text-white text-sm font-medium"
+                  className="flex-1 h-10 rounded-lg bg-[#4A5D7A] hover:bg-[#2E3E52] text-white text-sm font-medium"
                 >
                   Update Role
                 </button>
@@ -1211,7 +1211,7 @@ export default function UsersPage() {
                   <select
                     value={selectedEmployee}
                     onChange={(e) => handleEmployeeSelect(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                   >
                     <option value="">-- Select an employee --</option>
                     {inviteableEmployees.map((emp) => (
@@ -1234,7 +1234,7 @@ export default function UsersPage() {
                   type="email"
                   value={inviteData.invited_user_email}
                   onChange={(e) => setInviteData({ ...inviteData, invited_user_email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                   placeholder="user@example.com"
                   required
                 />
@@ -1253,7 +1253,7 @@ export default function UsersPage() {
                 <select
                   value={inviteData.role}
                   onChange={(e) => setInviteData({ ...inviteData, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                   required
                 >
                   {roleOptions.map((option) => (
@@ -1271,7 +1271,7 @@ export default function UsersPage() {
                 <textarea
                   value={inviteData.message}
                   onChange={(e) => setInviteData({ ...inviteData, message: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] resize-none"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] resize-none"
                   rows={3}
                   placeholder="Add a personal message..."
                 />
@@ -1288,7 +1288,7 @@ export default function UsersPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={submitting}
                 >
                   {submitting ? "Sending..." : "Send Invitation"}

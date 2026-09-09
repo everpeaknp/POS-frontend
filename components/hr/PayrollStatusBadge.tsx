@@ -3,7 +3,7 @@ export function PayrollStatusBadge({ status }: { status: "draft" | "processed" |
     draft: "bg-gray-100 text-gray-700",
     processed: "bg-blue-100 text-blue-700",
     processing: "bg-blue-100 text-blue-700",
-    paid: "bg-green-100 text-green-700",
+    paid: "bg-slate-100 text-slate-700",
   };
 
   const labels = {

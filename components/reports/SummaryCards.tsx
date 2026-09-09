@@ -13,7 +13,7 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
           <p className="text-xs text-gray-500 font-medium">{card.label}</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
           {card.change !== undefined && (
-            <p className={`text-xs font-medium mt-2 ${card.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <p className={`text-xs font-medium mt-2 ${card.change >= 0 ? "text-slate-600" : "text-red-600"}`}>
               {card.change >= 0 ? "+" : ""}{card.change}% vs last month
             </p>
           )}

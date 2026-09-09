@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { KhataLogo } from "@/components/khata-logo";
 import { setVisitedWorkspace, setSkipWorkspace } from "@/lib/utils/workspace";
 
-const B = "#22C55E";
-const BD = "#16A34A";
+const B = "#4A5D7A";
+const BD = "#2E3E52";
 
 // Module icons mapping
 const moduleIcons: Record<string, any> = {
@@ -154,7 +154,7 @@ export default function WorkspacePage() {
                         {tenant?.business_type || "Business"}
                       </span>
                       <span className="text-gray-300">•</span>
-                      <span className="text-sm font-medium text-green-600 capitalize">
+                      <span className="text-sm font-medium text-slate-600 capitalize">
                         {tenant?.plan_type || "Free"} Plan
                       </span>
                     </div>
@@ -213,10 +213,10 @@ export default function WorkspacePage() {
                     return (
                       <div
                         key={module}
-                        className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-sm transition-all"
+                        className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all"
                       >
-                        <div className="p-2 bg-green-50 rounded-lg">
-                          <Icon className="h-4 w-4 text-green-600" />
+                        <div className="p-2 bg-slate-50 rounded-lg">
+                          <Icon className="h-4 w-4 text-slate-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">

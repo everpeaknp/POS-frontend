@@ -34,6 +34,7 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { personalFinanceDashboardAPI } from "@/lib/api/personal-finance";
 import { formatNPR } from "@/lib/utils";
@@ -102,11 +103,12 @@ const moduleLinks = [
 
 export default function PersonalFinanceDashboardPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [transactionTab, setTransactionTab] = useState<"income" | "expense">("expense");
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Personal Finance overview and analytics`;
+  const subtitle = `${workspaceName} · ${t('finance.personal_finance_overview_and_analytics')}`;
 
   const { data, loading, error, refetch } = useApi(
     () => personalFinanceDashboardAPI.get(),
@@ -139,7 +141,7 @@ export default function PersonalFinanceDashboardPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[#4A5D7A] text-white rounded-lg hover:bg-[#2E3E52]"
             >
               Retry
             </button>
@@ -258,7 +260,7 @@ export default function PersonalFinanceDashboardPage() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -285,8 +287,8 @@ export default function PersonalFinanceDashboardPage() {
                 <AreaChart data={netWorthTrend} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#4A5D7A" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#4A5D7A" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid 
@@ -318,11 +320,11 @@ export default function PersonalFinanceDashboardPage() {
                     type="monotone"
                     dataKey="value"
                     name="Net Worth"
-                    stroke="#22C55E"
+                    stroke="#4A5D7A"
                     strokeWidth={2.5}
                     fill="url(#netWorthGradient)"
                     dot={{ 
-                      fill: "#22C55E", 
+                      fill: "#4A5D7A", 
                       stroke: "#fff", 
                       strokeWidth: 2, 
                       r: 5 
@@ -331,7 +333,7 @@ export default function PersonalFinanceDashboardPage() {
                       r: 7, 
                       stroke: "#fff", 
                       strokeWidth: 2, 
-                      fill: "#22C55E" 
+                      fill: "#4A5D7A" 
                     }}
                     connectNulls={true}
                     isAnimationActive={true}
@@ -379,7 +381,7 @@ export default function PersonalFinanceDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Recent Activities</h3>
               <Link
                 href="/dashboard/finance/activities"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -412,7 +414,7 @@ export default function PersonalFinanceDashboardPage() {
                               <span className={`text-xs font-medium ${
                                 activity.type === 'transaction' && activity.description.toLowerCase().includes('expense')
                                   ? 'text-red-600'
-                                  : 'text-[#22C55E]'
+                                  : 'text-[#4A5D7A]'
                               }`}>
                                 {formatNPR(activity.amount)}
                               </span>
@@ -421,7 +423,7 @@ export default function PersonalFinanceDashboardPage() {
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
                           activity.action === 'created' 
-                            ? 'bg-green-50 text-green-600' 
+                            ? 'bg-slate-50 text-slate-600' 
                             : activity.action === 'updated'
                             ? 'bg-blue-50 text-blue-600'
                             : 'bg-red-50 text-red-600'
@@ -479,7 +481,7 @@ export default function PersonalFinanceDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Top Accounts by Balance</h3>
               <Link
                 href="/dashboard/finance/account"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -503,7 +505,7 @@ export default function PersonalFinanceDashboardPage() {
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#22C55E] transition-all"
+                        className="h-full rounded-full bg-[#4A5D7A] transition-all"
                         style={{ 
                           width: `${(account.balance / topAccounts[0].balance) * 100}%` 
                         }}

@@ -93,7 +93,7 @@ export function TransactionDialog({
                 onClick={() => onFormDataChange({ type: "income", category: undefined })}
                 className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all ${
                   formData.type === "income"
-                    ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                    ? "border-[#4A5D7A] bg-slate-50 text-[#2E3E52]"
                     : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                 }`}
               >
@@ -192,7 +192,7 @@ export function TransactionDialog({
                       setCategorySearch("");
                       onShowCategoryDialog();
                     }}
-                    className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[#22C55E] hover:bg-emerald-50 flex items-center gap-2"
+                    className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[#4A5D7A] hover:bg-emerald-50 flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     Add new category
@@ -269,7 +269,7 @@ export function TransactionDialog({
                       setAccountSearch("");
                       onShowAccountDialog();
                     }}
-                    className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[#22C55E] hover:bg-emerald-50 flex items-center gap-2"
+                    className="w-full px-3 py-2 border-t border-gray-200 text-left text-sm text-[#4A5D7A] hover:bg-emerald-50 flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     Add new account
@@ -303,7 +303,7 @@ export function TransactionDialog({
             <Label>Receipt / Bill (Image/PDF)</Label>
             <div className="mt-1">
               {!receiptFile ? (
-                <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#4A5D7A] hover:bg-emerald-50 transition">
                   <div className="flex flex-col items-center gap-2">
                     <Upload className="h-5 w-5 text-gray-400" />
                     <span className="text-sm text-gray-600">
@@ -371,7 +371,7 @@ export function TransactionDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={onSave} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+          <Button onClick={onSave} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
             {editingTransaction ? "Update" : "Add"} Transaction
           </Button>
         </div>

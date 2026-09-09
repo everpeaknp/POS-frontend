@@ -119,7 +119,7 @@ export default function DebitNoteDetailPage() {
             <p className="font-semibold text-gray-800">{dn.supplier_name || dn.supplier}</p>
             <div className="flex justify-between text-sm pt-2">
               <span className="text-gray-500">Amount</span>
-              <span className="font-bold text-[#22C55E]">{formatCurrency(dn.amount)}</span>
+              <span className="font-bold text-[#4A5D7A]">{formatCurrency(dn.amount)}</span>
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function DebitNoteDetailPage() {
           <div className="flex justify-end">
             <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-3">
               <span className="text-sm text-gray-600">Debit Amount: </span>
-              <span className="font-bold text-[#22C55E]">{formatCurrency(dn.amount)}</span>
+              <span className="font-bold text-[#4A5D7A]">{formatCurrency(dn.amount)}</span>
             </div>
           </div>
           <div className="mt-3"><AmountInWords amount={dn.amount} /></div>

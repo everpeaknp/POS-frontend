@@ -264,7 +264,7 @@ export default function NewJournalEntryPage() {
             </Button>
             <Button 
               disabled={!balanced || submitting || accounts.length === 0} 
-              className={`px-6 text-white ${balanced && !submitting ? "bg-[#22C55E] hover:bg-[#16A34A]" : "bg-gray-300 cursor-not-allowed"}`}
+              className={`px-6 text-white ${balanced && !submitting ? "bg-[#4A5D7A] hover:bg-[#2E3E52]" : "bg-gray-300 cursor-not-allowed"}`}
               onClick={handlePostEntry}
             >
               {submitting ? "Posting..." : "Post Entry"}

@@ -194,11 +194,11 @@ export default function NewPurchaseRequestPage() {
               </Select>
               <p className="text-xs text-gray-500 mt-1">
                 Departments from{" "}
-                <Link href="/dashboard/hr/departments" className="text-[#22C55E] hover:underline">
+                <Link href="/dashboard/hr/departments" className="text-[#4A5D7A] hover:underline">
                   HR
                 </Link>
                 .{" "}
-                <Link href="/dashboard/hr/departments/new" className="text-[#22C55E] hover:underline">
+                <Link href="/dashboard/hr/departments/new" className="text-[#4A5D7A] hover:underline">
                   Add department
                 </Link>
               </p>
@@ -222,7 +222,7 @@ export default function NewPurchaseRequestPage() {
             <textarea 
               value={form.notes} 
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="mt-1.5 w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#22C55E]"
+              className="mt-1.5 w-full h-24 text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-[#4A5D7A]"
               placeholder="Reason for purchase request..." 
             />
           </div>
@@ -285,16 +285,18 @@ export default function NewPurchaseRequestPage() {
             <Button 
               variant="outline" 
               onClick={() => handleSubmit('Draft')}
-              className="border-[#22C55E] text-[#22C55E] hover:bg-green-50"
+              className="border-[#4A5D7A] text-[#4A5D7A] hover:bg-slate-50"
               disabled={submitting}
-            >
+            >
+
               Save Draft
             </Button>
             <Button 
               onClick={() => handleSubmit('Pending Approval')}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               disabled={submitting}
-            >
+            >
+
               Submit for Approval
             </Button>
           </div>

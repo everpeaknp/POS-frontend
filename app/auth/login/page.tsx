@@ -14,8 +14,8 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { buildInviteRedirect } from "@/lib/invitations/accept";
 
-const B = "#22C55E";
-const BD = "#16A34A";
+const B = "#4A5D7A";
+const BD = "#2E3E52";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -94,7 +94,7 @@ export default function LoginPage() {
           <h2 className="text-4xl font-bold leading-tight mb-4">
             Smart accounting<br />for modern businesses
           </h2>
-          <p className="text-green-300 text-base leading-relaxed">
+          <p className="text-slate-300 text-base leading-relaxed">
             Manage invoices, track expenses, and grow your business — all in one place.
           </p>
           <div className="mt-10 grid grid-cols-2 gap-4">
@@ -106,12 +106,12 @@ export default function LoginPage() {
             ].map((s) => (
               <div key={s.label} className="bg-white/10 rounded-xl p-4">
                 <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-green-300 text-sm mt-0.5">{s.label}</p>
+                <p className="text-slate-300 text-sm mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
+        <p className="text-slate-400 text-xs">© 2025 Khata. All rights reserved.</p>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
@@ -135,7 +135,7 @@ export default function LoginPage() {
                   <Input id="email" type="email" placeholder="Enter your email" value={email}
                     onChange={(e) => { setEmail(e.target.value); setFormError(""); }} required
                     aria-invalid={!!formError}
-                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                    className={`h-11 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                       formError ? "border-red-300" : "border-gray-200"
                     }`} />
                 </div>
@@ -146,7 +146,7 @@ export default function LoginPage() {
                       value={password} onChange={(e) => { setPassword(e.target.value); setFormError(""); }} required
                       aria-invalid={!!formError}
                       aria-describedby={formError ? "login-form-error" : undefined}
-                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                         formError ? "border-red-300" : "border-gray-200"
                       }`} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}

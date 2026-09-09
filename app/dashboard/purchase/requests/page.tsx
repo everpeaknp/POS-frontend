@@ -114,7 +114,7 @@ export default function PurchaseRequestsPage() {
             <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
           <div className="flex-1" />
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/requests/new")}>
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/requests/new")}>
             <Plus className="h-4 w-4" /> New Request
           </Button>
         </div>
@@ -135,7 +135,7 @@ export default function PurchaseRequestsPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/requests/${r.id}`)}>{r.request_number}</td>
+                      <td className="px-4 py-3 font-medium text-[#4A5D7A] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/requests/${r.id}`)}>{r.request_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={r.date} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{r.requested_by_name || 'N/A'}</td>
                       <td className="px-4 py-3 font-semibold text-gray-800">Rs. {Number(r.estimated_amount || 0).toLocaleString()}</td>

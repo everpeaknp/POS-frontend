@@ -41,7 +41,7 @@ import toast from "react-hot-toast";
 type ViewMode = "grid" | "list";
 
 function getBudgetHealthColor(percentage: number) {
-  if (percentage < 80) return "text-green-600 bg-green-50 border-green-200";
+  if (percentage < 80) return "text-slate-600 bg-slate-50 border-slate-200";
   if (percentage < 100) return "text-yellow-600 bg-yellow-50 border-yellow-200";
   return "text-red-600 bg-red-50 border-red-200";
 }
@@ -55,7 +55,7 @@ function getBudgetHealthLabel(percentage: number) {
 function getStatusColor(status: string) {
   switch (status) {
     case "active":
-      return "bg-green-100 text-green-800";
+      return "bg-slate-100 text-slate-800";
     case "planned":
       return "bg-blue-100 text-blue-800";
     case "on_hold":
@@ -252,7 +252,7 @@ export default function SitesPage() {
             </div>
           </div>
           <Link href="/dashboard/construction/sites/new">
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
               <Plus className="h-4 w-4" /> Add Site
             </Button>
           </Link>
@@ -301,7 +301,7 @@ export default function SitesPage() {
                   <tr key={site.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                           {site.name
                             .split(" ")
                             .map((n) => n[0])
@@ -312,7 +312,7 @@ export default function SitesPage() {
                         <div>
                           <Link
                             href={`/dashboard/construction/sites/${site.id}`}
-                            className="font-medium text-gray-800 hover:text-[#22C55E] hover:underline"
+                            className="font-medium text-gray-800 hover:text-[#4A5D7A] hover:underline"
                           >
                             {site.name}
                           </Link>
@@ -343,7 +343,7 @@ export default function SitesPage() {
                     </td>
                     <td
                       className={`px-4 py-3 whitespace-nowrap font-medium ${
-                        (site.remaining_budget ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+                        (site.remaining_budget ?? 0) >= 0 ? "text-slate-600" : "text-red-600"
                       }`}
                     >
                       {formatNPR(site.remaining_budget ?? 0)}
@@ -404,7 +404,7 @@ function SiteGridCard({
 
   return (
     <div
-      className={`${constructionCardClass} hover:shadow-md hover:border-[#22C55E]/20 transition-all cursor-pointer w-full overflow-hidden`}
+      className={`${constructionCardClass} hover:shadow-md hover:border-[#4A5D7A]/20 transition-all cursor-pointer w-full overflow-hidden`}
       onClick={onView}
     >
       <div className="p-5 border-b border-gray-100">
@@ -422,7 +422,7 @@ function SiteGridCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-2 text-[#22C55E] hover:bg-green-50 rounded-md transition-colors"
+              className="p-2 text-[#4A5D7A] hover:bg-slate-50 rounded-md transition-colors"
               title="Edit site"
             >
               <Pencil className="w-4 h-4" />
@@ -459,7 +459,7 @@ function SiteGridCard({
           <div
             style={{ width: `${Math.min(budgetPct, 100)}%` }}
             className={`h-full transition-all duration-500 ${
-              budgetPct < 80 ? "bg-green-500" : budgetPct < 100 ? "bg-yellow-500" : "bg-red-500"
+              budgetPct < 80 ? "bg-slate-500" : budgetPct < 100 ? "bg-yellow-500" : "bg-red-500"
             }`}
           />
         </div>

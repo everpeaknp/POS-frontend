@@ -26,6 +26,7 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { kiranaDashboardAPI } from "@/lib/api/kirana";
 import { formatNPR } from "@/lib/utils";
@@ -35,114 +36,115 @@ import { useEnabledModuleLinks } from "@/lib/dashboard/useEnabledModuleLinks";
 // left out of the dynamic "Explore Modules" list so they don't duplicate.
 const RETAIL_COVERED_MODULE_IDS = ["pos", "inventory", "customers"];
 
-const quickActions = [
-  {
-    href: "/dashboard/pos/checkout",
-    label: "POS Checkout",
-    sub: "Start selling now",
-    icon: Plus,
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    href: "/dashboard/pos/transactions",
-    label: "View Transactions",
-    sub: "See all sales",
-    icon: TrendingUp,
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    href: "/dashboard/inventory/products",
-    label: "Manage Products",
-    sub: "Add/update inventory",
-    icon: Package,
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    href: "/dashboard/pos/refunds/new",
-    label: "Process Refund",
-    sub: "Handle returns",
-    icon: ShoppingCart,
-    color: "bg-orange-50 text-orange-600",
-  },
-];
-
-const moduleLinks = [
-  {
-    href: "/dashboard/pos/checkout",
-    label: "POS Checkout",
-    sub: "Make sales quickly",
-    icon: DollarSign,
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    href: "/dashboard/pos/transactions",
-    label: "Transactions",
-    sub: "View all sales",
-    icon: TrendingUp,
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    href: "/dashboard/pos/sessions",
-    label: "POS Sessions",
-    sub: "Manage cash sessions",
-    icon: Clock,
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    href: "/dashboard/inventory",
-    label: "Inventory",
-    sub: "Stock & products",
-    icon: Package,
-    color: "bg-orange-50 text-orange-600",
-  },
-  {
-    href: "/dashboard/pos/reports",
-    label: "POS Reports",
-    sub: "Sales analytics",
-    icon: Activity,
-    color: "bg-indigo-50 text-indigo-600",
-  },
-  {
-    href: "/dashboard/sales/customers",
-    label: "Customers",
-    sub: "Manage customers",
-    icon: ShoppingCart,
-    color: "bg-pink-50 text-pink-600",
-  },
-];
-
 export default function KiranaOverviewPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { data: dashboardData, loading, error } = useApi(
     () => kiranaDashboardAPI.get(),
     { immediate: true }
   );
   const enabledModuleLinks = useEnabledModuleLinks(RETAIL_COVERED_MODULE_IDS);
 
+  const quickActions = [
+    {
+      href: "/dashboard/pos/checkout",
+      label: t('dashboard.quick_actions.pos_checkout'),
+      sub: t('dashboard.quick_actions.pos_checkout_sub'),
+      icon: Plus,
+      color: "bg-slate-50 text-slate-600",
+    },
+    {
+      href: "/dashboard/pos/transactions",
+      label: t('dashboard.quick_actions.view_transactions'),
+      sub: t('dashboard.quick_actions.view_transactions_sub'),
+      icon: TrendingUp,
+      color: "bg-blue-50 text-blue-600",
+    },
+    {
+      href: "/dashboard/inventory/products",
+      label: t('dashboard.quick_actions.manage_products'),
+      sub: t('dashboard.quick_actions.manage_products_sub'),
+      icon: Package,
+      color: "bg-purple-50 text-purple-600",
+    },
+    {
+      href: "/dashboard/pos/refunds/new",
+      label: t('dashboard.quick_actions.process_refund'),
+      sub: t('dashboard.quick_actions.process_refund_sub'),
+      icon: ShoppingCart,
+      color: "bg-orange-50 text-orange-600",
+    },
+  ];
+
+  const moduleLinks = [
+    {
+      href: "/dashboard/pos/checkout",
+      label: "POS Checkout",
+      sub: "Make sales quickly",
+      icon: DollarSign,
+      color: "bg-slate-50 text-slate-600",
+    },
+    {
+      href: "/dashboard/pos/transactions",
+      label: "Transactions",
+      sub: "View all sales",
+      icon: TrendingUp,
+      color: "bg-blue-50 text-blue-600",
+    },
+    {
+      href: "/dashboard/pos/sessions",
+      label: "POS Sessions",
+      sub: "Manage cash sessions",
+      icon: Clock,
+      color: "bg-purple-50 text-purple-600",
+    },
+    {
+      href: "/dashboard/inventory",
+      label: "Inventory",
+      sub: "Stock & products",
+      icon: Package,
+      color: "bg-orange-50 text-orange-600",
+    },
+    {
+      href: "/dashboard/pos/reports",
+      label: "POS Reports",
+      sub: "Sales analytics",
+      icon: Activity,
+      color: "bg-indigo-50 text-indigo-600",
+    },
+    {
+      href: "/dashboard/sales/customers",
+      label: "Customers",
+      sub: "Manage customers",
+      icon: ShoppingCart,
+      color: "bg-pink-50 text-pink-600",
+    },
+  ];
+
   const stats = [
     {
-      label: "Today's Sales",
+      label: t('dashboard.stats.today_sales'),
       value: dashboardData
         ? `NPR ${formatNPR(dashboardData.summary.today_sales)}`
         : "NPR 0",
       icon: TrendingUp,
     },
     {
-      label: "Cash in Hand",
+      label: t('dashboard.stats.cash_in_hand'),
       value: dashboardData
         ? `NPR ${formatNPR(dashboardData.summary.cash_in_hand)}`
         : "NPR 0",
       icon: Banknote,
     },
     {
-      label: "Total Stock Value",
+      label: t('dashboard.stats.total_stock_value'),
       value: dashboardData
         ? `NPR ${formatNPR(dashboardData.summary.total_stock_value)}`
         : "NPR 0",
       icon: Package,
     },
     {
-      label: "Low Stock Items",
+      label: t('dashboard.stats.low_stock_items'),
       value: dashboardData ? dashboardData.summary.low_stock_count : 0,
       icon: AlertCircle,
     },
@@ -164,8 +166,8 @@ export default function KiranaOverviewPage() {
   return (
     <div className="w-full">
       <DashHeader
-        title="Retail Dashboard"
-        subtitle="Point of Sale & Inventory Management"
+        title={t('dashboard.retail.title')}
+        subtitle={t('dashboard.retail.subtitle')}
       />
 
       {/* Stat Cards */}
@@ -182,7 +184,7 @@ export default function KiranaOverviewPage() {
                   <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
                   {loading ? (
                     <div className="flex items-center gap-2 mt-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
                     </div>
                   ) : (
                     <p className="text-lg font-semibold text-gray-900 mt-1">
@@ -190,7 +192,7 @@ export default function KiranaOverviewPage() {
                     </p>
                   )}
                 </div>
-                <Icon className="w-5 h-5 text-green-600" />
+                <Icon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
           );
@@ -199,7 +201,7 @@ export default function KiranaOverviewPage() {
 
       {/* Quick Actions */}
       <div className="px-6 py-4">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('dashboard.quick_actions')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {quickActions.map((action, idx) => {
             const Icon = action.icon;
@@ -222,14 +224,14 @@ export default function KiranaOverviewPage() {
       <div className="px-6 py-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">
-            Weekly Sales Trend
+            {t('dashboard.weekly_sales_trend')}
           </h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#4A5D7A" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#4A5D7A" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -246,7 +248,7 @@ export default function KiranaOverviewPage() {
               <Area
                 type="monotone"
                 dataKey="sales"
-                stroke="#22C55E"
+                stroke="#4A5D7A"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorSales)"
@@ -261,8 +263,8 @@ export default function KiranaOverviewPage() {
         {/* Recent Activities */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Activity size={16} className="text-green-600" />
-            Recent Activities
+            <Activity size={16} className="text-slate-600" />
+            {t('dashboard.recent_activities')}
           </h3>
           <div className="space-y-3">
             {recentActivities.length > 0 ? (
@@ -284,7 +286,7 @@ export default function KiranaOverviewPage() {
               ))
             ) : (
               <p className="text-xs text-gray-500 text-center py-4">
-                No recent activities
+                {t('dashboard.recent_activities.empty')}
               </p>
             )}
           </div>
@@ -294,7 +296,7 @@ export default function KiranaOverviewPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <AlertCircle size={16} className="text-orange-600" />
-            Alerts
+            {t('dashboard.alerts')}
           </h3>
           <div className="space-y-3">
             {alerts.length > 0 ? (
@@ -312,7 +314,7 @@ export default function KiranaOverviewPage() {
               ))
             ) : (
               <p className="text-xs text-gray-500 text-center py-4">
-                No alerts
+                {t('dashboard.alerts.empty')}
               </p>
             )}
           </div>
@@ -321,8 +323,8 @@ export default function KiranaOverviewPage() {
         {/* Top Selling Items */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <TrendingUp size={16} className="text-green-600" />
-            Top Selling Items
+            <TrendingUp size={16} className="text-slate-600" />
+            {t('dashboard.top_selling_items')}
           </h3>
           <div className="space-y-3">
             {topSellingItems.length > 0 ? (
@@ -331,7 +333,7 @@ export default function KiranaOverviewPage() {
                   <p className="text-xs font-medium text-gray-900">{item.name}</p>
                   <div className="flex justify-between mt-1">
                     <span className="text-xs text-gray-500">{item.quantity} sold</span>
-                    <span className="text-xs font-semibold text-green-600">
+                    <span className="text-xs font-semibold text-slate-600">
                       NPR {formatNPR(item.sales)}
                     </span>
                   </div>
@@ -339,7 +341,7 @@ export default function KiranaOverviewPage() {
               ))
             ) : (
               <p className="text-xs text-gray-500 text-center py-4">
-                No sales yet
+                {t('dashboard.top_selling_items.empty')}
               </p>
             )}
           </div>
@@ -354,15 +356,15 @@ export default function KiranaOverviewPage() {
             const Icon = module.icon;
             return (
               <Link key={idx} href={module.href}>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                      <p className="text-sm font-semibold text-gray-900 group-hover:text-slate-600 transition-colors">
                         {module.label}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">{module.sub}</p>
                     </div>
-                    <ChevronRight size={16} className="text-gray-400 group-hover:text-green-600 transition-colors" />
+                    <ChevronRight size={16} className="text-gray-400 group-hover:text-slate-600 transition-colors" />
                   </div>
                 </div>
               </Link>

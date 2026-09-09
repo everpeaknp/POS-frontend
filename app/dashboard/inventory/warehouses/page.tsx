@@ -14,6 +14,7 @@ import { SkeletonTable } from "@/components/shared/Skeleton";
 import { Pagination } from "@/components/shared/Pagination";
 import { useApi } from "@/lib/hooks/useApi";
 import { inventoryApi } from "@/lib/api/inventory";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { getEmployees } from "@/lib/api/hr";
 import toast from "react-hot-toast";
 
@@ -22,6 +23,7 @@ const ITEMS_PER_PAGE = 20;
 export default function WarehousesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: "", location: "", manager: "" });
@@ -298,7 +300,7 @@ export default function WarehousesPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Warehouses" subtitle="Manage storage locations" />
+        <DashHeader title={t('inventory.warehouses')} subtitle={t('inventory.manage_storage_locations')} />
         <div className="flex-1 p-6">
           <SkeletonTable rows={5} />
         </div>
@@ -309,13 +311,13 @@ export default function WarehousesPage() {
   if (filteredWarehouses.length === 0 && !searchQuery) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Warehouses" subtitle="Manage storage locations" />
+        <DashHeader title={t('inventory.warehouses')} subtitle={t('inventory.manage_storage_locations')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Plus}
-            title="No warehouses yet"
-            description="Create your first warehouse to manage storage locations"
-            actionLabel="Add Warehouse"
+            title={t('inventory.no_warehouses_yet')}
+            description={t('inventory.create_first_warehouse')}
+            actionLabel={t('inventory.add_warehouse')}
             onAction={handleOpenCreate}
           />
         </div>
@@ -365,7 +367,7 @@ export default function WarehousesPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -384,7 +386,7 @@ export default function WarehousesPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Warehouses" subtitle={`${filteredWarehouses.length} warehouses`} />
+      <DashHeader title={t('inventory.warehouses')} subtitle={`${filteredWarehouses.length} ${t('inventory.warehouses_count')}`} />
       <div className="flex-1 p-6 space-y-4">
         <div className="flex gap-3 items-center justify-between">
           <div className="relative flex-1 max-w-md">
@@ -407,7 +409,7 @@ export default function WarehousesPage() {
                 <Trash2 className="h-4 w-4" /> Delete ({selectedWarehouses.size})
               </Button>
             )}
-            <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={handleOpenCreate}>
+            <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={handleOpenCreate}>
               <Plus className="h-4 w-4" /> Add Warehouse
             </Button>
           </div>
@@ -530,7 +532,7 @@ export default function WarehousesPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

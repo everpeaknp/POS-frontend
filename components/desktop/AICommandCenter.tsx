@@ -128,7 +128,7 @@ export function AICommandCenter() {
         className="w-full max-w-md h-full bg-[#0b1220] text-white shadow-2xl border-l border-white/10 flex flex-col animate-in slide-in-from-right duration-200"
       >
         <header className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-white/10">
-          <Sparkles className="h-4 w-4 text-[#22C55E]" />
+          <Sparkles className="h-4 w-4 text-[#4A5D7A]" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">AI Command Center</p>
             <p className="text-[10px] text-white/45 truncate">
@@ -151,7 +151,7 @@ export function AICommandCenter() {
               key={i}
               className={`text-sm leading-relaxed whitespace-pre-wrap rounded-xl px-3 py-2.5 ${
                 row.role === "user"
-                  ? "bg-[#22C55E]/20 ml-8"
+                  ? "bg-[#4A5D7A]/20 ml-8"
                   : "bg-white/5 mr-4 text-white/90"
               }`}
             >
@@ -187,7 +187,7 @@ export function AICommandCenter() {
               onChange={(e) => setInput(e.target.value)}
               rows={2}
               placeholder="Ask or command… (Ctrl+Enter to send)"
-              className="flex-1 resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-[#22C55E]/50 placeholder:text-white/35"
+              className="flex-1 resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-[#4A5D7A]/50 placeholder:text-white/35"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                   e.preventDefault();
@@ -199,7 +199,7 @@ export function AICommandCenter() {
               type="button"
               disabled={busy || !input.trim()}
               onClick={() => void submit()}
-              className="h-auto px-3 rounded-xl bg-gradient-to-b from-[#16A34A] to-[#22C55E] disabled:opacity-40"
+              className="h-auto px-3 rounded-xl bg-gradient-to-b from-[#2E3E52] to-[#4A5D7A] disabled:opacity-40"
               aria-label="Send"
             >
               <Send className="h-4 w-4" />

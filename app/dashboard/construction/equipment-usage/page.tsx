@@ -254,7 +254,7 @@ export default function EquipmentUsagePage() {
             <Button
               type="submit"
               disabled={submitting}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {submitting ? "Saving..." : "Save"}
             </Button>
@@ -355,7 +355,7 @@ export default function EquipmentUsagePage() {
             </div>
             <Button
               size="sm"
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
               onClick={() => setDialogOpen(true)}
             >
               <Plus className="h-4 w-4" /> Log Usage
@@ -383,7 +383,7 @@ export default function EquipmentUsagePage() {
                     <tr key={log.id} className="hover:bg-gray-50/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                             {(log.equipment_name || "E")
                               .split(" ")
                               .map((n) => n[0])

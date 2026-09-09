@@ -89,7 +89,7 @@ export function DashHeader({
             className={cn(
               "h-9 w-9 rounded-lg grid place-items-center transition-colors shrink-0",
               pageTour?.active
-                ? "bg-[#22C55E]/15 text-[#22C55E] ring-1 ring-[#22C55E]/40"
+                ? "bg-[#4A5D7A]/15 text-[#4A5D7A] ring-1 ring-[#4A5D7A]/40"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
           >

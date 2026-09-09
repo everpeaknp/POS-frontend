@@ -14,7 +14,7 @@ import { format } from "date-fns";
 const statusColors = {
   Draft: "bg-gray-100 text-gray-700",
   Issued: "bg-blue-100 text-blue-700",
-  Applied: "bg-green-100 text-green-700",
+  Applied: "bg-slate-100 text-slate-700",
 };
 
 export default function CreditNotesPage() {
@@ -91,7 +91,7 @@ export default function CreditNotesPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/sales/credit-notes/new")}
-            className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-2"
+            className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-2"
           >
             <Plus className="h-4 w-4" />
             New Credit Note
@@ -190,7 +190,7 @@ export default function CreditNotesPage() {
             </div>
             <div className="bg-white rounded-lg border border-gray-100 p-4">
               <div className="text-sm text-gray-500 mb-1">Applied</div>
-              <div className="text-2xl font-semibold text-green-600">
+              <div className="text-2xl font-semibold text-slate-600">
                 {creditNotes.filter(cn => cn.status === 'Applied').length}
               </div>
             </div>

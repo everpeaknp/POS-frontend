@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import posApi from "@/lib/api/pos";
+import { bankAccountsAPI } from "@/lib/api/accounting";
 import { toast } from "sonner";
 
 type PaymentMethod = "tax" | "esewa" | "khalti" | "fonepay" | "bank";
@@ -32,17 +34,20 @@ export default function POSSettingsPage() {
     fonepay_number: "",
     fonepay_qr: null,
     bank_transfer_enabled: true,
+    linked_bank_account: null,
     bank_qr: null,
     bank_name: "",
     bank_account_number: "",
     bank_account_name: "",
   });
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadBankAccounts();
   }, []);
 
   const loadSettings = async () => {
@@ -53,6 +58,15 @@ export default function POSSettingsPage() {
       toast.error("Failed to load settings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBankAccounts = async () => {
+    try {
+      const data = await bankAccountsAPI.list();
+      setBankAccounts(data || []);
+    } catch (error) {
+      console.error("Failed to load bank accounts:", error);
     }
   };
 
@@ -128,29 +142,32 @@ export default function POSSettingsPage() {
     {
       id: "esewa" as PaymentMethod,
       name: "eSewa",
-      description: "Digital wallet",
+      description: "Digital wallet (deprecated)",
       logo: "https://cdn.esewa.com.np/ui/images/logos/esewa_logo.png",
       color: "bg-emerald-50",
       textLogo: { text: "eSewa", color: "text-emerald-600", bgColor: "bg-emerald-100" },
       enabled: settings.esewa_enabled,
+      deprecated: true,
     },
     {
       id: "khalti" as PaymentMethod,
       name: "Khalti",
-      description: "Digital wallet",
+      description: "Digital wallet (deprecated)",
       logo: "https://khalti.com/static/img/logo1.png",
       color: "bg-purple-50",
       textLogo: { text: "Khalti", color: "text-purple-600", bgColor: "bg-purple-100" },
       enabled: settings.khalti_enabled,
+      deprecated: true,
     },
     {
       id: "fonepay" as PaymentMethod,
       name: "FonePay",
-      description: "Digital wallet",
+      description: "Digital wallet (deprecated)",
       logo: "https://fonepay.com/images/fonepay-logo.png",
       color: "bg-blue-50",
       textLogo: { text: "FonePay", color: "text-blue-600", bgColor: "bg-blue-100" },
       enabled: settings.fonepay_enabled,
+      deprecated: true,
     },
     {
       id: "bank" as PaymentMethod,
@@ -168,7 +185,7 @@ export default function POSSettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#22C55E] border-t-transparent mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#4A5D7A] border-t-transparent mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading settings...</p>
         </div>
       </div>
@@ -188,7 +205,7 @@ export default function POSSettingsPage() {
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            className="border border-gray-200 dark:border-gray-700 hover:border-[#22C55E] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
+            className="border border-gray-200 dark:border-gray-700 hover:border-[#4A5D7A] hover:shadow-md transition-all cursor-pointer group overflow-hidden"
             onClick={() => setSelectedMethod(method.id)}
           >
             <CardContent className="p-4">
@@ -225,7 +242,7 @@ export default function POSSettingsPage() {
               <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-3">{method.description}</p>
 
               {/* Configure Button */}
-              <div className="flex items-center justify-center text-[#22C55E] dark:text-green-400 text-xs font-medium group-hover:gap-0.5 transition-all">
+              <div className="flex items-center justify-center text-[#4A5D7A] dark:text-slate-400 text-xs font-medium group-hover:gap-0.5 transition-all">
                 Configure
                 <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -267,6 +284,15 @@ export default function POSSettingsPage() {
             {/* eSewa */}
             {selectedMethod === "esewa" && (
               <>
+                <div className="col-span-2 mb-4">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">⚠️ Deprecated Payment Method</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      eSewa is now configured as a sub-method under specific Bank Accounts. Please go to <strong>Accounting → Bank Accounts</strong>, 
+                      add or edit a bank account, and enable eSewa there. This standalone configuration will be removed in a future update.
+                    </p>
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg">
                     <div>
@@ -357,6 +383,15 @@ export default function POSSettingsPage() {
             {/* Khalti */}
             {selectedMethod === "khalti" && (
               <>
+                <div className="col-span-2 mb-4">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">⚠️ Deprecated Payment Method</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      Khalti is now configured as a sub-method under specific Bank Accounts. Please go to <strong>Accounting → Bank Accounts</strong>, 
+                      add or edit a bank account, and enable Khalti there. This standalone configuration will be removed in a future update.
+                    </p>
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                     <div>
@@ -447,6 +482,15 @@ export default function POSSettingsPage() {
             {/* FonePay */}
             {selectedMethod === "fonepay" && (
               <>
+                <div className="col-span-2 mb-4">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">⚠️ Deprecated Payment Method</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      FonePay is now configured as a sub-method under specific Bank Accounts. Please go to <strong>Accounting → Bank Accounts</strong>, 
+                      add or edit a bank account, and enable FonePay there. This standalone configuration will be removed in a future update.
+                    </p>
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                     <div>
@@ -542,8 +586,49 @@ export default function POSSettingsPage() {
                 </div>
                 {settings.bank_transfer_enabled && (
                   <>
-                    {/* Left Column - Form Fields */}
-                    <div className="space-y-4">
+                    {/* Bank Account Selector */}
+                    <div className="space-y-4 mb-6">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                          Link to Accounting Bank Account (Recommended)
+                        </h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                          Select a bank account from Accounting → Bank Accounts. Bank transfer payments will automatically update that account's balance.
+                        </p>
+                        <div className="space-y-2">
+                          <Label htmlFor="linked_bank_account">Select Bank Account</Label>
+                          <Select
+                            value={settings.linked_bank_account ? String(settings.linked_bank_account) : ""}
+                            onValueChange={(value) => 
+                              setSettings({ ...settings, linked_bank_account: value ? parseInt(value) : null })
+                            }
+                          >
+                            <SelectTrigger className="bg-white dark:bg-gray-800">
+                              <SelectValue placeholder="Select a bank account or set up manually below" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None (Use manual setup below)</SelectItem>
+                              {bankAccounts.filter(acc => acc.status === 'active').map(account => (
+                                <SelectItem key={account.id} value={String(account.id)}>
+                                  {account.bank_name} - {account.account_number} ({account.account_name})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {bankAccounts.length === 0 && (
+                            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                              No bank accounts found. Go to Accounting → Bank Accounts to add one.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Manual Setup (Legacy/Fallback) */}
+                    <div className="space-y-4 opacity-60">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                        Manual setup (optional, only if not using linked account above):
+                      </p>
                       <div className="space-y-2">
                         <Label htmlFor="bank_name">Bank Name</Label>
                         <Input
@@ -552,6 +637,7 @@ export default function POSSettingsPage() {
                           onChange={(e) => setSettings({ ...settings, bank_name: e.target.value })}
                           placeholder="e.g., NIC Asia Bank"
                           className="h-10"
+                          disabled={!!settings.linked_bank_account}
                         />
                       </div>
                       <div className="space-y-2">
@@ -564,6 +650,7 @@ export default function POSSettingsPage() {
                           }
                           placeholder="Enter account number"
                           className="h-10"
+                          disabled={!!settings.linked_bank_account}
                         />
                       </div>
                       <div className="space-y-2">
@@ -576,6 +663,7 @@ export default function POSSettingsPage() {
                           }
                           placeholder="Enter account holder name"
                           className="h-10"
+                          disabled={!!settings.linked_bank_account}
                         />
                       </div>
                       <div className="space-y-2">
@@ -591,34 +679,10 @@ export default function POSSettingsPage() {
                             }
                           }}
                           className="h-10"
+                          disabled={!!settings.linked_bank_account}
                         />
                         <p className="text-sm text-gray-500 dark:text-gray-400">Upload your bank payment QR code image</p>
                       </div>
-                    </div>
-
-                    {/* Right Column - QR Preview */}
-                    <div className="flex items-center justify-center">
-                      {settings.bank_qr ? (
-                        <div className="w-full">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">QR Code Preview</p>
-                          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 p-6 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 shadow-lg">
-                            <img 
-                              src={typeof settings.bank_qr === 'string' ? settings.bank_qr : URL.createObjectURL(settings.bank_qr)} 
-                              alt="Bank Transfer QR" 
-                              className="w-full h-auto object-contain rounded-lg mx-auto" 
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-64 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
-                          <div className="text-center text-gray-400 dark:text-gray-600">
-                            <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <p className="text-sm">No QR code uploaded</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </>
                 )}
@@ -638,7 +702,7 @@ export default function POSSettingsPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
             >
               {saving ? "Saving..." : "Save Changes"}
             </Button>

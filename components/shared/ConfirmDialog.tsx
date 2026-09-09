@@ -25,8 +25,8 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   confirming = false,
   icon,
-  iconWrapperClassName = "bg-[#22C55E]/15 text-[#22C55E]",
-  confirmClassName = "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+  iconWrapperClassName = "bg-[#4A5D7A]/15 text-[#4A5D7A]",
+  confirmClassName = "bg-[#4A5D7A] hover:bg-[#2E3E52] text-white",
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {

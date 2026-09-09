@@ -83,7 +83,7 @@ function StatCard({
     <div className={salesStatCardClass}>
       <p className="text-xs text-gray-500 dark:text-muted-foreground">{label}</p>
       <p className="text-xl font-bold text-gray-900 dark:text-foreground mt-1">{value}</p>
-      {hint && <p className="text-xs text-[#22C55E] mt-0.5">{hint}</p>}
+      {hint && <p className="text-xs text-[#4A5D7A] mt-0.5">{hint}</p>}
     </div>
   );
 }
@@ -390,9 +390,9 @@ export default function SalesReportsPage() {
                       <Line
                         type="monotone"
                         dataKey="sales"
-                        stroke="#22C55E"
+                        stroke="#4A5D7A"
                         strokeWidth={2.5}
-                        dot={{ fill: "#22C55E", r: 4 }}
+                        dot={{ fill: "#4A5D7A", r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -413,7 +413,7 @@ export default function SalesReportsPage() {
                       <td className="px-4 py-3 font-medium text-gray-800 dark:text-foreground">
                         {fmt(row.sales)}
                       </td>
-                      <td className="px-4 py-3 text-[#22C55E] font-medium">{fmt(row.collected)}</td>
+                      <td className="px-4 py-3 text-[#4A5D7A] font-medium">{fmt(row.collected)}</td>
                       <td className="px-4 py-3 text-red-500">{fmt(row.outstanding)}</td>
                     </tr>
                   ))}
@@ -446,7 +446,7 @@ export default function SalesReportsPage() {
                         tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                       />
                       <Tooltip formatter={(v) => [fmt(Number(v)), "Revenue"]} />
-                      <Bar dataKey="revenue" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -468,7 +468,7 @@ export default function SalesReportsPage() {
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             c.status === "active"
-                              ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                              ? "bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-400"
                               : "bg-gray-100 text-gray-500 dark:bg-muted dark:text-muted-foreground"
                           }`}
                         >
@@ -507,7 +507,7 @@ export default function SalesReportsPage() {
                       />
                       <Tooltip formatter={(v) => [fmt(Number(v)), "Revenue"]} />
                       <Legend />
-                      <Bar dataKey="revenue" name="Revenue" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" name="Revenue" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="qty_sold" name="Qty Sold" fill="#86EFAC" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -532,7 +532,7 @@ export default function SalesReportsPage() {
                         <div className="flex items-center gap-2 min-w-[120px]">
                           <div className="flex-1 bg-gray-100 dark:bg-muted rounded-full h-1.5">
                             <div
-                              className="bg-[#22C55E] h-1.5 rounded-full"
+                              className="bg-[#4A5D7A] h-1.5 rounded-full"
                               style={{ width: `${Math.min(p.percentage, 100)}%` }}
                             />
                           </div>
@@ -572,7 +572,7 @@ export default function SalesReportsPage() {
                         width={110}
                       />
                       <Tooltip formatter={(v) => [fmt(Number(v)), "Revenue"]} />
-                      <Bar dataKey="revenue" fill="#22C55E" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="revenue" fill="#4A5D7A" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -593,7 +593,7 @@ export default function SalesReportsPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-20 bg-gray-100 dark:bg-muted rounded-full h-1.5">
                             <div
-                              className="bg-[#22C55E] h-1.5 rounded-full"
+                              className="bg-[#4A5D7A] h-1.5 rounded-full"
                               style={{ width: `${cat.percentage}%` }}
                             />
                           </div>
@@ -653,7 +653,7 @@ export default function SalesReportsPage() {
                       <Bar
                         dataKey="vat_collected"
                         name="VAT (13%)"
-                        fill="#22C55E"
+                        fill="#4A5D7A"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -679,7 +679,7 @@ export default function SalesReportsPage() {
                         {fmt(row.vat_collected)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-400">
                           {row.status}
                         </span>
                       </td>

@@ -1,6 +1,7 @@
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, DollarSign } from "lucide-react";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface POSHeaderProps {
   sidebarWidth: number;
@@ -21,11 +22,13 @@ export function POSHeader({
   onShowHeldOrders,
   onShowCashMovement,
 }: POSHeaderProps) {
+  const { t } = useLanguage();
+  
   return (
     <div style={{ paddingRight: `${sidebarWidth}px` }}>
       <DashHeader 
-        title="Point of Sale" 
-        subtitle="Scan or search products to add to cart"
+        title={t('pos.title')}
+        subtitle={t('pos.barcode_scan')}
         actions={
           hasOpenSession && hasCartItems ? (
             <div className="flex items-center gap-2">
@@ -36,7 +39,7 @@ export function POSHeader({
                 className="gap-1 h-9"
               >
                 <Pause className="h-4 w-4" />
-                Hold Order
+                {t('pos.hold_order')}
               </Button>
               
               <Button
@@ -46,9 +49,9 @@ export function POSHeader({
                 className="gap-1 h-9"
               >
                 <Play className="h-4 w-4" />
-                Held Orders
+                {t('pos.held_orders')}
                 {heldOrdersCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                  <span className="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
                     {heldOrdersCount}
                   </span>
                 )}
@@ -61,7 +64,7 @@ export function POSHeader({
                 className="gap-1 h-9"
               >
                 <DollarSign className="h-4 w-4" />
-                Cash In/Out
+                {t('pos.cash_movement')}
               </Button>
             </div>
           ) : null

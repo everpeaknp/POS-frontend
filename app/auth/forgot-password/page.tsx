@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 
-const B = "#22C55E";
-const BD = "#16A34A";
+const B = "#4A5D7A";
+const BD = "#2E3E52";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
           <h2 className="text-4xl font-bold leading-tight mb-4">
             Smart accounting<br />for modern businesses
           </h2>
-          <p className="text-green-300 text-base leading-relaxed">
+          <p className="text-slate-300 text-base leading-relaxed">
             Manage invoices, track expenses, and grow your business — all in one place.
           </p>
           <div className="mt-10 grid grid-cols-2 gap-4">
@@ -50,12 +50,12 @@ export default function ForgotPasswordPage() {
             ].map((s) => (
               <div key={s.label} className="bg-white/10 rounded-xl p-4">
                 <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-green-300 text-sm mt-0.5">{s.label}</p>
+                <p className="text-slate-300 text-sm mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
+        <p className="text-slate-400 text-xs">© 2025 Khata. All rights reserved.</p>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   <div className="flex flex-col items-center gap-4 py-2 text-center">
-                    <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center">
                       <CheckCircle2 className="h-7 w-7" style={{ color: B }} />
                     </div>
                     <p className="text-sm text-gray-500 leading-relaxed">
@@ -127,7 +127,7 @@ export default function ForgotPasswordPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="h-11 border-gray-200 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20"
+                        className="h-11 border-gray-200 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20"
                       />
                     </div>
                     <Button

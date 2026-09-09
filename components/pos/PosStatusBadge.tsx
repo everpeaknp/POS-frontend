@@ -1,6 +1,6 @@
 export function PosStatusBadge({ status }: { status: "open" | "closed" }) {
   const styles = {
-    open: "bg-green-100 text-green-700",
+    open: "bg-slate-100 text-slate-700",
     closed: "bg-gray-100 text-gray-700",
   };
 

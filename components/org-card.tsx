@@ -128,34 +128,34 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
 
   return (
     <>
-    <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-[#22C55E]/30 transition-all">
+    <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-3 h-full min-h-[200px] hover:shadow-md hover:border-[#4A5D7A]/30 transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div 
             {...dragHandleProps}
-            className="w-12 h-12 rounded-xl bg-[#22C55E]/10 flex items-center justify-center text-lg font-bold border border-[#22C55E]/20 overflow-hidden shrink-0 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-[#22C55E]/30 transition-all"
+            className="w-12 h-12 rounded-xl bg-[#4A5D7A]/10 flex items-center justify-center text-lg font-bold border border-[#4A5D7A]/20 overflow-hidden shrink-0 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-[#4A5D7A]/30 transition-all"
             title="Drag to reorder"
           >
             {org.logo ? (
               <img src={org.logo} alt="" className="w-full h-full object-cover" />
             ) : org.account_type === "personal" ? (
-              <Wallet className="h-6 w-6 text-[#16A34A]" />
+              <Wallet className="h-6 w-6 text-[#2E3E52]" />
             ) : org.account_type === "construction" ? (
-              <HardHat className="h-6 w-6 text-[#16A34A]" />
+              <HardHat className="h-6 w-6 text-[#2E3E52]" />
             ) : org.account_type === "hardware" ? (
-              <Wrench className="h-6 w-6 text-[#16A34A]" />
+              <Wrench className="h-6 w-6 text-[#2E3E52]" />
             ) : org.account_type === "retail" ? (
-              <ShoppingBag className="h-6 w-6 text-[#16A34A]" />
+              <ShoppingBag className="h-6 w-6 text-[#2E3E52]" />
             ) : (
-              <Building2 className="h-6 w-6 text-[#16A34A]" />
+              <Building2 className="h-6 w-6 text-[#2E3E52]" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-[#16A34A] mb-0.5">{getAccountTypeLabel()}</p>
+            <p className="text-xs font-medium text-[#2E3E52] mb-0.5">{getAccountTypeLabel()}</p>
             {roleLabel && (
               <p className="text-xs text-muted-foreground">
                 Role:{" "}
-                <span className={`font-medium ${isPersonalAccount ? "text-[#16A34A]" : isSuperAdmin ? "text-[#16A34A]" : "text-foreground capitalize"}`}>
+                <span className={`font-medium ${isPersonalAccount ? "text-[#2E3E52]" : isSuperAdmin ? "text-[#2E3E52]" : "text-foreground capitalize"}`}>
                   {roleLabel}
                 </span>
               </p>
@@ -165,7 +165,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
         {(canManageOrg || isSuperAdmin) && (
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]/30"
+            className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4A5D7A]/30"
             aria-label="Options"
           >
             <MoreVertical className="h-4 w-4" />
@@ -210,7 +210,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
           <>
             <Button 
               size="sm" 
-              className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold h-9 gap-1.5"
+              className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white text-xs font-semibold h-9 gap-1.5"
               onClick={handleOpenKhata}
             >
               <ExternalLink className="h-3 w-3" /> Open Khata
@@ -219,7 +219,7 @@ export function OrgCard({ org, onDelete, dragHandleProps }: OrgCardProps) {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 border-[#22C55E] text-[#22C55E] hover:bg-[#22C55E]/10 text-xs font-semibold h-9 gap-1.5"
+                className="flex-1 border-[#4A5D7A] text-[#4A5D7A] hover:bg-[#4A5D7A]/10 text-xs font-semibold h-9 gap-1.5"
                 onClick={handleOpenSettings}
               >
                 <Settings className="h-3 w-3" /> Settings

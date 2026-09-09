@@ -425,7 +425,7 @@ export function PageTour() {
             width: rect.width,
             height: rect.height,
             boxShadow:
-              "0 0 0 5px #ffffff, 0 0 0 10px #22C55E, 0 0 0 9999px rgba(15, 23, 42, 0.72)",
+              "0 0 0 5px #ffffff, 0 0 0 10px #4A5D7A, 0 0 0 9999px rgba(15, 23, 42, 0.72)",
           }}
         />
       ) : (
@@ -444,7 +444,7 @@ export function PageTour() {
           <TourArrow placement={layout.placement} offset={layout.arrowOffset} />
         )}
 
-        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#16A34A]">
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#2E3E52]">
           Page tip {index + 1} of {steps.length}
         </p>
         <h4
@@ -480,7 +480,7 @@ export function PageTour() {
             <Button
               type="button"
               size="sm"
-              className="rounded-xl bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent px-4 shadow-md shadow-green-500/20"
+              className="rounded-xl bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white border-transparent px-4 shadow-md shadow-slate-500/20"
               onClick={goNext}
             >
               {isLast ? "Done" : "Next"}

@@ -5,6 +5,7 @@ import POSInvoice from "@/components/pos/POSInvoice";
 import { RefObject } from "react";
 import type { User } from "@/lib/api/auth";
 import type { POSTransaction } from "@/lib/api/pos";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface POSInvoiceDialogProps {
   open: boolean;
@@ -27,12 +28,13 @@ export function POSInvoiceDialog({
   onDownloadPDF,
   onCloseAndNewSale,
 }: POSInvoiceDialogProps) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Invoice: {transaction?.transaction_number}</span>
+            <span>{t('pos.invoice')}: {transaction?.transaction_number}</span>
             <div className="flex gap-2">
               <Button
                 onClick={onPrint}
@@ -41,7 +43,7 @@ export function POSInvoiceDialog({
                 className="gap-2"
               >
                 <Printer className="h-4 w-4" />
-                Print
+                {t('common.print')}
               </Button>
               <Button
                 onClick={onDownloadPDF}
@@ -50,7 +52,7 @@ export function POSInvoiceDialog({
                 className="gap-2"
               >
                 <Download className="h-4 w-4" />
-                Download PDF
+                {t('pos.download_pdf')}
               </Button>
             </div>
           </DialogTitle>
@@ -75,7 +77,7 @@ export function POSInvoiceDialog({
             onClick={onCloseAndNewSale}
             variant="outline"
           >
-            Close & New Sale
+            {t('pos.close_new_sale')}
           </Button>
         </div>
       </DialogContent>

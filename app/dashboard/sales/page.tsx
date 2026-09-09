@@ -28,13 +28,14 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { salesDashboardAPI, customerCreditAPI } from "@/lib/api/sales";
 
 const statusStyle: Record<string, string> = {
-  Paid: "bg-green-100 text-green-700",
-  Confirmed: "bg-green-100 text-green-700",
-  Delivered: "bg-green-100 text-green-700",
+  Paid: "bg-slate-100 text-slate-700",
+  Confirmed: "bg-slate-100 text-slate-700",
+  Delivered: "bg-slate-100 text-slate-700",
   Pending: "bg-yellow-100 text-yellow-700",
   Draft: "bg-yellow-100 text-yellow-700",
   Cancelled: "bg-red-100 text-red-700",
@@ -53,7 +54,7 @@ const quickActions = [
     label: "New Quotation",
     sub: "Send quote",
     icon: ClipboardList,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-slate-50 text-[#4A5D7A]",
   },
   {
     href: "/dashboard/sales/customers/new",
@@ -91,7 +92,7 @@ const moduleLinks = [
     label: "Payments",
     sub: "Record collections",
     icon: CreditCard,
-    color: "bg-green-50 text-[#22C55E]",
+    color: "bg-slate-50 text-[#4A5D7A]",
   },
   {
     href: "/dashboard/sales/reports",
@@ -107,11 +108,12 @@ type Period = "today" | "week" | "month" | "year";
 export default function SalesDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [period, setPeriod] = useState<Period>("month");
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Sales overview and analytics`;
+  const subtitle = `${workspaceName} · ${t('sales.sales_overview_and_analytics')}`;
 
   const { data: dashboardData, loading, error, refetch } = useApi(
     () => salesDashboardAPI.get(period),
@@ -152,7 +154,7 @@ export default function SalesDashboardPage() {
             <p className="text-red-600 mb-4">Failed to load sales overview</p>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[#4A5D7A] text-white rounded-lg hover:bg-[#2E3E52]"
             >
               Retry
             </button>
@@ -171,7 +173,7 @@ export default function SalesDashboardPage() {
       value: stats.revenue,
       change: stats.revenueChange,
       icon: DollarSign,
-      color: "bg-green-50 text-[#22C55E]",
+      color: "bg-slate-50 text-[#4A5D7A]",
     },
     {
       label: "Total Orders",
@@ -218,7 +220,7 @@ export default function SalesDashboardPage() {
               <p className="text-xl font-bold text-gray-900">{value}</p>
               <div
                 className={`inline-flex items-center gap-0.5 text-xs font-medium mt-1 ${
-                  change >= 0 ? "text-green-600" : "text-red-500"
+                  change >= 0 ? "text-slate-600" : "text-red-500"
                 }`}
               >
                 {change >= 0 ? (
@@ -236,7 +238,7 @@ export default function SalesDashboardPage() {
           <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-700">Credit Overview</h2>
-              <Link href="/dashboard/sales/customers" className="text-xs text-[#22C55E] hover:underline">
+              <Link href="/dashboard/sales/customers" className="text-xs text-[#4A5D7A] hover:underline">
                 View customers
               </Link>
             </div>
@@ -272,7 +274,7 @@ export default function SalesDashboardPage() {
                   .slice(0, 5)
                   .map((c) => (
                     <li key={c.id} className="flex justify-between py-2 text-sm">
-                      <Link href={`/dashboard/sales/customers/${c.id}`} className="hover:text-[#22C55E]">
+                      <Link href={`/dashboard/sales/customers/${c.id}`} className="hover:text-[#4A5D7A]">
                         {c.name}
                       </Link>
                       <span className="font-medium text-red-600">Rs. {c.current_balance.toLocaleString()}</span>
@@ -291,7 +293,7 @@ export default function SalesDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -334,8 +336,8 @@ export default function SalesDashboardPage() {
               <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="salesColorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#4A5D7A" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#4A5D7A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -362,11 +364,11 @@ export default function SalesDashboardPage() {
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#22C55E"
+                  stroke="#4A5D7A"
                   strokeWidth={2.5}
                   fill="url(#salesColorRevenue)"
                   dot={false}
-                  activeDot={{ r: 5, fill: "#22C55E" }}
+                  activeDot={{ r: 5, fill: "#4A5D7A" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -405,7 +407,7 @@ export default function SalesDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Recent Orders</h3>
               <Link
                 href="/dashboard/sales/orders"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -431,7 +433,7 @@ export default function SalesDashboardPage() {
                     className="hover:bg-gray-50/50 cursor-pointer"
                     onClick={() => router.push(`/dashboard/sales/orders/${o.id}`)}
                   >
-                    <td className="px-4 py-2.5 font-mono text-xs text-[#22C55E]">{o.order_number || o.id}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-[#4A5D7A]">{o.order_number || o.id}</td>
                     <td className="px-4 py-2.5 font-medium text-gray-800">{o.customer}</td>
                     <td className="px-4 py-2.5 text-gray-700">{o.amount}</td>
                     <td className="px-4 py-2.5">
@@ -460,7 +462,7 @@ export default function SalesDashboardPage() {
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-[#22C55E] transition-all"
+                      className="h-full rounded-full bg-[#4A5D7A] transition-all"
                       style={{ width: `${(p.sales / p.max) * 100}%` }}
                     />
                   </div>
@@ -477,7 +479,7 @@ export default function SalesDashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700">Recent Customers</h3>
               <Link
                 href="/dashboard/sales/customers"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -486,7 +488,7 @@ export default function SalesDashboardPage() {
             <div className="space-y-3">
               {recentCustomers.map((c) => (
                 <div key={c.email} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#22C55E] text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#4A5D7A] text-white text-xs font-semibold flex items-center justify-center shrink-0">
                     {c.initials}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -506,7 +508,7 @@ export default function SalesDashboardPage() {
                 {
                   label: "In Stock",
                   value: inventorySummary.inStock.toString(),
-                  color: "bg-green-50 text-green-700 border-green-100",
+                  color: "bg-slate-50 text-slate-700 border-slate-100",
                 },
                 {
                   label: "Low Stock",

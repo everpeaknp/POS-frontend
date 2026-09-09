@@ -229,7 +229,7 @@ export default function HardwareAgingPage() {
                       <button
                         type="button"
                         onClick={() => router.push(`/dashboard/hardware/customers/${item.id}`)}
-                        className="text-sm text-[#22C55E] hover:text-[#16A34A] font-medium"
+                        className="text-sm text-[#4A5D7A] hover:text-[#2E3E52] font-medium"
                       >
                         View
                       </button>

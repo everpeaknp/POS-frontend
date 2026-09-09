@@ -145,7 +145,7 @@ export default function BankAccountsPage() {
           </Select>
         </div>
         <Link href="/dashboard/accounting/bank-accounts/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Bank Account
           </Button>
         </Link>
@@ -160,12 +160,12 @@ export default function BankAccountsPage() {
           {filteredAccounts.map((bank) => (
             <div
               key={bank.id}
-              className={`${accountingCardClass} p-5 space-y-4 hover:border-[#22C55E]/30 transition-colors`}
+              className={`${accountingCardClass} p-5 space-y-4 hover:border-[#4A5D7A]/30 transition-colors`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center">
-                    <CreditCard className="h-5 w-5 text-[#22C55E]" />
+                  <div className="w-10 h-10 rounded-lg bg-[#4A5D7A]/10 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-[#4A5D7A]" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-800 text-sm">{bank.bank_name}</p>
@@ -175,7 +175,7 @@ export default function BankAccountsPage() {
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                     bank.status === "active"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-slate-100 text-slate-700"
                       : bank.status === "closed"
                         ? "bg-red-100 text-red-700"
                         : "bg-gray-100 text-gray-500"

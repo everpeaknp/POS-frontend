@@ -33,6 +33,7 @@ import {
 } from '@/components/dashboard/ConstructionPageShell';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import { constructionApi, Site } from '@/lib/api/construction';
 import { formatNPR } from '@/lib/utils';
 import { useEnabledModuleLinks } from '@/lib/dashboard/useEnabledModuleLinks';
@@ -66,7 +67,7 @@ const quickActions = [
     label: 'New Worker',
     sub: 'Add workforce',
     icon: Users,
-    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+    color: 'bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400',
   },
   {
     href: '/dashboard/construction/attendance',
@@ -97,7 +98,7 @@ const moduleLinks = [
     label: 'Manage Workers',
     sub: 'View workforce',
     icon: HardHat,
-    color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+    color: 'bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400',
   },
   {
     href: '/dashboard/accounting/journal-entries',
@@ -116,7 +117,7 @@ const moduleLinks = [
 ];
 
 function getBudgetHealthColor(percentage: number) {
-  if (percentage < 80) return 'text-green-700 bg-green-50 border-green-200';
+  if (percentage < 80) return 'text-slate-700 bg-slate-50 border-slate-200';
   if (percentage < 100) return 'text-yellow-700 bg-yellow-50 border-yellow-200';
   return 'text-red-700 bg-red-50 border-red-200';
 }
@@ -128,7 +129,7 @@ function getBudgetHealthLabel(percentage: number) {
 }
 
 function getProgressBarColor(percentage: number) {
-  if (percentage < 80) return 'bg-[#22C55E]';
+  if (percentage < 80) return 'bg-[#4A5D7A]';
   if (percentage < 100) return 'bg-yellow-500';
   return 'bg-red-500';
 }
@@ -136,6 +137,7 @@ function getProgressBarColor(percentage: number) {
 export default function ConstructionDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [sites, setSites] = useState<Site[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -214,7 +216,7 @@ export default function ConstructionDashboardPage() {
           value: stats.total_workers.toString(),
           sub: `${stats.active_workers} active`,
           icon: Users,
-          color: 'bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400',
+          color: 'bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400',
         },
         {
           label: 'Budget Health',
@@ -279,7 +281,7 @@ export default function ConstructionDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className={`${constructionCardClass} p-4 hover:border-[#22C55E]/30 hover:shadow-md transition-all group`}
+                className={`${constructionCardClass} p-4 hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group`}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -312,7 +314,7 @@ export default function ConstructionDashboardPage() {
                   <Tooltip formatter={(value) => formatNPR(Number(value ?? 0))} />
                   <Legend />
                   <Bar dataKey="allocated" name="Allocated" fill="#93C5FD" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="spent" name="Spent" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="spent" name="Spent" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -354,7 +356,7 @@ export default function ConstructionDashboardPage() {
             <h2 className="text-sm font-semibold text-gray-700 dark:text-foreground">Active Construction Sites</h2>
             <Link
               href="/dashboard/construction/sites"
-              className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
             >
               View all
               <ChevronRight className="h-3.5 w-3.5" />
@@ -428,7 +430,7 @@ export default function ConstructionDashboardPage() {
                         <p
                           className={`font-semibold ${
                             (site.remaining_budget ?? 0) >= 0
-                              ? 'text-[#22C55E]'
+                              ? 'text-[#4A5D7A]'
                               : 'text-red-600'
                           }`}
                         >

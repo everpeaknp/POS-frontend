@@ -321,7 +321,7 @@ export default function UdaroPage() {
               <div className="bg-white dark:bg-card rounded-lg border border-gray-100 dark:border-border p-4 transition-all hover:shadow-md">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm text-gray-500 dark:text-muted-foreground">Customers</div>
-                  <Users className="h-5 w-5 text-green-500" />
+                  <Users className="h-5 w-5 text-slate-500" />
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-foreground">
                   {customersWithBalance}
@@ -342,7 +342,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("ledger")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "ledger"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[#4A5D7A] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -353,7 +353,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("aging")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "aging"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[#4A5D7A] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -364,7 +364,7 @@ export default function UdaroPage() {
                 onClick={() => setActiveTab("credit-notes")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === "credit-notes"
-                    ? "bg-[#22C55E] text-white"
+                    ? "bg-[#4A5D7A] text-white"
                     : "text-gray-600 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted"
                 }`}
               >
@@ -465,7 +465,7 @@ export default function UdaroPage() {
                                 <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground">
                                   {formatCurrency(item.total_amount)}
                                 </td>
-                                <td className="px-4 py-3 text-green-600 dark:text-green-400">
+                                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                                   {formatCurrency(item.total_paid)}
                                 </td>
                                 <td className="px-4 py-3 font-bold text-red-600 dark:text-red-400">
@@ -476,7 +476,7 @@ export default function UdaroPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                    item.days_overdue === 0 ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" :
+                                    item.days_overdue === 0 ? "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300" :
                                     item.days_overdue <= 30 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300" :
                                     item.days_overdue <= 60 ? "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300" :
                                     "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
@@ -582,7 +582,7 @@ export default function UdaroPage() {
                         </p>
                         <Button
                           onClick={() => router.push("/dashboard/sales/credit-notes/new")}
-                          className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                          className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                         >
                           Create Credit Note
                         </Button>
@@ -609,7 +609,7 @@ export default function UdaroPage() {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-gray-400" />
-                                    <span className="font-mono text-xs text-[#22C55E]">
+                                    <span className="font-mono text-xs text-[#4A5D7A]">
                                       {cn.credit_note_number}
                                     </span>
                                   </div>
@@ -628,7 +628,7 @@ export default function UdaroPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                                    cn.status === "Applied" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" :
+                                    cn.status === "Applied" ? "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300" :
                                     cn.status === "Issued" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" :
                                     "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                                   }`}>

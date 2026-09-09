@@ -17,11 +17,13 @@ import {
 } from "@/components/dashboard/HRPageShell";
 import { EmployeeStatusBadge } from "@/components/hr/EmployeeStatusBadge";
 import { EmploymentTypeBadge } from "@/components/hr/EmploymentTypeBadge";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import toast from "react-hot-toast";
 import { getEmployees, getDepartments, deactivateEmployee, type Employee, type Department } from "@/lib/api/hr";
 
 export default function EmployeesPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("All");
   const [status, setStatus] = useState("All");
@@ -135,8 +137,8 @@ export default function EmployeesPage() {
 
   return (
     <HRPageShell
-      title="Employees"
-      subtitle={loading ? "Loading..." : `${filtered.length} employees`}
+      title={t('hr.employees')}
+      subtitle={loading ? "Loading..." : `${filtered.length} ${t('hr.employees_count')}`}
       loading={loading}
     >
       <div className="flex gap-3 items-center justify-between flex-wrap">
@@ -169,7 +171,7 @@ export default function EmployeesPage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/employees/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Add Employee
           </Button>
         </Link>
@@ -195,9 +197,9 @@ export default function EmployeesPage() {
               filtered.map((emp) => (
                 <tr key={emp.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    <Link href={`/dashboard/hr/employees/${emp.id}`} className="hover:text-[#22C55E]">{emp.name}</Link>
+                    <Link href={`/dashboard/hr/employees/${emp.id}`} className="hover:text-[#4A5D7A]">{emp.name}</Link>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">{String(emp.id).substring(0, 8)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">{String(emp.id).substring(0, 8)}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.designation}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.department_name || 'N/A'}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.phone}</td>

@@ -98,7 +98,7 @@ export function CompanyLogoUpload({
       <div
         className={cn(
           "border-2 border-dashed border-gray-200 rounded-xl p-3 text-center bg-white transition-colors",
-          !disabled && "hover:border-[#22C55E]/40"
+          !disabled && "hover:border-[#4A5D7A]/40"
         )}
       >
         {displayUrl ? (
@@ -124,7 +124,7 @@ export function CompanyLogoUpload({
             {!disabled && (
               <div>
                 <label htmlFor="company-logo-upload" className="cursor-pointer">
-                  <span className="text-sm font-medium text-[#22C55E] hover:text-[#16A34A]">
+                  <span className="text-sm font-medium text-[#4A5D7A] hover:text-[#2E3E52]">
                     Upload a logo
                   </span>
                   <input

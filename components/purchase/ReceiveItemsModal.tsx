@@ -79,7 +79,7 @@ export function ReceiveItemsModal({ open, onClose, order, warehouses = [], onSuc
               <select
                 value={warehouseId}
                 onChange={(e) => setWarehouseId(e.target.value)}
-                className="mt-1.5 w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                className="mt-1.5 w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               >
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>{wh.name}</option>
@@ -121,7 +121,7 @@ export function ReceiveItemsModal({ open, onClose, order, warehouses = [], onSuc
                           className="h-8 w-20 text-sm border-gray-200"
                         />
                       </td>
-                      <td className={`px-3 py-2 font-medium ${remaining > 0 ? "text-orange-500" : "text-green-600"}`}>
+                      <td className={`px-3 py-2 font-medium ${remaining > 0 ? "text-orange-500" : "text-slate-600"}`}>
                         {remaining}
                       </td>
                     </tr>
@@ -135,8 +135,9 @@ export function ReceiveItemsModal({ open, onClose, order, warehouses = [], onSuc
             <Button
               onClick={handleSave}
               disabled={submitting}
-              className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white"
-            >
+              className="flex-1 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
+            >
+
               Confirm Receipt
             </Button>
             <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>

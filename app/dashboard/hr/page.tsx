@@ -36,6 +36,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { tenantApi } from "@/lib/api/tenant";
 import {
@@ -57,7 +58,7 @@ const quickActions = [
     label: "Mark Attendance",
     sub: "Daily check-in",
     icon: ClipboardCheck,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400",
   },
   {
     href: "/dashboard/hr/leave",
@@ -95,7 +96,7 @@ const moduleLinks = [
     label: "Departments",
     sub: "Org structure",
     icon: Building2,
-    color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+    color: "bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400",
   },
   {
     href: "/dashboard/hr/attendance",
@@ -132,7 +133,7 @@ function leaveStatusClass(status: string) {
     case "pending":
       return "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400";
     case "approved":
-      return "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400";
+      return "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-400";
     case "rejected":
       return "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400";
     default:
@@ -163,6 +164,7 @@ function buildDashboardFromReports(reports: HRReports) {
 export default function HRDashboardPage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const { hasModuleAccess, canView } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [enablingModule, setEnablingModule] = useState(false);
@@ -313,7 +315,7 @@ export default function HRDashboardPage() {
           value: (dashboard.departments?.length ?? 0).toString(),
           sub: `${dashboard.stats.inactive_employees} inactive`,
           icon: Building2,
-          color: "bg-green-50 text-[#22C55E] dark:bg-green-500/10 dark:text-green-400",
+          color: "bg-slate-50 text-[#4A5D7A] dark:bg-slate-500/10 dark:text-slate-400",
         },
         {
           label: "On Leave Today",
@@ -348,7 +350,7 @@ export default function HRDashboardPage() {
           </p>
           {canEnableHr ? (
             <Button
-              className="mt-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="mt-6 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
               onClick={handleEnableHrModule}
               disabled={enablingModule}
             >
@@ -407,7 +409,7 @@ export default function HRDashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className={`${hrCardClass} p-4 hover:border-[#22C55E]/30 hover:shadow-md transition-all group`}
+                className={`${hrCardClass} p-4 hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group`}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -442,7 +444,7 @@ export default function HRDashboardPage() {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip />
-                      <Bar dataKey="count" name="Employees" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" name="Employees" fill="#4A5D7A" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -468,7 +470,7 @@ export default function HRDashboardPage() {
                         type="monotone"
                         dataKey="rate"
                         name="Attendance"
-                        stroke="#22C55E"
+                        stroke="#4A5D7A"
                         strokeWidth={2}
                         dot={{ r: 3 }}
                       />
@@ -545,7 +547,7 @@ export default function HRDashboardPage() {
             </h3>
             <Link
               href="/dashboard/hr/leave"
-              className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+              className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
             >
               View all
               <ChevronRight className="h-3.5 w-3.5" />
@@ -620,7 +622,7 @@ export default function HRDashboardPage() {
               </h3>
               <Link
                 href="/dashboard/hr/employees"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />

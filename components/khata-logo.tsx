@@ -1,6 +1,6 @@
 "use client";
 
-// Brand color: #22C55E (Khata green) — used everywhere
+// Brand color: #4A5D7A (Khata green) — used everywhere
 
 interface KhataLogoProps {
   size?: "sm" | "md" | "lg";
@@ -10,7 +10,7 @@ interface KhataLogoProps {
 export function KhataLogo({ size = "md", className = "" }: KhataLogoProps) {
   const iconSize = size === "sm" ? 22 : size === "lg" ? 44 : 30;
   const textSize = size === "sm" ? "text-base" : size === "lg" ? "text-3xl" : "text-xl";
-  const color = "#22C55E";
+  const color = "#4A5D7A";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

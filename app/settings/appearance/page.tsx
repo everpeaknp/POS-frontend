@@ -109,20 +109,20 @@ export default function AppearancePage() {
                       onClick={() => handleThemeChange(theme.value)}
                       className={`rounded-xl p-1 transition-all ${
                         preferences.theme === theme.value
-                          ? "ring-2 ring-[#22C55E] ring-offset-2 ring-offset-background"
+                          ? "ring-2 ring-[#4A5D7A] ring-offset-2 ring-offset-background"
                           : "hover:opacity-90"
                       }`}
                     >
                       <div className={`h-20 rounded-lg border mb-2 flex items-center justify-center ${theme.preview}`}>
                         <theme.icon
                           className={`h-5 w-5 ${
-                            preferences.theme === theme.value ? "text-[#22C55E]" : "text-muted-foreground"
+                            preferences.theme === theme.value ? "text-[#4A5D7A]" : "text-muted-foreground"
                           }`}
                         />
                       </div>
                       <span
                         className={`text-xs font-medium ${
-                          preferences.theme === theme.value ? "text-[#22C55E]" : "text-muted-foreground"
+                          preferences.theme === theme.value ? "text-[#4A5D7A]" : "text-muted-foreground"
                         }`}
                       >
                         {theme.name}
@@ -200,7 +200,7 @@ export default function AppearancePage() {
                     onClick={() => handleNavbarPositionChange(pos.value)}
                     className={`rounded-xl p-1 text-left transition-all ${
                       preferences.navbar_position === pos.value
-                        ? "ring-2 ring-[#22C55E] ring-offset-2 ring-offset-background"
+                        ? "ring-2 ring-[#4A5D7A] ring-offset-2 ring-offset-background"
                         : "hover:opacity-90"
                     }`}
                   >
@@ -209,7 +209,7 @@ export default function AppearancePage() {
                         <div className="flex h-full gap-1.5">
                           <div className="w-2.5 rounded bg-white border border-gray-200 dark:bg-[#162232] dark:border-transparent" />
                           <div className="w-5 rounded bg-[#1E2A3B] flex flex-col gap-1 p-1">
-                            <div className="h-1 rounded-sm bg-[#22C55E]/80" />
+                            <div className="h-1 rounded-sm bg-[#4A5D7A]/80" />
                             <div className="h-1 rounded-sm bg-white/30" />
                             <div className="h-1 rounded-sm bg-white/20" />
                           </div>
@@ -218,7 +218,7 @@ export default function AppearancePage() {
                       ) : (
                         <div className="flex h-full gap-1.5">
                           <div className="w-5 rounded bg-[#1E2A3B] flex flex-col gap-1 p-1">
-                            <div className="h-1 rounded-sm bg-[#22C55E]/80" />
+                            <div className="h-1 rounded-sm bg-[#4A5D7A]/80" />
                             <div className="h-1 rounded-sm bg-white/30" />
                             <div className="h-1 rounded-sm bg-white/20" />
                           </div>
@@ -233,14 +233,14 @@ export default function AppearancePage() {
                       <pos.icon
                         className={`h-3.5 w-3.5 ${
                           preferences.navbar_position === pos.value
-                            ? "text-[#22C55E]"
+                            ? "text-[#4A5D7A]"
                             : "text-muted-foreground"
                         }`}
                       />
                       <span
                         className={`text-xs font-medium ${
                           preferences.navbar_position === pos.value
-                            ? "text-[#22C55E]"
+                            ? "text-[#4A5D7A]"
                             : "text-muted-foreground"
                         }`}
                       >

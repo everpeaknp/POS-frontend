@@ -13,7 +13,7 @@ import { invitationApi, type InvitationPreview } from "@/lib/api/tenant";
 import { acceptInviteToken, inviteErrorMessage } from "@/lib/invitations/accept";
 import { useAuth } from "@/lib/context/AuthContext";
 
-const B = "#22C55E";
+const B = "#4A5D7A";
 
 export default function InviteAcceptPage() {
   const params = useParams();
@@ -142,7 +142,7 @@ export default function InviteAcceptPage() {
             ) : (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-[#16A34A]">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#2E3E52]">
                     Organization invite
                   </p>
                   <h1 className="text-2xl font-semibold text-foreground">
@@ -157,15 +157,15 @@ export default function InviteAcceptPage() {
 
                 <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
                   <div className="flex items-center gap-3 text-sm">
-                    <Building2 className="h-4 w-4 text-[#22C55E]" />
+                    <Building2 className="h-4 w-4 text-[#4A5D7A]" />
                     <span>{preview.tenant_name}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <Mail className="h-4 w-4 text-[#22C55E]" />
+                    <Mail className="h-4 w-4 text-[#4A5D7A]" />
                     <span>{preview.invited_email}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-[#22C55E]" />
+                    <CheckCircle2 className="h-4 w-4 text-[#4A5D7A]" />
                     <span className="capitalize">Role: {preview.role_display || preview.role}</span>
                   </div>
                   {preview.message ? (

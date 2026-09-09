@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tags } from "lucide-react";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface Discount {
   id: string;
@@ -39,25 +40,26 @@ export function POSCouponDialog({
   subtotal,
   onSelectDiscount,
 }: POSCouponDialogProps) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900">Apply Coupon</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900">{t('pos.apply_coupon')}</DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            Enter a coupon code or select from available offers
+            {t('pos.enter_coupon_or_select')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <label className="text-sm font-semibold text-gray-900">Enter Coupon Code</label>
+            <label className="text-sm font-semibold text-gray-900">{t('pos.enter_code')}</label>
             <div className="flex gap-2">
               <Input
                 type="text"
                 value={couponCode}
                 onChange={(e) => onCouponCodeChange(e.target.value.toUpperCase())}
-                placeholder="Enter code (e.g., SAVE10)"
+                placeholder={t('pos.code_placeholder')}
                 className="flex-1 h-12 text-base font-mono uppercase"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -67,9 +69,9 @@ export function POSCouponDialog({
               />
               <Button
                 onClick={onApplyCouponCode}
-                className="h-12 px-6 bg-green-600 hover:bg-green-700"
+                className="h-12 px-6 bg-slate-600 hover:bg-slate-700"
               >
-                Apply
+                {t('pos.apply')}
               </Button>
             </div>
           </div>
@@ -79,21 +81,21 @@ export function POSCouponDialog({
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500 font-medium">OR CHOOSE FROM AVAILABLE COUPONS</span>
+              <span className="px-4 bg-white text-gray-500 font-medium">{t('pos.or_choose')}</span>
             </div>
           </div>
 
           <div className="space-y-3">
             {loadingDiscounts ? (
               <div className="text-center py-8 text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-                Loading coupons...
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600 mx-auto mb-2"></div>
+                {t('pos.loading_coupons')}
               </div>
             ) : availableDiscounts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Tags className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                <p className="font-medium">No active coupons available</p>
-                <p className="text-sm">Check back later for offers</p>
+                <p className="font-medium">{t('pos.no_coupons')}</p>
+                <p className="text-sm">{t('pos.check_later')}</p>
               </div>
             ) : (
               <div className="grid gap-3 max-h-96 overflow-y-auto">
@@ -111,13 +113,13 @@ export function POSCouponDialog({
                       className={`text-left p-4 rounded-lg border-2 transition-all ${
                         isDisabled
                           ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                          : 'border-green-200 bg-green-50 hover:border-green-400 hover:shadow-md cursor-pointer'
+                          : 'border-slate-200 bg-slate-50 hover:border-slate-400 hover:shadow-md cursor-pointer'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <Tags className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : 'text-green-600'}`} />
+                            <Tags className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : 'text-slate-600'}`} />
                             <span className="font-bold text-base text-gray-900">{discount.name}</span>
                           </div>
                           
@@ -153,7 +155,7 @@ export function POSCouponDialog({
                         </div>
 
                         <div className="text-right">
-                          <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-green-600'}`}>
+                          <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-slate-600'}`}>
                             {discount.discount_type === 'percentage' 
                               ? `${discount.discount_value}%` 
                               : `Rs. ${discount.discount_value}`}
@@ -170,9 +172,9 @@ export function POSCouponDialog({
 
           {availableDiscounts.length > 0 && (
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">Current Order</h4>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('pos.current_order')}</h4>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600">{t('pos.subtotal')}</span>
                 <span className="font-semibold text-gray-900">Rs. {subtotal.toFixed(2)}</span>
               </div>
             </div>
@@ -186,7 +188,7 @@ export function POSCouponDialog({
             onClick={() => onOpenChange(false)}
             className="flex-1"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
         </div>
       </DialogContent>

@@ -101,7 +101,7 @@ export default function RunPayrollPage() {
                 <Button
                   onClick={handleCalculate}
                   disabled={!month || loading}
-                  className="w-full h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="w-full h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                 >
                   {loading ? "Calculating..." : "Calculate Payroll"}
                 </Button>
@@ -132,9 +132,9 @@ export default function RunPayrollPage() {
                   <p className="text-xs text-gray-600 font-medium">Total Deductions</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">Rs. {payrollData?.total_deductions.toLocaleString() || 0}</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4">
+                <div className="bg-slate-50 rounded-lg p-4">
                   <p className="text-xs text-gray-600 font-medium">Net Payroll</p>
-                  <p className="text-2xl font-bold text-[#22C55E] mt-1">Rs. {payrollData?.total_net.toLocaleString() || 0}</p>
+                  <p className="text-2xl font-bold text-[#4A5D7A] mt-1">Rs. {payrollData?.total_net.toLocaleString() || 0}</p>
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function RunPayrollPage() {
               >
                 Back
               </Button>
-              <Button onClick={handleProcess} disabled={loading} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6">
+              <Button onClick={handleProcess} disabled={loading} className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6">
                 {loading ? "Processing..." : "Process Payroll"}
               </Button>
             </div>

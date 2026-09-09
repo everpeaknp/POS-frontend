@@ -27,6 +27,7 @@ import { NewPosSessionDialog } from "@/components/pos/NewPosSessionDialog";
 import posApi, { type POSSession } from "@/lib/api/pos";
 import { sumDigitalWalletSales } from "@/lib/pos/payment-methods";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 interface PosSessionsPageContentProps {
   openNewOnMount?: boolean;
@@ -36,6 +37,7 @@ export function PosSessionsPageContent({
   openNewOnMount = false,
 }: PosSessionsPageContentProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<POSSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -83,8 +85,8 @@ export function PosSessionsPageContent({
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="POS Sessions" subtitle="Loading..." />
-        <PageLoading message="Loading sessions…" />
+        <DashHeader title={t('pos.sessions')} subtitle={t('common.loading')} />
+        <PageLoading message={t('pos.loading_sessions')} />
       </div>
     );
   }
@@ -92,13 +94,13 @@ export function PosSessionsPageContent({
   if (sessions.length === 0 && !search && status === "All") {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="POS Sessions" subtitle="Manage cashier sessions" />
+        <DashHeader title={t('pos.sessions')} subtitle={t('pos.manage_sessions')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Monitor}
-            title="No POS sessions yet"
-            description="Open your first session to start processing sales at the register"
-            actionLabel="New Session"
+            title={t('pos.no_sessions')}
+            description={t('pos.open_first_session')}
+            actionLabel={t('pos.new_session')}
             onAction={() => setNewDialogOpen(true)}
           />
         </div>
@@ -113,14 +115,14 @@ export function PosSessionsPageContent({
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="POS Sessions" subtitle={`${filtered.length} sessions`} />
+      <DashHeader title={t('pos.sessions')} subtitle={`${filtered.length} ${t('pos.sessions_count')}`} />
       <div className="flex-1 p-6 space-y-4">
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search sessions..."
+                placeholder={t('pos.search_sessions')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 w-52 text-sm border-gray-200 bg-white"
@@ -133,7 +135,7 @@ export function PosSessionsPageContent({
               <SelectContent>
                 {["All", "open", "closed"].map((s) => (
                   <SelectItem key={s} value={s}>
-                    {s === "All" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+                    {s === "All" ? t('common.all') : t(`pos.status_${s}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -141,10 +143,10 @@ export function PosSessionsPageContent({
           </div>
           <Button
             size="sm"
-            className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+            className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             onClick={() => setNewDialogOpen(true)}
           >
-            <Plus className="h-4 w-4" /> New Session
+            <Plus className="h-4 w-4" /> {t('pos.new_session')}
           </Button>
         </div>
 
@@ -153,16 +155,16 @@ export function PosSessionsPageContent({
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 {[
-                  "Session ID",
-                  "Cashier",
-                  "Opened",
-                  "Closed",
-                  "Orders",
-                  "Sales",
-                  "Cash Sales",
-                  "Digital Sales",
-                  "Status",
-                  "Actions",
+                  t('pos.session_id'),
+                  t('pos.cashier'),
+                  t('pos.opened'),
+                  t('pos.closed'),
+                  t('pos.orders'),
+                  t('pos.sales'),
+                  t('pos.cash_sales'),
+                  t('pos.digital_sales'),
+                  t('status.status'),
+                  t('pos.actions'),
                 ].map((h) => (
                   <th
                     key={h}
@@ -177,13 +179,13 @@ export function PosSessionsPageContent({
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                    No sessions found matching your filters
+                    {t('pos.no_matching_sessions')}
                   </td>
                 </tr>
               ) : (
                 filtered.map((session) => (
                 <tr key={session.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-mono text-xs text-[#22C55E] font-medium">
+                  <td className="px-4 py-3 font-mono text-xs text-[#4A5D7A] font-medium">
                     <Link
                       href={`/dashboard/pos/sessions/${session.id}`}
                       className="hover:underline"
@@ -226,7 +228,7 @@ export function PosSessionsPageContent({
                             window.location.href = `/dashboard/pos/sessions/${session.id}`;
                           }}
                         >
-                          View
+                          {t('common.view')}
                         </DropdownMenuItem>
                         {session.status === "open" && (
                           <DropdownMenuItem
@@ -234,7 +236,7 @@ export function PosSessionsPageContent({
                               window.location.href = `/dashboard/pos/sessions/${session.id}/close`;
                             }}
                           >
-                            Close Session
+                            {t('pos.close_session')}
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

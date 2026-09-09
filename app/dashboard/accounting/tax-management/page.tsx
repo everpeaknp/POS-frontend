@@ -31,7 +31,7 @@ type ConfirmAction =
 const VAT_STATUS: Record<string, string> = {
   draft: "bg-gray-100 text-gray-600",
   filed: "bg-blue-100 text-blue-700",
-  paid: "bg-green-100 text-green-700" };
+  paid: "bg-slate-100 text-slate-700" };
 
 interface TaxRuleRow {
   id: string;
@@ -185,8 +185,8 @@ function TaxManagementContent() {
             description: "This marks it as submitted to IRD.",
             confirmLabel: "File Return",
             icon: <FileText className="h-5 w-5" />,
-            iconWrapperClassName: "bg-[#22C55E]/15 text-[#22C55E]",
-            confirmClassName: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+            iconWrapperClassName: "bg-[#4A5D7A]/15 text-[#4A5D7A]",
+            confirmClassName: "bg-[#4A5D7A] hover:bg-[#2E3E52] text-white",
           }
         : confirmAction?.kind === "mark-paid"
           ? {
@@ -194,8 +194,8 @@ function TaxManagementContent() {
               description: "This confirms the payment has been completed.",
               confirmLabel: "Mark as Paid",
               icon: <CheckCircle2 className="h-5 w-5" />,
-              iconWrapperClassName: "bg-[#22C55E]/15 text-[#22C55E]",
-              confirmClassName: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+              iconWrapperClassName: "bg-[#4A5D7A]/15 text-[#4A5D7A]",
+              confirmClassName: "bg-[#4A5D7A] hover:bg-[#2E3E52] text-white",
             }
           : null;
 
@@ -298,13 +298,13 @@ function TaxManagementContent() {
           </div>
           {tab === "Tax Rules" ? (
             <Link href="/dashboard/accounting/tax-management/new" className="shrink-0">
-              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> Add Tax Rule
               </Button>
             </Link>
           ) : (
             <Link href="/dashboard/accounting/tax-management/returns/new" className="shrink-0">
-              <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+              <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
                 <Plus className="h-4 w-4" /> New VAT Return
               </Button>
             </Link>
@@ -361,7 +361,7 @@ function TaxManagementContent() {
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  tax.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                                  tax.status === "active" ? "bg-slate-100 text-slate-700" : "bg-gray-100 text-gray-500"
                                 }`}
                               >
                                 {tax.status}
@@ -371,7 +371,7 @@ function TaxManagementContent() {
                               <div className="flex items-center gap-2 text-xs">
                                 <Link
                                   href={`/dashboard/accounting/tax-management/${tax.id}/edit`}
-                                  className="text-[#22C55E] hover:underline"
+                                  className="text-[#4A5D7A] hover:underline"
                                 >
                                   Edit
                                 </Link>
@@ -452,7 +452,7 @@ function TaxManagementContent() {
                               <div className="flex items-center gap-2 text-xs">
                                 <Link
                                   href={`/dashboard/accounting/tax-management/returns/${vat.id}`}
-                                  className="text-[#22C55E] hover:underline"
+                                  className="text-[#4A5D7A] hover:underline"
                                 >
                                   View
                                 </Link>
@@ -472,7 +472,7 @@ function TaxManagementContent() {
                                     <span className="text-gray-300">|</span>
                                     <button
                                       onClick={() => handleMarkPaid(vat.id)}
-                                      className="text-[#22C55E] hover:text-[#16A34A]"
+                                      className="text-[#4A5D7A] hover:text-[#2E3E52]"
                                     >
                                       Mark Paid
                                     </button>

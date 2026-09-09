@@ -20,7 +20,7 @@ import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const METHOD_STYLES: Record<string, string> = {
-  cash: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
+  cash: "bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400",
   bank_transfer: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
   bank: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
   cheque: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
@@ -153,7 +153,7 @@ export default function HardwarePaymentsPage() {
           type="button"
           size="sm"
           onClick={openModal}
-          className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5 shrink-0"
+          className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" /> Record Payment
         </Button>

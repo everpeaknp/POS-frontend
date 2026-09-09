@@ -154,7 +154,7 @@ export default function BankReconciliationPage() {
                             checked={isChecked}
                             disabled={t.reconciled}
                             onChange={() => toggle(t.id, t.reconciled)}
-                            className="accent-[#22C55E]"
+                            className="accent-[#4A5D7A]"
                           />
                         </td>
                         <td className="px-3 py-2.5 text-gray-600 text-xs">
@@ -162,7 +162,7 @@ export default function BankReconciliationPage() {
                         </td>
                         <td className="px-3 py-2.5 text-gray-700 text-xs">{t.description}</td>
                         <td
-                          className={`px-3 py-2.5 text-right text-xs font-medium ${isCredit ? "text-[#22C55E]" : "text-red-500"}`}
+                          className={`px-3 py-2.5 text-right text-xs font-medium ${isCredit ? "text-[#4A5D7A]" : "text-red-500"}`}
                         >
                           {isCredit ? "+" : "-"}
                           {fmt(amount)}
@@ -206,7 +206,7 @@ export default function BankReconciliationPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Add: Unreconciled Deposits:</span>
-              <span className="text-[#22C55E]">{fmt(unreconciledCredits)}</span>
+              <span className="text-[#4A5D7A]">{fmt(unreconciledCredits)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Less: Unreconciled Withdrawals:</span>
@@ -222,12 +222,12 @@ export default function BankReconciliationPage() {
             </div>
             <div className="border-t border-gray-200 pt-2 flex justify-between font-bold">
               <span className="text-gray-700">Difference:</span>
-              <span className={isBalanced ? "text-[#22C55E]" : "text-red-600"}>{fmt(Math.abs(difference))}</span>
+              <span className={isBalanced ? "text-[#4A5D7A]" : "text-red-600"}>{fmt(Math.abs(difference))}</span>
             </div>
           </div>
           <div
             className={`mt-4 flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${
-              isBalanced ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"
+              isBalanced ? "bg-slate-50 text-slate-700" : "bg-yellow-50 text-yellow-700"
             }`}
           >
             {isBalanced
@@ -239,7 +239,7 @@ export default function BankReconciliationPage() {
             onClick={handleComplete}
             className={`mt-4 w-full text-white ${
               pendingReconcile.length > 0
-                ? "bg-[#22C55E] hover:bg-[#16A34A]"
+                ? "bg-[#4A5D7A] hover:bg-[#2E3E52]"
                 : "bg-gray-300 cursor-not-allowed"
             }`}
           >

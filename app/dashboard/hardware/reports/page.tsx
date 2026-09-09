@@ -304,7 +304,7 @@ export default function HardwareReportsPage() {
                 onClick={() => setActiveReport(key)}
                 className={`text-left bg-white dark:bg-card rounded-xl border p-5 shadow-sm transition-all ${
                   isActive
-                    ? "border-[#22C55E] ring-1 ring-[#22C55E]"
+                    ? "border-[#4A5D7A] ring-1 ring-[#4A5D7A]"
                     : "border-gray-100 dark:border-border hover:border-gray-200 dark:hover:border-border"
                 }`}
               >

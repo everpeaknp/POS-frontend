@@ -162,7 +162,7 @@ export default function NewPaymentPage() {
                   step="0.01"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                   placeholder="0.00"
                   required
                 />
@@ -225,7 +225,7 @@ export default function NewPaymentPage() {
                   type="text"
                   value={formData.reference_number}
                   onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                   placeholder="Transaction ID, Cheque #, etc."
                 />
               </div>
@@ -239,7 +239,7 @@ export default function NewPaymentPage() {
                     type="text"
                     value={formData.bank_name}
                     onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                    className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                     placeholder="Bank name"
                   />
                 </div>
@@ -253,7 +253,7 @@ export default function NewPaymentPage() {
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent resize-none"
               placeholder="Additional notes..."
             />
           </div>
@@ -271,7 +271,7 @@ export default function NewPaymentPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             >
               <Save className="h-4 w-4" /> Record Payment
             </Button>

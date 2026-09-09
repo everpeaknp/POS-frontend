@@ -66,8 +66,8 @@ export default function LeavePage() {
       toast((t) => (
         <div className="flex flex-col gap-4 min-w-[320px] p-2">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -85,7 +85,7 @@ export default function LeavePage() {
             </button>
             <button
               onClick={() => { toast.dismiss(t.id); resolve(true); }}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-600 rounded-lg hover:bg-slate-700 transition-colors"
             >
               Approve
             </button>
@@ -315,7 +315,7 @@ export default function LeavePage() {
           </Select>
         </div>
         <Link href="/dashboard/hr/leave/requests/new" className="shrink-0">
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5">
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5">
             <Plus className="h-4 w-4" /> Apply Leave
           </Button>
         </Link>
@@ -330,7 +330,7 @@ export default function LeavePage() {
           <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.pending}</p>
         </div>
         <div className={hrStatCardClass}>
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
             <CheckCircle2 className="h-4 w-4" />
             <p className="text-xs font-medium">Approved</p>
           </div>
@@ -344,7 +344,7 @@ export default function LeavePage() {
           <p className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.rejected}</p>
         </div>
         <div className={hrStatCardClass}>
-          <div className="flex items-center gap-2 text-[#22C55E] mb-1">
+          <div className="flex items-center gap-2 text-[#4A5D7A] mb-1">
             <CalendarDays className="h-4 w-4" />
             <p className="text-xs font-medium">Leave Types</p>
           </div>
@@ -383,7 +383,7 @@ export default function LeavePage() {
                     {filtered.map((leave) => (
                       <tr key={leave.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/30">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-foreground whitespace-nowrap">
-                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[#22C55E]">
+                          <Link href={`/dashboard/hr/leave/requests/${leave.id}`} className="hover:text-[#4A5D7A]">
                             {leave.employee_name}
                           </Link>
                         </td>

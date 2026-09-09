@@ -165,14 +165,14 @@ export default function PersonalFinanceSettingsPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Settings" subtitle={subtitle} />
+      <DashHeader title={t('settings.settings')} subtitle={t('finance.personal_finance_settings')} />
 
       <div className="flex-1 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Account Information */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <User className="h-4 w-4 text-[#22C55E]" />
+              <User className="h-4 w-4 text-[#4A5D7A]" />
               Account Information
             </h2>
             <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -251,7 +251,7 @@ export default function PersonalFinanceSettingsPage() {
                 <Button
                   onClick={handleSaveProfile}
                   disabled={savingProfile}
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {savingProfile ? "Saving..." : "Save Changes"}
@@ -263,7 +263,7 @@ export default function PersonalFinanceSettingsPage() {
           {/* Currency & Formats */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-[#22C55E]" />
+              <DollarSign className="h-4 w-4 text-[#4A5D7A]" />
               Currency & Formats
             </h2>
             <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
@@ -308,7 +308,7 @@ export default function PersonalFinanceSettingsPage() {
                 <Button
                   onClick={handleSavePrefs}
                   disabled={savingPrefs}
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {savingPrefs ? "Saving..." : "Save Preferences"}
@@ -327,7 +327,7 @@ export default function PersonalFinanceSettingsPage() {
           {/* Data Management */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Download className="h-4 w-4 text-[#22C55E]" />
+              <Download className="h-4 w-4 text-[#4A5D7A]" />
               Data Management
             </h2>
             <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
@@ -366,7 +366,7 @@ export default function PersonalFinanceSettingsPage() {
           {/* Product Tour */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Play className="h-4 w-4 text-[#22C55E]" />
+              <Play className="h-4 w-4 text-[#4A5D7A]" />
               Help & Onboarding
             </h2>
             <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -383,7 +383,7 @@ export default function PersonalFinanceSettingsPage() {
                     startTour();
                     toast.success("Product tour started!");
                   }}
-                  className="shrink-0 border-[#22C55E] text-[#22C55E] hover:bg-[#22C55E]/10"
+                  className="shrink-0 border-[#4A5D7A] text-[#4A5D7A] hover:bg-[#4A5D7A]/10"
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Start Tour

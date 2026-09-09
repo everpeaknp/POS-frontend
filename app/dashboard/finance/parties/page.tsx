@@ -530,7 +530,7 @@ export default function PartiesPage() {
               />
             </div>
 
-            <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={openAddDialog} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
               <Plus className="h-4 w-4 mr-2" />
               Add Party
             </Button>
@@ -550,7 +550,7 @@ export default function PartiesPage() {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("list")}
-                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "list" ? "bg-[#4A5D7A] hover:bg-[#4A5D7A]/90" : ""}`}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -558,7 +558,7 @@ export default function PartiesPage() {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
-                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#22C55E] hover:bg-[#22C55E]/90" : ""}`}
+                className={`h-9 w-9 ${viewMode === "grid" ? "bg-[#4A5D7A] hover:bg-[#4A5D7A]/90" : ""}`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -579,7 +579,7 @@ export default function PartiesPage() {
                   {searchTerm ? "No parties match your search" : "No parties added yet"}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={openAddDialog} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+                  <Button onClick={openAddDialog} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Party
                   </Button>
@@ -610,8 +610,8 @@ export default function PartiesPage() {
                             {party.photo_url ? (
                               <img src={party.photo_url} alt={party.name} className="h-10 w-10 rounded-full object-cover" />
                             ) : (
-                              <div className="h-10 w-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-[#22C55E]">{getInitials(party.name)}</span>
+                              <div className="h-10 w-10 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center">
+                                <span className="text-xs font-semibold text-[#4A5D7A]">{getInitials(party.name)}</span>
                               </div>
                             )}
                             <span className="text-sm font-medium text-left">{party.name}</span>
@@ -681,7 +681,7 @@ export default function PartiesPage() {
             {filteredParties.length === 0 ? (
               <div className="col-span-full bg-white border border-gray-200 rounded-lg p-12 text-center">
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <Button onClick={openAddDialog} className="bg-[#22C55E]">Add Your First Party</Button>
+                <Button onClick={openAddDialog} className="bg-[#4A5D7A]">Add Your First Party</Button>
               </div>
             ) : (
               filteredParties.map((party) => (
@@ -693,19 +693,19 @@ export default function PartiesPage() {
                     {party.photo_url ? (
                       <img src={party.photo_url} alt={party.name} className="h-12 w-12 rounded-full" />
                     ) : (
-                      <div className="h-12 w-12 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
-                        <span className="text-sm font-semibold text-[#22C55E]">{getInitials(party.name)}</span>
+                      <div className="h-12 w-12 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-[#4A5D7A]">{getInitials(party.name)}</span>
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="font-medium hover:text-[#22C55E] transition-colors">{party.name}</h3>
+                      <h3 className="font-medium hover:text-[#4A5D7A] transition-colors">{party.name}</h3>
                     </div>
                   </button>
                   <div className="flex gap-1 mt-2">
                     <Button size="sm" onClick={() => handleShare(party)} variant="outline" className="text-xs">
                       Share
                     </Button>
-                    <Button size="sm" onClick={() => setSelectedPartyForTransactions(party)} className="bg-[#22C55E]">
+                    <Button size="sm" onClick={() => setSelectedPartyForTransactions(party)} className="bg-[#4A5D7A]">
                       View Txn
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => openEditDialog(party)} className="h-8 w-8 p-0">
@@ -763,7 +763,7 @@ export default function PartiesPage() {
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="bg-[#22C55E]">Save</Button>
+            <Button onClick={handleSave} className="bg-[#4A5D7A]">Save</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -804,7 +804,7 @@ export default function PartiesPage() {
               />
               <Button
                 onClick={handleCopyShareLink}
-                className={`gap-2 ${shareCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-[#22C55E] hover:bg-[#22C55E]/90'}`}
+                className={`gap-2 ${shareCopied ? 'bg-slate-600 hover:bg-slate-700' : 'bg-[#4A5D7A] hover:bg-[#4A5D7A]/90'}`}
               >
                 {shareCopied ? (
                   <>
@@ -827,7 +827,7 @@ export default function PartiesPage() {
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
                 title="Share on WhatsApp"
               >
-                <WhatsAppIcon className="h-5 w-5 text-green-600" />
+                <WhatsAppIcon className="h-5 w-5 text-slate-600" />
               </button>
               <button
                 onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
@@ -856,7 +856,7 @@ export default function PartiesPage() {
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
               onClick={() => setShareModalOpen(false)}
-              className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+              className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
             >
               Done
             </Button>
@@ -949,7 +949,7 @@ export default function PartiesPage() {
               <select
                 value={transactionFormData.paymentMethod}
                 onChange={(e) => setTransactionFormData({ ...transactionFormData, paymentMethod: e.target.value })}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
               >
                 <option value="">Select payment method...</option>
                 <option value="cash">Cash</option>
@@ -963,7 +963,7 @@ export default function PartiesPage() {
               <Label>Receipt (Image/PDF)</Label>
               <div className="mt-1">
                 {!receiptFile ? (
-                  <label className="flex items-center justify-center w-full px-3 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#22C55E] hover:bg-emerald-50 transition">
+                  <label className="flex items-center justify-center w-full px-3 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#4A5D7A] hover:bg-emerald-50 transition">
                     <div className="flex flex-col items-center gap-1">
                       <Upload className="h-4 w-4 text-gray-400" />
                       <span className="text-xs text-gray-600">
@@ -1032,7 +1032,7 @@ export default function PartiesPage() {
                 placeholder="Add a note..."
                 value={transactionFormData.note}
                 onChange={(e) => setTransactionFormData({ ...transactionFormData, note: e.target.value })}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
                 rows={2}
               />
             </div>

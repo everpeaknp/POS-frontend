@@ -82,8 +82,8 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
         (t) => (
           <div className="flex flex-col gap-4 min-w-[320px] p-2">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -109,7 +109,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                   toast.dismiss(t.id);
                   resolve(true);
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-600 rounded-lg hover:bg-slate-700 transition-colors"
               >
                 Approve
               </button>
@@ -299,7 +299,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
         <div className={`${hrCardClass} p-8 text-center w-full`}>
           <p className="text-gray-600 dark:text-muted-foreground mb-4">Leave request not found</p>
           <Link href="/dashboard/hr/leave">
-            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white">View leave management</Button>
+            <Button className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white">View leave management</Button>
           </Link>
         </div>
       </HRPageShell>
@@ -336,7 +336,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 <Button
                   size="sm"
                   onClick={handleApprove}
-                  className="h-8 gap-1.5 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                  className="h-8 gap-1.5 bg-slate-600 hover:bg-slate-700 text-white shadow-sm"
                 >
                   <CheckCircle className="h-3.5 w-3.5" />
                   Approve
@@ -372,7 +372,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
           </div>
 
           <div className="flex items-start gap-4 min-w-0 pr-4 sm:pr-72">
-            <div className="w-16 h-16 rounded-full bg-[#22C55E] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[#22C55E]/10">
+            <div className="w-16 h-16 rounded-full bg-[#4A5D7A] flex items-center justify-center text-white font-bold text-xl shrink-0 ring-4 ring-[#4A5D7A]/10">
               {initials}
             </div>
             <div className="min-w-0">
@@ -427,7 +427,7 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 value={
                   <Link
                     href={`/dashboard/hr/employees/${leaveRequest.employee}`}
-                    className="hover:text-[#22C55E] transition-colors"
+                    className="hover:text-[#4A5D7A] transition-colors"
                   >
                     {leaveRequest.employee_name}
                   </Link>
@@ -474,8 +474,8 @@ export default function LeaveRequestDetailPage({ params }: { params: Promise<{ i
                 Approval
               </h3>
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-500/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-muted-foreground">Approved by</p>

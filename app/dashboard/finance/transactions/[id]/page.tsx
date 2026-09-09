@@ -236,7 +236,7 @@ export default function TransactionDetailPage() {
         <DashHeader title="Transaction Details" subtitle={`${workspaceName} · Loading...`} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C55E] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4A5D7A] mx-auto mb-4"></div>
             <p className="text-gray-500">Loading transaction details...</p>
           </div>
         </div>
@@ -487,7 +487,7 @@ export default function TransactionDetailPage() {
             <div className="flex gap-3 no-print">
               <Button
                 onClick={handleEdit}
-                className="flex-1 bg-[#22C55E] hover:bg-[#22C55E]/90 gap-2"
+                className="flex-1 bg-[#4A5D7A] hover:bg-[#4A5D7A]/90 gap-2"
               >
                 <Edit2 className="h-4 w-4" />
                 Edit Transaction
@@ -509,7 +509,7 @@ export default function TransactionDetailPage() {
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 bg-[#22C55E] text-white rounded-full shadow-lg hover:bg-[#22C55E]/90 transition-all z-50 no-print"
+          className="fixed bottom-6 right-6 p-3 bg-[#4A5D7A] text-white rounded-full shadow-lg hover:bg-[#4A5D7A]/90 transition-all z-50 no-print"
           aria-label="Back to top"
         >
           <ChevronUp className="h-5 w-5" />
@@ -521,7 +521,7 @@ export default function TransactionDetailPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-[#22C55E]" />
+              <Edit2 className="h-5 w-5 text-[#4A5D7A]" />
               Edit Transaction
             </DialogTitle>
           </DialogHeader>
@@ -549,7 +549,7 @@ export default function TransactionDetailPage() {
                   onClick={() => setEditFormData({ ...editFormData, type: "income", categoryId: "" })}
                   className={`flex items-center justify-center gap-2 h-10 rounded-lg border font-medium text-sm transition-all ${
                     editFormData.type === "income"
-                      ? "border-[#22C55E] bg-green-50 text-[#16A34A]"
+                      ? "border-[#4A5D7A] bg-slate-50 text-[#2E3E52]"
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
@@ -647,7 +647,7 @@ export default function TransactionDetailPage() {
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} className="bg-[#22C55E] hover:bg-[#22C55E]/90">
+            <Button onClick={handleSaveEdit} className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90">
               Save Changes
             </Button>
           </div>

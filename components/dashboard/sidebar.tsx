@@ -11,6 +11,7 @@ import { KhataLogo } from "@/components/khata-logo";
 import { WorkplaceSwitcher } from "@/components/dashboard/WorkplaceSwitcher";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAppearance } from "@/lib/context/AppearanceContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { usePermissions } from "@/lib/hooks/usePermissions";
 import { useDesktopWorkspaceOptional } from "@/lib/context/DesktopWorkspaceContext";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ import {
   SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY,
   scopedSidebarKey,
   type NavItem,
+  getNavItemTranslationKey,
 } from "@/lib/dashboard/nav-items";
 
 function SidebarItem({
@@ -43,12 +45,16 @@ function SidebarItem({
   alwaysExpanded?: boolean;
 }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const isOpen = alwaysExpanded ? true : openKey === item.label;
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
 
   const isChildActive = item.children?.some((c) => matchesNavChild(pathname, c)) ?? false;
   const isParentActive = item.href ? pathname === item.href : isChildActive;
+  
+  // Get translated label
+  const translatedLabel = t(getNavItemTranslationKey(item.label));
   
   // Check if this is a "direct link with add button" pattern (has href AND single child with createHref)
   const hasDirectAdd = item.href && item.children?.length === 1 && item.children[0].createHref;
@@ -75,11 +81,11 @@ function SidebarItem({
         <div className="group flex items-center gap-1 relative" data-tour={`nav-${item.label.toLowerCase()}`}>
           <Link
             href={item.href!}
-            title={item.label}
+            title={translatedLabel}
             className={cn(
               "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
               isParentActive
-                ? "bg-[#22C55E] text-white"
+                ? "bg-[#4A5D7A] text-white"
                 : "!text-gray-400 hover:!text-white hover:bg-white/10"
             )}
           >
@@ -87,14 +93,14 @@ function SidebarItem({
               "shrink-0",
               isParentActive ? "!text-white" : "!text-gray-400"
             )} />
-            {item.label}
+            {translatedLabel}
           </Link>
           <button
             onClick={(e) => {
               e.preventDefault();
               setShowQuickMenu(!showQuickMenu);
             }}
-            className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+            className="p-1.5 rounded hover:bg-[#4A5D7A] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
             title="Quick actions"
           >
             <Plus size={16} />
@@ -133,13 +139,13 @@ function SidebarItem({
     return (
       <Link
         href={item.href}
-        title={item.label}
+        title={translatedLabel}
         data-tour={`nav-${item.label.toLowerCase()}`}
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
           compact && "justify-center px-2",
           isParentActive
-            ? "bg-[#22C55E] text-white"
+            ? "bg-[#4A5D7A] text-white"
             : "!text-gray-400 hover:!text-white hover:bg-white/10"
         )}
       >
@@ -147,7 +153,7 @@ function SidebarItem({
           "shrink-0",
           isParentActive ? "!text-white" : "!text-gray-400"
         )} />
-        {!compact && item.label}
+        {!compact && translatedLabel}
       </Link>
     );
   }
@@ -158,11 +164,11 @@ function SidebarItem({
       <div className="group flex items-center gap-1" data-tour={`nav-${item.label.toLowerCase()}`}>
         <Link
           href={item.href!}
-          title={item.label}
+          title={translatedLabel}
           className={cn(
             "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
             isParentActive
-              ? "bg-[#22C55E] text-white"
+              ? "bg-[#4A5D7A] text-white"
               : "!text-gray-400 hover:!text-white hover:bg-white/10"
           )}
         >
@@ -170,12 +176,12 @@ function SidebarItem({
             "shrink-0",
             isParentActive ? "!text-white" : "!text-gray-400"
           )} />
-          {item.label}
+          {translatedLabel}
         </Link>
         <Link
           href={addHref!}
-          className="p-1.5 rounded hover:bg-[#22C55E] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
-          title={`Add ${item.label}`}
+          className="p-1.5 rounded hover:bg-[#4A5D7A] !text-gray-400 hover:!text-white transition-all shrink-0 mr-2"
+          title={`Add ${translatedLabel}`}
         >
           <Plus size={16} />
         </Link>
@@ -189,14 +195,14 @@ function SidebarItem({
       <button
         type="button"
         onClick={() => !alwaysExpanded && onToggle(item.label)}
-        title={item.label}
+        title={translatedLabel}
         data-tour={`nav-${item.label.toLowerCase()}-toggle`}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
           compact && "justify-center px-2",
           alwaysExpanded && "cursor-default",
           isParentActive && !isOpen
-            ? "bg-[#22C55E] text-white"
+            ? "bg-[#4A5D7A] text-white"
             : isOpen
               ? "bg-white/10 text-white"
               : "!text-gray-400 hover:!text-white hover:bg-white/10"
@@ -212,7 +218,7 @@ function SidebarItem({
         )} />
         {!compact && (
           <>
-            <span className="flex-1 text-left">{item.label}</span>
+            <span className="flex-1 text-left">{translatedLabel}</span>
             {!alwaysExpanded && (
               <ChevronDown
                 size={14}
@@ -234,6 +240,7 @@ function SidebarItem({
           <div className="ml-4 mt-0.5 mb-1 pl-3 border-l border-white/10 space-y-0.5">
             {item.children?.map((child) => {
               const active = matchesNavChild(pathname, child);
+              const childTranslated = t(getNavItemTranslationKey(child.label));
               return (
                 <div key={child.href} className="group flex items-center gap-1">
                   <Link
@@ -241,17 +248,17 @@ function SidebarItem({
                     className={cn(
                       "flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-all",
                       active
-                        ? "text-[#22C55E] border-l-2 border-[#22C55E] -ml-[1px] pl-[9px] bg-white/5"
+                        ? "text-[#4A5D7A] border-l-2 border-[#4A5D7A] -ml-[1px] pl-[9px] bg-white/5"
                         : "text-gray-500 hover:text-white hover:bg-white/5"
                     )}
                   >
-                    {child.label}
+                    {childTranslated}
                   </Link>
                   {child.createHref && (
                     <Link
                       href={child.createHref}
-                      className="p-1 rounded hover:bg-[#22C55E] text-white hover:text-white transition-all"
-                      title={`Create new ${child.label}`}
+                      className="p-1 rounded hover:bg-[#4A5D7A] text-white hover:text-white transition-all"
+                      title={`Create new ${childTranslated}`}
                     >
                       <Plus size={14} />
                     </Link>
@@ -422,7 +429,7 @@ function SidebarContent({
         ) : (
           <div className={cn(compact && "flex-1 flex justify-center")}>
             {!compact ? <KhataLogo size="md" /> : (
-              <div className="w-8 h-8 rounded-lg bg-[#22C55E] grid place-items-center text-white text-sm font-bold">
+              <div className="w-8 h-8 rounded-lg bg-[#4A5D7A] grid place-items-center text-white text-sm font-bold">
                 K
               </div>
             )}
@@ -477,7 +484,7 @@ function SidebarContent({
               data-1p-ignore
               data-lpignore="true"
               data-form-type="other"
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#22C55E]/40 focus:bg-white/[0.07]"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-[4.25rem] text-sm text-gray-200 outline-none placeholder:text-gray-500 transition-colors focus:border-[#4A5D7A]/40 focus:bg-white/[0.07]"
             />
             {navQuery ? (
               <button
@@ -678,7 +685,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={toggleCollapse}
-            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[#22C55E] transition-all duration-200 shadow-lg"
+            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 items-center justify-center rounded-full bg-[#1E2A3B] border border-white/10 !text-gray-400 hover:!text-white hover:bg-[#4A5D7A] transition-all duration-200 shadow-lg"
             aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
             title={compact ? "Expand sidebar" : "Collapse sidebar"}
           >

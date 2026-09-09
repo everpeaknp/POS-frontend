@@ -21,21 +21,21 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
         return (
           <Link key={module.id} href={module.href} className="group block cursor-pointer">
             <div
-              className={`${dashboardCardClass} h-full transition-all duration-200 hover:border-[#22C55E]/30 hover:shadow-md`}
+              className={`${dashboardCardClass} h-full transition-all duration-200 hover:border-[#4A5D7A]/30 hover:shadow-md`}
             >
               <div className="border-b border-gray-100 px-4 py-3.5 dark:border-border">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     {Icon ? (
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#22C55E]/10">
-                        <Icon className="h-[18px] w-[18px] text-[#22C55E]" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#4A5D7A]/10">
+                        <Icon className="h-[18px] w-[18px] text-[#4A5D7A]" />
                       </div>
                     ) : null}
                     <h3 className="truncate text-sm font-medium text-gray-900 dark:text-foreground">
                       {module.title}
                     </h3>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-[#22C55E]" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-[#4A5D7A]" />
                 </div>
               </div>
 
@@ -54,7 +54,7 @@ export function ModuleOverviewGrid({ modules, catalogById }: ModuleOverviewGridP
                           {typeof stat.change === "number" ? (
                             <span
                               className={`inline-flex shrink-0 items-center gap-0.5 text-[11px] font-medium ${
-                                stat.change >= 0 ? "text-[#22C55E]" : "text-red-500"
+                                stat.change >= 0 ? "text-[#4A5D7A]" : "text-red-500"
                               }`}
                             >
                               {stat.change >= 0 ? (

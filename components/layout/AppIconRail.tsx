@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CircleHelp, LogOut, Moon, Sun, User } from "lucide-react";
+import { CircleHelp, LogOut, Moon, Sun, User, Search, Globe } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAppearance } from "@/lib/context/AppearanceContext";
 import { usePageTourOptional } from "@/lib/context/PageTourContext";
+import { useLanguageOptional } from "@/lib/context/LanguageContext";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { getDesktopApi } from "@/lib/desktop";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
@@ -16,6 +17,7 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useTopbarContentOptional } from "@/lib/context/TopbarContentContext";
 import { ErpTabsNav, useErpNavOptional } from "@/lib/context/ErpNavContext";
 import { KhataLogo } from "@/components/khata-logo";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,9 +36,9 @@ function KhataMark({ size = 22 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <path d="M16 2L28 10V22L16 30L4 22V10L16 2Z" fill="#22C55E" />
+      <path d="M16 2L28 10V22L16 30L4 22V10L16 2Z" fill="#4A5D7A" />
       <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="white" opacity="0.2" />
-      <path d="M16 6L26 12V20L16 26L6 20V12L16 6Z" fill="#22C55E" />
+      <path d="M16 6L26 12V20L16 26L6 20V12L16 6Z" fill="#4A5D7A" />
       <path d="M16 10L22 14V18L16 22L10 18V14L16 10Z" fill="white" opacity="0.45" />
     </svg>
   );
@@ -67,7 +69,7 @@ function RailButton({
     danger
       ? "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300"
       : active
-        ? "bg-[#22C55E]/20 ring-1 ring-[#22C55E]/50"
+        ? "bg-[#4A5D7A]/20 ring-1 ring-[#4A5D7A]/50"
         : "hover:bg-black/5 dark:hover:bg-white/10",
     disabled && "opacity-50 pointer-events-none"
   );
@@ -104,8 +106,8 @@ function OrgAvatar({ tenant, active }: { tenant: Tenant; active?: boolean }) {
   return (
     <span
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-lg bg-[#22C55E] text-white text-xs font-bold overflow-hidden",
-        active && "ring-2 ring-[#22C55E]/50 dark:ring-white/50"
+        "flex h-8 w-8 items-center justify-center rounded-lg bg-[#4A5D7A] text-white text-xs font-bold overflow-hidden",
+        active && "ring-2 ring-[#4A5D7A]/50 dark:ring-white/50"
       )}
     >
       {logo ? (
@@ -268,12 +270,65 @@ export function AppIconRail({
           className={cn(
             "h-[18px] w-[18px]",
             pageTour?.active
-              ? "text-[#22C55E]"
+              ? "text-[#4A5D7A]"
               : "text-gray-500 dark:text-gray-400"
           )}
           strokeWidth={2}
         />
       </RailButton>
+    </div>
+  ) : null;
+
+  // Language toggle
+  const languageContext = useLanguageOptional();
+  const languageToggle = languageContext && horizontal ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "rounded-lg grid place-items-center transition-colors shrink-0 outline-none h-9 w-9",
+          "hover:bg-black/5 dark:hover:bg-white/10"
+        )}
+        title="Language"
+        aria-label="Language"
+      >
+        <Globe className="h-[18px] w-[18px] text-gray-500 dark:text-gray-400" strokeWidth={2} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => languageContext.setLanguage('en')}
+        >
+          {languageContext.language === 'en' && (
+            <span className="mr-2">✓</span>
+          )}
+          English
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => languageContext.setLanguage('ne')}
+        >
+          {languageContext.language === 'ne' && (
+            <span className="mr-2">✓</span>
+          )}
+          नेपाली
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : null;
+
+  // Search bar (placeholder UI for now)
+  const searchBar = horizontal ? (
+    <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40 hover:bg-muted/60 transition-colors max-w-xs">
+      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Input
+        type="text"
+        placeholder={languageContext ? languageContext.t('common.search') : 'Search...'}
+        disabled
+        className="h-auto border-0 bg-transparent text-sm placeholder-muted-foreground focus-visible:ring-0 focus-visible:outline-none cursor-pointer"
+      />
+      <kbd className="hidden lg:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
+        <span className="text-xs">⌘</span>K
+      </kbd>
     </div>
   ) : null;
 
@@ -293,6 +348,7 @@ export function AppIconRail({
           )}
         </RailButton>
       </div>
+      {languageToggle}
       <div data-tour="topbar-user" className="shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -300,13 +356,13 @@ export function AppIconRail({
               "rounded-lg grid place-items-center transition-colors shrink-0 outline-none",
               horizontal ? "h-9 w-9" : "h-10 w-10",
               onSettings
-                ? "bg-[#22C55E]/15 ring-1 ring-[#22C55E]/40 dark:bg-[#22C55E]/20 dark:ring-[#22C55E]/50"
+                ? "bg-[#4A5D7A]/15 ring-1 ring-[#4A5D7A]/40 dark:bg-[#4A5D7A]/20 dark:ring-[#4A5D7A]/50"
                 : "hover:bg-black/5 dark:hover:bg-white/10"
             )}
             aria-label="Account menu"
             title="Account"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#22C55E] text-white text-xs font-semibold overflow-hidden">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4A5D7A] text-white text-xs font-semibold overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -417,6 +473,8 @@ export function AppIconRail({
             {orgButtons}
           </div>
         )}
+
+        {searchBar}
 
         <div
           data-tour="topbar-actions"

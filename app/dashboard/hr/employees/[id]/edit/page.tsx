@@ -216,9 +216,9 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
                       currentStep > step.id
-                        ? "bg-[#22C55E] border-[#22C55E] text-white"
+                        ? "bg-[#4A5D7A] border-[#4A5D7A] text-white"
                         : currentStep === step.id
-                          ? "bg-[#22C55E] border-[#22C55E] text-white"
+                          ? "bg-[#4A5D7A] border-[#4A5D7A] text-white"
                           : "bg-white border-gray-300 text-gray-400"
                     }`}
                   >
@@ -235,7 +235,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                 {index < STEPS.length - 1 && (
                   <div
                     className={`h-0.5 flex-1 mx-2 transition-colors ${
-                      currentStep > step.id ? "bg-[#22C55E]" : "bg-gray-200"
+                      currentStep > step.id ? "bg-[#4A5D7A]" : "bg-gray-200"
                     }`}
                   />
                 )}
@@ -439,9 +439,9 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                   />
                 </div>
               </div>
-              <div className="mt-4 bg-green-50 border border-green-100 rounded-lg p-4 w-full">
-                <p className="text-sm text-green-700">PF (Provident Fund): 10% employee + 10% employer</p>
-                <p className="text-sm text-green-700 mt-1">
+              <div className="mt-4 bg-slate-50 border border-slate-100 rounded-lg p-4 w-full">
+                <p className="text-sm text-slate-700">PF (Provident Fund): 10% employee + 10% employer</p>
+                <p className="text-sm text-slate-700 mt-1">
                   Current PF: Rs. {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employee) + Rs.{" "}
                   {(Number(formData.basic_salary) * 0.1).toLocaleString()} (Employer)
                 </p>
@@ -493,7 +493,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={loading}
                 >
                   Next
@@ -501,7 +501,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
               ) : (
                 <Button
                   type="submit"
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                  className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                   disabled={loading}
                 >
                   {loading ? "Updating..." : "Update Employee"}

@@ -208,7 +208,7 @@ export default function NewBulkPricingPage() {
                           step="0.01"
                           value={tier.min_quantity}
                           onChange={(e) => updateTier(index, 'min_quantity', e.target.value)}
-                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                           required
                         />
                       </div>
@@ -222,7 +222,7 @@ export default function NewBulkPricingPage() {
                           step="0.01"
                           value={tier.max_quantity}
                           onChange={(e) => updateTier(index, 'max_quantity', e.target.value)}
-                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                           placeholder="Unlimited"
                         />
                       </div>
@@ -236,7 +236,7 @@ export default function NewBulkPricingPage() {
                           step="0.01"
                           value={tier.unit_price}
                           onChange={(e) => updateTier(index, 'unit_price', e.target.value)}
-                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                           required
                         />
                       </div>
@@ -250,7 +250,7 @@ export default function NewBulkPricingPage() {
                           step="0.01"
                           value={tier.discount_percent}
                           onChange={(e) => updateTier(index, 'discount_percent', e.target.value)}
-                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                          className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D7A] focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -286,7 +286,7 @@ export default function NewBulkPricingPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             >
               <Save className="h-4 w-4" /> Create Pricing Tiers
             </Button>

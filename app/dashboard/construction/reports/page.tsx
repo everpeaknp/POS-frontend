@@ -153,7 +153,7 @@ export default function ConstructionReportsPage() {
 
   const getBudgetHealthColor = (health: string) => {
     const colors: Record<string, string> = {
-      green: 'text-white bg-[#22C55E]',
+      green: 'text-white bg-[#4A5D7A]',
       yellow: 'text-white bg-yellow-500',
       red: 'text-white bg-red-500',
     };
@@ -176,7 +176,7 @@ export default function ConstructionReportsPage() {
             <select
               value={selectedSite}
               onChange={(e) => setSelectedSite(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             >
               <option value="All">All Sites</option>
               {sites.map((site) => (
@@ -190,7 +190,7 @@ export default function ConstructionReportsPage() {
             <button
               onClick={generateReport}
               disabled={!selectedSite || loading}
-              className="w-full px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {loading ? 'Generating...' : 'Generate Report'}
             </button>
@@ -208,7 +208,7 @@ export default function ConstructionReportsPage() {
             <select
               value={payrollSite}
               onChange={(e) => setPayrollSite(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md bg-white dark:bg-card focus:outline-none focus:ring-2 focus:ring-[#4A5D7A]"
             >
               <option value="All">All Sites</option>
               {sites.map((site) => (
@@ -283,7 +283,7 @@ export default function ConstructionReportsPage() {
             <button
               onClick={loadPayrollSummary}
               disabled={!payrollSite || loadingPayroll}
-              className="w-full px-6 py-2 bg-[#22C55E] text-white rounded-md hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full px-6 py-2 bg-[#4A5D7A] text-white rounded-md hover:bg-[#2E3E52] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {loadingPayroll ? 'Loading...' : 'Load Payroll'}
             </button>
@@ -389,7 +389,7 @@ export default function ConstructionReportsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Status</p>
-                <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#22C55E] text-white">
+                <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#4A5D7A] text-white">
                   {report.status.toUpperCase()}
                 </span>
               </div>
@@ -412,7 +412,7 @@ export default function ConstructionReportsPage() {
                   style={{ width: `${Math.min(report.budget_percentage, 100)}%` }}
                   className={`h-full transition-all duration-500 ${
                     report.budget_percentage < 80
-                      ? 'bg-[#22C55E]'
+                      ? 'bg-[#4A5D7A]'
                       : report.budget_percentage < 100
                         ? 'bg-yellow-500'
                         : 'bg-red-500'
@@ -433,7 +433,7 @@ export default function ConstructionReportsPage() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Remaining Budget</p>
                 <p
-                  className={`text-2xl font-bold ${report.remaining_budget >= 0 ? 'text-[#22C55E]' : 'text-red-600'}`}
+                  className={`text-2xl font-bold ${report.remaining_budget >= 0 ? 'text-[#4A5D7A]' : 'text-red-600'}`}
                 >
                   {formatNPR(report.remaining_budget)}
                 </p>

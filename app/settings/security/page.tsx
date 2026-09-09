@@ -289,8 +289,8 @@ export default function SecurityPage() {
                               {session.device}
                             </p>
                             {session.is_current && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#22C55E] bg-[#22C55E]/10 rounded-full">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#4A5D7A] bg-[#4A5D7A]/10 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#4A5D7A]" />
                                 Current
                               </span>
                             )}

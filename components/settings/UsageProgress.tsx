@@ -32,7 +32,7 @@ export function UsageProgress({
               ? "bg-red-500"
               : isWarning
                 ? "bg-amber-500"
-                : "bg-[#22C55E]"
+                : "bg-[#4A5D7A]"
           }`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />

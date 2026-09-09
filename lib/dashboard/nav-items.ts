@@ -183,11 +183,37 @@ const REPORTS_NAV: NavItem = {
   requiredModule: "reports",
   children: [
     { label: "Overview", href: "/dashboard/reports", exact: true },
+    // Sales & Returns
     { label: "Sales Report", href: "/dashboard/reports/sales" },
+    { label: "Sales Returns", href: "/dashboard/reports/sales-returns" },
+    // Purchases & Returns
     { label: "Purchase Report", href: "/dashboard/reports/purchase" },
+    { label: "Purchase Returns", href: "/dashboard/reports/purchase-returns" },
+    // Inventory
     { label: "Inventory Report", href: "/dashboard/reports/inventory" },
-    { label: "Financial Report", href: "/dashboard/reports/financial" },
-    { label: "Tax Report", href: "/dashboard/reports/tax" },
+    { label: "Stock Valuation", href: "/dashboard/reports/stock-valuation" },
+    { label: "Stock Movement", href: "/dashboard/reports/stock-movement" },
+    { label: "Item Details", href: "/dashboard/reports/item-details" },
+    { label: "Item-wise Sales", href: "/dashboard/reports/item-sales" },
+    // Daily & Transactions
+    { label: "Day Book", href: "/dashboard/reports/day-book" },
+    { label: "All Transactions", href: "/dashboard/reports/all-transactions" },
+    // Customers & Receivables
+    { label: "Receivables", href: "/dashboard/reports/receivables" },
+    { label: "Customer Statements", href: "/dashboard/reports/customer-statements" },
+    { label: "Party-wise Profit", href: "/dashboard/reports/party-profit" },
+    // Suppliers & Payables
+    { label: "Payables", href: "/dashboard/reports/payables" },
+    { label: "Supplier Statements", href: "/dashboard/reports/supplier-statements" },
+    // Financial & Accounting
+    { label: "Profit & Loss", href: "/dashboard/reports/profit-loss" },
+    { label: "Income Report", href: "/dashboard/reports/income" },
+    { label: "Expense Report", href: "/dashboard/reports/expense" },
+    { label: "Cash Flow", href: "/dashboard/reports/cash-flow" },
+    { label: "Financial Report", href: "/dashboard/reports/financial-report" },
+    { label: "Cash in Hand", href: "/dashboard/reports/cash-hand" },
+    { label: "Bank Statement", href: "/dashboard/reports/bank-statement" },
+    // Custom Reports
     { label: "Custom Reports", href: "/dashboard/reports/custom", createHref: "/dashboard/reports/custom?tab=builder" },
   ],
 };
@@ -340,16 +366,7 @@ const RETAIL_NAV_ITEMS: NavItem[] = [
   },
   ACCOUNTING_NAV,
   HR_NAV,
-  {
-    label: "Reports",
-    icon: BarChart2,
-    requiredModule: "reports",
-    children: [
-      { label: "Overview", href: "/dashboard/reports", exact: true },
-      { label: "Sales Report", href: "/dashboard/reports/sales" },
-      { label: "Inventory Report", href: "/dashboard/reports/inventory" },
-    ],
-  },
+  REPORTS_NAV,
   SETTINGS_NAV,
 ];
 
@@ -689,4 +706,13 @@ export function sortFeaturesByOrder(features: NavSubItem[], order: string[] | un
     if (indexB !== -1) return 1;
     return 0;
   });
+}
+
+/**
+ * Convert a nav item label to its translation key
+ * e.g. "Dashboard" -> "nav.dashboard"
+ */
+export function getNavItemTranslationKey(label: string): string {
+  const normalized = label.toLowerCase().replace(/\s+/g, '.');
+  return `nav.${normalized}`;
 }

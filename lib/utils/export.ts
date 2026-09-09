@@ -143,7 +143,7 @@ function buildExportHtml(data: ExportTableData) {
       .report-header { margin-bottom: 28px; }
       .report-header-accent {
         height: 4px;
-        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        background: linear-gradient(90deg, #4A5D7A 0%, #2E3E52 100%);
         border-radius: 2px;
         margin-bottom: 20px;
       }
@@ -154,7 +154,7 @@ function buildExportHtml(data: ExportTableData) {
       }
       .org-logo-fallback {
         width: 56px; height: 56px; border-radius: 10px;
-        background: #ecfdf5; color: #16a34a; font-size: 22px; font-weight: 700;
+        background: #E7ECF2; color: #2E3E52; font-size: 22px; font-weight: 700;
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       }
       .org-name { font-size: 22px; font-weight: 700; margin: 0 0 2px; color: #111827; letter-spacing: -0.02em; }
@@ -168,7 +168,7 @@ function buildExportHtml(data: ExportTableData) {
       }
       .report-type {
         font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
-        text-transform: uppercase; color: #22c55e; margin: 0 0 4px;
+        text-transform: uppercase; color: #4A5D7A; margin: 0 0 4px;
       }
       .report-title { font-size: 18px; font-weight: 700; margin: 0 0 4px; color: #111827; }
       .report-subtitle { font-size: 12px; color: #6b7280; margin: 0; }
@@ -201,9 +201,9 @@ function buildExportHtml(data: ExportTableData) {
       tr.row-subtotal td { font-weight: 600; background: #fafafa; }
       tr.row-total td {
         font-weight: 700;
-        background: #ecfdf5;
-        border-top: 2px solid #22c55e;
-        border-bottom: 2px solid #22c55e;
+        background: #E7ECF2;
+        border-top: 2px solid #4A5D7A;
+        border-bottom: 2px solid #4A5D7A;
         color: #111827;
         padding-top: 10px;
         padding-bottom: 10px;

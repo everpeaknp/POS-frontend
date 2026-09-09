@@ -230,7 +230,7 @@ export default function NewQuotationPage() {
                   <button 
                     type="button"
                     onClick={() => setCustomerDialogOpen(true)}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 hover:border-[#22C55E] hover:text-[#22C55E] hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 hover:border-[#4A5D7A] hover:text-[#4A5D7A] hover:bg-gray-50 transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -304,7 +304,7 @@ export default function NewQuotationPage() {
                       <Button 
                         type="button"
                         onClick={handleCreateCustomer}
-                        className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                        className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                         disabled={creatingCustomer}
                       >
                         {creatingCustomer ? "Creating..." : (
@@ -349,7 +349,7 @@ export default function NewQuotationPage() {
                 rows={3} 
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#22C55E]" 
+                className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#4A5D7A]" 
               />
             </div>
             <SalesSummaryBox 
@@ -372,7 +372,7 @@ export default function NewQuotationPage() {
             <Button 
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
             >
               {submitting ? "Creating..." : (
                 'Create Quotation'

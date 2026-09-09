@@ -72,11 +72,11 @@ export function UserMenuDropdown({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4A5D7A] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label="User menu"
         aria-expanded={open}
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#22C55E] text-white text-sm font-semibold overflow-hidden shrink-0">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4A5D7A] text-white text-sm font-semibold overflow-hidden shrink-0">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
           ) : (

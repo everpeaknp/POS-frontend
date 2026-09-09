@@ -254,22 +254,45 @@ export function usePOSCheckout() {
           setTaxRate(settingsRes.tax_rate / 100);
         }
         if (settingsRes) {
+          // Import getMediaURL to convert media paths
+          const { getMediaURL } = await import("@/lib/api/client");
+          
           setPaymentSettings({
             esewa_enabled: settingsRes.esewa_enabled ?? true,
             esewa_number: settingsRes.esewa_number || "",
-            esewa_qr: settingsRes.esewa_qr || "",
+            esewa_qr: getMediaURL(settingsRes.esewa_qr) || "",
             khalti_enabled: settingsRes.khalti_enabled ?? true,
             khalti_number: settingsRes.khalti_number || "",
-            khalti_qr: settingsRes.khalti_qr || "",
+            khalti_qr: getMediaURL(settingsRes.khalti_qr) || "",
             fonepay_enabled: settingsRes.fonepay_enabled ?? true,
             fonepay_number: settingsRes.fonepay_number || "",
-            fonepay_qr: settingsRes.fonepay_qr || "",
+            fonepay_qr: getMediaURL(settingsRes.fonepay_qr) || "",
             bank_transfer_enabled: settingsRes.bank_transfer_enabled ?? true,
-            bank_qr: settingsRes.bank_qr || "",
+            bank_qr: getMediaURL(settingsRes.bank_qr) || "",
             bank_name: settingsRes.bank_name || "",
             bank_account_number: settingsRes.bank_account_number || "",
             bank_account_name: settingsRes.bank_account_name || "",
           });
+          
+          // Fetch bank accounts with wallet QR codes and override POS settings
+          try {
+            const { bankAccountsAPI } = await import("@/lib/api/accounting");
+            const bankAccounts = await bankAccountsAPI.list({ status: 'active' });
+            
+            // Find the first bank account with each wallet enabled and use its QR
+            const esewaBank = bankAccounts.find(b => b.esewa_enabled);
+            const khaltiBank = bankAccounts.find(b => b.khalti_enabled);
+            const fonepayBank = bankAccounts.find(b => b.fonepay_enabled);
+            
+            setPaymentSettings(prev => ({
+              ...prev,
+              esewa_qr: getMediaURL(esewaBank?.esewa_qr) || prev.esewa_qr,
+              khalti_qr: getMediaURL(khaltiBank?.khalti_qr) || prev.khalti_qr,
+              fonepay_qr: getMediaURL(fonepayBank?.fonepay_qr) || prev.fonepay_qr,
+            }));
+          } catch (error) {
+            console.error("Failed to load bank account QR codes:", error);
+          }
         }
 
         if (sessionRes?.warehouse) {
@@ -605,11 +628,15 @@ export function usePOSCheckout() {
       );
       
       if (transaction) {
+        // Close the checkout dialog
+        setShowCheckoutDialog(false);
+        
+        // Show the thank you dialog with the completed transaction
         setCompletedTransaction(transaction);
         setShowThankYouDialog(true);
-      } else {
-        toast.error("Failed to complete sale. Please try again.");
       }
+      // If createTransaction returns null, the error was already handled
+      // by handleTransactionError() which showed specific error toasts
     } catch (error: any) {
       console.error("Complete sale error:", error);
       toast.error(error.message || "Failed to complete sale");

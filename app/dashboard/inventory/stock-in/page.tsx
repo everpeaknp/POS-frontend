@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { inventoryApi } from "@/lib/api/inventory";
 import { useApi } from "@/lib/hooks/useApi";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { mapDjangoErrorsToForm, getErrorMessage } from "@/lib/utils/form-errors";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 
@@ -29,6 +30,7 @@ type StockInFormData = z.infer<typeof stockInSchema>;
 
 export default function StockInPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch products and warehouses
@@ -87,8 +89,8 @@ export default function StockInPage() {
     return (
       <div className="flex flex-col h-full min-h-0">
         <DashHeader
-          title="Stock In"
-          subtitle="Receive stock into warehouse"
+          title={t('inventory.stock_in')}
+          subtitle={t('inventory.receive_stock_warehouse')}
         />
         <div className="flex-1 overflow-y-auto p-6">
           <SkeletonCard />
@@ -107,8 +109,8 @@ export default function StockInPage() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-sm p-6 lg:p-8 w-full min-h-full">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <Package className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-slate-50 rounded-lg">
+                <Package className="h-5 w-5 text-slate-600" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Receive Stock</h2>
@@ -234,7 +236,7 @@ export default function StockInPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? "Receiving..." : (
                     <>

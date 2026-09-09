@@ -360,7 +360,7 @@ function SortableModuleCard({
         isDragging ? "shadow-lg opacity-90 z-10 relative" : ""
       } ${
         isSelected
-          ? "border-[#22C55E]/30 bg-[#22C55E]/[0.04] dark:bg-green-500/[0.06]"
+          ? "border-[#4A5D7A]/30 bg-[#4A5D7A]/[0.04] dark:bg-slate-500/[0.06]"
           : "border-gray-200 dark:border-border bg-white dark:bg-card"
       }`}
     >
@@ -372,7 +372,7 @@ function SortableModuleCard({
         }}
         title="Drag anywhere on the card to reorder the sidebar"
         className={`group relative flex items-center gap-3 px-4 py-3.5 transition-colors touch-none rounded-xl ${
-          isSelected ? "hover:bg-[#22C55E]/[0.07] dark:hover:bg-green-500/10" : "hover:bg-gray-50 dark:hover:bg-muted/40"
+          isSelected ? "hover:bg-[#4A5D7A]/[0.07] dark:hover:bg-slate-500/10" : "hover:bg-gray-50 dark:hover:bg-muted/40"
         } ${canToggle ? "cursor-pointer" : "cursor-default"} ${isLoading ? "opacity-70" : ""} ${isDragging ? "cursor-grabbing" : ""}`}
       >
         <div
@@ -385,7 +385,7 @@ function SortableModuleCard({
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
             isSelected
-              ? "bg-[#22C55E]/15 text-[#22C55E]"
+              ? "bg-[#4A5D7A]/15 text-[#4A5D7A]"
               : "bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground"
           }`}
         >
@@ -403,7 +403,7 @@ function SortableModuleCard({
               </span>
             )}
             {!isRequired && module.recommended && (
-              <span className="rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
+              <span className="rounded-full bg-[#4A5D7A]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#2E3E52]">
                 Recommended
               </span>
             )}
@@ -422,7 +422,7 @@ function SortableModuleCard({
             }}
             className={`shrink-0 flex items-center justify-center h-7 w-7 rounded-lg border transition-colors ${
               isAlwaysExpanded
-                ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#16A34A]"
+                ? "border-[#4A5D7A]/40 bg-[#4A5D7A]/10 text-[#2E3E52]"
                 : "border-gray-200 dark:border-border text-gray-400 dark:text-muted-foreground hover:border-gray-300 hover:text-gray-700 dark:hover:text-foreground"
             }`}
             title={
@@ -445,7 +445,7 @@ function SortableModuleCard({
             }}
             className={`shrink-0 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
               showPanel
-                ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#16A34A]"
+                ? "border-[#4A5D7A]/40 bg-[#4A5D7A]/10 text-[#2E3E52]"
                 : "border-gray-200 dark:border-border text-gray-500 dark:text-muted-foreground hover:border-gray-300 hover:text-gray-700 dark:hover:text-foreground"
             }`}
             title="Show features in this module"
@@ -463,7 +463,7 @@ function SortableModuleCard({
         <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
           {isLoading ? null : isRequired ? (
             <div
-              className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white"
+              className="flex h-5 w-5 items-center justify-center rounded-md bg-[#4A5D7A] text-white"
               aria-label={`${module.name} enabled`}
             >
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -473,7 +473,7 @@ function SortableModuleCard({
               checked={isSelected}
               disabled={!canEdit}
               onCheckedChange={onToggle}
-              className="h-5 w-5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+              className="h-5 w-5 data-[state=checked]:bg-[#4A5D7A] data-[state=checked]:border-[#4A5D7A]"
             />
           )}
         </div>
@@ -558,7 +558,7 @@ function SortableFeatureRow({ feature, isDisabled, isBusy, canEdit, onToggle }: 
           checked={!isDisabled}
           disabled={!canEdit || isBusy}
           onCheckedChange={onToggle}
-          className="h-4 w-4 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+          className="h-4 w-4 data-[state=checked]:bg-[#4A5D7A] data-[state=checked]:border-[#4A5D7A]"
         />
         <span className={isDisabled ? "text-gray-400 dark:text-muted-foreground" : ""}>
           {feature.label}

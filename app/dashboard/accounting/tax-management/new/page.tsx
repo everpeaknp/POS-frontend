@@ -266,7 +266,7 @@ export default function NewTaxRulePage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
                 disabled={loading || accounts.length === 0}
               >
                 {loading ? "Saving..." : "Save Tax Rule"}

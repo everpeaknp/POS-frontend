@@ -663,7 +663,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Type:</span>
-                    <span className={`font-medium ${parsedData.type === 'income' ? 'text-[#22C55E]' : 'text-red-600'}`}>
+                    <span className={`font-medium ${parsedData.type === 'income' ? 'text-[#4A5D7A]' : 'text-red-600'}`}>
                       {parsedData.type === 'income' ? 'Income' : 'Expense'}
                     </span>
                   </div>
@@ -724,7 +724,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
                   <Button
                     onClick={handleConfirm}
                     disabled={isSaving || !selectedAccount}
-                    className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+                    className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
                   >
                     {isSaving ? (
                       <>
@@ -744,7 +744,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
 
             {/* Confirmation Card - Retail/Kirana */}
             {!isPersonal && retailParsedCommand && (
-              <div className="bg-white border-2 border-[#22C55E] rounded-lg p-4 space-y-3">
+              <div className="bg-white border-2 border-[#4A5D7A] rounded-lg p-4 space-y-3">
                 {console.log('[QuickAdd] Retail confirmation card render', { 
                   isSaving, 
                   selectedWarehouse, 
@@ -808,7 +808,7 @@ export default function QuickAddBar({ onTransactionAdded }: QuickAddBarProps) {
                   <Button
                     onClick={handleConfirm}
                     disabled={isSaving || ((retailParsedCommand?.intent === 'restock' || retailParsedCommand?.intent === 'stock-out') && !selectedWarehouse)}
-                    className="bg-[#22C55E] hover:bg-[#22C55E]/90"
+                    className="bg-[#4A5D7A] hover:bg-[#4A5D7A]/90"
                   >
                     {isSaving ? (
                       <>

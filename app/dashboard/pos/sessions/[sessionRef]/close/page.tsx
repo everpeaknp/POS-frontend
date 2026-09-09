@@ -146,7 +146,7 @@ export default function CloseSessionPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Total Sales</span>
-                  <span className="text-sm font-medium text-green-600">
+                  <span className="text-sm font-medium text-slate-600">
                     Rs. {session.total_sales.toLocaleString()}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export default function CloseSessionPage() {
                   disabled={submitting}
                 />
                 {closingCash && (
-                  <div className={`mt-3 p-3 rounded-lg ${variance === 0 ? "bg-green-50 text-green-700" : variance > 0 ? "bg-blue-50 text-blue-700" : "bg-red-50 text-red-700"}`}>
+                  <div className={`mt-3 p-3 rounded-lg ${variance === 0 ? "bg-slate-50 text-slate-700" : variance > 0 ? "bg-blue-50 text-blue-700" : "bg-red-50 text-red-700"}`}>
                     <p className="text-sm font-medium">
                       {variance === 0
                         ? "✓ Cash matches perfectly"
@@ -207,7 +207,7 @@ export default function CloseSessionPage() {
             <div className="flex gap-3">
               <Button
                 type="submit"
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
                 disabled={submitting}
               >
                 {submitting ? "Closing..." : "Close Session"}

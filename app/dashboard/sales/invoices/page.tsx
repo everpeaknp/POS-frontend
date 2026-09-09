@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { StatusBadge } from "@/components/sales/StatusBadge";
 import { RecordPaymentModal } from "@/components/sales/RecordPaymentModal";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -96,6 +97,7 @@ function InvoiceActions({
 
 export default function InvoicesPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [paymentModal, setPaymentModal] = useState<{
@@ -244,7 +246,7 @@ export default function InvoicesPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Sales Invoices" subtitle="Loading..." />
+        <DashHeader title={t('sales.sales_invoices')} subtitle="Loading..." />
         <div className="flex-1 p-6">
           <SkeletonTable rows={10} />
         </div>
@@ -261,8 +263,8 @@ export default function InvoicesPage() {
     return (
       <div className="flex flex-col min-h-full">
         <DashHeader
-          title="Sales Invoices"
-          subtitle="Manage your sales invoices"
+          title={t('sales.sales_invoices')}
+          subtitle={t('sales.manage_your_invoices')}
         />
         <div className="flex-1 p-6">
           <EmptyState
@@ -280,8 +282,8 @@ export default function InvoicesPage() {
   return (
     <div className="flex flex-col min-h-full">
       <DashHeader
-        title="Sales Invoices"
-        subtitle={`${filteredInvoices.length} invoices`}
+        title={t('sales.sales_invoices')}
+        subtitle={`${filteredInvoices.length} ${t('sales.invoices_count')}`}
       />
       <div className="flex-1 p-6 space-y-4">
         {/* Filters */}
@@ -317,7 +319,7 @@ export default function InvoicesPage() {
           <Link href="/dashboard/sales/invoices/new">
             <Button
               size="sm"
-              className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5"
+              className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5"
             >
               <Plus className="h-4 w-4" /> New Invoice
             </Button>
@@ -372,7 +374,7 @@ export default function InvoicesPage() {
                       {/* Invoice Number */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#22C55E] transition-colors">
+                          <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#4A5D7A] transition-colors">
                             {invoice.invoice_number}
                           </span>
                         </div>
@@ -402,7 +404,7 @@ export default function InvoicesPage() {
                       {/* Balance */}
                       <td className="px-6 py-4 text-right">
                         <span className={`text-sm font-semibold ${
-                          invoice.balance > 0 ? "text-red-600" : "text-green-600"
+                          invoice.balance > 0 ? "text-red-600" : "text-slate-600"
                         }`}>
                           Rs. {invoice.balance.toLocaleString()}
                         </span>

@@ -68,6 +68,7 @@ function clearUserCache() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log('[AuthContext DEBUG] AuthProvider mounted/rendered');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -75,33 +76,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load user from localStorage on mount
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        try {
-          const userData = await authApi.getProfile();
-          setUser(userData);
-          cacheUser(userData);
-        } catch (error: unknown) {
-          if (isApiNetworkError(error)) {
-            const cachedUser = readCachedUser();
-            if (cachedUser) {
-              setUser(cachedUser);
-            }
-          } else {
-            console.error('[AuthContext] Failed to load user:', error);
+      try {
+        console.log('[AuthContext DEBUG] loadUser started');
+        const token = localStorage.getItem('access_token');
+        console.log('[AuthContext DEBUG] Token exists:', !!token);
+        
+        if (token) {
+          try {
+            console.log('[AuthContext DEBUG] Fetching user profile');
+            const userData = await authApi.getProfile();
+            console.log('[AuthContext DEBUG] Profile fetched successfully:', userData.email);
+            setUser(userData);
+            cacheUser(userData);
+          } catch (error: unknown) {
+            console.error('[AuthContext DEBUG] Profile fetch failed:', error);
+            if (isApiNetworkError(error)) {
+              console.log('[AuthContext DEBUG] Network error, checking cache');
+              const cachedUser = readCachedUser();
+              if (cachedUser) {
+                console.log('[AuthContext DEBUG] Using cached user:', cachedUser.email);
+                setUser(cachedUser);
+              }
+            } else {
+              console.error('[AuthContext] Failed to load user:', error);
 
-            const status = (error as { response?: { status?: number } })?.response?.status;
-            if (status === 401) {
-              localStorage.removeItem('access_token');
-              localStorage.removeItem('refresh_token');
-              clearUserCache();
-              document.cookie = 'access_token=; path=/; max-age=0';
-              document.cookie = 'refresh_token=; path=/; max-age=0';
+              const status = (error as { response?: { status?: number } })?.response?.status;
+              if (status === 401) {
+                console.log('[AuthContext DEBUG] 401 error, clearing tokens');
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                clearUserCache();
+                document.cookie = 'access_token=; path=/; max-age=0';
+                document.cookie = 'refresh_token=; path=/; max-age=0';
+              }
             }
           }
+        } else {
+          console.log('[AuthContext DEBUG] No token found');
         }
+      } catch (outerError) {
+        console.error('[AuthContext DEBUG] Unexpected error in loadUser:', outerError);
+      } finally {
+        console.log('[AuthContext DEBUG] Setting loading to false');
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadUser();

@@ -23,6 +23,7 @@ import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { useAuth } from "@/lib/context/AuthContext";
 import { isTenantOrgAdmin } from "@/lib/tenant/admin-access";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import type { DateCalendarSystem } from "@/lib/dates";
 import { getMediaUrl } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -297,6 +298,7 @@ function OrgSettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const { dateSystem, setDateSystem } = useDateSystem();
 
   // Redirect personal accounts to their dedicated settings
@@ -321,7 +323,7 @@ function OrgSettingsContent() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D7A]"></div>
           <p className="mt-4 text-gray-600">Redirecting to Personal Finance Settings...</p>
         </div>
       </div>
@@ -449,7 +451,7 @@ function OrgSettingsContent() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <DashHeader title="Organization Settings" subtitle="Manage your business profile" />
+      <DashHeader title={t('settings.organization_settings')} subtitle={t('settings.manage_business_profile')} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-8 w-full min-h-full">
@@ -684,7 +686,7 @@ function OrgSettingsContent() {
             <div className="pt-2 border-t border-gray-100">
               <Button
                 onClick={handleSubmit}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
                 disabled={submitting}
               >
                 {submitting ? "Saving..." : (

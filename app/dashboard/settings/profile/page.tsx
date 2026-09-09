@@ -21,7 +21,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const inputCls =
-  "h-11 pl-10 pr-3 border-gray-200 focus-visible:border-[#22C55E] focus-visible:ring-[#22C55E]/15 focus-visible:ring-3";
+  "h-11 pl-10 pr-3 border-gray-200 focus-visible:border-[#4A5D7A] focus-visible:ring-[#4A5D7A]/15 focus-visible:ring-3";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -62,7 +62,7 @@ export default function ProfilePage() {
           {/* Profile Overview Card */}
           <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-start gap-6">
-              <div className="w-20 h-20 rounded-full bg-[#22C55E] text-white text-2xl font-bold flex items-center justify-center shrink-0">
+              <div className="w-20 h-20 rounded-full bg-[#4A5D7A] text-white text-2xl font-bold flex items-center justify-center shrink-0">
                 {user ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}` : "U"}
               </div>
               <div className="flex-1">
@@ -71,7 +71,7 @@ export default function ProfilePage() {
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">{user?.email}</p>
                 <div className="flex items-center gap-4 mt-3">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-medium">
                     <Shield className="w-4 h-4" />
                     {user?.role || "Role"}
                   </span>
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6"
+                  className="bg-[#4A5D7A] hover:bg-[#2E3E52] text-white px-6"
                 >
                   {isSubmitting ? "Saving..." : "Save Changes"}
                 </Button>
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                   </label>
                   <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                     user.tenant.is_active 
-                      ? "bg-green-100 text-green-700" 
+                      ? "bg-slate-100 text-slate-700" 
                       : "bg-red-100 text-red-700"
                   }`}>
                     {user.tenant.is_active ? "Active" : "Inactive"}

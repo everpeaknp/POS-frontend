@@ -28,85 +28,33 @@ import {
 import { DashHeader } from "@/components/dashboard/dash-header";
 import { SkeletonCard } from "@/components/shared/Skeleton";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { useApi } from "@/lib/hooks/useApi";
 import { inventoryDashboardAPI } from "@/lib/api/inventory";
 import { formatNPR } from "@/lib/utils";
 
-const quickActions = [
-  {
-    href: "/dashboard/inventory/products/new",
-    label: "New Product",
-    sub: "Add SKU",
-    icon: Plus,
-    color: "bg-green-50 text-[#22C55E]",
-  },
-  {
-    href: "/dashboard/inventory/stock-in",
-    label: "Stock In",
-    sub: "Receive goods",
-    icon: Package,
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    href: "/dashboard/inventory/stock-out",
-    label: "Stock Out",
-    sub: "Issue goods",
-    icon: TrendingDown,
-    color: "bg-red-50 text-red-600",
-  },
-  {
-    href: "/dashboard/inventory/adjustment?new=1",
-    label: "Stock Adjustment",
-    sub: "Correct levels",
-    icon: SlidersHorizontal,
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    href: "/dashboard/inventory/transfer?new=1",
-    label: "Stock Transfer",
-    sub: "Move stock",
-    icon: ArrowLeftRight,
-    color: "bg-amber-50 text-amber-600",
-  },
+const quickActionsConfig = [
+  { href: "/dashboard/inventory/products/new", labelKey: "inventory.new_product", subKey: "inventory.add_sku", icon: Plus, color: "bg-slate-50 text-[#4A5D7A]" },
+  { href: "/dashboard/inventory/stock-in", labelKey: "inventory.stock_in", subKey: "inventory.receive_goods", icon: Package, color: "bg-blue-50 text-blue-600" },
+  { href: "/dashboard/inventory/stock-out", labelKey: "inventory.stock_out", subKey: "inventory.issue_goods", icon: TrendingDown, color: "bg-red-50 text-red-600" },
+  { href: "/dashboard/inventory/adjustment?new=1", labelKey: "inventory.stock_adjustment", subKey: "inventory.correct_levels", icon: SlidersHorizontal, color: "bg-purple-50 text-purple-600" },
+  { href: "/dashboard/inventory/transfer?new=1", labelKey: "inventory.stock_transfer", subKey: "inventory.move_stock", icon: ArrowLeftRight, color: "bg-amber-50 text-amber-600" },
 ];
 
-const moduleLinks = [
-  {
-    href: "/dashboard/inventory/products",
-    label: "Products",
-    sub: "Full product catalog",
-    icon: Package,
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    href: "/dashboard/inventory/categories",
-    label: "Categories",
-    sub: "Product groups",
-    icon: Tags,
-    color: "bg-green-50 text-[#22C55E]",
-  },
-  {
-    href: "/dashboard/inventory/warehouses",
-    label: "Warehouses",
-    sub: "Storage locations",
-    icon: Warehouse,
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    href: "/dashboard/inventory/reports",
-    label: "Inventory Reports",
-    sub: "Analytics & exports",
-    icon: BarChart3,
-    color: "bg-amber-50 text-amber-600",
-  },
+const moduleLinksConfig = [
+  { href: "/dashboard/inventory/products", labelKey: "inventory.products", subKey: "inventory.full_product_catalog", icon: Package, color: "bg-blue-50 text-blue-600" },
+  { href: "/dashboard/inventory/categories", labelKey: "inventory.categories", subKey: "inventory.product_groups", icon: Tags, color: "bg-slate-50 text-[#4A5D7A]" },
+  { href: "/dashboard/inventory/warehouses", labelKey: "inventory.warehouses", subKey: "inventory.storage_locations", icon: Warehouse, color: "bg-purple-50 text-purple-600" },
+  { href: "/dashboard/inventory/reports", labelKey: "inventory.inventory_reports", subKey: "inventory.analytics_exports", icon: BarChart3, color: "bg-amber-50 text-amber-600" },
 ];
 
 export default function InventoryDashboardPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const workspaceName =
     user?.tenant?.workspace_name || user?.tenant?.name || "Workspace";
-  const subtitle = `${workspaceName} · Inventory overview and analytics`;
+  const subtitle = `${workspaceName} · ${t('inventory.inventory_overview_and_analytics')}`;
 
   const { data, loading, error, refetch } = useApi(
     () => {
@@ -161,7 +109,7 @@ export default function InventoryDashboardPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Inventory" subtitle={subtitle} />
+        <DashHeader title={t('inventory.title')} subtitle={subtitle} />
         <div className="flex-1 p-6 space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <SkeletonCard />
@@ -177,16 +125,16 @@ export default function InventoryDashboardPage() {
   if (error || !data) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Inventory" subtitle={subtitle} />
+        <DashHeader title={t('inventory.title')} subtitle={subtitle} />
         <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 mb-4">Failed to load inventory overview</p>
+            <p className="text-red-600 mb-4">{t('inventory.failed_to_load')}</p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A]"
+              className="px-4 py-2 bg-[#4A5D7A] text-white rounded-lg hover:bg-[#2E3E52]"
             >
-              Retry
+              {t('common.retry')}
             </button>
           </div>
         </div>
@@ -211,30 +159,34 @@ export default function InventoryDashboardPage() {
 
   const statCards = [
     {
-      label: "Total Products",
+      labelKey: "inventory.total_products",
       value: summary.total_products.toLocaleString(),
-      sub: `${summary.total_units.toLocaleString()} total units`,
+      subKey: "inventory.total_units",
+      subValue: summary.total_units.toLocaleString(),
       icon: Package,
       color: "bg-blue-50 text-blue-600",
     },
     {
-      label: "Stock Value",
+      labelKey: "inventory.stock_value",
       value: formatNPR(valuation.total_cost_value),
-      sub: `Retail: ${formatNPR(valuation.total_sale_value)}`,
+      subKey: "inventory.retail_value",
+      subValue: formatNPR(valuation.total_sale_value),
       icon: DollarSign,
-      color: "bg-green-50 text-[#22C55E]",
+      color: "bg-slate-50 text-[#4A5D7A]",
     },
     {
-      label: "Low Stock",
+      labelKey: "inventory.low_stock",
       value: summary.low_stock.toLocaleString(),
-      sub: `${summary.out_of_stock} out of stock`,
+      subKey: "inventory.out_of_stock",
+      subValue: summary.out_of_stock,
       icon: AlertTriangle,
       color: "bg-amber-50 text-amber-600",
     },
     {
-      label: "Warehouses",
+      labelKey: "inventory.warehouses",
       value: warehouseCount.toLocaleString(),
-      sub: `${categoryCount} categories`,
+      subKey: "inventory.categories_count",
+      subValue: categoryCount,
       icon: Warehouse,
       color: "bg-purple-50 text-purple-600",
     },
@@ -242,37 +194,37 @@ export default function InventoryDashboardPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="Inventory" subtitle={subtitle} />
+      <DashHeader title={t('inventory.title')} subtitle={subtitle} />
 
       <div className="flex-1 p-6 space-y-6">
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((s) => (
             <div
-              key={s.label}
+              key={s.labelKey}
               className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-500">{s.label}</p>
+                <p className="text-xs text-gray-500">{t(s.labelKey)}</p>
                 <div className={`p-2 rounded-lg ${s.color}`}>
                   <s.icon className="h-4 w-4" />
                 </div>
               </div>
               <p className="text-xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t(s.subKey)}: {s.subValue}</p>
             </div>
           ))}
         </div>
 
         {/* Quick actions */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('inventory.quick_actions')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {quickActions.map((action) => (
+            {quickActionsConfig.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#22C55E]/30 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-[#4A5D7A]/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -281,8 +233,8 @@ export default function InventoryDashboardPage() {
                     <action.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">{action.label}</p>
-                    <p className="text-xs text-gray-500">{action.sub}</p>
+                    <p className="font-medium text-gray-900 text-sm">{t(action.labelKey)}</p>
+                    <p className="text-xs text-gray-500">{t(action.subKey)}</p>
                   </div>
                 </div>
               </Link>
@@ -293,7 +245,7 @@ export default function InventoryDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Stock chart */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Stock Levels Overview</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('inventory.stock_levels_overview')}</h3>
             {stockData.length > 0 ? (
               <>
                 {console.log('📊 Stock Levels Overview Chart Data:', {
@@ -321,8 +273,8 @@ export default function InventoryDashboardPage() {
                       <AreaChart data={testData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
                         <defs>
                           <linearGradient id="inventoryStock" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                            <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#4A5D7A" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="#4A5D7A" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         {/* Vertical gridlines only */}
@@ -358,11 +310,11 @@ export default function InventoryDashboardPage() {
                           type="monotone"
                           dataKey="stock"
                           name="Stock"
-                          stroke="#22C55E"
+                          stroke="#4A5D7A"
                           strokeWidth={2.5}
                           fill="url(#inventoryStock)"
                           dot={{ 
-                            fill: "#22C55E", 
+                            fill: "#4A5D7A", 
                             stroke: "#fff", 
                             strokeWidth: 2, 
                             r: 5 
@@ -371,7 +323,7 @@ export default function InventoryDashboardPage() {
                             r: 7, 
                             stroke: "#fff", 
                             strokeWidth: 2, 
-                            fill: "#22C55E" 
+                            fill: "#4A5D7A" 
                           }}
                           connectNulls={true}
                           isAnimationActive={true}
@@ -384,12 +336,12 @@ export default function InventoryDashboardPage() {
             ) : (
               <div className="h-[260px] flex flex-col items-center justify-center text-gray-400 text-sm">
                 <Layers className="h-10 w-10 mb-2 text-gray-300" />
-                No stock data yet
+                {t('inventory.no_stock_data_yet')}
                 <Link
                   href="/dashboard/inventory/products/new"
-                  className="text-[#22C55E] text-xs mt-2 hover:underline"
+                  className="text-[#4A5D7A] text-xs mt-2 hover:underline"
                 >
-                  Add your first product
+                  {t('inventory.add_first_product')}
                 </Link>
               </div>
             )}
@@ -397,9 +349,9 @@ export default function InventoryDashboardPage() {
 
           {/* Module navigation */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Module Navigation</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('inventory.module_navigation')}</h3>
             <div className="space-y-2">
-              {moduleLinks.map((link) => (
+              {moduleLinksConfig.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -410,8 +362,8 @@ export default function InventoryDashboardPage() {
                       <link.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{link.label}</p>
-                      <p className="text-xs text-gray-500">{link.sub}</p>
+                      <p className="text-sm font-medium text-gray-900">{t(link.labelKey)}</p>
+                      <p className="text-xs text-gray-500">{t(link.subKey)}</p>
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
@@ -425,24 +377,24 @@ export default function InventoryDashboardPage() {
           {/* Low stock alerts */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-gray-700">Low Stock Alerts</h3>
+              <h3 className="text-sm font-semibold text-gray-700">{t('inventory.low_stock_alerts')}</h3>
               <Link
                 href="/dashboard/inventory/products"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
-                Manage products
+                {t('inventory.manage_products')}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             {lowStockItems.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-500">
-                All products are above reorder levels
+                {t('inventory.all_products_above_reorder')}
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {["Product", "Stock", "Reorder", "Status"].map((h) => (
+                    {[t('inventory.product'), t('inventory.stock'), t('inventory.reorder'), t('inventory.status')].map((h) => (
                       <th
                         key={h}
                         className="text-left px-4 py-2.5 text-xs font-medium text-gray-500"
@@ -458,7 +410,7 @@ export default function InventoryDashboardPage() {
                       <td className="px-4 py-3 font-medium text-gray-900">
                         <Link
                           href={`/dashboard/inventory/products/${item.id}`}
-                          className="hover:text-[#22C55E]"
+                          className="hover:text-[#4A5D7A]"
                         >
                           {item.name}
                         </Link>
@@ -486,18 +438,18 @@ export default function InventoryDashboardPage() {
           {/* Top products by value */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-semibold text-gray-700">Top Products by Value</h3>
+              <h3 className="text-sm font-semibold text-gray-700">{t('inventory.top_products_by_value')}</h3>
               <Link
                 href="/dashboard/inventory/reports"
-                className="text-xs text-[#22C55E] hover:text-[#16A34A] font-medium inline-flex items-center gap-1"
+                className="text-xs text-[#4A5D7A] hover:text-[#2E3E52] font-medium inline-flex items-center gap-1"
               >
-                View reports
+                {t('inventory.view_reports')}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             {topByValue.length === 0 ? (
               <div className="h-[200px] flex items-center justify-center text-gray-400 text-sm">
-                No valuation data yet
+                {t('inventory.no_valuation_data_yet')}
               </div>
             ) : (
               <div className="space-y-4">
@@ -513,7 +465,7 @@ export default function InventoryDashboardPage() {
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#22C55E] transition-all"
+                        className="h-full rounded-full bg-[#4A5D7A] transition-all"
                         style={{ width: `${(p.total_cost_value / maxValue) * 100}%` }}
                       />
                     </div>
@@ -526,22 +478,22 @@ export default function InventoryDashboardPage() {
 
         {/* Valuation summary bar */}
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Inventory Valuation</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('inventory.inventory_valuation')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { label: "Cost Value", value: formatNPR(valuation.total_cost_value), icon: Package },
-              { label: "Retail Value", value: formatNPR(valuation.total_sale_value), icon: TrendingDown },
-              { label: "Potential Profit", value: formatNPR(valuation.potential_profit), icon: DollarSign },
+              { labelKey: "inventory.cost_value", value: formatNPR(valuation.total_cost_value), icon: Package },
+              { labelKey: "inventory.retail_value", value: formatNPR(valuation.total_sale_value), icon: TrendingDown },
+              { labelKey: "inventory.potential_profit", value: formatNPR(valuation.potential_profit), icon: DollarSign },
             ].map((item) => (
               <div
-                key={item.label}
+                key={item.labelKey}
                 className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 flex items-center gap-3"
               >
                 <div className="p-2 rounded-lg bg-white border border-gray-100">
-                  <item.icon className="h-4 w-4 text-[#22C55E]" />
+                  <item.icon className="h-4 w-4 text-[#4A5D7A]" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{item.label}</p>
+                  <p className="text-xs text-gray-500">{t(item.labelKey)}</p>
                   <p className="text-lg font-bold text-gray-900">{item.value}</p>
                 </div>
               </div>

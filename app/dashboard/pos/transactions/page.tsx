@@ -15,11 +15,13 @@ import posApi, { type POSTransaction, POS_PAGE_SIZE } from "@/lib/api/pos";
 import toast from "react-hot-toast";
 import { POS_PAYMENT_METHODS, getPosPaymentMethodLabel } from "@/lib/pos/payment-methods";
 import { useDateSystem } from "@/lib/context/DateSystemContext";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import NepaliDate from "nepali-date-converter";
 
 export default function POSTransactionsPage() {
   const router = useRouter();
   const { dateSystem } = useDateSystem();
+  const { t } = useLanguage();
   
   const [transactions, setTransactions] = useState<POSTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ export default function POSTransactionsPage() {
 
   const handleCancelTransaction = async (id: string, transactionNumber: string) => {
     // Show custom confirmation toast
-    toast((t) => (
+    toast((t_toast) => (
       <div className="flex flex-col gap-4 min-w-[320px] p-2">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-red-100">
@@ -150,33 +152,33 @@ export default function POSTransactionsPage() {
             </svg>
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-base">Cancel transaction?</p>
+            <p className="font-semibold text-gray-900 text-base">{t('pos.cancel_transaction_question')}</p>
             <p className="text-sm text-gray-600 mt-1">
-              Cancel transaction {transactionNumber}? Stock will be restored.
+              {t('pos.cancel_transaction_description')} {transactionNumber}? {t('pos.stock_will_be_restored')}
             </p>
           </div>
         </div>
         <div className="flex gap-3 justify-end">
           <button
-            onClick={() => toast.dismiss(t.id)}
+            onClick={() => toast.dismiss(t_toast.id)}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={async () => {
-              toast.dismiss(t.id);
+              toast.dismiss(t_toast.id);
               try {
                 await posApi.cancelTransaction(id);
-                toast.success("Transaction cancelled successfully");
+                toast.success(t('pos.transaction_cancelled_successfully'));
                 fetchTransactions();
               } catch (error: any) {
-                toast.error(error.response?.data?.error || "Failed to cancel transaction");
+                toast.error(error.response?.data?.error || t('pos.failed_to_cancel_transaction'));
               }
             }}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
           >
-            Cancel Transaction
+            {t('pos.cancel_transaction')}
           </button>
         </div>
       </div>
@@ -193,7 +195,7 @@ export default function POSTransactionsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      completed: "bg-green-100 text-green-700",
+      completed: "bg-slate-100 text-slate-700",
       cancelled: "bg-red-100 text-red-700",
       refunded: "bg-yellow-100 text-yellow-700"
     };
@@ -204,7 +206,7 @@ export default function POSTransactionsPage() {
     const styles = {
       cash: "bg-blue-100 text-blue-700",
       card: "bg-purple-100 text-purple-700",
-      esewa: "bg-green-100 text-green-700",
+      esewa: "bg-slate-100 text-slate-700",
       khalti: "bg-violet-100 text-violet-700",
       fonepay: "bg-indigo-100 text-indigo-700",
       credit: "bg-orange-100 text-orange-700"
@@ -215,15 +217,15 @@ export default function POSTransactionsPage() {
   if (loading && transactions.length === 0) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="POS Transactions" subtitle="Loading..." />
-        <PageLoading message="Loading…" />
+        <DashHeader title={t('pos.transactions')} subtitle={t('common.loading')} />
+        <PageLoading message={t('common.loading')} />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="POS Transactions" subtitle="View all point of sale transactions" />
+      <DashHeader title={t('pos.transactions')} subtitle={t('pos.view_all_point_of_sale_transactions')} />
 
       <div className="flex-1 p-6 space-y-6">
         {/* Summary Cards */}
@@ -236,14 +238,14 @@ export default function POSTransactionsPage() {
                   <DollarSign className="h-8 w-8" />
                 </div>
                 <div>
-                  <p className="text-sm text-white/80 mb-1">Total Amount Received</p>
+                  <p className="text-sm text-white/80 mb-1">{t('pos.total_amount_received')}</p>
                   <p className="text-4xl font-bold">
                     Rs. {summaryStats.totalAmount.toLocaleString()}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-white/80 mb-1">Total Transactions</p>
+                <p className="text-sm text-white/80 mb-1">{t('pos.total_transactions')}</p>
                 <p className="text-4xl font-bold">
                   {summaryStats.totalTransactions}
                 </p>
@@ -257,7 +259,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Wallet className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-semibold text-blue-700">Cash</span>
+                <span className="text-xs font-semibold text-blue-700">{t('pos.payment_method_cash')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.cashTotal.toLocaleString()}
@@ -273,7 +275,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <CreditCard className="h-4 w-4 text-purple-600" />
-                <span className="text-xs font-semibold text-purple-700">Card</span>
+                <span className="text-xs font-semibold text-purple-700">{t('pos.payment_method_card')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.cardTotal.toLocaleString()}
@@ -286,10 +288,10 @@ export default function POSTransactionsPage() {
             </div>
 
             {/* eSewa Card */}
-            <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-green-500 hover:shadow-md transition-all">
+            <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-slate-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <Receipt className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-semibold text-green-700">eSewa</span>
+                <Receipt className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-semibold text-slate-700">{t('pos.payment_method_esewa')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.esewaTotal.toLocaleString()}
@@ -305,7 +307,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-violet-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Wallet className="h-4 w-4 text-violet-600" />
-                <span className="text-xs font-semibold text-violet-700">Khalti</span>
+                <span className="text-xs font-semibold text-violet-700">{t('pos.payment_method_khalti')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.khaltiTotal.toLocaleString()}
@@ -321,7 +323,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-indigo-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Receipt className="h-4 w-4 text-indigo-600" />
-                <span className="text-xs font-semibold text-indigo-700">FonePay</span>
+                <span className="text-xs font-semibold text-indigo-700">{t('pos.payment_method_fonepay')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.fonepayTotal.toLocaleString()}
@@ -337,7 +339,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-cyan-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <CreditCard className="h-4 w-4 text-cyan-600" />
-                <span className="text-xs font-semibold text-cyan-700">Bank</span>
+                <span className="text-xs font-semibold text-cyan-700">{t('pos.payment_method_bank')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.bankTransferTotal.toLocaleString()}
@@ -353,7 +355,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-teal-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Wallet className="h-4 w-4 text-teal-600" />
-                <span className="text-xs font-semibold text-teal-700">Digital</span>
+                <span className="text-xs font-semibold text-teal-700">{t('pos.payment_method_digital_wallet')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.digitalWalletTotal.toLocaleString()}
@@ -369,7 +371,7 @@ export default function POSTransactionsPage() {
             <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-orange-500 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Receipt className="h-4 w-4 text-orange-600" />
-                <span className="text-xs font-semibold text-orange-700">Credit</span>
+                <span className="text-xs font-semibold text-orange-700">{t('pos.payment_method_credit')}</span>
               </div>
               <p className="text-lg font-bold text-gray-900">
                 {summaryStats.creditTotal.toLocaleString()}
@@ -388,7 +390,7 @@ export default function POSTransactionsPage() {
           <div className="relative flex-1 max-w-md min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by transaction number..."
+              placeholder={t('pos.search_by_transaction_number')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9 text-sm border-gray-200"
@@ -403,36 +405,36 @@ export default function POSTransactionsPage() {
           }}>
             <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
               <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="All Time" />
+              <SelectValue placeholder={t('pos.all_time')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="this_week">This Week</SelectItem>
-              <SelectItem value="this_month">This Month</SelectItem>
-              <SelectItem value="this_year">This Year</SelectItem>
-              <SelectItem value="custom">Custom Range</SelectItem>
+              <SelectItem value="all">{t('pos.all_time')}</SelectItem>
+              <SelectItem value="today">{t('pos.today')}</SelectItem>
+              <SelectItem value="this_week">{t('pos.this_week')}</SelectItem>
+              <SelectItem value="this_month">{t('pos.this_month')}</SelectItem>
+              <SelectItem value="this_year">{t('pos.this_year')}</SelectItem>
+              <SelectItem value="custom">{t('pos.custom_range')}</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
             <SelectTrigger className="w-[150px] h-9 border-gray-200 shrink-0">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={t('pos.all_statuses')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="refunded">Refunded</SelectItem>
+              <SelectItem value="all">{t('pos.all_statuses')}</SelectItem>
+              <SelectItem value="completed">{t('pos.status_completed')}</SelectItem>
+              <SelectItem value="cancelled">{t('pos.status_cancelled')}</SelectItem>
+              <SelectItem value="refunded">{t('pos.status_refunded')}</SelectItem>
             </SelectContent>
           </Select>
           
           <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v ?? "all")}>
             <SelectTrigger className="w-[160px] h-9 border-gray-200 shrink-0">
-              <SelectValue placeholder="All Payments" />
+              <SelectValue placeholder={t('pos.all_payments')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Payments</SelectItem>
+              <SelectItem value="all">{t('pos.all_payments')}</SelectItem>
               {POS_PAYMENT_METHODS.map((method) => (
                 <SelectItem key={method.value} value={method.value}>
                   {method.label}
@@ -447,7 +449,7 @@ export default function POSTransactionsPage() {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Custom Date Range</h3>
+                <h3 className="text-lg font-semibold">{t('pos.custom_date_range')}</h3>
                 <button
                   onClick={() => {
                     setShowCustomDateDialog(false);
@@ -464,7 +466,7 @@ export default function POSTransactionsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date ({dateSystem === 'BS' ? 'BS' : 'AD'})
+                    {t('pos.start_date')} ({dateSystem === 'BS' ? 'BS' : 'AD'})
                   </label>
                   <Input
                     type="date"
@@ -476,7 +478,7 @@ export default function POSTransactionsPage() {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date ({dateSystem === 'BS' ? 'BS' : 'AD'})
+                    {t('pos.end_date')} ({dateSystem === 'BS' ? 'BS' : 'AD'})
                   </label>
                   <Input
                     type="date"
@@ -497,20 +499,20 @@ export default function POSTransactionsPage() {
                     }}
                     className="flex-1"
                   >
-                    Clear
+                    {t('common.clear')}
                   </Button>
                   <Button
                     onClick={() => {
                       if (customStartDate && customEndDate) {
                         setShowCustomDateDialog(false);
                       } else {
-                        toast.error("Please select both start and end dates");
+                        toast.error(t('pos.select_both_dates'));
                       }
                     }}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-slate-600 hover:bg-slate-700"
                     disabled={!customStartDate || !customEndDate}
                   >
-                    Apply
+                    {t('common.apply')}
                   </Button>
                 </div>
               </div>
@@ -523,21 +525,21 @@ export default function POSTransactionsPage() {
             <table className="w-full">
               <thead className="bg-gray-50/50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Transaction #</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Cashier</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.transaction_number')}</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.date')}</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.customer')}</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.payment')}</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.total')}</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.status')}</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('pos.cashier')}</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {transactions.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
-                      No transactions found
+                      {t('pos.no_transactions_found')}
                     </td>
                   </tr>
                 ) : (
@@ -547,7 +549,7 @@ export default function POSTransactionsPage() {
                       className="group transition-all duration-150 hover:bg-gray-50 active:bg-gray-100"
                     >
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#22C55E] transition-colors">
+                        <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-[#4A5D7A] transition-colors">
                           {transaction.transaction_number}
                         </span>
                       </td>
@@ -558,7 +560,7 @@ export default function POSTransactionsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-gray-900">
-                          {transaction.customer_display || "Walk-in"}
+                          {transaction.customer_display || t('pos.walk_in')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -594,7 +596,7 @@ export default function POSTransactionsPage() {
                               onClick={() => router.push(`/dashboard/pos/transactions/${transaction.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              View Details
+                              {t('pos.view_details')}
                             </DropdownMenuItem>
                             {transaction.status === "completed" && (
                               <>
@@ -602,7 +604,7 @@ export default function POSTransactionsPage() {
                                   onClick={() => router.push(`/dashboard/pos/refunds/new?pos=${transaction.transaction_number}`)}
                                 >
                                   <RotateCcw className="h-4 w-4 mr-2" />
-                                  Create Refund
+                                  {t('pos.create_refund')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -610,7 +612,7 @@ export default function POSTransactionsPage() {
                                   className="text-red-600 focus:text-red-600"
                                 >
                                   <X className="h-4 w-4 mr-2" />
-                                  Cancel Transaction
+                                  {t('pos.cancel_transaction')}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -627,7 +629,7 @@ export default function POSTransactionsPage() {
           {totalCount > POS_PAGE_SIZE && (
             <div className="p-4 border-t border-gray-100 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Showing {(page - 1) * POS_PAGE_SIZE + 1} to {Math.min(page * POS_PAGE_SIZE, totalCount)} of {totalCount} transactions
+                {t('common.showing')} {(page - 1) * POS_PAGE_SIZE + 1} {t('common.to')} {Math.min(page * POS_PAGE_SIZE, totalCount)} {t('common.of')} {totalCount} {t('pos.transactions')}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -636,7 +638,7 @@ export default function POSTransactionsPage() {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
-                  Previous
+                  {t('common.previous')}
                 </Button>
                 <Button
                   size="sm"
@@ -644,7 +646,7 @@ export default function POSTransactionsPage() {
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page * POS_PAGE_SIZE >= totalCount}
                 >
-                  Next
+                  {t('common.next')}
                 </Button>
               </div>
             </div>

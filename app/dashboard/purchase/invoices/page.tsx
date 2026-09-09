@@ -137,7 +137,7 @@ export default function PurchaseInvoicesPage() {
           <Button variant="outline" size="sm" className="h-9 text-gray-600 border-gray-200 gap-1.5" onClick={handleExportCsv}>
             <Download className="h-4 w-4" /> Export CSV
           </Button>
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/invoices/new")}>
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/invoices/new")}>
             <Plus className="h-4 w-4" /> New Invoice
           </Button>
         </div>
@@ -158,7 +158,7 @@ export default function PurchaseInvoicesPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((inv) => (
                     <tr key={inv.id} className={`hover:bg-gray-50/50 transition-colors ${inv.status === "Overdue" ? "border-l-2 border-red-400" : ""}`}>
-                      <td className="px-4 py-3 font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/invoices/${inv.id}`)}>{inv.invoice_number}</td>
+                      <td className="px-4 py-3 font-medium text-[#4A5D7A] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/invoices/${inv.id}`)}>{inv.invoice_number}</td>
                       <td className="px-4 py-3 text-gray-600"><FormattedDate value={inv.date} /></td>
                       <td className={`px-4 py-3 ${inv.status === "Overdue" ? "text-red-500 font-medium" : "text-gray-600"}`}><FormattedDate value={inv.due_date || ""} /></td>
                       <td className="px-4 py-3 font-medium text-gray-800">{inv.supplier_name}</td>

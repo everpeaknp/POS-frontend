@@ -96,13 +96,13 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
         }}
         className={`group flex items-start gap-3 rounded-2xl border px-4 py-4 transition-all ${
           isSelected
-            ? "border-2 border-[#22C55E] bg-green-50/80 cursor-pointer shadow-sm shadow-green-500/10"
+            ? "border-2 border-[#4A5D7A] bg-slate-50/80 cursor-pointer shadow-sm shadow-slate-500/10"
             : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
         }`}
       >
         <div
           className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            isSelected ? "bg-[#22C55E]/15 text-[#16A34A]" : "bg-gray-100 text-gray-500"
+            isSelected ? "bg-[#4A5D7A]/15 text-[#2E3E52]" : "bg-gray-100 text-gray-500"
           }`}
         >
           <IconComponent className="h-[18px] w-[18px]" />
@@ -117,7 +117,7 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
               </span>
             )}
             {!isRequired && module.recommended && (
-              <span className="rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#16A34A]">
+              <span className="rounded-full bg-[#4A5D7A]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#2E3E52]">
                 Recommended
               </span>
             )}
@@ -129,14 +129,14 @@ export function ModuleSelection({ accountType, onBack, onNext }: ModuleSelection
 
         <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
           {isRequired ? (
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[#22C55E] text-white">
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[#4A5D7A] text-white">
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
             </div>
           ) : (
             <Checkbox
               checked={isSelected}
               onCheckedChange={() => toggleModule(module.id)}
-              className="h-5 w-5 data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+              className="h-5 w-5 data-[state=checked]:bg-[#4A5D7A] data-[state=checked]:border-[#4A5D7A]"
             />
           )}
         </div>

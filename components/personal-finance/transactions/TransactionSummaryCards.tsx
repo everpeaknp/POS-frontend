@@ -14,9 +14,9 @@ export function TransactionSummaryCards({ income, expense, net }: TransactionSum
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">Total Income</p>
-            <p className="text-2xl font-bold text-[#22C55E]">{formatCurrency(income)}</p>
+            <p className="text-2xl font-bold text-[#4A5D7A]">{formatCurrency(income)}</p>
           </div>
-          <TrendingUp className="h-8 w-8 text-[#22C55E]" />
+          <TrendingUp className="h-8 w-8 text-[#4A5D7A]" />
         </div>
       </div>
       <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -32,7 +32,7 @@ export function TransactionSummaryCards({ income, expense, net }: TransactionSum
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">Net Balance</p>
-            <p className={`text-2xl font-bold ${net >= 0 ? "text-[#22C55E]" : "text-red-600"}`}>
+            <p className={`text-2xl font-bold ${net >= 0 ? "text-[#4A5D7A]" : "text-red-600"}`}>
               {formatCurrency(net)}
             </p>
           </div>

@@ -18,8 +18,8 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { buildInviteRedirect } from "@/lib/invitations/accept";
 
-const B = "#22C55E";
-const BD = "#16A34A";
+const B = "#4A5D7A";
+const BD = "#2E3E52";
 
 // Zod validation schema - simplified without organization and username
 const signupSchema = z.object({
@@ -143,19 +143,19 @@ export default function SignupPage() {
         <KhataLogo size="md" />
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-4">Join thousands of<br />businesses on Khata</h2>
-          <p className="text-green-300 text-base leading-relaxed">Start your free trial today. No credit card required.</p>
+          <p className="text-slate-300 text-base leading-relaxed">Start your free trial today. No credit card required.</p>
           <div className="mt-10 space-y-3">
             {["Automated invoicing & billing", "Real-time financial reports", "VAT & tax compliance", "Multi-currency support"].map((f) => (
               <div key={f} className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: B }}>
                   <CheckCircle2 className="h-3 w-3 text-white" />
                 </div>
-                <span className="text-green-100 text-sm">{f}</span>
+                <span className="text-slate-100 text-sm">{f}</span>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
+        <p className="text-slate-400 text-xs">© 2025 Khata. All rights reserved.</p>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50 overflow-y-auto">
@@ -186,7 +186,7 @@ export default function SignupPage() {
                       {...register("first_name")}
                       id="first_name"
                       placeholder="John"
-                      className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      className={`h-11 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                         formError ? "border-red-300" : "border-gray-200"
                       }`}
                     />
@@ -203,7 +203,7 @@ export default function SignupPage() {
                       {...register("last_name")}
                       id="last_name"
                       placeholder="Doe"
-                      className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      className={`h-11 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                         formError ? "border-red-300" : "border-gray-200"
                       }`}
                     />
@@ -223,7 +223,7 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="yourmail@domain.com"
-                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                    className={`h-11 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                       formError ? "border-red-300" : "border-gray-200"
                     }`}
                   />
@@ -242,7 +242,7 @@ export default function SignupPage() {
                     id="phone"
                     type="tel"
                     placeholder="+977 9800000000"
-                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                    className={`h-11 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                       formError ? "border-red-300" : "border-gray-200"
                     }`}
                   />
@@ -262,7 +262,7 @@ export default function SignupPage() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
-                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
+                      className={`h-11 pr-10 bg-gray-50 focus-visible:border-slate-500 focus-visible:ring-green-500/20 ${
                         formError ? "border-red-300" : "border-gray-200"
                       }`}
                     />
@@ -298,12 +298,12 @@ export default function SignupPage() {
                           : passwordMismatch
                             ? "border-red-400"
                             : passwordMatch
-                              ? "border-green-400"
+                              ? "border-slate-400"
                               : "border-gray-200"
                       }`}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                      {passwordMatch && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                      {passwordMatch && <CheckCircle2 className="h-4 w-4 text-slate-500" />}
                       <button
                         type="button"
                         onClick={() => setShowConfirm(!showConfirm)}

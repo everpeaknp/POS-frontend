@@ -18,7 +18,7 @@ export default function HelpDeskPage() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
         <div className={`${dashboardCardClass} p-5 sm:p-6`}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 dark:bg-green-500/15 text-[#16A34A] mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-500/15 text-[#2E3E52] mb-4">
             <Zap className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-gray-900 dark:text-foreground">
@@ -30,7 +30,7 @@ export default function HelpDeskPage() {
           </p>
           <Button
             type="button"
-            className="mt-5 bg-gradient-to-r from-[#16A34A] to-[#22C55E] hover:from-[#15803d] hover:to-[#16A34A] text-white border-transparent rounded-xl"
+            className="mt-5 bg-gradient-to-r from-[#2E3E52] to-[#4A5D7A] hover:from-[#2E3E52] hover:to-[#2E3E52] text-white border-transparent rounded-xl"
             onClick={replayWizard}
           >
             <RefreshCw className="h-4 w-4 mr-1.5" />
@@ -39,7 +39,7 @@ export default function HelpDeskPage() {
         </div>
 
         <div className={`${dashboardCardClass} p-5 sm:p-6`}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 dark:bg-green-500/15 text-[#16A34A] mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-500/15 text-[#2E3E52] mb-4">
             <BookOpen className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-gray-900 dark:text-foreground">

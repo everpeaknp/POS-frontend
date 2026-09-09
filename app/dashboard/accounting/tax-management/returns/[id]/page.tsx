@@ -20,7 +20,7 @@ const fmt = (n: number) =>
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-100 text-gray-600",
   filed: "bg-blue-100 text-blue-700",
-  paid: "bg-green-100 text-green-700",
+  paid: "bg-slate-100 text-slate-700",
 };
 
 export default function VatReturnDetailPage() {
@@ -88,7 +88,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("file")}
-        className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
       >
         File Return
       </Button>
@@ -96,7 +96,7 @@ export default function VatReturnDetailPage() {
       <Button
         size="sm"
         onClick={() => setConfirmAction("mark-paid")}
-        className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+        className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white"
       >
         Mark as Paid
       </Button>
@@ -167,7 +167,7 @@ export default function VatReturnDetailPage() {
               {
                 label: "Net Payable to IRD",
                 value: fmt(vatReturn.net_payable),
-                color: vatReturn.net_payable >= 0 ? "text-[#22C55E]" : "text-red-600",
+                color: vatReturn.net_payable >= 0 ? "text-[#4A5D7A]" : "text-red-600",
                 bold: true,
               },
             ].map((s) => (

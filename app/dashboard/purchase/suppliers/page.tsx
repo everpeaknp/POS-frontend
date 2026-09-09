@@ -1,6 +1,7 @@
 "use client";
 
 import { PageLoading } from "@/components/shared/PageLoading";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,7 @@ import toast from "react-hot-toast";
 
 export default function SuppliersPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [menu, setMenu] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export default function SuppliersPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Suppliers" subtitle="Loading..." />
+        <DashHeader title={t('purchase.suppliers')} subtitle="Loading..." />
         <div className="flex-1 p-6">
           <PageLoading message="Loading…" />
         </div>
@@ -75,7 +77,7 @@ export default function SuppliersPage() {
   if (suppliers.length === 0 && !search && status === "All") {
     return (
       <div className="flex flex-col min-h-full">
-        <DashHeader title="Suppliers" subtitle="Manage your supplier directory" />
+        <DashHeader title={t('purchase.suppliers')} subtitle={t('purchase.manage_supplier_directory')} />
         <div className="flex-1 p-6">
           <EmptyState
             icon={Users}
@@ -107,7 +109,7 @@ export default function SuppliersPage() {
             </SelectContent>
           </Select>
           <div className="flex-1" />
-          <Button size="sm" className="h-9 bg-[#22C55E] hover:bg-[#16A34A] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/suppliers/new")}>
+          <Button size="sm" className="h-9 bg-[#4A5D7A] hover:bg-[#2E3E52] text-white gap-1.5" onClick={() => router.push("/dashboard/purchase/suppliers/new")}>
             <Plus className="h-4 w-4" /> Add Supplier
           </Button>
         </div>
@@ -130,10 +132,10 @@ export default function SuppliersPage() {
                     <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-sm font-bold text-[#22C55E] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#4A5D7A]/10 flex items-center justify-center text-sm font-bold text-[#4A5D7A] shrink-0">
                             {s.name[0]}
                           </div>
-                          <span className="font-medium text-[#22C55E] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/suppliers/${s.id}`)}>
+                          <span className="font-medium text-[#4A5D7A] cursor-pointer hover:underline" onClick={() => router.push(`/dashboard/purchase/suppliers/${s.id}`)}>
                             {s.name}
                           </span>
                         </div>

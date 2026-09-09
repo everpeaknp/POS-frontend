@@ -69,7 +69,7 @@ export function InsightCards({ insights, language }: InsightCardsProps) {
           {insight.action_link && (
             <button
               onClick={() => handleAction(insight.action_link)}
-              className="text-xs px-3 py-1.5 rounded-lg bg-[#22C55E] text-white font-medium hover:bg-[#22C55E]/90 transition"
+              className="text-xs px-3 py-1.5 rounded-lg bg-[#4A5D7A] text-white font-medium hover:bg-[#4A5D7A]/90 transition"
             >
               {insight.action_label || (language === "en" ? "View" : "हेर्नुहोस्")}
             </button>
