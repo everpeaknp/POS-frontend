@@ -710,3 +710,62 @@ export function filterDashboardNavItems(
     )
     .filter((item) => !item.children || item.children.length > 0);
 }
+
+// Sidebar ordering constants and utilities
+export const SIDEBAR_MODULE_ORDER_KEY = "sidebarModuleOrder";
+export const SIDEBAR_FEATURE_ORDER_KEY = "sidebarFeatureOrder";
+export const SIDEBAR_ORDER_CHANGED_EVENT = "sidebarOrderChanged";
+export const SIDEBAR_ALWAYS_EXPANDED_MODULES_KEY = "sidebarAlwaysExpandedModules";
+
+export function scopedSidebarKey(tenantId: string | null, key: string): string {
+  return tenantId ? `${key}_${tenantId}` : key;
+}
+
+export function sortNavItemsByModuleOrder(
+  items: NavItem[],
+  moduleOrder: string[]
+): NavItem[] {
+  if (!moduleOrder || moduleOrder.length === 0) return items;
+
+  const ordered = items.slice().sort((a, b) => {
+    const aModule = a.requiredModule || a.label;
+    const bModule = b.requiredModule || b.label;
+    const aIndex = moduleOrder.indexOf(aModule);
+    const bIndex = moduleOrder.indexOf(bModule);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+
+  return ordered;
+}
+
+export function getNavItemTranslationKey(item: NavItem | NavSubItem | string): string {
+  // For nav items, use label to generate key
+  const label = typeof item === "string" ? item : item?.label;
+  if (!label) {
+    return "nav.unknown";
+  }
+  const baseLabel = label.toLowerCase().replace(/\s+/g, "_");
+  return `nav.${baseLabel}`;
+}
+
+export function getModulePrimaryHref(moduleId: string): string | null {
+  const navItem = dashboardNavItems.find(
+    (item) => item.requiredModule?.toLowerCase() === moduleId.toLowerCase()
+  );
+
+  if (!navItem) return null;
+
+  // If the item has a direct href, use it
+  if (navItem.href) return navItem.href;
+
+  // If the item has children, use the first child's href (typically "Overview")
+  if (navItem.children && navItem.children.length > 0) {
+    return navItem.children[0].href;
+  }
+
+  return null;
+}
