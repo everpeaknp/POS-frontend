@@ -232,6 +232,19 @@
     color-scheme: dark;
   }
 
+  /* Plain native <select> elements (as opposed to the app's custom
+     Select/SelectContent components) render their dropdown popup using
+     OS-native chrome that doesn't reliably track the page's own dark/light
+     toggle — on Windows Chrome this can produce near-invisible option text
+     (light gray on a light popup background) when the page sets
+     `color-scheme: dark`. Force these popups to stay light/readable,
+     regardless of the app's theme, same rationale as the date input fix
+     above. Custom Select components are unaffected — they don't use a
+     native <select> element at all. */
+  select {
+    color-scheme: light;
+  }
+
   html[data-reduce-motion="true"] *:not(.khata-loader):not(.khata-loader *),
   html[data-reduce-motion="true"] *:not(.khata-loader)::before,
   html[data-reduce-motion="true"] *:not(.khata-loader)::after {

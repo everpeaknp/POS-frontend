@@ -697,7 +697,7 @@ export default function UsersPage() {
               }
             >
               <SelectTrigger className="h-9 w-48 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                <SelectValue />
+                <SelectValue placeholder={activeTab === "invitations" ? `Pending Invites (${pendingInvites})` : `Team Members (${users.length})`} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="users">
@@ -715,7 +715,7 @@ export default function UsersPage() {
                   onValueChange={(v) => setRoleFilter(v ?? "All")}
                 >
                   <SelectTrigger className="h-9 w-40 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
+                    <SelectValue placeholder="All Roles" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Roles</SelectItem>
@@ -732,7 +732,7 @@ export default function UsersPage() {
                   onValueChange={(v) => setStatusFilter(v ?? "All")}
                 >
                   <SelectTrigger className="h-9 w-36 text-sm border-gray-200 bg-white dark:bg-card dark:border-border">
-                    <SelectValue />
+                    <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Status</SelectItem>
@@ -1128,24 +1128,21 @@ export default function UsersPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="change-role-select"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select New Role <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="change-role-select"
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)] bg-white"
-                >
-                  {roleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={newRole} onValueChange={(v) => setNewRole(v ?? newRole)}>
+                  <SelectTrigger className="w-full h-10 text-sm border-gray-200 bg-white">
+                    <SelectValue placeholder={roleOptions.find((o) => o.value === newRole)?.label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -1208,18 +1205,22 @@ export default function UsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Select from Employees (Optional)
                   </label>
-                  <select
-                    value={selectedEmployee}
-                    onChange={(e) => handleEmployeeSelect(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
+                  <Select
+                    value={selectedEmployee || "__none__"}
+                    onValueChange={(v) => handleEmployeeSelect(v === "__none__" ? "" : (v ?? ""))}
                   >
-                    <option value="">-- Select an employee --</option>
-                    {inviteableEmployees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name} - {emp.designation} ({emp.email})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full h-10 text-sm border-gray-200 bg-white">
+                      <SelectValue placeholder="-- Select an employee --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">-- Select an employee --</SelectItem>
+                      {inviteableEmployees.map((emp) => (
+                        <SelectItem key={emp.id} value={String(emp.id)}>
+                          {emp.name} - {emp.designation} ({emp.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-gray-500 mt-1">
                     Auto-fill invitation details from your HR employees
                   </p>
@@ -1250,18 +1251,21 @@ export default function UsersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role <span className="text-red-500">*</span>
                 </label>
-                <select
+                <Select
                   value={inviteData.role}
-                  onChange={(e) => setInviteData({ ...inviteData, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
-                  required
+                  onValueChange={(v) => setInviteData({ ...inviteData, role: v ?? inviteData.role })}
                 >
-                  {roleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-10 text-sm border-gray-200 bg-white">
+                    <SelectValue placeholder={roleOptions.find((o) => o.value === inviteData.role)?.label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -32,6 +32,7 @@ function AccountSidebarContent({
   searchFocusNonce?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [planName, setPlanName] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
@@ -243,7 +244,7 @@ function AccountSidebarContent({
 
       <nav
         className={cn(
-          "flex-1 py-3 space-y-0.5 overflow-y-auto scrollbar-thin-sidebar",
+          "flex-1 min-h-0 flex flex-col py-3 overflow-y-auto scrollbar-thin-sidebar",
           compact ? "px-2" : "px-3"
         )}
       >
@@ -253,42 +254,50 @@ function AccountSidebarContent({
           </p>
         ) : (
           <>
-            {filteredNavItems.map((item) => {
-              const active = isSettingsNavActive(pathname, item);
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  title={item.label}
-                  onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    compact && "justify-center px-2",
-                    active
-                      ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
-                      : "text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
-                  )}
-                >
-                  <item.icon size={17} className="shrink-0" />
-                  {!compact && item.label}
-                </Link>
-              );
-            })}
+            <div className="space-y-0.5">
+              {filteredNavItems.map((item) => {
+                const active = isSettingsNavActive(pathname, item);
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    title={item.label}
+                    onClick={onClose}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      compact && "justify-center px-2",
+                      active
+                        ? "bg-[var(--color-accent-custom,#22C55E)] text-white"
+                        : "text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))]"
+                    )}
+                  >
+                    <item.icon size={17} className="shrink-0" />
+                    {!compact && item.label}
+                  </Link>
+                );
+              })}
+            </div>
 
             {showBack && (
-              <>
-                <Link
-                  href="/erp"
+              <div className="mt-auto pt-3 space-y-0.5 border-t border-[var(--sidebar-custom-border,rgba(255,255,255,0.1))]">
+                <button
+                  type="button"
                   title="Back"
-                  onClick={onClose}
+                  onClick={() => {
+                    onClose?.();
+                    // Behave like a real browser back button (return to
+                    // wherever the user actually came from) instead of
+                    // always jumping to a fixed /erp destination.
+                    router.back();
+                  }}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))] transition-all mt-1",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-[var(--sidebar-fg,#ffffff)] hover:bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.1))] transition-all w-full",
                     compact && "justify-center px-2"
                   )}
                 >
                   <ArrowLeft size={17} className="shrink-0" />
                   {!compact && "Back"}
-                </Link>
+                </button>
 
                 {/* Logout Button */}
                 <button
@@ -296,14 +305,14 @@ function AccountSidebarContent({
                   onClick={() => setShowLogoutConfirm(true)}
                   title="Logout"
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-red-400 hover:bg-red-500/10 transition-all",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--sidebar-fg-muted,#9ca3af)] hover:text-red-400 hover:bg-red-500/10 transition-all w-full",
                     compact && "justify-center px-2"
                   )}
                 >
                   <LogOut size={17} className="shrink-0" />
                   {!compact && "Logout"}
                 </button>
-              </>
+              </div>
             )}
           </>
         )}

@@ -1,58 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import {
   BookOpen,
   RefreshCw,
   ArrowRight,
   Zap,
-  MessageCircle,
   HelpCircle,
   ChevronDown,
-  Send,
+  LifeBuoy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   SettingsCard,
   SettingsCardBody,
   SettingsCardHeader,
-  SettingsField,
   SettingsPageContent,
 } from "@/components/settings/settings-ui";
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
-import {
-  helpdeskApi,
-  type SupportTicket,
-  type TicketCategory,
-  type TicketPriority,
-} from "@/lib/api/helpdesk";
-import toast from "react-hot-toast";
-
-const CATEGORY_OPTIONS: { value: TicketCategory; label: string }[] = [
-  { value: "bug", label: "Bug report" },
-  { value: "billing", label: "Billing" },
-  { value: "feature_request", label: "Feature request" },
-  { value: "account", label: "Account & access" },
-  { value: "other", label: "Other" },
-];
-
-const PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
-];
-
-const statusColors: Record<string, string> = {
-  open: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
-  in_progress: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
-  resolved: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400",
-  closed: "bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground",
-};
 
 const FAQ_ITEMS = [
   {
@@ -73,72 +40,16 @@ const FAQ_ITEMS = [
   },
   {
     q: "I found a bug or have a feature request — what should I do?",
-    a: "Submit a ticket below with as much detail as you can (steps to reproduce, what you expected). An admin can track its status right here.",
+    a: "Submit a ticket from your account Settings → Support. An admin can track its status right there.",
   },
 ];
 
 export default function HelpDeskPage() {
   const { replayWizard, startTour } = useOnboarding();
-
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [ticketsLoading, setTicketsLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const [subject, setSubject] = useState("");
-  const [category, setCategory] = useState<TicketCategory>("bug");
-  const [priority, setPriority] = useState<TicketPriority>("medium");
-  const [message, setMessage] = useState("");
-
-  const loadTickets = async () => {
-    try {
-      setTicketsLoading(true);
-      const data = await helpdeskApi.listTickets();
-      setTickets(data);
-    } catch {
-      toast.error("Failed to load support tickets");
-    } finally {
-      setTicketsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTickets();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!subject.trim() || message.trim().length < 10) {
-      toast.error("Add a subject and at least 10 characters describing your issue");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const ticket = await helpdeskApi.createTicket({ subject: subject.trim(), category, priority, message: message.trim() });
-      setTickets((prev) => [ticket, ...prev]);
-      setSubject("");
-      setMessage("");
-      setCategory("bug");
-      setPriority("medium");
-      toast.success("Support ticket submitted");
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: Record<string, string[]> & { detail?: string } } };
-      const msg =
-        err.response?.data?.subject?.[0] ||
-        err.response?.data?.message?.[0] ||
-        err.response?.data?.detail ||
-        "Failed to submit ticket";
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleString();
-
   return (
-    <SettingsPageShell title="Help Desk" subtitle="Get help, contact support, and browse FAQs">
+    <SettingsPageShell title="Help Desk" subtitle="Get help and browse FAQs">
       <SettingsPageContent>
         <SettingsCard>
           <SettingsCardHeader
@@ -190,118 +101,29 @@ export default function HelpDeskPage() {
           </SettingsCardBody>
         </SettingsCard>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:items-start">
-          <SettingsCard>
-            <SettingsCardHeader
-              icon={MessageCircle}
-              title="Contact Support"
-              description="Submit a ticket and track its status"
-            />
-            <SettingsCardBody>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <SettingsField label="Subject">
-                  <Input
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Briefly describe the issue"
-                    maxLength={255}
-                    required
-                  />
-                </SettingsField>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <SettingsField label="Category">
-                    <Select value={category} onValueChange={(v) => setCategory((v as TicketCategory) ?? "other")}>
-                      <SelectTrigger className="h-10 text-sm">
-                        <SelectValue placeholder="Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </SettingsField>
-                  <SettingsField label="Priority">
-                    <Select value={priority} onValueChange={(v) => setPriority((v as TicketPriority) ?? "medium")}>
-                      <SelectTrigger className="h-10 text-sm">
-                        <SelectValue placeholder="Priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRIORITY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </SettingsField>
+        <SettingsCard>
+          <SettingsCardBody>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-accent-custom,#22C55E)]/10 text-[var(--color-accent-custom,#22C55E)]">
+                  <LifeBuoy className="h-5 w-5" />
                 </div>
-
-                <SettingsField label="Message" hint="At least 10 characters">
-                  <Textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="What's going on? Include steps to reproduce if it's a bug."
-                    rows={4}
-                    required
-                  />
-                </SettingsField>
-
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-[var(--color-accent-custom,#22C55E)] hover:bg-[var(--color-accent-custom-600,#16A34A)] text-white gap-1.5"
-                >
-                  <Send className="h-4 w-4" />
-                  {submitting ? "Submitting..." : "Submit ticket"}
+                <div>
+                  <h3 className="text-sm font-medium text-foreground">Need to contact support?</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Submit a ticket and track its status from your account settings.
+                  </p>
+                </div>
+              </div>
+              <Link href="/settings/support">
+                <Button variant="outline" className="gap-1.5">
+                  Go to Support
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
-              </form>
-            </SettingsCardBody>
-          </SettingsCard>
-
-          <SettingsCard>
-            <SettingsCardHeader
-              icon={MessageCircle}
-              title="Your Tickets"
-              description={ticketsLoading ? "Loading..." : `${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
-            />
-            <SettingsCardBody className="p-0">
-              {ticketsLoading ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">Loading tickets...</div>
-              ) : tickets.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  No tickets yet. Submitted tickets will appear here.
-                </div>
-              ) : (
-                <div className="divide-y divide-border max-h-[420px] overflow-y-auto">
-                  {tickets.map((ticket) => (
-                    <div key={ticket.id} className="px-6 py-3.5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{ticket.subject}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {ticket.category_display} · {ticket.priority_display} priority · {ticket.user_name}
-                          </p>
-                        </div>
-                        <span
-                          className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                            statusColors[ticket.status] ?? "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {ticket.status_display}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground/80 mt-1.5">{formatDate(ticket.created_at)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </SettingsCardBody>
-          </SettingsCard>
-        </div>
+              </Link>
+            </div>
+          </SettingsCardBody>
+        </SettingsCard>
 
         <SettingsCard>
           <SettingsCardHeader

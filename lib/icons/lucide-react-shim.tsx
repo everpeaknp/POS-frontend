@@ -90,6 +90,7 @@ export const ClipboardList: IconType = Hi.HiOutlineClipboardDocumentList;
 export const Clock: IconType = Hi.HiOutlineClock;
 export const Copy: IconType = Hi.HiOutlineSquare2Stack;
 export const CornerDownLeft: IconType = Hi.HiOutlineArrowUturnLeft;
+export const CornerDownRight: IconType = Hi.HiOutlineArrowUturnRight;
 export const CreditCard: IconType = Hi.HiOutlineCreditCard;
 export const DollarSign: IconType = Hi.HiOutlineCurrencyDollar;
 export const Download: IconType = Hi.HiOutlineArrowDownTray;
@@ -140,6 +141,7 @@ export function Loader2({ className, ...props }: IconBaseProps) {
   return <Hi.HiOutlineArrowPath className={cn("animate-spin", className)} {...props} />;
 }
 
+export const LifeBuoy: IconType = Hi.HiOutlineLifebuoy;
 export const Lock: IconType = Hi.HiOutlineLockClosed;
 export const LogOut: IconType = Hi.HiOutlineArrowRightOnRectangle;
 export const Mail: IconType = Hi.HiOutlineEnvelope;
@@ -158,6 +160,7 @@ export const Package: IconType = Hi.HiOutlineCube;
 export const PackageCheck: IconType = Hi.HiOutlineCube;
 export const PackageMinus: IconType = Hi.HiOutlineCube;
 export const PackagePlus: IconType = Hi.HiOutlineCube;
+export const Paperclip: IconType = Hi.HiOutlinePaperClip;
 export const Palette: IconType = Hi.HiOutlineSwatch;
 export const PanelLeft: IconType = Hi.HiOutlineViewColumns;
 export const PanelLeftClose: IconType = Hi.HiOutlineBars3BottomLeft;

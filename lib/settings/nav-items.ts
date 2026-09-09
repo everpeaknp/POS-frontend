@@ -4,6 +4,7 @@ import {
   Key,
   Bell,
   Palette,
+  MessageCircle,
 } from "lucide-react";
 
 export type SettingsNavItem = {
@@ -48,6 +49,14 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     description: "Customize your workspace theme and display density.",
     href: "/settings/appearance",
     icon: Palette,
+  },
+  {
+    id: "support",
+    label: "Support",
+    title: "Help Desk",
+    description: "Contact support and track your tickets.",
+    href: "/settings/support",
+    icon: MessageCircle,
   },
 ];
 
