@@ -9,6 +9,7 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -216,12 +217,10 @@ export default function PersonalFinanceSettingsPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input
+                      <PhoneInput
                         id="phone"
                         value={profile.phone}
-                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                        placeholder="+977 98XXXXXXXX"
-                        className="focus-visible:ring-0 focus-visible:border-input"
+                        onChange={(phone) => setProfile({ ...profile, phone })}
                       />
                     </div>
                   </div>

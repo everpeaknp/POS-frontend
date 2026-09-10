@@ -8,8 +8,9 @@ import { DashHeader } from "@/components/dashboard/dash-header";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import FormField from "@/components/shared/FormField";
-import { User, Mail, Phone, Building2, Shield, Wallet } from "lucide-react";
+import { User, Mail, Building2, Shield, Wallet } from "lucide-react";
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -31,6 +32,8 @@ export default function ProfilePage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
+    setValue,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -40,6 +43,8 @@ export default function ProfilePage() {
       phone: user?.phone || "",
     },
   });
+
+  const phone = watch("phone");
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -155,16 +160,11 @@ export default function ProfilePage() {
                 name="phone"
                 error={errors.phone}
               >
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    {...register("phone")}
-                    type="tel"
-                    id="phone"
-                    className={inputCls}
-                    placeholder="+977 9800000000"
-                  />
-                </div>
+                <PhoneInput
+                  id="phone"
+                  value={phone || ""}
+                  onChange={(value) => setValue("phone", value)}
+                />
               </FormField>
 
               {/* Read-only fields */}

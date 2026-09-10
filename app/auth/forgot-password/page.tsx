@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KhataLogo } from "@/components/khata-logo";
 
 const B = "var(--color-accent-custom,#22C55E)";
-const BD = "#16A34A";
+const BD = "var(--color-accent-custom-dark,#16A34A)";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -28,57 +28,22 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen flex">
-      <div
-        className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white"
-        style={{ backgroundColor: "#1A2E1A" }}
-      >
-        <KhataLogo size="md" />
-        <div>
-          <h2 className="text-4xl font-bold leading-tight mb-4">
-            Smart accounting<br />for modern businesses
-          </h2>
-          <p className="text-green-300 text-base leading-relaxed">
-            Manage invoices, track expenses, and grow your business — all in one place.
-          </p>
-          <div className="mt-10 grid grid-cols-2 gap-4">
-            {[
-              { label: "Businesses", value: "10,000+" },
-              { label: "Invoices Sent", value: "2M+" },
-              { label: "Countries", value: "15+" },
-              { label: "Uptime", value: "99.9%" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white/10 rounded-xl p-4">
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-green-300 text-sm mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
+      <div className="w-full max-w-[400px]">
+        <div className="flex justify-center mb-8">
+          <KhataLogo size="lg" />
         </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
-        <div className="w-full max-w-[400px]">
-          <div className="flex justify-center mb-8 lg:hidden">
-            <KhataLogo size="lg" />
-          </div>
-          <Card className="border-0 shadow-xl bg-white">
-            <CardContent className="p-8">
-              {sent ? (
-                <>
-                  <div className="flex items-start justify-between mb-7">
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Check your inbox</h1>
-                      <p className="text-sm text-gray-400 mt-1">
-                        We sent a reset link to{" "}
-                        <span className="font-medium text-gray-700">{email}</span>
-                      </p>
-                    </div>
-                    <div className="hidden lg:block">
-                      <KhataLogo size="sm" />
-                    </div>
-                  </div>
+        <Card className="border-0 shadow-xl bg-white">
+          <CardContent className="p-8">
+            {sent ? (
+              <>
+                <div className="mb-7">
+                  <h1 className="text-2xl font-bold text-gray-900">Check your inbox</h1>
+                  <p className="text-sm text-gray-400 mt-1">
+                    We sent a reset link to{" "}
+                    <span className="font-medium text-gray-700">{email}</span>
+                  </p>
+                </div>
 
                   <div className="flex flex-col items-center gap-4 py-2 text-center">
                     <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
@@ -103,16 +68,11 @@ export default function ForgotPasswordPage() {
                 </>
               ) : (
                 <>
-                  <div className="flex items-start justify-between mb-7">
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Forgot password?</h1>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Enter your email and we&apos;ll send a reset link
-                      </p>
-                    </div>
-                    <div className="hidden lg:block">
-                      <KhataLogo size="sm" />
-                    </div>
+                  <div className="mb-7">
+                    <h1 className="text-2xl font-bold text-gray-900">Forgot password?</h1>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Enter your email and we&apos;ll send a reset link
+                    </p>
                   </div>
 
                   <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -171,7 +131,6 @@ export default function ForgotPasswordPage() {
             </Link>
             .
           </p>
-        </div>
       </div>
     </main>
   );

@@ -7,6 +7,7 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { constructionApi, Site, Worker } from '@/lib/api/construction';
 import FormField from '@/components/shared/FormField';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 const workerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -43,13 +44,20 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
+    setValue,
   } = useForm<WorkerFormData>({
     resolver: zodResolver(workerSchema),
     defaultValues: {
       status: 'active',
+      phone: '',
+      emergency_contact: '',
       ...initialData,
     },
   });
+
+  const phone = watch('phone');
+  const emergencyContact = watch('emergency_contact');
 
   useEffect(() => {
     fetchSites();
@@ -173,11 +181,10 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           name="phone"
           error={errors.phone}
         >
-          <input
-            {...register('phone')}
-            type="tel"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
-            placeholder="Enter phone number"
+          <PhoneInput
+            value={phone || ''}
+            onChange={(value) => setValue('phone', value)}
+            placeholder="+977 9800000000"
           />
         </FormField>
 
@@ -199,11 +206,10 @@ export default function WorkerForm({ workerId, initialData, onSuccess, onCancel 
           name="emergency_contact"
           error={errors.emergency_contact}
         >
-          <input
-            {...register('emergency_contact')}
-            type="tel"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-custom,#22C55E)]"
-            placeholder="Emergency contact number"
+          <PhoneInput
+            value={emergencyContact || ''}
+            onChange={(value) => setValue('emergency_contact', value)}
+            placeholder="+977 9800000000"
           />
         </FormField>
 

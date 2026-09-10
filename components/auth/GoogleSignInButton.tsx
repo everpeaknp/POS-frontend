@@ -146,7 +146,7 @@ export function GoogleSignInButton({
   const [config, setConfig] = useState<GoogleOAuthConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [buttonReady, setButtonReady] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
+  const [useFallback, setUseFallback] = useState(true); // Always use custom button for instant load
   const [busy, setBusy] = useState(false);
   const [btnWidth, setBtnWidth] = useState(0);
 
@@ -214,7 +214,13 @@ export function GoogleSignInButton({
             return;
           }
           setBusy(false);
-          toast.error(response.error_description || response.error || "Google sign-in cancelled");
+          if (response.error) {
+            // User closed popup or cancelled
+            if (response.error === "access_denied" || response.error === "popup_closed") {
+              return; // Don't show error for user cancellation
+            }
+            toast.error(response.error_description || response.error || "Google sign-in failed");
+          }
         },
         error_callback: (error) => {
           setBusy(false);
@@ -222,10 +228,13 @@ export function GoogleSignInButton({
           toast.error(error?.message || "Google sign-in failed");
         },
       });
+      
+      // Trigger the popup
       client.requestCode();
     } catch (error: unknown) {
       setBusy(false);
       const message = error instanceof Error ? error.message : "Google sign-in failed";
+      console.error("Google OAuth error:", error);
       toast.error(message);
     }
   }, [busy, config?.client_id, handleAuthCode]);
@@ -344,11 +353,8 @@ export function GoogleSignInButton({
     };
   }, [config, handleCredential, label, btnWidth, useFallback, desktop]);
 
-  // Desktop: always show custom Google button after hydration.
-  // Web: wait for config so we don't flash a dead control.
-  if (!desktop && (loading || !config)) {
-    return null;
-  }
+  // Show button immediately - config loads in background
+  // Don't block rendering on config fetch
 
   const showCustom = useFallback || desktop;
 

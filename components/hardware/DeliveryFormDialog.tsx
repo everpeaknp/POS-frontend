@@ -5,6 +5,7 @@ import { ChevronDownIcon, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { invoiceAPI, type Invoice } from "@/lib/api/sales";
@@ -226,7 +227,7 @@ export function DeliveryFormDialog({ open, onOpenChange, onSuccess }: DeliveryFo
             </div>
             <div className="space-y-2">
               <Label htmlFor="contact-phone">Contact Phone</Label>
-              <Input id="contact-phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="98XXXXXXXX" />
+              <PhoneInput id="contact-phone" value={contactPhone} onChange={setContactPhone} />
             </div>
           </div>
 
@@ -270,7 +271,7 @@ export function DeliveryFormDialog({ open, onOpenChange, onSuccess }: DeliveryFo
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="driver-phone">Driver Phone</Label>
-              <Input id="driver-phone" value={driverPhone} onChange={(e) => setDriverPhone(e.target.value)} placeholder="Optional" />
+              <PhoneInput id="driver-phone" value={driverPhone} onChange={setDriverPhone} placeholder="Optional" />
             </div>
             <div />
           </div>

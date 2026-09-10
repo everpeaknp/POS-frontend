@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
@@ -70,18 +71,11 @@ export function POSCustomerDialog({
             <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700">
               Phone <span className="text-red-500">*</span>
             </label>
-            <Input
+            <PhoneInput
               id="customer-phone"
-              type="text"
               value={customerPhone}
-              onChange={(e) => onFieldChange('phone', e.target.value)}
-              placeholder="Phone number"
-              className="h-9"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && customerName.trim() && customerPhone.trim()) {
-                  onAddCustomer();
-                }
-              }}
+              onChange={(value) => onFieldChange('phone', value)}
+              placeholder="+977 9800000000"
             />
           </div>
 

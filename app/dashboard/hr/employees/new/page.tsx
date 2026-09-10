@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
+import { PhoneInput, isValidPhoneNumber } from "@/components/ui/phone-input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -102,6 +103,10 @@ export default function NewEmployeePage() {
         }
         if (!isAtLeastAge(formData.dob, MIN_EMPLOYEE_AGE)) {
           toast.error(`Employee must be at least ${MIN_EMPLOYEE_AGE} years old`);
+          return false;
+        }
+        if (!isValidPhoneNumber(formData.phone)) {
+          toast.error("Please enter a valid phone number");
           return false;
         }
         return true;
@@ -256,12 +261,11 @@ export default function NewEmployeePage() {
                   </div>
                   <div>
                     <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone*</Label>
-                    <Input 
-                      id="phone" 
-                      placeholder="Enter phone number" 
-                      value={formData.phone} 
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
-                      className="mt-1 h-9 border-gray-200" 
+                    <PhoneInput
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(phone) => setFormData({ ...formData, phone })}
+                      className="mt-1"
                     />
                   </div>
                   <div>

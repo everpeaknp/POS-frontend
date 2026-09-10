@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, ImageIcon, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getMediaUrl } from "@/lib/utils";
@@ -147,14 +148,11 @@ export default function ProfilePage() {
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <SettingsField label="Phone number" hint="Used for account recovery and alerts">
-                    <input
-                      type="tel"
-                      className={settingsInputClass}
-                      placeholder="+977 98XXXXXXXX"
+                    <PhoneInput
                       value={formData.phone}
-                      onChange={(e) => updateField("phone", e.target.value)}
+                      onChange={(value) => updateField("phone", value)}
                       disabled={isLoading}
-                      autoComplete="tel"
+                      placeholder="+977 98XXXXXXXX"
                     />
                   </SettingsField>
 

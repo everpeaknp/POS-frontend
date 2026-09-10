@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { buildInviteRedirect } from "@/lib/invitations/accept";
 
 const B = "var(--color-accent-custom,#22C55E)";
-const BD = "#16A34A";
+const BD = "var(--color-accent-custom-dark,#16A34A)";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -87,47 +87,17 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white" style={{ backgroundColor: "#1A2E1A" }}>
-        <KhataLogo size="md" />
-        <div>
-          <h2 className="text-4xl font-bold leading-tight mb-4">
-            Smart accounting<br />for modern businesses
-          </h2>
-          <p className="text-green-300 text-base leading-relaxed">
-            Manage invoices, track expenses, and grow your business — all in one place.
-          </p>
-          <div className="mt-10 grid grid-cols-2 gap-4">
-            {[
-              { label: "Businesses", value: "10,000+" },
-              { label: "Invoices Sent", value: "2M+" },
-              { label: "Countries", value: "15+" },
-              { label: "Uptime", value: "99.9%" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white/10 rounded-xl p-4">
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-green-300 text-sm mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
+      <div className="w-full max-w-[400px]">
+        <div className="flex justify-center mb-8">
+          <KhataLogo size="lg" />
         </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50">
-        <div className="w-full max-w-[400px]">
-          <div className="flex justify-center mb-8 lg:hidden">
-            <KhataLogo size="lg" />
-          </div>
-          <Card className="border-0 shadow-xl bg-white">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-7">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-                  <p className="text-sm text-gray-400 mt-1">Sign in to your Khata account</p>
-                </div>
-                <div className="hidden lg:block"><KhataLogo size="sm" /></div>
-              </div>
+        <Card className="border-0 shadow-xl bg-white">
+          <CardContent className="p-8">
+            <div className="mb-7">
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+              <p className="text-sm text-gray-400 mt-1">Sign in to your Khata account</p>
+            </div>
 
               <form onSubmit={handleLogin} className="flex flex-col gap-5">
                 <div className="flex flex-col gap-1.5">
@@ -206,7 +176,6 @@ export default function LoginPage() {
             <Link href="#" className="underline hover:text-gray-600">Privacy Policy</Link>.
           </p>
         </div>
-      </div>
     </main>
   );
 }

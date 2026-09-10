@@ -13,13 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { KhataLogo } from "@/components/khata-logo";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/lib/context/AuthContext";
 import { buildInviteRedirect } from "@/lib/invitations/accept";
 
 const B = "var(--color-accent-custom,#22C55E)";
-const BD = "#16A34A";
+const BD = "var(--color-accent-custom-dark,#16A34A)";
 
 // Zod validation schema - simplified without organization and username
 const signupSchema = z.object({
@@ -58,11 +59,13 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: inviteEmail,
+      phone: "",
     },
   });
 
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
+  const phone = watch("phone");
   const passwordMatch = confirmPassword && password === confirmPassword;
   const passwordMismatch = confirmPassword && password !== confirmPassword;
 
@@ -138,38 +141,15 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 text-white" style={{ backgroundColor: "#1A2E1A" }}>
-        <KhataLogo size="md" />
-        <div>
-          <h2 className="text-4xl font-bold leading-tight mb-4">Join thousands of<br />businesses on Khata</h2>
-          <p className="text-green-300 text-base leading-relaxed">Start your free trial today. No credit card required.</p>
-          <div className="mt-10 space-y-3">
-            {["Automated invoicing & billing", "Real-time financial reports", "VAT & tax compliance", "Multi-currency support"].map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: B }}>
-                  <CheckCircle2 className="h-3 w-3 text-white" />
-                </div>
-                <span className="text-green-100 text-sm">{f}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="text-green-400 text-xs">© 2025 Khata. All rights reserved.</p>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-slate-50 overflow-y-auto">
-        <div className="w-full max-w-[480px] my-8">
-          <div className="flex justify-center mb-8 lg:hidden"><KhataLogo size="lg" /></div>
-          <Card className="border-0 shadow-xl bg-white">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-                  <p className="text-sm text-gray-400 mt-1">Get started with Khata for free</p>
-                </div>
-                <div className="hidden lg:block"><KhataLogo size="sm" /></div>
-              </div>
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-slate-50 overflow-y-auto">
+      <div className="w-full max-w-[480px] my-8">
+        <div className="flex justify-center mb-8"><KhataLogo size="lg" /></div>
+        <Card className="border-0 shadow-xl bg-white">
+          <CardContent className="p-8">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
+              <p className="text-sm text-gray-400 mt-1">Get started with Khata for free</p>
+            </div>
 
               <form
                 onSubmit={handleSubmit(onSubmit)}
@@ -237,17 +217,17 @@ export default function SignupPage() {
                   <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
                     Phone <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    {...register("phone")}
+                  <PhoneInput
                     id="phone"
-                    type="tel"
+                    value={phone}
+                    onChange={(value) => setValue("phone", value)}
                     placeholder="+977 9800000000"
-                    className={`h-11 bg-gray-50 focus-visible:border-green-500 focus-visible:ring-green-500/20 ${
-                      formError ? "border-red-300" : "border-gray-200"
-                    }`}
+                    className={formError ? "border-red-300" : ""}
+                    aria-invalid={!!errors.phone}
+                    aria-describedby={errors.phone ? "phone-error" : undefined}
                   />
                   {errors.phone && (
-                    <p className="text-xs text-red-500">{errors.phone.message}</p>
+                    <p id="phone-error" className="text-xs text-red-500">{errors.phone.message}</p>
                   )}
                 </div>
 
@@ -357,8 +337,7 @@ export default function SignupPage() {
                 </Link>
               </p>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     </main>
   );

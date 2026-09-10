@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -530,10 +531,9 @@ function OrgSettingsContent() {
                 />
               </Field>
               <Field label="Phone">
-                <Input
-                  className="h-9 text-sm border-gray-200"
+                <PhoneInput
                   value={form.phone}
-                  onChange={(e) => updateField("phone", e.target.value)}
+                  onChange={(phone) => updateField("phone", phone)}
                   disabled={!canEdit || submitting}
                 />
               </Field>

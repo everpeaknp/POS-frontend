@@ -12,9 +12,12 @@ import toast from "react-hot-toast";
 interface ExportButtonsProps {
   getExportData?: () => ExportTableData | null;
   disabled?: boolean;
+  /** Label for the CSV button — CSV opens natively in Excel, so pages that
+   * frame this as an "Excel export" can override the default wording. */
+  csvLabel?: string;
 }
 
-export function ExportButtons({ getExportData, disabled }: ExportButtonsProps) {
+export function ExportButtons({ getExportData, disabled, csvLabel = "Export CSV" }: ExportButtonsProps) {
   const runExport = (format: "csv" | "pdf") => {
     if (!getExportData) {
       toast.error("Export is not available on this page");
@@ -68,7 +71,7 @@ export function ExportButtons({ getExportData, disabled }: ExportButtonsProps) {
         disabled={disabled}
         onClick={() => runExport("csv")}
       >
-        <Download className="h-4 w-4" /> Export CSV
+        <Download className="h-4 w-4" /> {csvLabel}
       </Button>
     </div>
   );

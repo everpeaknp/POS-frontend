@@ -8,6 +8,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
+import { PhoneInput, isValidPhoneNumber } from "@/components/ui/phone-input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,6 +111,10 @@ export default function NewPurchaseOrderPage() {
   const handleCreateSupplier = async () => {
     if (!supplierForm.name || !supplierForm.phone) {
       toast.error("Name and phone are required");
+      return;
+    }
+    if (!isValidPhoneNumber(supplierForm.phone)) {
+      toast.error("Please enter a valid phone number");
       return;
     }
 
@@ -412,11 +417,9 @@ export default function NewPurchaseOrderPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm">Phone <span className="text-red-500">*</span></Label>
-              <Input
+              <PhoneInput
                 value={supplierForm.phone}
-                onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
-                placeholder="98XXXXXXXX"
-                className="h-9 text-sm border-gray-200"
+                onChange={(phone) => setSupplierForm({ ...supplierForm, phone })}
               />
             </div>
             <div className="flex flex-col gap-1.5">

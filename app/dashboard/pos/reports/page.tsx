@@ -138,7 +138,11 @@ export default function POSReportsPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <DashHeader title="POS Reports" subtitle="Daily sales reports and analytics" />
+      <DashHeader
+        title="POS Reports"
+        subtitle="Daily sales reports and analytics"
+        actions={<ExportButtons getExportData={getExportData} csvLabel="Export Excel" />}
+      />
       
       <div className="flex-1 p-6 space-y-6">
         {/* Info Banner */}

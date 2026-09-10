@@ -378,3 +378,205 @@ button > svg.animate-spin,
 [data-slot="button"] > svg.animate-spin {
   display: none !important;
 }
+
+/* ============================================================================
+   React International Phone Styles - Redesigned for proper dark mode
+   ============================================================================ */
+
+/* Reset and base wrapper */
+.phone-input-wrapper {
+  width: 100%;
+}
+
+/* Main phone input field — sized to match the `h-9 text-sm border-gray-200`
+   convention most dashboard forms apply to their sibling <Input> fields
+   (customers/suppliers/employees/quotations/orders), and colored using the
+   same design tokens components/ui/input.tsx itself uses.
+   Note: --input/--background/--border etc. are raw oklch() values (see the
+   @theme inline block), not HSL components, so they must be referenced as
+   plain var(--x) here — wrapping them in hsl(var(--x)) is invalid CSS and
+   silently drops the whole declaration, which is why this previously looked
+   different from every other input in both themes. */
+.phone-input {
+  height: 2.25rem !important;
+  width: 100% !important;
+  /* Square on the left, rounded on the right — the country button owns the
+     opposite pairing (rounded left / square right) and drops its own right
+     border, so together they read as one seamless field instead of two
+     separate boxes glued side by side. */
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0 !important;
+  border: 1px solid var(--input) !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode background — matches Input's dark:bg-input/30 (border color
+   already comes for free since --input itself is redefined under .dark) */
+.dark .phone-input {
+  background-color: color-mix(in oklab, var(--input) 30%, transparent) !important;
+}
+
+/* Focus state */
+.phone-input:focus {
+  outline: none !important;
+  border-color: var(--color-accent-custom, #22C55E) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+}
+
+.dark .phone-input:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+/* Disabled state */
+.phone-input:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* Placeholder */
+.phone-input::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+/* Country selector button — same box model as the input it's attached to */
+.phone-input-country-button {
+  height: 2.25rem !important;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg) !important;
+  border: 1px solid var(--input) !important;
+  border-right: none !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  padding: 0 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer !important;
+}
+
+/* Dark mode button */
+.dark .phone-input-country-button {
+  background-color: color-mix(in oklab, var(--input) 30%, transparent) !important;
+}
+
+/* Button hover */
+.phone-input-country-button:hover {
+  background-color: var(--accent) !important;
+}
+
+.dark .phone-input-country-button:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Button focus */
+.phone-input-country-button:focus {
+  outline: none !important;
+  border-color: var(--color-accent-custom, #22C55E) !important;
+}
+
+/* Country dropdown container */
+.phone-input-dropdown {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border) !important;
+  background-color: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  z-index: 50 !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Dark mode dropdown */
+.dark .phone-input-dropdown {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Dropdown list items */
+.phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item {
+  padding: 0.625rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: var(--popover-foreground) !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  border: none !important;
+}
+
+/* Hover state */
+.phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.dark .phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Selected item */
+.phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item--selected {
+  background-color: var(--color-accent-custom, #22C55E) !important;
+  color: white !important;
+}
+
+.dark .phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item--selected {
+  background-color: var(--color-accent-custom, #22C55E) !important;
+  color: white !important;
+}
+
+/* Focused item (keyboard navigation) */
+.phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item--focused {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.dark .phone-input-dropdown .react-international-phone-country-selector-dropdown__list-item--focused {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Search input in dropdown */
+.phone-input-dropdown input[type="text"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.5rem !important;
+}
+
+.dark .phone-input-dropdown input[type="text"] {
+  background-color: color-mix(in oklab, var(--input) 30%, transparent) !important;
+}
+
+.phone-input-dropdown input[type="text"]:focus {
+  outline: none !important;
+  border-color: var(--color-accent-custom, #22C55E) !important;
+}
+
+/* Custom scrollbar for dark mode */
+.dark .phone-input-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark .phone-input-dropdown::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark .phone-input-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.dark .phone-input-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .phone-input-dropdown {
+    max-height: 250px !important;
+  }
+}

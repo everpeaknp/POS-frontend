@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput, isValidPhoneNumber } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -92,6 +93,10 @@ export default function EditSupplierPage() {
       toast.error("Phone number is required");
       return;
     }
+    if (!isValidPhoneNumber(form.phone)) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -162,10 +167,9 @@ export default function EditSupplierPage() {
                 </Select>
               </Field>
               <Field label="Phone" required>
-                <Input
+                <PhoneInput
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="h-9 text-sm border-gray-200"
+                  onChange={(phone) => setForm({ ...form, phone })}
                 />
               </Field>
               <Field label="Email">

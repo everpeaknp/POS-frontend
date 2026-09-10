@@ -8,6 +8,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
+import { PhoneInput, isValidPhoneNumber } from "@/components/ui/phone-input";
 import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -90,6 +91,10 @@ export default function NewQuotationPage() {
     }
     if (!newCustomer.phone.trim()) {
       toast.error("Phone number is required");
+      return;
+    }
+    if (!isValidPhoneNumber(newCustomer.phone)) {
+      toast.error("Please enter a valid phone number");
       return;
     }
 
@@ -250,11 +255,9 @@ export default function NewQuotationPage() {
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-sm">Phone <span className="text-red-500">*</span></Label>
-                        <Input 
+                        <PhoneInput
                           value={newCustomer.phone}
-                          onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                          placeholder="98XXXXXXXX"
-                          className="h-9 text-sm border-gray-200"
+                          onChange={(phone) => setNewCustomer({ ...newCustomer, phone })}
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
