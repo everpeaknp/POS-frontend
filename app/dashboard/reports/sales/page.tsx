@@ -27,7 +27,7 @@ import type { ExportTableData } from "@/lib/utils/export";
 const SALES_PERIODS = ["today", "week", "month", "year"] as const;
 
 export default function SalesReportPage() {
-  const [period, setPeriod] = useState<string>("month");
+  const [period, setPeriod] = useState<string>("today");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<Awaited<
@@ -36,12 +36,8 @@ export default function SalesReportPage() {
   const [trendData, setTrendData] = useState<Awaited<
     ReturnType<typeof reportsAPI.revenueExpenseTrend>
   > | null>(null);
-  const [startDate, setStartDate] = useState(
-    format(startOfMonth(new Date()), "yyyy-MM-dd")
-  );
-  const [endDate, setEndDate] = useState(
-    format(endOfMonth(new Date()), "yyyy-MM-dd")
-  );
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const applyPeriod = useCallback((newPeriod: string) => {
     setPeriod(newPeriod);

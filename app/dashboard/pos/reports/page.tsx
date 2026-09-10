@@ -3,7 +3,7 @@
 import { PageLoading } from "@/components/shared/PageLoading";
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar, DollarSign, ShoppingCart, TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { DateInput } from "@/components/shared/DateInput";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashHeader } from "@/components/dashboard/dash-header";
+import { ExportButtons } from "@/components/reports/ExportButtons";
+import type { ExportTableData } from "@/lib/utils/export";
 import posApi, { type POSDailySalesReport } from "@/lib/api/pos";
 import { inventoryApi, type Warehouse } from "@/lib/api/inventory";
 import toast from "react-hot-toast";
@@ -76,6 +78,54 @@ export default function POSReportsPage() {
     if (filterDate && report.date !== filterDate) return false;
     return true;
   });
+
+  const getExportData = useCallback((): ExportTableData | null => {
+    if (!filteredReports.length) return null;
+    return {
+      filename: `pos-daily-sales-report${filterDate ? `-${filterDate}` : ""}`,
+      title: "POS Daily Sales Report",
+      subtitle: filterDate || "All dates",
+      reportType: "Point of Sale",
+      headers: [
+        "Date",
+        "Warehouse",
+        "Cashier",
+        "Transactions",
+        "Gross Sales",
+        "Net Sales",
+        "Items Sold",
+        "Cash",
+        "Card",
+        "eSewa",
+        "Khalti",
+        "Fonepay",
+        "Credit",
+        "Discounts",
+        "Tax",
+        "Cancelled",
+        "Refunded",
+      ],
+      rows: filteredReports.map((report) => [
+        report.date,
+        report.warehouse_name || "All Warehouses",
+        report.cashier_name || "All Cashiers",
+        String(report.total_transactions),
+        `Rs. ${report.gross_sales.toLocaleString()}`,
+        `Rs. ${report.net_sales.toLocaleString()}`,
+        String(report.total_items_sold),
+        `Rs. ${report.cash_sales.toLocaleString()}`,
+        `Rs. ${report.card_sales.toLocaleString()}`,
+        `Rs. ${report.esewa_sales.toLocaleString()}`,
+        `Rs. ${report.khalti_sales.toLocaleString()}`,
+        `Rs. ${report.fonepay_sales.toLocaleString()}`,
+        `Rs. ${report.credit_sales.toLocaleString()}`,
+        `Rs. ${report.total_discounts.toLocaleString()}`,
+        `Rs. ${report.total_tax.toLocaleString()}`,
+        String(report.cancelled_transactions),
+        `Rs. ${report.refunded_amount.toLocaleString()}`,
+      ]),
+    };
+  }, [filteredReports, filterDate]);
 
   if (loading) {
     return (
@@ -160,23 +210,26 @@ export default function POSReportsPage() {
 
         {/* Filter Reports */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <div className="flex items-center gap-3">
-            <Label className="text-sm">Filter by Date:</Label>
-            <DateInput
-              
-              value={filterDate}
-              onChange={(date) => setFilterDate(date)}
-              className="max-w-xs"
-            />
-            {filterDate && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setFilterDate("")}
-              >
-                Clear
-              </Button>
-            )}
+          <div className="flex flex-nowrap items-center justify-between gap-3">
+            <div className="flex flex-nowrap items-center gap-3">
+              <Label className="text-sm whitespace-nowrap">Filter by Date:</Label>
+              <DateInput
+                
+                value={filterDate}
+                onChange={(date) => setFilterDate(date)}
+                className="max-w-xs"
+              />
+              {filterDate && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setFilterDate("")}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <ExportButtons getExportData={getExportData} />
           </div>
         </div>
 

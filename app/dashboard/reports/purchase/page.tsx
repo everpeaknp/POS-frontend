@@ -23,10 +23,12 @@ import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { ExportTableData } from "@/lib/utils/export";
 
-type PurchasePeriod = "week" | "month" | "quarter" | "year";
+type PurchasePeriod = "today" | "week" | "month" | "quarter" | "year";
+
+const PURCHASE_PERIODS: PurchasePeriod[] = ["today", "week", "month", "quarter", "year"];
 
 export default function PurchaseReportPage() {
-  const [period, setPeriod] = useState<PurchasePeriod>("month");
+  const [period, setPeriod] = useState<PurchasePeriod>("today");
   const [reportData, setReportData] = useState<PurchaseReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,9 @@ export default function PurchaseReportPage() {
   }, []);
 
   useEffect(() => {
-    void fetchData("month");
-  }, [fetchData]);
+    void fetchData("today");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats = reportData
     ? [
@@ -106,6 +109,7 @@ export default function PurchaseReportPage() {
         <ReportFilter
           embedded
           period={period}
+          periods={PURCHASE_PERIODS}
           onPeriodChange={(p) => setPeriod(p as PurchasePeriod)}
           onGenerate={() => void fetchData(period)}
           showDateInputs={false}

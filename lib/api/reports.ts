@@ -491,7 +491,7 @@ export const reportsAPI = {
    * Comprehensive purchase analytics including summary, by supplier, by product, and tax reports
    */
   purchaseReports: async (params?: {
-    date_range?: 'week' | 'month' | 'quarter' | 'year';
+    date_range?: 'today' | 'week' | 'month' | 'quarter' | 'year';
   }) => {
     const response = await apiClient.get<PurchaseReportsData>('/reports/purchase-reports/', { params });
     return response.data;

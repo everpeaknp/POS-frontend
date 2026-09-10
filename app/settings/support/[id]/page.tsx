@@ -196,6 +196,7 @@ export default function TicketDetailPage() {
   }
 
   const timelineEvents = ticket.messages.filter((m) => m.message_type !== "message");
+  const isClosed = ticket.status === "closed";
 
   return (
     <SettingsPageShell title={`Ticket #${ticket.id}`} subtitle={ticket.subject}>
@@ -226,6 +227,12 @@ export default function TicketDetailPage() {
           </div>
 
           <div className="border-t border-border p-3.5">
+            {isClosed ? (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                This ticket is closed and no longer accepts new messages.
+              </p>
+            ) : (
+            <>
             {attachment && (
               <div className="mb-2.5 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
                 {attachmentPreview && attachmentPreview !== "pdf" ? (
@@ -284,6 +291,8 @@ export default function TicketDetailPage() {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            </>
+            )}
           </div>
         </div>
 

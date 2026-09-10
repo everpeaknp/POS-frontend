@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { DateInput } from "@/components/shared/DateInput";
 
 const DEFAULT_PERIODS = ["week", "month", "quarter", "year"] as const;
@@ -36,7 +36,14 @@ export function ReportFilter({
   const content = (
     <div className="flex flex-wrap items-center gap-3">
       <Select value={period} onValueChange={(v) => onPeriodChange(v ?? "month")}>
-        <SelectTrigger className="h-9 w-40 text-sm border-gray-200"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="h-9 w-40 text-sm border-gray-200">
+          {/* SelectValue's label lookup only resolves after a SelectItem
+              has mounted at least once (it registers its label via
+              useEffect), which never happens before the dropdown is first
+              opened — leaving the trigger blank on initial render. Render
+              the label straight from `period` instead of relying on it. */}
+          <span>{period.charAt(0).toUpperCase() + period.slice(1)}</span>
+        </SelectTrigger>
         <SelectContent>
           {periods.map((p) => (
             <SelectItem key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</SelectItem>

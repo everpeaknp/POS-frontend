@@ -2,7 +2,7 @@
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, startOfYear } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportFilter } from "@/components/reports/ReportFilter";
 import { ExportButtons } from "@/components/reports/ExportButtons";
@@ -17,28 +17,39 @@ import { formatNPR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { ExportTableData } from "@/lib/utils/export";
 
-function defaultFiscalRange() {
-  const today = new Date();
-  if (today.getMonth() >= 6) {
-    return {
-      from: format(new Date(today.getFullYear(), 6, 1), "yyyy-MM-dd"),
-      to: format(today, "yyyy-MM-dd"),
-    };
-  }
-  return {
-    from: format(new Date(today.getFullYear() - 1, 6, 1), "yyyy-MM-dd"),
-    to: format(today, "yyyy-MM-dd"),
-  };
-}
+const TAX_PERIODS = ["today", "week", "month", "year"] as const;
 
 export default function TaxReportPage() {
-  const fiscal = defaultFiscalRange();
   const [data, setData] = useState<TaxReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fromDate, setFromDate] = useState(fiscal.from);
-  const [toDate, setToDate] = useState(fiscal.to);
+  const [period, setPeriod] = useState<string>("today");
+  const [fromDate, setFromDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [toDate, setToDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [activeTab, setActiveTab] = useState("vat");
+
+  const applyPeriod = useCallback((newPeriod: string) => {
+    setPeriod(newPeriod);
+    const today = new Date();
+    switch (newPeriod) {
+      case "today":
+        setFromDate(format(today, "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+      case "week":
+        setFromDate(format(subDays(today, 7), "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+      case "month":
+        setFromDate(format(startOfMonth(today), "yyyy-MM-dd"));
+        setToDate(format(endOfMonth(today), "yyyy-MM-dd"));
+        break;
+      case "year":
+        setFromDate(format(startOfYear(today), "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -143,13 +154,13 @@ export default function TaxReportPage() {
       toolbar={
         <ReportFilter
           embedded
-          period="year"
-          periods={["year"]}
+          period={period}
+          periods={TAX_PERIODS}
           fromDate={fromDate}
           toDate={toDate}
           onFromDateChange={setFromDate}
           onToDateChange={setToDate}
-          onPeriodChange={() => {}}
+          onPeriodChange={applyPeriod}
           onGenerate={fetchData}
           loading={loading}
         />

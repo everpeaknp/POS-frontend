@@ -2,7 +2,7 @@
 
 import { FormattedDate } from "@/components/shared/FormattedDate";
 import { useState, useEffect, useCallback } from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, startOfYear } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportFilter } from "@/components/reports/ReportFilter";
 import { ExportButtons } from "@/components/reports/ExportButtons";
@@ -18,18 +18,42 @@ import toast from "react-hot-toast";
 import type { ExportTableData, ExportRow } from "@/lib/utils/export";
 import { tenantToExportOrg } from "@/lib/utils/export";
 
+const FINANCIAL_PERIODS = ["today", "week", "month", "year"] as const;
+
 export default function FinancialReportPage() {
   const { user } = useAuth();
   const [data, setData] = useState<FinancialReportsData | null>(null);
   const [orgProfile, setOrgProfile] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fromDate, setFromDate] = useState(
-    format(startOfMonth(new Date()), "yyyy-MM-dd")
-  );
-  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
+  const [period, setPeriod] = useState<string>("today");
+  const [fromDate, setFromDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [toDate, setToDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [asOfDate, setAsOfDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [activeTab, setActiveTab] = useState("pnl");
+
+  const applyPeriod = useCallback((newPeriod: string) => {
+    setPeriod(newPeriod);
+    const today = new Date();
+    switch (newPeriod) {
+      case "today":
+        setFromDate(format(today, "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+      case "week":
+        setFromDate(format(subDays(today, 7), "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+      case "month":
+        setFromDate(format(startOfMonth(today), "yyyy-MM-dd"));
+        setToDate(format(endOfMonth(today), "yyyy-MM-dd"));
+        break;
+      case "year":
+        setFromDate(format(startOfYear(today), "yyyy-MM-dd"));
+        setToDate(format(today, "yyyy-MM-dd"));
+        break;
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -211,19 +235,19 @@ export default function FinancialReportPage() {
       subtitle="P&L, Balance Sheet, Trial Balance, and Cash Flow"
       loading={loading && !data}
       error={error}
-      onRetry={fetchData}
+      onRetry={() => fetchData()}
       toolbar={
         <>
           <ReportFilter
             embedded
-            period="month"
-            periods={["month"]}
+            period={period}
+            periods={FINANCIAL_PERIODS}
             fromDate={fromDate}
             toDate={toDate}
             onFromDateChange={setFromDate}
             onToDateChange={setToDate}
-            onPeriodChange={() => {}}
-            onGenerate={fetchData}
+            onPeriodChange={applyPeriod}
+            onGenerate={() => fetchData()}
             loading={loading}
           />
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-muted-foreground">
