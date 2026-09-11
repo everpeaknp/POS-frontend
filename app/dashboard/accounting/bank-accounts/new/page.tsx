@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { DashHeader } from "@/components/dashboard/dash-header";
@@ -34,6 +35,11 @@ export default function NewBankAccountPage() {
   const [loadingGlAccounts, setLoadingGlAccounts] = useState(true);
   const [glAccounts, setGlAccounts] = useState<Awaited<ReturnType<typeof loadBankGlAccounts>>>([]);
   const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
+  const [digitalWallets, setDigitalWallets] = useState({
+    enable_esewa: false,
+    enable_khalti: false,
+    enable_fonepay: false,
+  });
   const [formData, setFormData] = useState<{
     bank_name: string;
     account_name: string;
@@ -125,6 +131,11 @@ export default function NewBankAccountPage() {
         if (qrCodeFile) {
           formDataToSend.append('qr_code_image', qrCodeFile);
         }
+        
+        // Add digital wallet flags
+        formDataToSend.append('enable_esewa', String(digitalWallets.enable_esewa));
+        formDataToSend.append('enable_khalti', String(digitalWallets.enable_khalti));
+        formDataToSend.append('enable_fonepay', String(digitalWallets.enable_fonepay));
         
         await bankAccountsAPI.create(formDataToSend);
         toast.success('Bank account created successfully');
@@ -284,6 +295,55 @@ export default function NewBankAccountPage() {
                   className="h-9 text-sm border-gray-200"
                 />
               </Field>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-4">Digital Wallet Sub-Methods (Optional)</h3>
+              <p className="text-sm text-gray-600 mb-4">Enable digital wallets linked to this bank account for POS checkout</p>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable_esewa"
+                    checked={digitalWallets.enable_esewa}
+                    onCheckedChange={(checked) => setDigitalWallets({ ...digitalWallets, enable_esewa: checked as boolean })}
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="enable_esewa"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Enable eSewa payments via this bank
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable_khalti"
+                    checked={digitalWallets.enable_khalti}
+                    onCheckedChange={(checked) => setDigitalWallets({ ...digitalWallets, enable_khalti: checked as boolean })}
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="enable_khalti"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Enable Khalti payments via this bank
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable_fonepay"
+                    checked={digitalWallets.enable_fonepay}
+                    onCheckedChange={(checked) => setDigitalWallets({ ...digitalWallets, enable_fonepay: checked as boolean })}
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="enable_fonepay"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Enable FonePay payments via this bank
+                  </label>
+                </div>
+              </div>
             </div>
             </>
             )}

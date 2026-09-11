@@ -60,6 +60,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.financial.reports': 'Financial Reports',
     'nav.fiscal.year': 'Fiscal Year',
     'nav.bank.accounts': 'Bank Accounts',
+    'nav.expenses': 'Expenses',
+    'nav.add_expense': 'Add Expense',
     'nav.checkout': 'Checkout',
     'nav.sessions': 'Sessions',
     'nav.transactions': 'Transactions',
@@ -82,6 +84,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.item.details': 'Item Details',
     'nav.item-wise.sales': 'Item-wise Sales',
     'nav.day.book': 'Day Book',
+    'nav.categories': 'Categories',
+    'nav.units_of_measure': 'Units of Measure',
+    'nav.stock_adjustment': 'Stock Adjustment',
+    'nav.bank_accounts': 'Bank Accounts',
+    'nav.cash_accounts': 'Cash Accounts',
     
     // Common
     'common.search': 'Search...',
@@ -1760,6 +1767,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.financial.reports': 'वित्तीय रिपोर्टहरू',
     'nav.fiscal.year': 'आर्थिक वर्ष',
     'nav.bank.accounts': 'बैंक खाताहरू',
+    'nav.expenses': 'खर्चहरू',
+    'nav.add_expense': 'खर्च थप्नुहोस्',
     'nav.checkout': 'चेकआउट',
     'nav.sessions': 'सत्रहरू',
     'nav.transactions': 'लेनदेनहरू',
@@ -1782,6 +1791,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.item.details': 'वस्तु विवरण',
     'nav.item-wise.sales': 'वस्तुवार बिक्री',
     'nav.day.book': 'दैनिक पुस्तिका',
+    'nav.categories': 'श्रेणीहरू',
+    'nav.units_of_measure': 'मापनको एकाइहरू',
+    'nav.stock_adjustment': 'स्टक समायोजन',
+    'nav.bank_accounts': 'बैंक खाताहरू',
+    'nav.cash_accounts': 'नगद खाताहरू',
   },
 };
 

@@ -755,6 +755,57 @@ export const bankAccountsAPI = {
 };
 
 // ============================================================================
+// CASH ACCOUNTS API
+// ============================================================================
+
+export interface CashAccount {
+  id: number;
+  user: number;
+  user_name: string;
+  user_username: string;
+  tenant: number;
+  balance: number;
+  last_transaction_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CashTransaction {
+  id: number;
+  cash_account: number;
+  date: string;
+  reference: string;
+  description: string;
+  type: 'Credit' | 'Debit';
+  debit: number;
+  credit: number;
+  balance: number;
+  created_at: string;
+}
+
+export const cashAccountsAPI = {
+  // List all cash accounts
+  list: async (params?: {
+    search?: string;
+    ordering?: string;
+  }) => {
+    return fetchAllPages<CashAccount>('/accounting/cash-accounts/', params);
+  },
+
+  // Get cash account by ID
+  get: async (id: string) => {
+    const response = await apiClient.get<CashAccount>(`/accounting/cash-accounts/${id}/`);
+    return response.data;
+  },
+
+  // Get cash account statement
+  statement: async (id: string) => {
+    const response = await apiClient.get<CashTransaction[] | Paginated<CashTransaction>>(`/accounting/cash-accounts/${id}/statement/`);
+    return unwrapList(response.data);
+  },
+};
+
+// ============================================================================
 // PAYMENT METHODS API
 // ============================================================================
 

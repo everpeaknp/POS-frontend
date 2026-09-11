@@ -156,6 +156,7 @@ export const dashboardNavItems: NavItem[] = [
       { label: "Financial Reports", href: "/dashboard/accounting/reports" },
       { label: "Fiscal Year", href: "/dashboard/accounting/fiscal-year" },
       { label: "Bank Accounts", href: "/dashboard/accounting/bank-accounts", createHref: "/dashboard/accounting/bank-accounts/new" },
+      { label: "Cash Accounts", href: "/dashboard/accounting/cash-accounts" },
     ],
   },
   {
@@ -628,6 +629,7 @@ export function filterDashboardNavItems(
         requiredModule: "accounting",
         children: [
           { label: "Bank Accounts", href: "/dashboard/accounting/bank-accounts", createHref: "/dashboard/accounting/bank-accounts/new" },
+          { label: "Cash Accounts", href: "/dashboard/accounting/cash-accounts" },
         ],
       },
       {
@@ -768,4 +770,31 @@ export function getModulePrimaryHref(moduleId: string): string | null {
   }
 
   return null;
+}
+
+export function getOrganizationModuleFeatures(moduleId: string): NavSubItem[] {
+  const navItem = dashboardNavItems.find(
+    (item) => item.requiredModule?.toLowerCase() === moduleId.toLowerCase()
+  );
+  
+  return navItem?.children || [];
+}
+
+export function sortFeaturesByOrder(
+  features: NavSubItem[],
+  order: string[]
+): NavSubItem[] {
+  if (!order || order.length === 0) return features;
+
+  const sorted = features.slice().sort((a, b) => {
+    const aIndex = order.indexOf(a.href);
+    const bIndex = order.indexOf(b.href);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+
+  return sorted;
 }
