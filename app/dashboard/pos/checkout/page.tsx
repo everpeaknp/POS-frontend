@@ -12,7 +12,6 @@ import { POSInvoiceDialog } from "@/components/pos/checkout/POSInvoiceDialog";
 import { POSHeader } from "@/components/pos/checkout/POSHeader";
 import { POSSessionBanner } from "@/components/pos/checkout/POSSessionBanner";
 import { POSQuickAddProductDialog } from "@/components/pos/checkout/POSQuickAddProductDialog";
-import { NewPosSessionDialog } from "@/components/pos/NewPosSessionDialog";
 import { usePOSCheckout } from "@/hooks/usePOSCheckout";
 import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
@@ -25,7 +24,6 @@ export default function POSCheckoutPage() {
   const [sidebarWidth, setSidebarWidth] = useState(340);
   const [isResizing, setIsResizing] = useState(false);
   const [showQuickAddProduct, setShowQuickAddProduct] = useState(false);
-  const [showNewSession, setShowNewSession] = useState(false);
 
   // Handle resize
   useEffect(() => {
@@ -175,7 +173,7 @@ export default function POSCheckoutPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-custom-600,#16a34a)] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto"></div>
           <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -201,7 +199,9 @@ export default function POSCheckoutPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* No Session Warning Banner */}
           {!checkout.openSession && (
-            <POSSessionBanner onStartSession={() => setShowNewSession(true)} />
+            <POSSessionBanner
+              onStartSession={() => checkout.router.push("/dashboard/pos/sessions/new")}
+            />
           )}
 
           {/* Product Grid with Search and Categories */}
@@ -386,16 +386,6 @@ export default function POSCheckoutPage() {
         onCloseAndNewSale={() => {
           handleDialogChange('receipt', false);
           checkout.resetForm();
-        }}
-      />
-
-      {/* Open New POS Session Dialog */}
-      <NewPosSessionDialog
-        open={showNewSession}
-        onOpenChange={setShowNewSession}
-        redirectAfterCreate={false}
-        onCreated={() => {
-          checkout.refreshSession();
         }}
       />
     </div>

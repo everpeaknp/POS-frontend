@@ -130,7 +130,7 @@ export default function RefundDetailPage() {
                   </div>
                   <div className="flex justify-between gap-4 items-center">
                     <span className="text-gray-500">Status</span>
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                       COMPLETED
                     </span>
                   </div>

@@ -156,7 +156,7 @@ export const POSReceipt = forwardRef<HTMLDivElement, POSReceiptProps>(
                 <span>Rs. {Number(transaction.amount_paid).toFixed(2)}</span>
               </div>
               {transaction.change_given > 0 && (
-                <div className="flex justify-between font-bold text-green-600">
+                <div className="flex justify-between font-bold text-slate-600">
                   <span>Change:</span>
                   <span>Rs. {Number(transaction.change_given).toFixed(2)}</span>
                 </div>

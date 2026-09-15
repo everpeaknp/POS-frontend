@@ -148,7 +148,7 @@ const POSProfessionalInvoice = forwardRef<HTMLDivElement, POSProfessionalInvoice
                 )}
                 <div className="flex justify-between pt-2 border-t border-gray-200">
                   <span className="text-gray-600">Status:</span>
-                  <span className="font-semibold uppercase text-green-600">{transaction.status}</span>
+                  <span className="font-semibold uppercase text-slate-600">{transaction.status}</span>
                 </div>
               </div>
             </div>
@@ -171,7 +171,7 @@ const POSProfessionalInvoice = forwardRef<HTMLDivElement, POSProfessionalInvoice
                 </div>
                 
                 {transaction.discount_amount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-slate-600">
                     <span>Discount:</span>
                     <span className="font-medium">-{formatNPR(transaction.discount_amount)}</span>
                   </div>
