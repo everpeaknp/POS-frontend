@@ -254,21 +254,21 @@ export function usePOSCheckout() {
           setTaxRate(settingsRes.tax_rate / 100);
         }
         if (settingsRes) {
-          // Import getMediaURL to convert media paths
-          const { getMediaURL } = await import("@/lib/api/client");
+          // Import getMediaUrl to convert media paths
+          const { getMediaUrl } = await import("@/lib/utils");
           
           setPaymentSettings({
             esewa_enabled: settingsRes.esewa_enabled ?? true,
             esewa_number: settingsRes.esewa_number || "",
-            esewa_qr: getMediaURL(settingsRes.esewa_qr) || "",
+            esewa_qr: getMediaUrl(settingsRes.esewa_qr) || "",
             khalti_enabled: settingsRes.khalti_enabled ?? true,
             khalti_number: settingsRes.khalti_number || "",
-            khalti_qr: getMediaURL(settingsRes.khalti_qr) || "",
+            khalti_qr: getMediaUrl(settingsRes.khalti_qr) || "",
             fonepay_enabled: settingsRes.fonepay_enabled ?? true,
             fonepay_number: settingsRes.fonepay_number || "",
-            fonepay_qr: getMediaURL(settingsRes.fonepay_qr) || "",
+            fonepay_qr: getMediaUrl(settingsRes.fonepay_qr) || "",
             bank_transfer_enabled: settingsRes.bank_transfer_enabled ?? true,
-            bank_qr: getMediaURL(settingsRes.bank_qr) || "",
+            bank_qr: getMediaUrl(settingsRes.bank_qr) || "",
             bank_name: settingsRes.bank_name || "",
             bank_account_number: settingsRes.bank_account_number || "",
             bank_account_name: settingsRes.bank_account_name || "",
@@ -286,9 +286,9 @@ export function usePOSCheckout() {
             
             setPaymentSettings(prev => ({
               ...prev,
-              esewa_qr: getMediaURL(esewaBank?.esewa_qr) || prev.esewa_qr,
-              khalti_qr: getMediaURL(khaltiBank?.khalti_qr) || prev.khalti_qr,
-              fonepay_qr: getMediaURL(fonepayBank?.fonepay_qr) || prev.fonepay_qr,
+              esewa_qr: getMediaUrl(esewaBank?.esewa_qr) || prev.esewa_qr,
+              khalti_qr: getMediaUrl(khaltiBank?.khalti_qr) || prev.khalti_qr,
+              fonepay_qr: getMediaUrl(fonepayBank?.fonepay_qr) || prev.fonepay_qr,
             }));
           } catch (error) {
             console.error("Failed to load bank account QR codes:", error);

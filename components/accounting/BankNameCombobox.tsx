@@ -21,7 +21,7 @@ export function BankNameCombobox({ value, onChange, disabled }: BankNameCombobox
 
   const handleSelect = (selected: string) => {
     if (selected === NEPAL_BANK_OTHER) {
-      onChange(customName || "");
+      onChange(NEPAL_BANK_OTHER);
       return;
     }
     onChange(selected);

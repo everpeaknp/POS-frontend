@@ -245,7 +245,7 @@ export default function ActivitiesPage() {
               />
             </div>
 
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={(value) => setFilterType(value || 'all')}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>

@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CircleHelp, LogOut, Moon, Sun, User } from "lucide-react";
+import { CircleHelp, LogOut, Moon, Sun, User, Globe } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAppearance } from "@/lib/context/AppearanceContext";
 import { usePageTourOptional } from "@/lib/context/PageTourContext";
+import { useLanguageOptional } from "@/lib/context/LanguageContext";
 import { tenantApi, type Tenant } from "@/lib/api/tenant";
 import { getDesktopApi } from "@/lib/desktop";
 import { useIsElectron } from "@/lib/desktop/use-is-electron";
@@ -279,6 +280,45 @@ export function AppIconRail({
     </div>
   ) : null;
 
+  // Language toggle
+  const languageContext = useLanguageOptional();
+  const languageToggle = languageContext && horizontal ? (
+    <div data-tour="topbar-language" className="shrink-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            "rounded-lg grid place-items-center transition-colors shrink-0 outline-none h-9 w-9",
+            "hover:bg-[var(--navbar-hover-bg,rgba(0,0,0,0.05))]"
+          )}
+          title="Language"
+          aria-label="Language"
+        >
+          <Globe className="h-[18px] w-[18px] text-gray-500 dark:text-gray-400" strokeWidth={2} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => languageContext.setLanguage('en')}
+          >
+            {languageContext.language === 'en' && (
+              <span className="mr-2">✓</span>
+            )}
+            English
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => languageContext.setLanguage('ne')}
+          >
+            {languageContext.language === 'ne' && (
+              <span className="mr-2">✓</span>
+            )}
+            नेपाली
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ) : null;
+
   const utilityButtons = (
     <>
       {pageHelpControl}
@@ -295,6 +335,7 @@ export function AppIconRail({
           )}
         </RailButton>
       </div>
+      {languageToggle}
       <div data-tour="topbar-user" className="shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger
